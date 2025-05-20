@@ -28,6 +28,17 @@
         <label for="available_no">לא</label>
 
         <br><br>
+
+        <label>מלמד דרך זום:</label><br>
+        <input type="radio" id="zoom_yes" name="teaches_online" value="true"
+               {% if teacher.teaches_online %}checked{% endif %}>
+        <label for="zoom_yes">כן</label>
+
+        <input type="radio" id="zoom_no" name="teaches_online" value="false"
+               {% if teacher.teaches_online == False %}checked{% endif %}>
+        <label for="zoom_no">לא</label>
+
+        <br><br>
         <button type="submit" class="btn">שמור</button>
     </form>
 </div>

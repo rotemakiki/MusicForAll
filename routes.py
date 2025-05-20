@@ -267,11 +267,15 @@ def edit_teacher_profile(teacher_id):
         styles = request.form.get('styles')
         is_available_str = request.form.get('is_available')
         is_available = True if is_available_str == 'true' else False
+        teaches_online_str = request.form.get('teaches_online')
+        teaches_online = True if teaches_online_str == 'true' else False
+
 
         db.collection("users").document(teacher_id).update({
             "instruments": instruments,
             "styles": styles,
-            "is_available": is_available
+            "is_available": is_available,
+            "teaches_online": teaches_online
         })
 
         flash("הפרופיל עודכן בהצלחה!", "success")

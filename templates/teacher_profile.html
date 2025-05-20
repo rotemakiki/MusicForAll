@@ -15,6 +15,14 @@
             <span style="color: red; font-weight: bold;">לא</span>
         {% endif %}
     </p>
+    <p><strong>מלמד דרך זום:</strong>
+    {% if teacher.teaches_online %}
+        <span style="color: green; font-weight: bold;">כן</span>
+    {% else %}
+        <span style="color: red; font-weight: bold;">לא</span>
+    {% endif %}
+    </p>
+
 
     <p><strong>ותק באתר:</strong> {{ days_on_site }} ימים</p>
 
