@@ -54,6 +54,7 @@ def register():
             # נקבל את ה-ID של המורה החדש
             doc_ref = db.collection("users").where("email", "==", email).get()[0]
             return redirect(url_for('routes.edit_teacher_profile', teacher_id=doc_ref.id))
+        #dskdaskdas
 
 
         flash("Registration successful! Please log in.", "success")
