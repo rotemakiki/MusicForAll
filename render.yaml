@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: music-for-all
+    env: python
+    buildCommand: ""
+    startCommand: "python app.py"
+    envVars:
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json
