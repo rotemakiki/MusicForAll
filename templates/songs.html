@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}רשימת שירים{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>רשימת שירים</h1>
+    <ul id="song-list">
+        {% for song in songs %}
+            <li id="song-{{ song.id }}">
+                <a href="{{ url_for('routes.chords', song_id=song.id) }}">{{ song.title }} - {{ song.artist }}</a>
+                <button class="delete-btn" onclick="deleteSong({{ song.id }})">🗑 מחק</button>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<style>
+    .delete-btn {
+        margin-right: 10px;
+        background-color: red;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        cursor: pointer;
+    }
+
+    .delete-btn:hover {
+        background-color: darkred;
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    li {
+        margin-bottom: 10px;
+    }
+</style>
+
+<script>
+    function deleteSong(songId) {
+        if (!confirm("האם אתה בטוח שברצונך למחוק את השיר?")) return;
+
+        fetch(`/api/delete_song/${songId}`, {
+            method: "DELETE"
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                document.getElementById(`song-${songId}`).remove();
+            } else {
+                alert("⚠️ שגיאה במחיקת השיר");
+            }
+        })
+        .catch(err => {
+            console.error("Delete error:", err);
+            alert("⚠️ שגיאה במחיקת השיר");
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}מוזיקה לכולם{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>ברוכים הבאים למוזיקה לכולם</h1>
+        <p>זוהי פלטפורמה שבה מורים יכולים להעלות שיעורי מוזיקה ותלמידים יכולים ללמוד מהם.</p>
+        <div class="buttons">
+            <a href="{{ url_for('routes.login') }}" class="btn">התחברות</a>
+            <a href="{{ url_for('routes.register') }}" class="btn">הרשמה</a>
+            <a href="{{ url_for('routes.videos') }}" class="btn">צפייה בשיעורים</a>
+        </div>
+    </div>
+{% endblock %}

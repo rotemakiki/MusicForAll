@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}הוספת שיר{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>🎵 הוספת שיר חדש 🎶</h1>
+    <form id="add-song-form" class="styled-form">
+        <label for="title">שם השיר:</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="artist">שם האמן:</label>
+        <input type="text" id="artist" name="artist" required>
+
+        <label for="key">סולם:</label>
+        <input type="text" id="key" name="key" required>
+
+        <label for="key_type">סוג סולם:</label>
+        <input type="text" id="key_type" name="key_type" required>
+
+        <label for="time_signature">מקצב:</label>
+        <input type="text" id="time_signature" name="time_signature" required>
+
+        <label for="bpm">BPM (מהירות):</label>
+        <input type="number" id="bpm" name="bpm" required>
+
+        <label for="video_url">🎥 קישור לסרטון:</label>
+        <input type="text" id="video_url" name="video_url" required>
+
+        <label>🎸 אקורדים:</label>
+        <button type="button" class="btn" onclick="goToChordsPage()">הוסף אקורדים</button>
+        <input type="hidden" id="chords" name="chords" required>
+
+        <button type="submit" class="btn">➕ הוסף שיר</button>
+    </form>
+
+    <p id="response-message" class="message"></p>
+</div>
+
+<script>
+    function goToChordsPage() {
+        window.location.href = "/add-chords";
+    }
+
+    // טוען אקורדים שהוזנו בעבר (אם שמרנו ב-localStorage)
+    document.addEventListener("DOMContentLoaded", function () {
+        const savedChords = localStorage.getItem("chords");
+        if (savedChords) {
+            document.getElementById("chords").value = savedChords;  // JSON string
+        }
+    });
+
+    document.getElementById("add-song-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const title = document.getElementById("title").value;
+        const artist = document.getElementById("artist").value;
+        const key = document.getElementById("key").value;
+        const keyType = document.getElementById("key_type").value;
+        const timeSignature = document.getElementById("time_signature").value;
+        const bpm = document.getElementById("bpm").value;
+        const videoUrl = document.getElementById("video_url").value;
+        const chordsRaw = document.getElementById("chords").value;
+
+        let chords;
+        try {
+            chords = JSON.parse(chordsRaw);
+        } catch (e) {
+            alert("שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.");
+            return;
+        }
+
+        fetch("/api/add_song", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                title: title,
+                artist: artist,
+                key: key,
+                key_type: keyType,
+                time_signature: timeSignature,
+                bpm: parseInt(bpm),
+                video_url: videoUrl,
+                chords: chords
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const messageEl = document.getElementById("response-message");
+            if (data.message) {
+                messageEl.textContent = "✅ " + data.message;
+                messageEl.style.color = "green";
+                localStorage.removeItem("chords");
+            } else {
+                messageEl.textContent = "❌ שגיאה בהוספת השיר, נסה שוב";
+                messageEl.style.color = "red";
+            }
+        })
+        .catch(error => {
+            document.getElementById("response-message").textContent = "❌ שגיאה בהוספת השיר!";
+            document.getElementById("response-message").style.color = "red";
+            console.error("Error:", error);
+        });
+    });
+</script>
+
+<style>
+    .styled-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 400px;
+        margin: auto;
+    }
+
+    .styled-form label {
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .styled-form input {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn {
+        background-color: #28a745;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: #218838;
+    }
+
+    .message {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}הוספת אקורדים{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>🎸 הוספת אקורדים לשיר</h1>
+
+    <!-- בורר אקורד -->
+    <div style="margin-bottom: 20px;">
+        <h3>בחר אקורד:</h3>
+        <div id="root-letters" class="button-row"></div>
+
+        <button id="toggle-accidental" class="btn" style="margin-top: 10px;">♮ ללא סימן</button>
+
+        <h4 style="margin-top: 20px;">בחר סוג אקורד:</h4>
+        <div id="chord-types" class="button-row"></div>
+
+        <p style="margin-top: 10px;">אקורד נבחר: <strong id="current-selection">—</strong></p>
+    </div>
+
+    <!-- מבנה השיר -->
+    <div class="chords-layout">
+        <div class="chord-builder">
+            <h3>רשימת אקורדים לשיר</h3>
+            <div id="chord-lines"></div>
+
+            <div class="builder-buttons">
+                <button type="button" class="btn" onclick="addChordToLine()">➕ הוסף אקורד לשורה</button>
+                <button type="button" class="btn" onclick="addNewLine()">⬇️ ירידת שורה</button>
+                <button type="button" class="btn finish" onclick="finishAndReturn()">✅ סיים והמשך</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chords-layout {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    .chord-line {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+    .chord-box {
+        padding: 10px;
+        border: 2px solid #aaa;
+        border-radius: 8px;
+        font-weight: bold;
+        background-color: white;
+    }
+    .builder-buttons {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+    .finish {
+        background-color: green;
+    }
+    .finish:hover {
+        background-color: darkgreen;
+    }
+    .letter-button, .type-button {
+        padding: 10px 16px;
+        background: #f0f0f0;
+        border: 2px solid gray;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .letter-button.selected, .type-button.selected {
+        background: lightblue;
+        border-color: blue;
+    }
+    .button-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+</style>
+
+<script>
+    const rootLetters = ["A", "B", "C", "D", "E", "F", "G"];
+    const accidentalOptions = ["", "#", "b"];
+    const chordTypes = ["", "m", "7", "maj7", "dim", "sus4", "aug", "m7"];
+
+    let accidentalIndex = 0;
+    let selectedLetter = null;
+    let selectedType = "";
+    let selectedChord = null;
+
+    let songChords = [[]];
+
+    function getCurrentAccidental() {
+        return accidentalOptions[accidentalIndex];
+    }
+
+    function updateSelectedChord() {
+        if (!selectedLetter) {
+            selectedChord = null;
+            document.getElementById("current-selection").innerText = "—";
+            return;
+        }
+        selectedChord = selectedLetter + getCurrentAccidental() + selectedType;
+        document.getElementById("current-selection").innerText = selectedChord;
+    }
+
+    function renderRootButtons() {
+        const container = document.getElementById("root-letters");
+        container.innerHTML = "";
+        rootLetters.forEach(letter => {
+            const fullChord = letter + getCurrentAccidental();
+            const btn = document.createElement("div");
+            btn.className = "letter-button";
+            btn.innerText = fullChord;
+            if (selectedLetter === letter) btn.classList.add("selected");
+            btn.addEventListener("click", () => {
+                selectedLetter = letter;
+                updateSelectedChord();
+                renderRootButtons();
+            });
+            container.appendChild(btn);
+        });
+    }
+
+    function renderTypeButtons() {
+        const container = document.getElementById("chord-types");
+        container.innerHTML = "";
+        chordTypes.forEach(type => {
+            const btn = document.createElement("div");
+            btn.className = "type-button";
+            btn.innerText = type || "רגיל";
+            if (selectedType === type) btn.classList.add("selected");
+            btn.addEventListener("click", () => {
+                selectedType = type;
+                updateSelectedChord();
+                renderTypeButtons();
+            });
+            container.appendChild(btn);
+        });
+    }
+
+    function toggleAccidental() {
+        accidentalIndex = (accidentalIndex + 1) % accidentalOptions.length;
+        const labelMap = {
+            "": "♮ ללא סימן",
+            "#": "♯ דיאז",
+            "b": "♭ במול"
+        };
+        document.getElementById("toggle-accidental").innerText = labelMap[getCurrentAccidental()];
+        updateSelectedChord();
+        renderRootButtons();
+    }
+
+    function addChordToLine() {
+        if (!selectedChord) return;
+        songChords[songChords.length - 1].push(selectedChord);
+        renderChordLines();
+    }
+
+    function addNewLine() {
+        songChords.push([]);
+        renderChordLines();
+    }
+
+    function renderChordLines() {
+        const container = document.getElementById("chord-lines");
+        container.innerHTML = "";
+        songChords.forEach(line => {
+            const lineDiv = document.createElement("div");
+            lineDiv.className = "chord-line";
+            line.forEach(chord => {
+                const box = document.createElement("div");
+                box.className = "chord-box";
+                box.innerText = chord;
+                lineDiv.appendChild(box);
+            });
+            container.appendChild(lineDiv);
+        });
+    }
+
+    function finishAndReturn() {
+        localStorage.setItem("chords", JSON.stringify(songChords));
+        window.location.href = "/add_song";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        renderRootButtons();
+        renderTypeButtons();
+        renderChordLines();
+
+        document.getElementById("toggle-accidental").addEventListener("click", toggleAccidental);
+    });
+</script>
+{% endblock %}

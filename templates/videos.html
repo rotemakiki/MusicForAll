@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}שיעורי מוזיקה{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>שיעורי מוזיקה</h1>
+        <ul id="videos-list">
+            <!-- הסרטונים יוכנסו כאן באופן דינמי -->
+        </ul>
+        <a href="{{ url_for('routes.home') }}" class="btn">חזרה לדף הבית</a>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch("/api/videos")
+                .then(response => response.json())
+                .then(data => {
+                    const videosList = document.getElementById("videos-list");
+                    if (data.length > 0) {
+                        data.forEach(video => {
+                            let listItem = document.createElement("li");
+                            listItem.innerHTML = `<h3>${video.title}</h3>
+                                                  <p>${video.description}</p>
+                                                  <a href="${video.url}" target="_blank">צפה בסרטון</a>`;
+                            videosList.appendChild(listItem);
+                        });
+                    } else {
+                        videosList.innerHTML = "<p>אין סרטונים זמינים כרגע.</p>";
+                    }
+                })
+                .catch(error => console.error("שגיאה בטעינת הסרטונים:", error));
+        });
+    </script>
+{% endblock %}

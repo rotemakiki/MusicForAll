@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}שיר - {{ song.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ song.title }}</h1>
+    <h3>שם האמן: {{ song.artist }}</h3>
+    <h4>סולם השיר: {{ song.key }} ({{ song.key_type }})</h4>
+    <p>מקצב: {{ song.time_signature }}</p>
+    <p>BPM (מהירות): {{ song.bpm }}</p>
+
+    <!-- וידאו של השיר -->
+    <div class="video-container">
+        <iframe width="560" height="315" src="{{ song.video_url }}" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+    <!-- כפתור נגן שיר -->
+    <div style="margin-top: 20px;">
+        <a href="{{ url_for('routes.play_song', song_id=song.id) }}" class="btn">🎵 נגן שיר</a>
+        <a href="{{ url_for('routes.songs') }}" class="btn">📚 חזרה לרשימת השירים</a>
+    </div>
+</div>
+
+<style>
+    .container {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .btn {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        margin: 10px;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
+    }
+
+    .video-container {
+        margin: 20px auto;
+        display: flex;
+        justify-content: center;
+    }
+</style>
+{% endblock %}

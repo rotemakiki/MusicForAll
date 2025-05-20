@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}מוזיקה לכולם{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</head>
+<body>
+
+    <!-- תפריט המבורגר -->
+    <nav class="navbar">
+        <div class="menu-icon" onclick="toggleMenu()">☰</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="{{ url_for('routes.home') }}">דף הבית</a></li>
+            <li><a href="{{ url_for('routes.videos') }}">שיעורים</a></li>
+            <li><a href="{{ url_for('routes.songs') }}">שירים</a></li>
+            <li><a href="{{ url_for('routes.list_teachers') }}">רשימת מורים</a></li>
+            <li><a href="{{ url_for('routes.login') }}">התחברות</a></li>
+            <li><a href="{{ url_for('routes.register') }}">הרשמה</a></li>
+            <li><a href="{{ url_for('routes.add_song_page') }}">הוספת שיר</a></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>

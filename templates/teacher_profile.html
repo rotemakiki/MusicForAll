@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}פרופיל מורה - {{ teacher.username }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ teacher.username }}</h1>
+    <p><strong>כלי נגינה:</strong> {{ teacher.instruments or "לא צויין" }}</p>
+    <p><strong>סגנונות לימוד:</strong> {{ teacher.styles or "לא צויין" }}</p>
+
+    <p><strong>פנוי לקבלת תלמידים:</strong>
+        {% if teacher.is_available %}
+            <span style="color: green; font-weight: bold;">כן</span>
+        {% else %}
+            <span style="color: red; font-weight: bold;">לא</span>
+        {% endif %}
+    </p>
+
+    <p><strong>ותק באתר:</strong> {{ days_on_site }} ימים</p>
+
+    <a href="#" class="btn">צור קשר עם המורה (בקרוב)</a>
+    <a href="{{ url_for('routes.edit_teacher_profile', teacher_id=teacher.id) }}" class="btn">✏️ ערוך פרופיל</a>
+
+
+
+    <hr>
+    <h3>🎬 סרטונים פופולריים</h3>
+    {% if videos %}
+        {% for video in videos %}
+            <div style="margin-bottom: 20px;">
+                <h4>{{ video.title }}</h4>
+                <p>{{ video.description }}</p>
+                <a href="{{ video.url }}" target="_blank">צפה בסרטון</a>
+            </div>
+        {% endfor %}
+        <a href="{{ url_for('routes.videos') }}" class="btn">צפייה בכל הסרטונים</a>
+    {% else %}
+        <p>אין סרטונים להצגה.</p>
+    {% endif %}
+
+    <hr>
+    <h3>💬 המלצות תלמידים</h3>
+    <ul>
+        <li>מורה הכי תותח!</li>
+        <li>מסביר בצורה סבלנית וברורה</li>
+        <li>נהניתי מכל רגע, ממליץ בחום!</li>
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{
+  "users": {
+    "AWsBNokbQbtuj3MEsJkE": {
+      "styles": "פופ",
+      "password": "pbkdf2:sha256:600000$5ft1LqWBXWpiDsiK$6bfc47e28750513f6c5cabffe70672661c0be23259fcb36f2fc2a2970aa6e9c3",
+      "created_at": "2025-05-20T12:28:32.367936+00:00",
+      "is_available": true,
+      "role": "teacher",
+      "email": "rrr@gmail.com",
+      "instruments": "צ'לו",
+      "username": "רותם עקיקי"
+    }
+  },
+  "songs": {},
+  "videos": {}
+}

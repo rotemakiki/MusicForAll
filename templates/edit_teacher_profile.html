@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}עריכת פרופיל מורה{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>עריכת פרופיל</h1>
+    <form method="POST">
+        <label>כלי נגינה:</label>
+        <div id="instruments-container"></div>
+        <button type="button" onclick="addInstrumentField()" class="btn">➕ הוסף כלי נגינה</button>
+
+        <label>סגנונות לימוד:</label>
+        <div id="styles-container"></div>
+        <button type="button" onclick="addStyleField()" class="btn">➕ הוסף סגנון לימוד</button>
+
+        <!-- Hidden inputs to collect joined values -->
+        <input type="hidden" id="instruments" name="instruments">
+        <input type="hidden" id="styles" name="styles">
+
+        <label>פנוי לקבלת תלמידים:</label><br>
+        <input type="radio" id="available_yes" name="is_available" value="true"
+               {% if teacher.is_available %}checked{% endif %}>
+        <label for="available_yes">כן</label>
+
+        <input type="radio" id="available_no" name="is_available" value="false"
+               {% if teacher.is_available == False %}checked{% endif %}>
+        <label for="available_no">לא</label>
+
+        <br><br>
+        <button type="submit" class="btn">שמור</button>
+    </form>
+</div>
+
+<script>
+    function addField(containerId, value = "") {
+        const container = document.getElementById(containerId);
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = value;
+        input.className = "form-control";
+        container.appendChild(input);
+    }
+
+    function addInstrumentField(value = "") {
+        addField("instruments-container", value);
+    }
+
+    function addStyleField(value = "") {
+        addField("styles-container", value);
+    }
+
+    function collectValues(containerId) {
+        const inputs = document.getElementById(containerId).getElementsByTagName("input");
+        return Array.from(inputs).map(input => input.value).filter(Boolean).join(",");
+    }
+
+    document.querySelector("form").addEventListener("submit", function (e) {
+        document.getElementById("instruments").value = collectValues("instruments-container");
+        document.getElementById("styles").value = collectValues("styles-container");
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const instruments = "{{ teacher.instruments or '' }}".split(",");
+        const styles = "{{ teacher.styles or '' }}".split(",");
+
+        instruments.forEach(inst => {
+            if (inst.trim()) addInstrumentField(inst.trim());
+        });
+
+        styles.forEach(style => {
+            if (style.trim()) addStyleField(style.trim());
+        });
+
+        if (instruments.length === 0 || instruments[0] === "") addInstrumentField();
+        if (styles.length === 0 || styles[0] === "") addStyleField();
+    });
+</script>
+{% endblock %}

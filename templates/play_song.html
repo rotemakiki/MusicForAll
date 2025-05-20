@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}נגן שיר - {{ song.title }}{% endblock %}
+
+{% block content %}
+<h2>{{ song.title }}</h2>
+
+<div id="bpm-info">BPM: {{ song.bpm }}</div>
+<div id="controls" style="margin: 20px 0;">
+    <div>
+        <label>הקצב הנוכחי: <span id="current-bpm">{{ song.bpm }}</span> BPM</label><br>
+        <input type="range" id="bpm-slider" min="40" max="180" value="{{ song.bpm }}">
+    </div>
+
+    <div style="margin-top: 10px;">
+        <button onclick="startPlayback()">החל לנגן</button>
+        <button onclick="restartPlayback()">התחל מחדש</button>
+        <button onclick="stopPlayback()">עצור</button>
+    </div>
+</div>
+
+<div id="chord-container">
+    <h3>אקורדים</h3>
+    <div id="chords-wrapper"></div>
+</div>
+
+<audio id="metronome-sound" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
+
+<div class="buttons" style="margin-top: 20px;">
+    <a href="{{ url_for('routes.chords', song_id=song.id) }}" class="btn">🎼 חזרה לעמוד השיר</a>
+    <a href="{{ url_for('routes.songs') }}" class="btn">📚 חזרה לרשימת השירים</a>
+</div>
+
+<style>
+    .chord-row {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .chord-box {
+        border: 2px solid #aaa;
+        border-radius: 10px;
+        width: 60px;
+        height: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: bold;
+        font-size: 18px;
+        padding: 6px 0;
+        box-sizing: border-box;
+        transition: background-color 0.3s ease;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .active {
+        background-color: lightgreen;
+        border-color: green;
+    }
+
+    .selected-chord-box {
+        border: 2px solid blue !important;
+        box-shadow: 0 0 8px blue;
+    }
+
+    .beat-indicators {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        margin-top: 4px;
+    }
+
+    .beat-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #ccc;
+    }
+
+    .beat-dot.active-dot {
+        background-color: #007bff;
+    }
+
+    #bpm-info {
+        margin-bottom: 10px;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<script>
+    const chords = {{ song.chords | tojson }};
+    const beatsPerChord = {{ song.beats }};
+    let bpm = {{ song.bpm }};
+    let intervalMs = 60000 / bpm;
+
+    let currentLineIndex = 0;
+    let currentChordIndexInLine = 0;
+    let currentBeat = 0;
+    let interval = null;
+
+    let selectedStartLine = null;
+    let selectedStartChord = null;
+
+    const metronome = document.getElementById("metronome-sound");
+
+    function renderChords() {
+        const wrapper = document.getElementById("chords-wrapper");
+        wrapper.innerHTML = "";
+
+        chords.forEach((line, lineIdx) => {
+            const rowDiv = document.createElement("div");
+            rowDiv.className = "chord-row";
+
+            line.forEach((chord, chordIdx) => {
+                const box = document.createElement("div");
+                box.className = "chord-box";
+
+                const isCurrent = lineIdx === currentLineIndex && chordIdx === currentChordIndexInLine;
+                const isPast = (
+                    lineIdx < currentLineIndex ||
+                    (lineIdx === currentLineIndex && chordIdx < currentChordIndexInLine)
+                );
+
+                const isSelected = lineIdx === selectedStartLine && chordIdx === selectedStartChord;
+                if (isSelected) {
+                    box.classList.add("selected-chord-box");
+                }
+
+                if (isCurrent) {
+                    const indicators = document.createElement("div");
+                    indicators.className = "beat-indicators";
+
+                    for (let j = 0; j < beatsPerChord; j++) {
+                        const dot = document.createElement("div");
+                        dot.className = "beat-dot";
+                        if (j < currentBeat) {
+                            dot.classList.add("active-dot");
+                        }
+                        indicators.appendChild(dot);
+                    }
+
+                    box.appendChild(indicators);
+                } else {
+                    const spacer = document.createElement("div");
+                    spacer.style.height = "16px";
+                    box.appendChild(spacer);
+                }
+
+                box.appendChild(document.createTextNode(chord));
+
+                if (isPast) {
+                    box.classList.add("active");
+                }
+
+                // Select on click
+                box.addEventListener("click", () => {
+                    selectedStartLine = lineIdx;
+                    selectedStartChord = chordIdx;
+                    renderChords();
+                });
+
+                rowDiv.appendChild(box);
+            });
+
+            wrapper.appendChild(rowDiv);
+        });
+    }
+
+    function playMetronome() {
+        metronome.currentTime = 0;
+        metronome.play().catch(() => {});
+    }
+
+    function startPlayback() {
+        stopPlayback();
+        bpm = parseInt(document.getElementById("bpm-slider").value);
+        intervalMs = 60000 / bpm;
+        document.getElementById("current-bpm").innerText = bpm;
+
+        // Use selection if exists
+        currentLineIndex = selectedStartLine !== null ? selectedStartLine : 0;
+        currentChordIndexInLine = selectedStartChord !== null ? selectedStartChord : 0;
+        currentBeat = 0;
+
+        renderChords();
+        playMetronome();
+
+        interval = setInterval(() => {
+            playMetronome();
+            currentBeat++;
+
+            if (currentBeat > beatsPerChord) {
+                currentBeat = 1;
+                currentChordIndexInLine++;
+
+                if (currentChordIndexInLine >= chords[currentLineIndex].length) {
+                    currentChordIndexInLine = 0;
+                    currentLineIndex++;
+
+                    if (currentLineIndex >= chords.length) {
+                        stopPlayback();
+                        return;
+                    }
+                }
+            }
+
+            renderChords();
+        }, intervalMs);
+    }
+
+    function stopPlayback() {
+        clearInterval(interval);
+        interval = null;
+    }
+
+    function restartPlayback() {
+        stopPlayback();
+        currentLineIndex = 0;
+        currentChordIndexInLine = 0;
+        currentBeat = 0;
+        selectedStartLine = null;
+        selectedStartChord = null;
+        renderChords();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("bpm-slider").addEventListener("input", (e) => {
+            bpm = parseInt(e.target.value);
+            document.getElementById("current-bpm").innerText = bpm;
+            intervalMs = 60000 / bpm;
+        });
+
+        renderChords();
+    });
+</script>
+{% endblock %}

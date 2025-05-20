@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}רשימת מורים{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>רשימת מורים</h1>
+    {% if teachers %}
+        <ul style="text-align: right;">
+            {% for teacher in teachers %}
+                <li>
+                    <a href="{{ url_for('routes.teacher_profile', teacher_id=teacher.id) }}">
+                        {{ teacher.username }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>אין מורים להצגה כרגע.</p>
+    {% endif %}
+</div>
+{% endblock %}
