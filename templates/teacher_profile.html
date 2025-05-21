@@ -23,24 +23,35 @@
     {% endif %}
     </p>
 
-
     <p><strong>ותק באתר:</strong> {{ days_on_site }} ימים</p>
 
     <a href="#" class="btn">צור קשר עם המורה (בקרוב)</a>
     <a href="{{ url_for('routes.edit_teacher_profile', teacher_id=teacher.id) }}" class="btn">✏️ ערוך פרופיל</a>
 
-
+    <hr>
+    <h3>📤 העלאת סרטון חדש</h3>
+    <form action="{{ url_for('routes.upload_video') }}" method="POST" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="כותרת הסרטון" required>
+        <input type="text" name="description" placeholder="תיאור קצר" required>
+        <input type="file" name="video_file" accept="video/*" required>
+        <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+        <button type="submit" class="btn">⬆️ העלה סרטון</button>
+    </form>
 
     <hr>
     <h3>🎬 סרטונים פופולריים</h3>
     {% if videos %}
-        {% for video in videos %}
-            <div style="margin-bottom: 20px;">
-                <h4>{{ video.title }}</h4>
-                <p>{{ video.description }}</p>
-                <a href="{{ video.url }}" target="_blank">צפה בסרטון</a>
-            </div>
-        {% endfor %}
+            {% for video in videos %}
+                <div style="margin-bottom: 30px;">
+                    <h4>{{ video.title }}</h4>
+                    <p>{{ video.description }}</p>
+                    <video width="400" controls>
+                        <source src="{{ video.url }}" type="video/mp4">
+                        הדפדפן שלך לא תומך בניגון וידאו.
+                    </video>
+                </div>
+            {% endfor %}
+
         <a href="{{ url_for('routes.videos') }}" class="btn">צפייה בכל הסרטונים</a>
     {% else %}
         <p>אין סרטונים להצגה.</p>

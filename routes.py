@@ -283,3 +283,59 @@ def edit_teacher_profile(teacher_id):
 
     teacher["id"] = teacher_id
     return render_template("edit_teacher_profile.html", teacher=teacher)
+
+import os
+import uuid
+from google.cloud import storage
+from werkzeug.utils import secure_filename
+
+# נתיב לתיקייה זמנית לשמירת קובץ לפני העלאה
+TEMP_UPLOAD_FOLDER = "temp_uploads"
+os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
+
+@routes.route('/upload_video', methods=['POST'])
+def upload_video():
+    if 'video_file' not in request.files:
+        flash("לא נבחר קובץ וידאו", "error")
+        return redirect(request.referrer)
+
+    file = request.files['video_file']
+    if file.filename == '':
+        flash("לא נבחר קובץ", "error")
+        return redirect(request.referrer)
+
+    title = request.form.get('title')
+    description = request.form.get('description')
+    teacher_id = request.form.get('teacher_id')
+
+    if not all([title, description, teacher_id]):
+        flash("שדות חסרים", "error")
+        return redirect(request.referrer)
+
+    # שמירת הקובץ זמנית
+    filename = secure_filename(file.filename)
+    temp_path = os.path.join("temp_uploads", filename)
+    os.makedirs("temp_uploads", exist_ok=True)
+    file.save(temp_path)
+
+    storage_client = storage.Client.from_service_account_json("music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json")
+    bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
+    blob_name = f"videos/{uuid.uuid4()}_{filename}"
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(temp_path)
+    blob.make_public()
+
+    # מחיקת קובץ זמני
+    os.remove(temp_path)
+
+    # שמירה במסד
+    db.collection("videos").add({
+        "title": title,
+        "description": description,
+        "url": blob.public_url,
+        "uploaded_by": teacher_id,
+        "uploaded_at": datetime.utcnow()
+    })
+
+    flash("🎉 הסרטון עלה בהצלחה!", "success")
+    return redirect(url_for('routes.teacher_profile', teacher_id=teacher_id))
