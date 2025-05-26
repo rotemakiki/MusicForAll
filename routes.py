@@ -42,7 +42,9 @@ def register():
             "email": email,
             "role": role,
             "password": hashed_password,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.utcnow(),
+            "profile_image": "",  # יתעדכן לאחר העלאה
+
         }
 
         # תוספת למורה: השדות האלו ימולאו רק מאוחר יותר בעריכת פרופיל
@@ -454,3 +456,55 @@ def edit_song(song_id):
 
     song["id"] = song_id
     return render_template("edit_song.html", song=song)
+
+@routes.route('/tutorials')
+def tutorials():
+    return render_template('tutorials.html')
+
+@routes.route('/upload_profile_image', methods=['POST'])
+def upload_profile_image():
+    if 'user_id' not in session:
+        flash("יש להתחבר כדי להעלות תמונה", "error")
+        return redirect(url_for('routes.login'))
+
+    file = request.files.get('profile_image')
+    user_id = request.form.get('user_id')
+
+    if not file or not user_id:
+        flash("חסר קובץ או מזהה משתמש", "error")
+        return redirect(request.referrer)
+
+    if session['user_id'] != user_id:
+        flash("אין לך הרשאה לשנות תמונה זו", "error")
+        return redirect(url_for('routes.home'))
+
+    # שמירת קובץ זמנית
+    filename = secure_filename(file.filename)
+    temp_path = os.path.join(TEMP_UPLOAD_FOLDER, filename)
+    os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
+    file.save(temp_path)
+
+    # העלאה ל-Firebase
+    storage_client = storage.Client.from_service_account_json("music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json")
+    bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
+    blob_name = f"profile_images/{user_id}_{uuid.uuid4().hex}_{filename}"
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(temp_path)
+    blob.make_public()
+
+    # ניקוי
+    os.remove(temp_path)
+
+    # עדכון במסד
+    db.collection("users").document(user_id).update({
+        "profile_image": blob.public_url
+    })
+
+    flash("📸 תמונת הפרופיל עודכנה בהצלחה!", "success")
+
+    # הפנייה חכמה
+    if session.get("role") == "teacher":
+        return redirect(url_for('routes.teacher_profile', teacher_id=user_id))
+    else:
+        return redirect(url_for('routes.user_profile'))
+

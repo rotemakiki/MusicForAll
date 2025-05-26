@@ -18,6 +18,8 @@
                 <li><a href="{{ url_for('routes.videos') }}">שיעורים</a></li>
                 <li><a href="{{ url_for('routes.songs') }}">שירים</a></li>
                 <li><a href="{{ url_for('routes.list_teachers') }}">רשימת מורים</a></li>
+                <li><a href="{{ url_for('routes.tutorials') }}">📘 עמוד הדרכה</a></li>
+
 
                 <li><a href="{{ url_for('routes.user_profile') }}">👤 {{ session.get('username') }}</a></li>
 
@@ -32,6 +34,7 @@
                 <li><a href="{{ url_for('routes.songs') }}">רשימת שירים</a></li>
                 <li><a href="{{ url_for('routes.login') }}">התחברות</a></li>
                 <li><a href="{{ url_for('routes.register') }}">הרשמה</a></li>
+                <li><a href="{{ url_for('routes.tutorials') }}">📘 עמוד הדרכה</a></li>
             {% endif %}
         </ul>
     </nav>
