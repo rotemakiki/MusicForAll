@@ -5,11 +5,19 @@
 {% block content %}
 <div class="container">
     <h1>רשימת שירים</h1>
+
+    {% if session.get('role') == 'teacher' %}
+        <a href="{{ url_for('routes.add_song_page') }}" class="btn">➕ הוסף שיר חדש</a>
+    {% endif %}
+
     <ul id="song-list">
         {% for song in songs %}
             <li id="song-{{ song.id }}">
                 <a href="{{ url_for('routes.chords', song_id=song.id) }}">{{ song.title }} - {{ song.artist }}</a>
-                <button class="delete-btn" onclick="deleteSong({{ song.id }})">🗑 מחק</button>
+
+                {% if session.get('user_id') == song.created_by %}
+                    <button class="delete-btn" onclick="deleteSong('{{ song.id }}')">🗑 מחק</button>
+                {% endif %}
             </li>
         {% endfor %}
     </ul>
@@ -37,6 +45,21 @@
 
     li {
         margin-bottom: 10px;
+    }
+
+    .btn {
+        display: inline-block;
+        margin-bottom: 20px;
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .btn:hover {
+        background-color: #0056b3;
     }
 </style>
 

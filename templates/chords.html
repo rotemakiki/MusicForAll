@@ -20,6 +20,10 @@
         <a href="{{ url_for('routes.play_song', song_id=song.id) }}" class="btn">🎵 נגן שיר</a>
         <a href="{{ url_for('routes.songs') }}" class="btn">📚 חזרה לרשימת השירים</a>
     </div>
+    {% if session.get('user_id') == song.created_by %}
+    <a href="{{ url_for('routes.edit_song', song_id=song.id) }}" class="btn">✏️ ערוך שיר</a>
+    {% endif %}
+
 </div>
 
 <style>

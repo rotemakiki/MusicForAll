@@ -13,7 +13,11 @@ routes = Blueprint('routes', __name__)
 
 @routes.route('/')
 def home():
-    return render_template('home.html')
+    if 'user_id' in session:
+        return render_template('home_user.html')
+    else:
+        return render_template('home_guest.html')
+
 
 from firebase_config import db
 
@@ -84,7 +88,11 @@ def login():
             flash("Invalid email or password!", "error")
             return redirect(url_for('routes.login'))
 
-        # התחברות מוצלחת
+        # התחברות מוצלחת - שמירה ב-session
+        session['user_id'] = user_doc.id
+        session['username'] = user['username']
+        session['role'] = user['role']
+
         flash("Login successful!", "success")
         return redirect(url_for('routes.home'))
 
@@ -127,6 +135,7 @@ def songs():
     for doc in song_docs:
         song = doc.to_dict()
         song["id"] = doc.id
+        song["created_by"] = song.get("created_by", None)  # הוספה חשובה!
         all_songs.append(song)
 
     return render_template('songs.html', songs=all_songs)
@@ -150,7 +159,9 @@ def add_song():
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
         "chords": json.dumps(data["chords"]),  # הפתרון לשגיאה
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow(),
+        "created_by": session.get("user_id"),
+
     }
 
 
@@ -256,6 +267,10 @@ def list_teachers():
 
 @routes.route('/edit_teacher_profile/<string:teacher_id>', methods=['GET', 'POST'])
 def edit_teacher_profile(teacher_id):
+    if 'user_id' not in session or session['user_id'] != teacher_id:
+        flash("אין לך הרשאה לגשת לעמוד זה", "error")
+        return redirect(url_for('routes.home'))
+
     doc = db.collection("users").document(teacher_id).get()
     if not doc.exists:
         return "מורה לא נמצא", 404
@@ -270,7 +285,6 @@ def edit_teacher_profile(teacher_id):
         teaches_online_str = request.form.get('teaches_online')
         teaches_online = True if teaches_online_str == 'true' else False
 
-
         db.collection("users").document(teacher_id).update({
             "instruments": instruments,
             "styles": styles,
@@ -283,6 +297,7 @@ def edit_teacher_profile(teacher_id):
 
     teacher["id"] = teacher_id
     return render_template("edit_teacher_profile.html", teacher=teacher)
+
 
 import os
 import uuid
@@ -339,3 +354,103 @@ def upload_video():
 
     flash("🎉 הסרטון עלה בהצלחה!", "success")
     return redirect(url_for('routes.teacher_profile', teacher_id=teacher_id))
+
+@routes.route('/logout')
+def logout():
+    session.clear()
+    flash("התנתקת מהמערכת", "success")
+    return redirect(url_for('routes.home'))
+
+@routes.route('/profile')
+def user_profile():
+    if 'user_id' not in session:
+        flash("יש להתחבר כדי לגשת לפרופיל", "error")
+        return redirect(url_for('routes.login'))
+
+    user_id = session['user_id']
+    user_doc = db.collection("users").document(user_id).get()
+
+    if not user_doc.exists:
+        return "המשתמש לא נמצא", 404
+
+    user = user_doc.to_dict()
+    user["id"] = user_id
+
+    if user["role"] == "teacher":
+        return redirect(url_for('routes.teacher_profile', teacher_id=user_id))
+    elif user["role"] == "student":
+        return render_template("student_profile.html", student=user)
+    else:
+        return "תפקיד לא מוכר", 400
+
+@routes.route('/api/students/<string:student_id>', methods=['GET'])
+def get_student_profile(student_id):
+    doc = db.collection("users").document(student_id).get()
+    if not doc.exists:
+        return jsonify({"error": "Student not found"}), 404
+
+    user = doc.to_dict()
+    if user.get("role") != "student":
+        return jsonify({"error": "User is not a student"}), 400
+
+    result = {
+        "id": student_id,
+        "username": user.get("username", ""),
+        "email": user.get("email", ""),
+        "interests": user.get("interests", ""),
+        "style": user.get("style", ""),
+        "future_learning": user.get("future_learning", "")
+    }
+    return jsonify(result), 200
+
+
+@routes.route('/api/students/<string:student_id>', methods=['PATCH'])
+def update_student_profile(student_id):
+    if 'user_id' not in session or session['user_id'] != student_id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+
+    updated_fields = {
+        "username": data.get("username", ""),
+        "interests": data.get("interests", ""),
+        "style": data.get("style", ""),
+        "future_learning": data.get("future_learning", "")
+    }
+
+    db.collection("users").document(student_id).update(updated_fields)
+    return jsonify({"message": "Profile updated successfully"}), 200
+
+@routes.route('/edit_song/<string:song_id>', methods=['GET', 'POST'])
+def edit_song(song_id):
+    if 'user_id' not in session:
+        flash("יש להתחבר כדי לערוך שיר", "error")
+        return redirect(url_for('routes.login'))
+
+    doc = db.collection("songs").document(song_id).get()
+    if not doc.exists:
+        return "שיר לא נמצא", 404
+
+    song = doc.to_dict()
+
+    if song.get("created_by") != session["user_id"]:
+        flash("אין לך הרשאה לערוך שיר זה", "error")
+        return redirect(url_for('routes.songs'))
+
+    if request.method == 'POST':
+        data = request.form
+        updated_fields = {
+            "title": data.get("title"),
+            "artist": data.get("artist"),
+            "key": data.get("key"),
+            "key_type": data.get("key_type"),
+            "time_signature": data.get("time_signature"),
+            "bpm": int(data.get("bpm", 120)),
+            "video_url": data.get("video_url")
+        }
+        db.collection("songs").document(song_id).update(updated_fields)
+        flash("🎵 השיר עודכן בהצלחה!", "success")
+        return redirect(url_for('routes.chords', song_id=song_id))
+
+    song["id"] = song_id
+    return render_template("edit_song.html", song=song)

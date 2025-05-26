@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}ברוך הבא, {{ session.get('username') }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>🎬 סרטונים שהתחלת לצפות בהם</h2>
+    <p><em>סימנת שברצונך להמשיך לצפות בהם</em></p>
+    <div class="video-grid">
+        <!-- דוגמאות לווידאו - בעתיד נטען מהמסד -->
+        {% for i in range(3) %}
+        <video width="300" height="180" controls>
+            <source src="{{ url_for('static', filename='videos/sample.mp4') }}" type="video/mp4">
+            הדפדפן שלך לא תומך בווידאו.
+        </video>
+        {% endfor %}
+    </div>
+
+    <h2 style="margin-top: 40px;">🎯 סרטונים מומלצים בשבילך</h2>
+    <p><em>בהתאם לתחומי העניין שלך</em></p>
+    <div class="video-grid">
+        {% for i in range(3) %}
+        <video width="300" height="180" controls>
+            <source src="{{ url_for('static', filename='videos/sample.mp4') }}" type="video/mp4">
+            הדפדפן שלך לא תומך בווידאו.
+        </video>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .video-grid {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}

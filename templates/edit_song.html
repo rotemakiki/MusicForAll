@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}עריכת שיר - {{ song.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>✏️ עריכת שיר</h1>
+
+    <form method="POST" class="styled-form">
+        <label for="title">שם השיר:</label>
+        <input type="text" id="title" name="title" value="{{ song.title }}" required>
+
+        <label for="artist">שם האמן:</label>
+        <input type="text" id="artist" name="artist" value="{{ song.artist }}" required>
+
+        <label for="key">סולם:</label>
+        <input type="text" id="key" name="key" value="{{ song.key }}" required>
+
+        <label for="key_type">סוג סולם:</label>
+        <input type="text" id="key_type" name="key_type" value="{{ song.key_type }}" required>
+
+        <label for="time_signature">מקצב:</label>
+        <input type="text" id="time_signature" name="time_signature" value="{{ song.time_signature }}" required>
+
+        <label for="bpm">BPM (מהירות):</label>
+        <input type="number" id="bpm" name="bpm" value="{{ song.bpm }}" required>
+
+        <label for="video_url">🎥 קישור לסרטון:</label>
+        <input type="text" id="video_url" name="video_url" value="{{ song.video_url }}" required>
+
+        <button type="submit" class="btn">💾 שמור שינויים</button>
+    </form>
+</div>
+
+<style>
+    .styled-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 500px;
+        margin: auto;
+    }
+
+    .styled-form label {
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .styled-form input {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn {
+        background-color: #28a745;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: #218838;
+    }
+</style>
+{% endblock %}
