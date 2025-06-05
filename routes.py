@@ -367,9 +367,14 @@ def upload_video():
 
 @routes.route('/logout')
 def logout():
+    user_id = session.get('user_id')
+    if user_id:
+        # Update is_logged_in to False in Firestore
+        db.collection("users").document(user_id).update({"is_logged_in": False})
     session.clear()
     flash("התנתקת מהמערכת", "success")
     return redirect(url_for('routes.home'))
+
 
 @routes.route('/profile')
 def user_profile():
