@@ -43,6 +43,7 @@ def register():
             "role": role,
             "password": hashed_password,
             "created_at": datetime.utcnow(),
+            "is_logged_in": False,
             "profile_image": "",  # יתעדכן לאחר העלאה
 
         }
@@ -85,6 +86,11 @@ def login():
         user_doc = user_query[0]
         user = user_doc.to_dict()
 
+        # בדיקה אם המשתמש כבר מחובר ממקום אחר
+        if user.get('is_logged_in'):
+            flash("המשתמש כבר מחובר ממכשיר אחר!", "error")
+            return redirect(url_for('routes.login'))
+
         # בדיקת סיסמה
         if not check_password_hash(user['password'], password):
             flash("Invalid email or password!", "error")
@@ -95,11 +101,13 @@ def login():
         session['username'] = user['username']
         session['role'] = user['role']
 
+        # עדכון במסד: המשתמש מחובר
+        db.collection("users").document(user_doc.id).update({"is_logged_in": True})
+
         flash("Login successful!", "success")
         return redirect(url_for('routes.home'))
 
     return render_template('login.html')
-
 
 @routes.route('/videos')
 def videos():

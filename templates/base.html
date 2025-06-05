@@ -24,7 +24,6 @@
                 <li><a href="{{ url_for('routes.user_profile') }}">👤 {{ session.get('username') }}</a></li>
 
                 {% if session.get('role') == 'teacher' %}
-                    <li><a href="{{ url_for('routes.edit_teacher_profile', teacher_id=session.get('user_id')) }}">הפרופיל שלי</a></li>
                     <li><a href="{{ url_for('routes.add_song_page') }}">➕ הוספת שיר</a></li>
                 {% endif %}
 
@@ -32,8 +31,6 @@
             {% else %}
                 <li><a href="{{ url_for('routes.home') }}">דף הבית</a></li>
                 <li><a href="{{ url_for('routes.songs') }}">רשימת שירים</a></li>
-                <li><a href="{{ url_for('routes.login') }}">התחברות</a></li>
-                <li><a href="{{ url_for('routes.register') }}">הרשמה</a></li>
                 <li><a href="{{ url_for('routes.tutorials') }}">📘 עמוד הדרכה</a></li>
             {% endif %}
         </ul>

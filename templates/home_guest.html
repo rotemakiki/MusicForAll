@@ -19,11 +19,12 @@
         </video>
     </div>
 
-    <!-- כפתורים לאורחים -->
-    <div class="buttons">
-        <a href="{{ url_for('routes.login') }}" class="btn">🔑 התחברות</a>
-        <a href="{{ url_for('routes.register') }}" class="btn">📝 הרשמה</a>
-        <a href="{{ url_for('routes.songs') }}" class="btn">🎧 צפייה בשירים</a>
+
+    <div class="top-left-buttons">
+    <a href="{{ url_for('routes.login') }}" class="btn small-btn">🔑 התחברות</a>
+    <a href="{{ url_for('routes.register') }}" class="btn small-btn">📝 הרשמה</a>
     </div>
+
+
 </div>
 {% endblock %}

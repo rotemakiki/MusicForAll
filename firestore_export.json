@@ -1,16 +1,99 @@
 {
   "users": {
     "AWsBNokbQbtuj3MEsJkE": {
-      "styles": "פופ",
       "password": "pbkdf2:sha256:600000$5ft1LqWBXWpiDsiK$6bfc47e28750513f6c5cabffe70672661c0be23259fcb36f2fc2a2970aa6e9c3",
       "created_at": "2025-05-20T12:28:32.367936+00:00",
+      "styles": "פופ,סמבה",
       "is_available": true,
       "role": "teacher",
       "email": "rrr@gmail.com",
-      "instruments": "צ'לו",
-      "username": "רותם עקיקי"
+      "instruments": "תופים,גיטרה,כינור",
+      "username": "רותם עקיקי",
+      "teaches_online": true
+    },
+    "MBFvG9qcjY9sPyUq1TnV": {
+      "password": "pbkdf2:sha256:600000$2cx1dLteajbd792e$387addc55a61f3e4680fc92155b752f6ed0e971039c30710b5a8ab8b61be502a",
+      "created_at": "2025-05-26T09:04:19.347393+00:00",
+      "email": "rot@gmail.com",
+      "username": "בר עקיקי",
+      "role": "student"
+    },
+    "QFtpTIzONNA5cEZvuNvA": {
+      "password": "pbkdf2:sha256:600000$vWkiBXFpfyBls5zQ$5176974d89a9f85252aa3599cbde157fc4975a87acb9a6601a2a4515db94d352",
+      "created_at": "2025-05-26T14:09:14.934698+00:00",
+      "profile_image": "",
+      "email": "ilan@gmail.com",
+      "username": "אילן רוזנפלד",
+      "role": "student"
+    },
+    "QkthltCOrNmfnFUw4KkC": {
+      "styles": "",
+      "password": "pbkdf2:sha256:600000$vDCLIDiGK1NJ74MU$cc8086d0062ed230dceca2cb78a09f9c2f1ffdb575dbeb3ef82c65acf56ee944",
+      "profile_image": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/profile_images/QkthltCOrNmfnFUw4KkC_952382399c544b2fa3669056de66c35f_4cf3933f-c7e2-4c41-a816-c3ac052c7fa4.jpg",
+      "is_available": false,
+      "created_at": "2025-05-26T09:51:11.367515+00:00",
+      "role": "teacher",
+      "email": "oneg@gmail.com",
+      "instruments": "",
+      "username": "עונג עקיקי"
+    },
+    "eVr3ruKbrZD2fnU5L7jH": {
+      "password": "pbkdf2:sha256:600000$oYeaTEZOrFH1mlTg$0cf35b8ca4ff1c4258934efb38bc6635d2f6790c96c4037c847ae37530e603d4",
+      "created_at": "2025-05-28T10:03:42.651679+00:00",
+      "profile_image": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/profile_images/eVr3ruKbrZD2fnU5L7jH_20d922540e1a46e691644518843c7c2d_66f1e8d8-78d1-4f60-911e-200ad71a88c9.jpg",
+      "is_available": true,
+      "styles": "רוק,היפ הופ,בלוז,רגאיי",
+      "role": "teacher",
+      "email": "saargurr@gmail.com",
+      "instruments": "גיטרה,הפקה מוסיקלית",
+      "username": "סער גור",
+      "teaches_online": false
+    },
+    "hWDQzNJcpGC53cevsPBg": {
+      "password": "pbkdf2:sha256:600000$nzwc0OkOqcNerl6s$105867f914b05594a4a0d778575eeaa5eed874c6eff17fe4bb5117763064b924",
+      "created_at": "2025-05-20T13:43:19.419384+00:00",
+      "styles": "רוק,היפ הופ,פאנק",
+      "is_available": true,
+      "role": "teacher",
+      "email": "rr33@gmail.com",
+      "instruments": "גיטרה,הפקה מוסיקלית,יוקילילי",
+      "username": "דדדד",
+      "teaches_online": false
     }
   },
-  "songs": {},
-  "videos": {}
+  "songs": {
+    "GBsKtnY86Pa4Oe2UvcWo": {
+      "created_at": "2025-05-26T09:53:20.990835+00:00",
+      "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
+      "key": "C",
+      "chords": "[[\"D\", \"D\", \"D\"], [\"Dsus4\", \"Dsus4\", \"Dsus4\"], [\"E#sus4\", \"E#sus4\", \"E#sus4\", \"E#sus4\"]]",
+      "artist": "עליכם",
+      "bpm": 70,
+      "title": "שלום",
+      "created_by": "QkthltCOrNmfnFUw4KkC",
+      "key_type": "מינור",
+      "time_signature": "4/4"
+    },
+    "bLQoNa1iGQeY5wl4sW7Z": {
+      "created_at": "2025-05-28T10:07:34.264540+00:00",
+      "video_url": "https://www.youtube.com/watch?v=4pZzLJp5drI",
+      "artist": "טונה",
+      "chords": "[[\"Bmaj7\", \"Bmaj7\", \"Bmaj7\", \"Bmaj7\"], [\"Dbmaj7\", \"Dbmaj7\", \"Dbmaj7\"]]",
+      "key": "מי - E",
+      "bpm": 78,
+      "title": "גם זה יעבור",
+      "created_by": "eVr3ruKbrZD2fnU5L7jH",
+      "key_type": "מינור - Minor",
+      "time_signature": "4/4"
+    }
+  },
+  "videos": {
+    "Mrjff2v1txsirwnRONRr": {
+      "uploaded_by": "AWsBNokbQbtuj3MEsJkE",
+      "title": "סער מנגן",
+      "description": "מנגן יפה בגיטרה",
+      "url": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/videos/451db636-090d-455f-a55a-49a7043143c0_saar_play.mp4",
+      "uploaded_at": "2025-05-21T09:44:15.958344+00:00"
+    }
+  }
 }
