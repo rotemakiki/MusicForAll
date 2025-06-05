@@ -9,24 +9,34 @@
 </head>
 <body>
 
-    <!-- תפריט המבורגר -->
+    <!-- תפריט ניווט ראשי -->
     <nav class="navbar">
-        <div class="menu-icon" onclick="toggleMenu()">☰</div>
+        {% if session.get('user_id') %}
+            {% set profile_image = session.get('profile_image', '') %}
+            {% if profile_image %}
+                <!-- תמונת פרופיל במקום המבורגר -->
+                <img src="{{ profile_image }}" alt="תמונת פרופיל" class="profile-icon" onclick="toggleMenu()" style="width: 44px; height: 44px; object-fit: cover; border-radius: 50%; cursor: pointer;">
+            {% else %}
+                <!-- אייקון המבורגר רגיל -->
+                <div class="menu-icon" onclick="toggleMenu()">☰</div>
+            {% endif %}
+        {% else %}
+            <!-- לא מחובר: תמיד המבורגר -->
+            <div class="menu-icon" onclick="toggleMenu()">☰</div>
+        {% endif %}
         <ul class="nav-links" id="nav-links">
+            {% set roles = session.get('roles', []) %}
             {% if session.get('user_id') %}
                 <li><a href="{{ url_for('routes.home') }}">דף הבית</a></li>
                 <li><a href="{{ url_for('routes.videos') }}">שיעורים</a></li>
                 <li><a href="{{ url_for('routes.songs') }}">שירים</a></li>
                 <li><a href="{{ url_for('routes.list_teachers') }}">רשימת מורים</a></li>
                 <li><a href="{{ url_for('routes.tutorials') }}">📘 עמוד הדרכה</a></li>
-
-
+                <li><a href="{{ url_for('routes.info_page') }}">עמוד מידע</a></li>
                 <li><a href="{{ url_for('routes.user_profile') }}">👤 {{ session.get('username') }}</a></li>
-
-                {% if session.get('role') == 'teacher' %}
+                {% if 'teacher' in roles or 'admin' in roles %}
                     <li><a href="{{ url_for('routes.add_song_page') }}">➕ הוספת שיר</a></li>
                 {% endif %}
-
                 <li><a href="{{ url_for('routes.logout') }}">🚪 התנתק</a></li>
             {% else %}
                 <li><a href="{{ url_for('routes.home') }}">דף הבית</a></li>
@@ -40,5 +50,16 @@
         {% block content %}{% endblock %}
     </div>
 
+    <style>
+        /* הוספת עיצוב לתמונת פרופיל בתפריט */
+        .profile-icon {
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px #0002;
+            transition: border 0.2s;
+        }
+        .profile-icon:hover {
+            border: 2px solid #007bff;
+        }
+    </style>
 </body>
 </html>

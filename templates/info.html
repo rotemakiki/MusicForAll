@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}עמוד מידע{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>📝 עמוד מידע</h1>
+
+    <!-- Check if user has admin role - using session directly -->
+    {% if session['roles'] and 'admin' in session['roles'] %}
+    <!-- טופס פרסום פוסט חדש - רק למנהל -->
+    <form method="POST" style="margin-bottom: 30px;">
+        <label for="content"><b>כתוב פוסט חדש:</b></label>
+        <textarea name="content" id="content" rows="3" style="width: 100%;" required></textarea>
+        <button type="submit" class="btn" style="margin-top: 10px;">פרסם</button>
+    </form>
+    {% endif %}
+
+    <h2>כל הפוסטים:</h2>
+    {% if posts %}
+        <ul style="text-align: right;">
+            {% for post in posts %}
+            <li style="background: #f9f9f9; border-radius: 8px; margin-bottom: 15px; padding: 12px;">
+                <div style="font-size: 1.1em;">{{ post.content }}</div>
+                <div style="font-size: 0.9em; color: gray; margin-top: 7px;">
+                    🕒 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }} | נכתב ע"י: {{ post.author_name }}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>עדיין לא פורסם מידע.</p>
+    {% endif %}
+</div>
+{% endblock %}
