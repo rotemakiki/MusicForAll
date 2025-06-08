@@ -6,7 +6,7 @@
       "profile_image": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/profile_images/OLKXZUtvyZ6EosAkJHJj_16a7d2f87a0a4f4b8378c406667eacc1_1_.jpg",
       "is_available": true,
       "created_at": "2025-06-05T07:27:54.079935+00:00",
-      "is_logged_in": true,
+      "is_logged_in": false,
       "roles": [
         "teacher",
         "admin"
@@ -15,6 +15,21 @@
       "instruments": "",
       "username": "oneg",
       "teaches_online": true
+    },
+    "z3oSwSkZoqAiAoNM3Ks4": {
+      "styles": "",
+      "password": "pbkdf2:sha256:600000$LfgQdqRuYqit6Mb6$c26f89e2178844fa8e90059c7be8a17f11d481095f11e4291e649ae183921d12",
+      "profile_image": "",
+      "is_available": false,
+      "created_at": "2025-06-05T09:14:26.520193+00:00",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "email": "saargura@gmail.com",
+      "instruments": "",
+      "username": "Saar Gur",
+      "is_logged_in": false
     }
   },
   "songs": {
@@ -41,6 +56,18 @@
       "created_by": "eVr3ruKbrZD2fnU5L7jH",
       "key_type": "מינור - Minor",
       "time_signature": "4/4"
+    },
+    "zNahyRe46FA5wxXsXBzZ": {
+      "created_at": "2025-06-05T09:26:56.334349+00:00",
+      "video_url": "https://www.youtube.com/watch?v=4pZzLJp5drI",
+      "key": "מי - E",
+      "chords": "[[\"Em\", \"Em\", \"Am\", \"Am\"], [\"Am\", \"Am\", \"Am\", \"Am\"]]",
+      "artist": "טונה",
+      "bpm": 78,
+      "title": "גם זה יעבור",
+      "created_by": "z3oSwSkZoqAiAoNM3Ks4",
+      "key_type": "מינור - Minor",
+      "time_signature": "4/4"
     }
   },
   "videos": {
@@ -50,6 +77,13 @@
       "description": "מנגן יפה בגיטרה",
       "url": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/videos/451db636-090d-455f-a55a-49a7043143c0_saar_play.mp4",
       "uploaded_at": "2025-05-21T09:44:15.958344+00:00"
+    },
+    "PO2WvJyfCBUml5cgHxjR": {
+      "uploaded_by": "OLKXZUtvyZ6EosAkJHJj",
+      "title": "fff",
+      "description": "fff",
+      "url": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/videos/5a7d3ae2-55fa-4c87-9d91-162a31ce5323_saar_play.mp4",
+      "uploaded_at": "2025-06-05T08:50:07.426036+00:00"
     }
   }
 }

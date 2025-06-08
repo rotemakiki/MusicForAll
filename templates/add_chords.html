@@ -24,6 +24,9 @@
             <h3>רשימת אקורדים לשיר</h3>
             <div id="chord-lines"></div>
 
+            <!-- Edit/Delete controls will appear here dynamically -->
+            <div id="edit-delete-controls" style="margin-bottom: 15px;"></div>
+
             <div class="builder-buttons">
                 <button type="button" class="btn" onclick="addChordToLine()">➕ הוסף אקורד לשורה</button>
                 <button type="button" class="btn" onclick="addNewLine()">⬇️ ירידת שורה</button>
@@ -43,14 +46,53 @@
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
-        margin-bottom: 10px;
+        margin-bottom: 18px;
+        padding: 12px 14px;
+        background: #f8faff;
+        border: 2px solid #b4d7ff;
+        border-radius: 16px;
+        min-height: 54px;
+        direction: ltr;
+        box-shadow: 0 2px 8px rgba(135,180,255,0.07);
+        transition: background 0.2s;
+        align-items: center;
     }
     .chord-box {
-        padding: 10px;
+        padding: 10px 16px;
         border: 2px solid #aaa;
         border-radius: 8px;
         font-weight: bold;
         background-color: white;
+        min-width: 56px;
+        text-align: center;
+        cursor: pointer;
+        position: relative;
+        transition: border 0.15s;
+    }
+    .chord-box.selected {
+        border: 2.5px solid #007bff;
+        box-shadow: 0 0 9px #a5d4ff;
+        background: #e6f1ff;
+    }
+    .edit-btn, .delete-btn {
+        margin-right: 2px;
+        background: none;
+        border: none;
+        color: #007bff;
+        font-size: 17px;
+        cursor: pointer;
+        margin-left: 4px;
+        vertical-align: middle;
+        transition: color 0.2s;
+    }
+    .delete-btn {
+        color: #e74c3c;
+    }
+    .edit-btn:hover {
+        color: #0056b3;
+    }
+    .delete-btn:hover {
+        color: #b81e1e;
     }
     .builder-buttons {
         margin-top: 20px;
@@ -105,7 +147,18 @@
     let selectedType = "";
     let selectedChord = null;
 
-    let songChords = [[]];
+    // Load chords from localStorage if exist, else start new
+    let songChords;
+    try {
+        const saved = localStorage.getItem("chords");
+        songChords = saved ? JSON.parse(saved) : [[]];
+    } catch {
+        songChords = [[]];
+    }
+
+    // For selecting an existing chord to edit/delete
+    let selectedChordLineIndex = null;
+    let selectedChordIndexInLine = null;
 
     function getCurrentAccidental() {
         return accidentalOptions[accidentalIndex];
@@ -172,31 +225,117 @@
         if (!selectedChord) return;
         songChords[songChords.length - 1].push(selectedChord);
         renderChordLines();
+        // Deselect after adding
+        selectedChordLineIndex = null;
+        selectedChordIndexInLine = null;
+        renderEditDeleteControls();
     }
 
     function addNewLine() {
         songChords.push([]);
         renderChordLines();
+        selectedChordLineIndex = null;
+        selectedChordIndexInLine = null;
+        renderEditDeleteControls();
     }
 
     function renderChordLines() {
         const container = document.getElementById("chord-lines");
         container.innerHTML = "";
-        songChords.forEach(line => {
+        songChords.forEach((line, lineIdx) => {
             const lineDiv = document.createElement("div");
             lineDiv.className = "chord-line";
-            line.forEach(chord => {
+            line.forEach((chord, chordIdx) => {
                 const box = document.createElement("div");
                 box.className = "chord-box";
                 box.innerText = chord;
+
+                // Highlight if selected
+                if (selectedChordLineIndex === lineIdx && selectedChordIndexInLine === chordIdx) {
+                    box.classList.add("selected");
+                }
+
+                // Clicking a chord selects it for edit/delete
+                box.addEventListener("click", (e) => {
+                    selectedChordLineIndex = lineIdx;
+                    selectedChordIndexInLine = chordIdx;
+                    renderChordLines();
+                    renderEditDeleteControls();
+                    e.stopPropagation();
+                });
+
                 lineDiv.appendChild(box);
             });
             container.appendChild(lineDiv);
         });
     }
 
+    function renderEditDeleteControls() {
+        const controlsDiv = document.getElementById("edit-delete-controls");
+        controlsDiv.innerHTML = "";
+
+        if (selectedChordLineIndex !== null && selectedChordIndexInLine !== null) {
+            // Get chord
+            const chord = songChords[selectedChordLineIndex][selectedChordIndexInLine];
+            // Edit button
+            const editBtn = document.createElement("button");
+            editBtn.className = "edit-btn";
+            editBtn.innerHTML = "🖉 ערוך";
+            editBtn.onclick = () => editChord(selectedChordLineIndex, selectedChordIndexInLine);
+            controlsDiv.appendChild(editBtn);
+
+            // Delete button
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.innerHTML = "🗑 מחק";
+            deleteBtn.onclick = () => deleteChord(selectedChordLineIndex, selectedChordIndexInLine);
+            controlsDiv.appendChild(deleteBtn);
+        }
+    }
+
+    // Edit chord: loads the values to the picker and removes from list
+    function editChord(lineIdx, chordIdx) {
+        const chord = songChords[lineIdx][chordIdx];
+        // Regex to parse chord parts (example: "C#m7" => letter=C, acc=#, type=m7)
+        const chordMatch = chord.match(/^([A-G])([#b]?)(.*)$/);
+        if (chordMatch) {
+            selectedLetter = chordMatch[1];
+            accidentalIndex = accidentalOptions.indexOf(chordMatch[2]);
+            selectedType = chordMatch[3] || "";
+            updateSelectedChord();
+            renderRootButtons();
+            renderTypeButtons();
+        }
+        // Remove the chord from the array
+        songChords[lineIdx].splice(chordIdx, 1);
+        // If line is empty after deletion, remove the line
+        if (songChords[lineIdx].length === 0 && songChords.length > 1) {
+            songChords.splice(lineIdx, 1);
+        }
+        // Clear selection
+        selectedChordLineIndex = null;
+        selectedChordIndexInLine = null;
+        renderChordLines();
+        renderEditDeleteControls();
+    }
+
+    // Delete chord: removes chord from line
+    function deleteChord(lineIdx, chordIdx) {
+        songChords[lineIdx].splice(chordIdx, 1);
+        // If line is empty after deletion, remove the line
+        if (songChords[lineIdx].length === 0 && songChords.length > 1) {
+            songChords.splice(lineIdx, 1);
+        }
+        // Clear selection
+        selectedChordLineIndex = null;
+        selectedChordIndexInLine = null;
+        renderChordLines();
+        renderEditDeleteControls();
+    }
+
     function finishAndReturn() {
         localStorage.setItem("chords", JSON.stringify(songChords));
+        localStorage.setItem("justReturnedFromChords", "true");
         window.location.href = "/add_song";
     }
 
@@ -204,8 +343,21 @@
         renderRootButtons();
         renderTypeButtons();
         renderChordLines();
+        renderEditDeleteControls();
 
         document.getElementById("toggle-accidental").addEventListener("click", toggleAccidental);
+
+        // Clicking outside deselects
+        document.body.addEventListener("click", () => {
+            selectedChordLineIndex = null;
+            selectedChordIndexInLine = null;
+            renderChordLines();
+            renderEditDeleteControls();
+        });
+        // Prevent click inside builder from deselecting
+        document.querySelector('.chord-builder').addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
     });
 </script>
 {% endblock %}

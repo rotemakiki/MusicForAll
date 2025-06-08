@@ -172,6 +172,8 @@ def add_song():
         "artist": data["artist"],
         "key": data["key"],
         "key_type": data["key_type"],
+        "difficulty": data["difficulty"],                 # נוספה רמת קושי
+        "difficulty_approved": False,                     # מסומן תמיד כלא מאושר
         "time_signature": data["time_signature"],
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
@@ -179,6 +181,7 @@ def add_song():
         "created_at": datetime.utcnow(),
         "created_by": session.get("user_id"),
     }
+
 
     # שמירה ב-Firestore
     song_ref = db.collection("songs").add(new_song)

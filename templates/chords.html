@@ -10,6 +10,17 @@
     <p>מקצב: {{ song.time_signature }}</p>
     <p>BPM (מהירות): {{ song.bpm }}</p>
 
+    {% if song.difficulty %}
+    <p>
+        <b>רמת קושי:</b>
+        {{ song.difficulty }}
+        {% if not song.difficulty_approved %}
+            <span style="color: orange; font-size: 0.93em;">*</span>
+            <span style="font-size: 0.85em; color: gray;">(ממתין לאישור מנהל)</span>
+        {% endif %}
+    </p>
+    {% endif %}
+
     <!-- וידאו של השיר -->
     <div class="video-container">
         <iframe width="560" height="315" src="{{ song.video_url }}" frameborder="0" allowfullscreen></iframe>
