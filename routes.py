@@ -456,6 +456,8 @@ def update_student_profile(student_id):
     db.collection("users").document(student_id).update(updated_fields)
     return jsonify({"message": "Profile updated successfully"}), 200
 
+# Replace your existing edit_song route with this updated version
+
 @routes.route('/edit_song/<string:song_id>', methods=['GET', 'POST'])
 def edit_song(song_id):
     if 'user_id' not in session:
@@ -473,7 +475,7 @@ def edit_song(song_id):
         flash("אין לך הרשאה לערוך שיר זה", "error")
         return redirect(url_for('routes.songs'))
 
-
+    # Handle the old POST method for backward compatibility (if needed)
     if request.method == 'POST':
         data = request.form
         updated_fields = {
@@ -489,7 +491,15 @@ def edit_song(song_id):
         flash("🎵 השיר עודכן בהצלחה!", "success")
         return redirect(url_for('routes.chords', song_id=song_id))
 
+    # Prepare song data for template
     song["id"] = song_id
+
+    # Parse chords JSON string back to list/object for JavaScript
+    try:
+        song["chords"] = json.loads(song.get("chords", "[]"))
+    except:
+        song["chords"] = []
+
     return render_template("edit_song.html", song=song)
 
 @routes.route('/tutorials')
@@ -585,3 +595,50 @@ def info_page():
             return redirect(url_for('routes.info_page'))
 
     return render_template("info.html", posts=posts)
+
+# Add this route to your routes.py file
+
+@routes.route('/api/edit_song/<string:song_id>', methods=['PUT'])
+def edit_song_api(song_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    # Get the song document
+    doc = db.collection("songs").document(song_id).get()
+    if not doc.exists:
+        return jsonify({"error": "Song not found"}), 404
+
+    song = doc.to_dict()
+
+    # Check authorization - only creator or admin can edit
+    user_roles = session.get("roles", [])
+    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
+
+    # Get the JSON data from request
+    data = request.get_json()
+
+    # Validate required fields
+    required_fields = ["title", "artist", "key", "key_type", "time_signature", "bpm", "video_url", "chords"]
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({"error": f"Missing or empty field: {field}"}), 400
+
+    # Prepare updated fields
+    updated_fields = {
+        "title": data["title"],
+        "artist": data["artist"],
+        "key": data["key"],
+        "key_type": data["key_type"],
+        "difficulty": data["difficulty"],
+        "time_signature": data["time_signature"],
+        "bpm": int(data["bpm"]),
+        "video_url": data["video_url"],
+        "chords": json.dumps(data["chords"]),  # Store as JSON string
+        "updated_at": datetime.utcnow()  # Add timestamp for when it was updated
+    }
+
+    # Update the song in Firestore
+    db.collection("songs").document(song_id).update(updated_fields)
+
+    return jsonify({"message": "השיר עודכן בהצלחה!"}), 200

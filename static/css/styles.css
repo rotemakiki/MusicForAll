@@ -155,3 +155,7 @@ body {
 .small-btn:hover {
     background: #0056b3;
 }
+
+.chord-row {
+    direction: ltr;
+}

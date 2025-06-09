@@ -336,7 +336,16 @@
     function finishAndReturn() {
         localStorage.setItem("chords", JSON.stringify(songChords));
         localStorage.setItem("justReturnedFromChords", "true");
-        window.location.href = "/add_song";
+
+        // Check if we're editing an existing song
+        const editingSongId = localStorage.getItem("editingSongId");
+        if (editingSongId) {
+            // We're editing - go back to edit song page
+            window.location.href = `/edit_song/${editingSongId}`;
+        } else {
+            // We're adding a new song - go to add song page
+            window.location.href = "/add_song";
+        }
     }
 
     document.addEventListener("DOMContentLoaded", () => {

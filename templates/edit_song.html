@@ -5,8 +5,9 @@
 {% block content %}
 <div class="container">
     <h1>✏️ עריכת שיר</h1>
+    <form id="edit-song-form" class="styled-form">
+        <input type="hidden" id="song_id" name="song_id" value="{{ song.id }}">
 
-    <form method="POST" class="styled-form">
         <label for="title">שם השיר:</label>
         <input type="text" id="title" name="title" value="{{ song.title }}" required>
 
@@ -14,30 +15,236 @@
         <input type="text" id="artist" name="artist" value="{{ song.artist }}" required>
 
         <label for="key">סולם:</label>
-        <input type="text" id="key" name="key" value="{{ song.key }}" required>
+        <select id="key" name="key" required>
+            <option value="">בחר סולם</option>
+            <option value="C" {% if song.key == 'C' %}selected{% endif %}>דו - C</option>
+            <option value="D" {% if song.key == 'D' %}selected{% endif %}>רה - D</option>
+            <option value="E" {% if song.key == 'E' %}selected{% endif %}>מי - E</option>
+            <option value="F" {% if song.key == 'F' %}selected{% endif %}>פה - F</option>
+            <option value="G" {% if song.key == 'G' %}selected{% endif %}>סול - G</option>
+            <option value="A" {% if song.key == 'A' %}selected{% endif %}>לה - A</option>
+            <option value="B" {% if song.key == 'B' %}selected{% endif %}>סי - B</option>
+        </select>
 
         <label for="key_type">סוג סולם:</label>
-        <input type="text" id="key_type" name="key_type" value="{{ song.key_type }}" required>
+        <select id="key_type" name="key_type" required>
+            <option value="">בחר סוג</option>
+            <option value="major" {% if song.key_type == 'major' %}selected{% endif %}>מז'ור - Major</option>
+            <option value="minor" {% if song.key_type == 'minor' %}selected{% endif %}>מינור - Minor</option>
+            <option value="harmonic_minor" {% if song.key_type == 'harmonic_minor' %}selected{% endif %}>מינור הרמוני - Harmonic Minor</option>
+            <option value="melodic_minor" {% if song.key_type == 'melodic_minor' %}selected{% endif %}>מינור מלודי - Melodic Minor</option>
+            <option value="dorian" {% if song.key_type == 'dorian' %}selected{% endif %}>דורי - Dorian</option>
+            <option value="phrygian" {% if song.key_type == 'phrygian' %}selected{% endif %}>פריגי - Phrygian</option>
+            <option value="lydian" {% if song.key_type == 'lydian' %}selected{% endif %}>לידי - Lydian</option>
+            <option value="mixolydian" {% if song.key_type == 'mixolydian' %}selected{% endif %}>מיקסולידי - Mixolydian</option>
+            <option value="locrian" {% if song.key_type == 'locrian' %}selected{% endif %}>לוקריאן - Locrian</option>
+        </select>
+
+        <label for="difficulty">רמת קושי:</label>
+        <select id="difficulty" name="difficulty" required>
+            <option value="">בחר רמת קושי</option>
+            <option value="beginner" {% if song.difficulty == 'beginner' %}selected{% endif %}>מתחילים</option>
+            <option value="intermediate" {% if song.difficulty == 'intermediate' %}selected{% endif %}>ביניים</option>
+            <option value="advanced" {% if song.difficulty == 'advanced' %}selected{% endif %}>מתקדמים</option>
+        </select>
 
         <label for="time_signature">מקצב:</label>
-        <input type="text" id="time_signature" name="time_signature" value="{{ song.time_signature }}" required>
+        <select id="time_signature" name="time_signature" required>
+            <option value="">בחר מקצב</option>
+            <option value="4/4" {% if song.time_signature == '4/4' %}selected{% endif %}>4/4 (הנפוץ ביותר)</option>
+            <option value="3/4" {% if song.time_signature == '3/4' %}selected{% endif %}>3/4 (ולס)</option>
+            <option value="2/4" {% if song.time_signature == '2/4' %}selected{% endif %}>2/4</option>
+            <option value="6/8" {% if song.time_signature == '6/8' %}selected{% endif %}>6/8 (בלוז/שירים קצביים)</option>
+            <option value="5/4" {% if song.time_signature == '5/4' %}selected{% endif %}>5/4 (לא שגרתי)</option>
+            <option value="7/8" {% if song.time_signature == '7/8' %}selected{% endif %}>7/8 (מתקדם/אתני)</option>
+            <option value="12/8" {% if song.time_signature == '12/8' %}selected{% endif %}>12/8 (בלוז/גוספל)</option>
+            <option value="9/8" {% if song.time_signature == '9/8' %}selected{% endif %}>9/8</option>
+        </select>
 
         <label for="bpm">BPM (מהירות):</label>
-        <input type="number" id="bpm" name="bpm" value="{{ song.bpm }}" required>
+        <input type="number" id="bpm" name="bpm" value="{{ song.bpm }}" required min="40" max="200" step="1">
+        <span style="font-size:0.95em;color:gray;">(40-200)</span>
 
         <label for="video_url">🎥 קישור לסרטון:</label>
         <input type="text" id="video_url" name="video_url" value="{{ song.video_url }}" required>
 
+        <label>🎸 אקורדים:</label>
+        <!-- הודעת הצלחה תוצג כאן, ומיד אחרי זה הכפתור -->
+        <div id="chords-success" style="display:none; margin: 6px 0 10px 0;">
+            <span style="color:green; font-weight:bold;">🎶 האקורדים נוספו בהצלחה!</span>
+        </div>
+        <button type="button" class="btn" id="chords-btn" onclick="goToChordsPage()">ערוך אקורדים</button>
+        <input type="hidden" id="chords" name="chords" required>
+
         <button type="submit" class="btn">💾 שמור שינויים</button>
     </form>
+
+    <p id="response-message" class="message"></p>
 </div>
+
+<script>
+    const songId = "{{ song.id }}";
+    const existingChords = {{ song.chords|safe }};
+
+    // Button navigation
+    function goToChordsPage() {
+        // Save current form data before going to chords page
+        saveFormData();
+        // Store existing chords for editing
+        localStorage.setItem("chords", JSON.stringify(existingChords));
+        localStorage.setItem("editingSongId", songId);
+        window.location.href = "/add-chords";
+    }
+
+    // Show success message if chords were added (and stay even after refresh)
+    function editChords() {
+        saveFormData();
+        localStorage.setItem("chords", JSON.stringify(existingChords));
+        localStorage.setItem("editingSongId", songId);
+        window.location.href = "/add-chords";
+    }
+
+    function saveFormData() {
+        const formData = {
+            title: document.getElementById("title").value,
+            artist: document.getElementById("artist").value,
+            key: document.getElementById("key").value,
+            key_type: document.getElementById("key_type").value,
+            difficulty: document.getElementById("difficulty").value,
+            time_signature: document.getElementById("time_signature").value,
+            bpm: document.getElementById("bpm").value,
+            video_url: document.getElementById("video_url").value
+        };
+        localStorage.setItem("editSongData", JSON.stringify(formData));
+    }
+
+    // --- Prefill form from localStorage if exists ---
+    document.addEventListener("DOMContentLoaded", function () {
+        // Load existing chords into hidden field
+        document.getElementById("chords").value = JSON.stringify(existingChords);
+
+        // Prefill fields from localStorage if user was editing
+        const editSongData = JSON.parse(localStorage.getItem("editSongData") || "{}");
+        for (const key in editSongData) {
+            const element = document.getElementById(key);
+            if (element && editSongData[key]) {
+                element.value = editSongData[key];
+            }
+        }
+
+        // Check if user just returned from chords page
+        const chordsSuccessDiv = document.getElementById("chords-success");
+        const chordsBtn = document.getElementById("chords-btn");
+        const savedChords = localStorage.getItem("chords");
+        const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
+        const editingSongId = localStorage.getItem("editingSongId");
+
+        if (savedChords && justReturnedFromChords === "true" && editingSongId === songId) {
+            // User just returned from chords page - show success message
+            document.getElementById("chords").value = savedChords;
+            chordsSuccessDiv.style.display = "block";
+            chordsBtn.textContent = "ערוך אקורדים";
+            chordsBtn.onclick = editChords;
+            // Clear the flag so it won't show again on refresh
+            localStorage.removeItem("justReturnedFromChords");
+        } else {
+            // Show regular edit chords button
+            chordsSuccessDiv.style.display = "none";
+            chordsBtn.textContent = "ערוך אקורדים";
+            chordsBtn.onclick = editChords;
+        }
+
+        // Save form fields to localStorage on change
+        const fields = ["title", "artist", "key", "key_type", "difficulty", "time_signature", "bpm", "video_url"];
+        fields.forEach(field => {
+            const el = document.getElementById(field);
+            if (el) {
+                el.addEventListener("input", () => {
+                    const currentData = JSON.parse(localStorage.getItem("editSongData") || "{}");
+                    currentData[field] = el.value;
+                    localStorage.setItem("editSongData", JSON.stringify(currentData));
+                });
+            }
+        });
+    });
+
+    document.getElementById("edit-song-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const title = document.getElementById("title").value;
+        const artist = document.getElementById("artist").value;
+        const key = document.getElementById("key").value;
+        const keyType = document.getElementById("key_type").value;
+        const difficulty = document.getElementById("difficulty").value;
+        const timeSignature = document.getElementById("time_signature").value;
+        const bpm = document.getElementById("bpm").value;
+        const videoUrl = document.getElementById("video_url").value;
+        const chordsRaw = document.getElementById("chords").value;
+
+        let finalVideoUrl = videoUrl;
+        const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
+        if (ytMatch && ytMatch[1]) {
+            finalVideoUrl = "https://www.youtube.com/embed/" + ytMatch[1];
+        }
+
+        let chords;
+        try {
+            chords = JSON.parse(chordsRaw);
+        } catch (e) {
+            alert("שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.");
+            return;
+        }
+
+        fetch(`/api/edit_song/${songId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                title: title,
+                artist: artist,
+                key: key,
+                key_type: keyType,
+                difficulty: difficulty,
+                time_signature: timeSignature,
+                bpm: parseInt(bpm),
+                video_url: finalVideoUrl,
+                chords: chords
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const messageEl = document.getElementById("response-message");
+            if (data.message) {
+                messageEl.textContent = "✅ " + data.message;
+                messageEl.style.color = "green";
+                // Clear localStorage after successful edit
+                localStorage.removeItem("editSongData");
+                localStorage.removeItem("justReturnedFromChords");
+                localStorage.removeItem("editingSongId");
+                // Redirect to song page after short delay
+                setTimeout(() => {
+                    window.location.href = `/chords/${songId}`;
+                }, 1500);
+            } else {
+                messageEl.textContent = "❌ שגיאה בעדכון השיר, נסה שוב";
+                messageEl.style.color = "red";
+            }
+        })
+        .catch(error => {
+            document.getElementById("response-message").textContent = "❌ שגיאה בעדכון השיר!";
+            document.getElementById("response-message").style.color = "red";
+            console.error("Error:", error);
+        });
+    });
+</script>
 
 <style>
     .styled-form {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        max-width: 500px;
+        gap: 10px;
+        max-width: 400px;
         margin: auto;
     }
 
@@ -46,7 +253,8 @@
         text-align: right;
     }
 
-    .styled-form input {
+    .styled-form input,
+    .styled-form select {
         padding: 8px;
         border: 1px solid #ccc;
         border-radius: 5px;
@@ -63,6 +271,12 @@
 
     .btn:hover {
         background-color: #218838;
+    }
+
+    .message {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
     }
 </style>
 {% endblock %}

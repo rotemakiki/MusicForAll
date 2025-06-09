@@ -156,6 +156,12 @@
         const videoUrl = document.getElementById("video_url").value;
         const chordsRaw = document.getElementById("chords").value;
 
+        let finalVideoUrl = videoUrl;
+        const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
+        if (ytMatch && ytMatch[1]) {
+            finalVideoUrl = "https://www.youtube.com/embed/" + ytMatch[1];
+        }
+
         let chords;
         try {
             chords = JSON.parse(chordsRaw);
@@ -177,7 +183,7 @@
                 difficulty: difficulty,
                 time_signature: timeSignature,
                 bpm: parseInt(bpm),
-                video_url: videoUrl,
+                video_url: finalVideoUrl,
                 chords: chords
             })
         })

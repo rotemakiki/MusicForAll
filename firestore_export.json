@@ -6,7 +6,7 @@
       "profile_image": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/profile_images/OLKXZUtvyZ6EosAkJHJj_16a7d2f87a0a4f4b8378c406667eacc1_1_.jpg",
       "is_available": true,
       "created_at": "2025-06-05T07:27:54.079935+00:00",
-      "is_logged_in": false,
+      "is_logged_in": true,
       "roles": [
         "teacher",
         "admin"
@@ -29,45 +29,51 @@
       "email": "saargura@gmail.com",
       "instruments": "",
       "username": "Saar Gur",
-      "is_logged_in": false
+      "is_logged_in": true
     }
   },
   "songs": {
-    "GBsKtnY86Pa4Oe2UvcWo": {
-      "created_at": "2025-05-26T09:53:20.990835+00:00",
+    "4idtYpfbMm4RhZXcircI": {
+      "created_at": "2025-06-08T08:52:41.750828+00:00",
+      "video_url": "https://www.youtube.com/embed/hbLgszfXTAY",
+      "key": "D",
+      "chords": "[[\"Dmaj7\", \"Dmaj7\"], [\"A#m\", \"A#m\", \"A#m\"]]",
+      "artist": "hhh",
+      "bpm": 100,
+      "title": "hhhh",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "minor",
+      "difficulty": "beginner",
+      "time_signature": "7/8",
+      "difficulty_approved": false
+    },
+    "ViGlci8uZSfh24dWgooU": {
+      "created_at": "2025-06-08T07:25:37.608035+00:00",
       "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
       "key": "C",
-      "chords": "[[\"D\", \"D\", \"D\"], [\"Dsus4\", \"Dsus4\", \"Dsus4\"], [\"E#sus4\", \"E#sus4\", \"E#sus4\", \"E#sus4\"]]",
-      "artist": "עליכם",
-      "bpm": 70,
-      "title": "שלום",
-      "created_by": "QkthltCOrNmfnFUw4KkC",
-      "key_type": "מינור",
-      "time_signature": "4/4"
+      "chords": "[[\"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"D#maj7\"], [\"D#maj7\", \"D#maj7\", \"D#maj7\", \"D#maj7\"], [\"D#\", \"D#\", \"D#\", \"D#\", \"D#\"]]",
+      "artist": "הפיג'מות",
+      "bpm": 100,
+      "title": "שיר המכולת",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "minor",
+      "difficulty": "intermediate",
+      "time_signature": "4/4",
+      "difficulty_approved": false
     },
-    "bLQoNa1iGQeY5wl4sW7Z": {
-      "created_at": "2025-05-28T10:07:34.264540+00:00",
-      "video_url": "https://www.youtube.com/watch?v=4pZzLJp5drI",
-      "artist": "טונה",
-      "chords": "[[\"Bmaj7\", \"Bmaj7\", \"Bmaj7\", \"Bmaj7\"], [\"Dbmaj7\", \"Dbmaj7\", \"Dbmaj7\"]]",
-      "key": "מי - E",
-      "bpm": 78,
-      "title": "גם זה יעבור",
-      "created_by": "eVr3ruKbrZD2fnU5L7jH",
-      "key_type": "מינור - Minor",
-      "time_signature": "4/4"
-    },
-    "zNahyRe46FA5wxXsXBzZ": {
-      "created_at": "2025-06-05T09:26:56.334349+00:00",
-      "video_url": "https://www.youtube.com/watch?v=4pZzLJp5drI",
-      "key": "מי - E",
-      "chords": "[[\"Em\", \"Em\", \"Am\", \"Am\"], [\"Am\", \"Am\", \"Am\", \"Am\"]]",
-      "artist": "טונה",
-      "bpm": 78,
-      "title": "גם זה יעבור",
-      "created_by": "z3oSwSkZoqAiAoNM3Ks4",
-      "key_type": "מינור - Minor",
-      "time_signature": "4/4"
+    "w7DoslS196OUOVfKoO9h": {
+      "created_at": "2025-06-08T08:24:35.041577+00:00",
+      "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
+      "key": "C",
+      "chords": "[[\"Dmaj7\", \"Dmaj7\", \"Dmaj7\", \"Dmaj7\"], [\"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"Cmaj7\"]]",
+      "artist": "גכגכ",
+      "bpm": 100,
+      "title": "גכגכ",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "major",
+      "difficulty": "intermediate",
+      "time_signature": "2/4",
+      "difficulty_approved": false
     }
   },
   "videos": {
