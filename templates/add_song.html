@@ -16,26 +16,48 @@
         <select id="key" name="key" required>
             <option value="">בחר סולם</option>
             <option value="C">דו - C</option>
+            <option value="C#">דו דיאז - C#</option>
+            <option value="Db">רה במול - Db</option>
             <option value="D">רה - D</option>
+            <option value="D#">רה דיאז - D#</option>
+            <option value="Eb">מי במול - Eb</option>
             <option value="E">מי - E</option>
             <option value="F">פה - F</option>
+            <option value="F#">פה דיאז - F#</option>
+            <option value="Gb">סול במול - Gb</option>
             <option value="G">סול - G</option>
+            <option value="G#">סול דיאז - G#</option>
+            <option value="Ab">לה במול - Ab</option>
             <option value="A">לה - A</option>
+            <option value="A#">לה דיאז - A#</option>
+            <option value="Bb">סי במול - Bb</option>
             <option value="B">סי - B</option>
+
         </select>
 
         <label for="key_type">סוג סולם:</label>
         <select id="key_type" name="key_type" required>
             <option value="">בחר סוג</option>
             <option value="major">מז'ור - Major</option>
-            <option value="minor">מינור - Minor</option>
+            <option value="natural_minor">מינור טבעי - Natural Minor</option>
             <option value="harmonic_minor">מינור הרמוני - Harmonic Minor</option>
             <option value="melodic_minor">מינור מלודי - Melodic Minor</option>
-            <option value="dorian">דורי - Dorian</option>
+
+            <option value="ionian">יוֹני - Ionian</option>
+            <option value="dorian">דוֹרי - Dorian</option>
             <option value="phrygian">פריגי - Phrygian</option>
             <option value="lydian">לידי - Lydian</option>
             <option value="mixolydian">מיקסולידי - Mixolydian</option>
-            <option value="locrian">לוקריאן - Locrian</option>
+            <option value="aeolian">אאולי - Aeolian</option>
+            <option value="locrian">לוֹקרי - Locrian</option>
+
+            <option value="major_pentatonic">פנטטוני מז'ורי - Major Pentatonic</option>
+            <option value="minor_pentatonic">פנטטוני מינורי - Minor Pentatonic</option>
+
+            <option value="chromatic">כרומטי - Chromatic</option>
+            <option value="whole_tone">שלם טונים - Whole Tone</option>
+            <option value="blues">בלוז - Blues</option>
+            <option value="octatonic">אוקטטוני / דימינישד - Octatonic / Diminished</option>
         </select>
 
         <label for="difficulty">רמת קושי:</label>
@@ -50,13 +72,27 @@
         <select id="time_signature" name="time_signature" required>
             <option value="">בחר מקצב</option>
             <option value="4/4">4/4 (הנפוץ ביותר)</option>
-            <option value="3/4">3/4 (ולס)</option>
             <option value="2/4">2/4</option>
+            <option value="3/4">3/4 (ולס)</option>
+            <option value="2/2">2/2 (Alla Breve)</option>
+            <option value="3/2">3/2</option>
+            <option value="3/8">3/8</option>
+
             <option value="6/8">6/8 (בלוז/שירים קצביים)</option>
-            <option value="5/4">5/4 (לא שגרתי)</option>
-            <option value="7/8">7/8 (מתקדם/אתני)</option>
-            <option value="12/8">12/8 (בלוז/גוספל)</option>
             <option value="9/8">9/8</option>
+            <option value="12/8">12/8 (בלוז/גוספל)</option>
+            <option value="6/4">6/4</option>
+            <option value="9/4">9/4</option>
+            <option value="12/4">12/4</option>
+
+            <option value="5/4">5/4 (לא שגרתי)</option>
+            <option value="5/8">5/8</option>
+            <option value="7/4">7/4</option>
+            <option value="7/8">7/8 (מתקדם/אתני)</option>
+            <option value="11/4">11/4</option>
+            <option value="11/8">11/8</option>
+            <option value="13/4">13/4</option>
+            <option value="13/8">13/8</option>
         </select>
 
         <label for="bpm">BPM (מהירות):</label>

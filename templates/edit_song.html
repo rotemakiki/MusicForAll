@@ -18,26 +18,46 @@
         <select id="key" name="key" required>
             <option value="">בחר סולם</option>
             <option value="C" {% if song.key == 'C' %}selected{% endif %}>דו - C</option>
+            <option value="C#" {% if song.key == 'C#' %}selected{% endif %}>דו דיאז - C#</option>
+            <option value="Db" {% if song.key == 'Db' %}selected{% endif %}>רה במול - Db</option>
             <option value="D" {% if song.key == 'D' %}selected{% endif %}>רה - D</option>
+            <option value="D#" {% if song.key == 'D#' %}selected{% endif %}>רה דיאז - D#</option>
+            <option value="Eb" {% if song.key == 'Eb' %}selected{% endif %}>מי במול - Eb</option>
             <option value="E" {% if song.key == 'E' %}selected{% endif %}>מי - E</option>
             <option value="F" {% if song.key == 'F' %}selected{% endif %}>פה - F</option>
+            <option value="F#" {% if song.key == 'F#' %}selected{% endif %}>פה דיאז - F#</option>
+            <option value="Gb" {% if song.key == 'Gb' %}selected{% endif %}>סול במול - Gb</option>
             <option value="G" {% if song.key == 'G' %}selected{% endif %}>סול - G</option>
+            <option value="G#" {% if song.key == 'G#' %}selected{% endif %}>סול דיאז - G#</option>
+            <option value="Ab" {% if song.key == 'Ab' %}selected{% endif %}>לה במול - Ab</option>
             <option value="A" {% if song.key == 'A' %}selected{% endif %}>לה - A</option>
+            <option value="A#" {% if song.key == 'A#' %}selected{% endif %}>לה דיאז - A#</option>
+            <option value="Bb" {% if song.key == 'Bb' %}selected{% endif %}>סי במול - Bb</option>
             <option value="B" {% if song.key == 'B' %}selected{% endif %}>סי - B</option>
         </select>
-
         <label for="key_type">סוג סולם:</label>
         <select id="key_type" name="key_type" required>
             <option value="">בחר סוג</option>
             <option value="major" {% if song.key_type == 'major' %}selected{% endif %}>מז'ור - Major</option>
-            <option value="minor" {% if song.key_type == 'minor' %}selected{% endif %}>מינור - Minor</option>
+            <option value="natural_minor" {% if song.key_type == 'natural_minor' %}selected{% endif %}>מינור טבעי - Natural Minor</option>
             <option value="harmonic_minor" {% if song.key_type == 'harmonic_minor' %}selected{% endif %}>מינור הרמוני - Harmonic Minor</option>
             <option value="melodic_minor" {% if song.key_type == 'melodic_minor' %}selected{% endif %}>מינור מלודי - Melodic Minor</option>
-            <option value="dorian" {% if song.key_type == 'dorian' %}selected{% endif %}>דורי - Dorian</option>
+
+            <option value="ionian" {% if song.key_type == 'ionian' %}selected{% endif %}>יוֹני - Ionian</option>
+            <option value="dorian" {% if song.key_type == 'dorian' %}selected{% endif %}>דוֹרי - Dorian</option>
             <option value="phrygian" {% if song.key_type == 'phrygian' %}selected{% endif %}>פריגי - Phrygian</option>
             <option value="lydian" {% if song.key_type == 'lydian' %}selected{% endif %}>לידי - Lydian</option>
             <option value="mixolydian" {% if song.key_type == 'mixolydian' %}selected{% endif %}>מיקסולידי - Mixolydian</option>
-            <option value="locrian" {% if song.key_type == 'locrian' %}selected{% endif %}>לוקריאן - Locrian</option>
+            <option value="aeolian" {% if song.key_type == 'aeolian' %}selected{% endif %}>אאולי - Aeolian</option>
+            <option value="locrian" {% if song.key_type == 'locrian' %}selected{% endif %}>לוֹקרי - Locrian</option>
+
+            <option value="major_pentatonic" {% if song.key_type == 'major_pentatonic' %}selected{% endif %}>פנטטוני מז'ורי - Major Pentatonic</option>
+            <option value="minor_pentatonic" {% if song.key_type == 'minor_pentatonic' %}selected{% endif %}>פנטטוני מינורי - Minor Pentatonic</option>
+
+            <option value="chromatic" {% if song.key_type == 'chromatic' %}selected{% endif %}>כרומטי - Chromatic</option>
+            <option value="whole_tone" {% if song.key_type == 'whole_tone' %}selected{% endif %}>שלם טונים - Whole Tone</option>
+            <option value="blues" {% if song.key_type == 'blues' %}selected{% endif %}>בלוז - Blues</option>
+            <option value="octatonic" {% if song.key_type == 'octatonic' %}selected{% endif %}>אוקטטוני / דימינישד - Octatonic / Diminished</option>
         </select>
 
         <label for="difficulty">רמת קושי:</label>
@@ -52,13 +72,27 @@
         <select id="time_signature" name="time_signature" required>
             <option value="">בחר מקצב</option>
             <option value="4/4" {% if song.time_signature == '4/4' %}selected{% endif %}>4/4 (הנפוץ ביותר)</option>
-            <option value="3/4" {% if song.time_signature == '3/4' %}selected{% endif %}>3/4 (ולס)</option>
             <option value="2/4" {% if song.time_signature == '2/4' %}selected{% endif %}>2/4</option>
+            <option value="3/4" {% if song.time_signature == '3/4' %}selected{% endif %}>3/4 (ולס)</option>
+            <option value="2/2" {% if song.time_signature == '2/2' %}selected{% endif %}>2/2 (Alla Breve)</option>
+            <option value="3/2" {% if song.time_signature == '3/2' %}selected{% endif %}>3/2</option>
+            <option value="3/8" {% if song.time_signature == '3/8' %}selected{% endif %}>3/8</option>
+
             <option value="6/8" {% if song.time_signature == '6/8' %}selected{% endif %}>6/8 (בלוז/שירים קצביים)</option>
-            <option value="5/4" {% if song.time_signature == '5/4' %}selected{% endif %}>5/4 (לא שגרתי)</option>
-            <option value="7/8" {% if song.time_signature == '7/8' %}selected{% endif %}>7/8 (מתקדם/אתני)</option>
-            <option value="12/8" {% if song.time_signature == '12/8' %}selected{% endif %}>12/8 (בלוז/גוספל)</option>
             <option value="9/8" {% if song.time_signature == '9/8' %}selected{% endif %}>9/8</option>
+            <option value="12/8" {% if song.time_signature == '12/8' %}selected{% endif %}>12/8 (בלוז/גוספל)</option>
+            <option value="6/4" {% if song.time_signature == '6/4' %}selected{% endif %}>6/4</option>
+            <option value="9/4" {% if song.time_signature == '9/4' %}selected{% endif %}>9/4</option>
+            <option value="12/4" {% if song.time_signature == '12/4' %}selected{% endif %}>12/4</option>
+
+            <option value="5/4" {% if song.time_signature == '5/4' %}selected{% endif %}>5/4 (לא שגרתי)</option>
+            <option value="5/8" {% if song.time_signature == '5/8' %}selected{% endif %}>5/8</option>
+            <option value="7/4" {% if song.time_signature == '7/4' %}selected{% endif %}>7/4</option>
+            <option value="7/8" {% if song.time_signature == '7/8' %}selected{% endif %}>7/8 (מתקדם/אתני)</option>
+            <option value="11/4" {% if song.time_signature == '11/4' %}selected{% endif %}>11/4</option>
+            <option value="11/8" {% if song.time_signature == '11/8' %}selected{% endif %}>11/8</option>
+            <option value="13/4" {% if song.time_signature == '13/4' %}selected{% endif %}>13/4</option>
+            <option value="13/8" {% if song.time_signature == '13/8' %}selected{% endif %}>13/8</option>
         </select>
 
         <label for="bpm">BPM (מהירות):</label>
