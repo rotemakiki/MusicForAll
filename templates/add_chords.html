@@ -10,12 +10,31 @@
         <h3>בחר אקורד:</h3>
         <div id="root-letters" class="button-row"></div>
 
-        <button id="toggle-accidental" class="btn" style="margin-top: 10px;">♮ ללא סימן</button>
+        <button id="toggle-accidental" class="btn accidental-btn">♮ ללא סימן</button>
 
         <h4 style="margin-top: 20px;">בחר סוג אקורד:</h4>
         <div id="chord-types" class="button-row"></div>
 
         <p style="margin-top: 10px;">אקורד נבחר: <strong id="current-selection">—</strong></p>
+    </div>
+
+    <!-- אזור יצירת תיבה חדשה -->
+    <div class="measure-box-creator">
+        <h3>יצירת תיבה חדשה</h3>
+        <div class="input-group">
+            <label>מספר נקישות בתיבה:</label>
+            <input type="number" id="beats-input" value="4" min="1" max="12" class="beats-input">
+        </div>
+        <div class="input-group">
+            <label>שם תיבה (לא חובה):</label>
+            <input type="text" id="label-input" placeholder="" class="label-input">
+        </div>
+        <div class="create-btn-container">
+            <button type="button" class="btn create-btn" onclick="createMeasureBox()">צור תיבה</button>
+        </div>
+        <!-- הצגת התיבה שיצרת -->
+        <div id="current-measure-box"></div>
+        <button type="button" class="btn add-measure-btn" id="add-measure-btn" onclick="addMeasureToLine()">הוסף תיבה לשורה</button>
     </div>
 
     <!-- מבנה השיר -->
@@ -25,23 +44,34 @@
             <div id="chord-lines"></div>
 
             <!-- Edit/Delete controls will appear here dynamically -->
-            <div id="edit-delete-controls" style="margin-bottom: 15px;"></div>
+            <div id="edit-delete-controls"></div>
 
             <div class="builder-buttons">
-                <button type="button" class="btn" onclick="addChordToLine()">➕ הוסף אקורד לשורה</button>
-                <button type="button" class="btn" onclick="addNewLine()">⬇️ ירידת שורה</button>
-                <button type="button" class="btn finish" onclick="finishAndReturn()">✅ סיים והמשך</button>
+                <button type="button" class="btn new-line-btn" onclick="addNewLine()">⬇️ ירידת שורה</button>
+                <button type="button" class="btn finish-btn" onclick="finishAndReturn()">✅ סיים והמשך</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
     .chords-layout {
         display: flex;
         justify-content: center;
         margin-top: 30px;
     }
+
+    .chord-builder {
+        width: 100%;
+        max-width: 800px;
+    }
+
     .chord-line {
         display: flex;
         gap: 10px;
@@ -57,83 +87,236 @@
         transition: background 0.2s;
         align-items: center;
     }
+
     .chord-box {
-        padding: 10px 16px;
-        border: 2px solid #aaa;
-        border-radius: 8px;
+        padding: 13px 18px;
+        border: 2px solid #007bff;
+        border-radius: 12px;
         font-weight: bold;
-        background-color: white;
-        min-width: 56px;
+        background: #e9f4ff;
+        min-width: 80px;
+        min-height: 64px;
         text-align: center;
         cursor: pointer;
         position: relative;
-        transition: border 0.15s;
+        transition: all 0.15s;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
+
     .chord-box.selected {
         border: 2.5px solid #007bff;
         box-shadow: 0 0 9px #a5d4ff;
-        background: #e6f1ff;
+        background: #d4edff;
     }
+
+    .chord-box .chord-name {
+        font-size: 20px;
+        font-weight: bold;
+        line-height: 1;
+    }
+
+    .chord-box .chord-beats {
+        font-size: 16px;
+        color: #226;
+        line-height: 1;
+        margin-top: 2px;
+    }
+
+    .chord-box .chord-label {
+        font-size: 14px;
+        color: #444;
+        margin-top: 3px;
+        line-height: 1;
+    }
+
+    .measure-box-creator {
+        margin-bottom: 32px;
+        border: 1px solid #cce;
+        border-radius: 10px;
+        padding: 18px;
+        background: #fafbff;
+    }
+
+    .input-group {
+        margin-bottom: 12px;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .beats-input {
+        width: 80px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    .label-input {
+        width: 200px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    .create-btn-container {
+        margin: 16px 0;
+    }
+
     .edit-btn, .delete-btn {
-        margin-right: 2px;
+        margin-right: 8px;
         background: none;
         border: none;
         color: #007bff;
-        font-size: 17px;
+        font-size: 16px;
         cursor: pointer;
-        margin-left: 4px;
-        vertical-align: middle;
-        transition: color 0.2s;
+        padding: 8px 12px;
+        border-radius: 4px;
+        transition: all 0.2s;
     }
+
     .delete-btn {
         color: #e74c3c;
     }
+
     .edit-btn:hover {
         color: #0056b3;
+        background: #f0f8ff;
     }
+
     .delete-btn:hover {
         color: #b81e1e;
+        background: #fff0f0;
     }
+
     .builder-buttons {
         margin-top: 20px;
         display: flex;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
+        justify-content: center;
     }
+
     .btn {
         background-color: #007bff;
         color: white;
-        padding: 10px;
+        padding: 12px 20px;
         border: none;
-        border-radius: 5px;
+        border-radius: 8px;
         cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.2s;
+        min-width: 120px;
     }
+
     .btn:hover {
         background-color: #0056b3;
+        transform: translateY(-1px);
     }
-    .finish {
-        background-color: green;
+
+    .accidental-btn {
+        margin-top: 10px;
+        min-width: 140px;
     }
-    .finish:hover {
-        background-color: darkgreen;
+
+    .create-btn {
+        background-color: #28a745;
     }
+
+    .create-btn:hover {
+        background-color: #218838;
+    }
+
+    .add-measure-btn {
+        display: none;
+        margin-top: 12px;
+        background-color: #17a2b8;
+    }
+
+    .add-measure-btn:hover {
+        background-color: #138496;
+    }
+
+    .new-line-btn {
+        background-color: #6c757d;
+    }
+
+    .new-line-btn:hover {
+        background-color: #545b62;
+    }
+
+    .finish-btn {
+        background-color: #28a745;
+        min-width: 150px;
+    }
+
+    .finish-btn:hover {
+        background-color: #218838;
+    }
+
     .letter-button, .type-button {
-        padding: 10px 16px;
-        background: #f0f0f0;
-        border: 2px solid gray;
-        border-radius: 6px;
-        font-weight: bold;
+        padding: 12px 16px;
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-weight: 500;
         cursor: pointer;
+        transition: all 0.2s;
+        min-width: 50px;
+        text-align: center;
     }
+
+    .letter-button:hover, .type-button:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+
     .letter-button.selected, .type-button.selected {
-        background: lightblue;
-        border-color: blue;
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
     }
+
     .button-row {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
         justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    #edit-delete-controls {
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    #current-measure-box {
+        margin-top: 14px;
+        text-align: center;
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+    }
+
+    h3 {
+        color: #555;
+        margin-bottom: 15px;
+    }
+
+    h4 {
+        color: #666;
+        margin-bottom: 10px;
     }
 </style>
 
@@ -221,16 +404,6 @@
         renderRootButtons();
     }
 
-    function addChordToLine() {
-        if (!selectedChord) return;
-        songChords[songChords.length - 1].push(selectedChord);
-        renderChordLines();
-        // Deselect after adding
-        selectedChordLineIndex = null;
-        selectedChordIndexInLine = null;
-        renderEditDeleteControls();
-    }
-
     function addNewLine() {
         songChords.push([]);
         renderChordLines();
@@ -245,10 +418,22 @@
         songChords.forEach((line, lineIdx) => {
             const lineDiv = document.createElement("div");
             lineDiv.className = "chord-line";
-            line.forEach((chord, chordIdx) => {
+            line.forEach((chordData, chordIdx) => {
                 const box = document.createElement("div");
                 box.className = "chord-box";
-                box.innerText = chord;
+
+                // Handle both old string format and new measure object format
+                if (typeof chordData === 'string') {
+                    // Old format - just chord name
+                    box.innerHTML = `<div class="chord-name">${chordData}</div>`;
+                } else if (typeof chordData === 'object' && chordData.chord) {
+                    // New format - measure object
+                    box.innerHTML = `
+                        <div class="chord-name">${chordData.chord}</div>
+                        <div class="chord-beats">${chordData.beats} נקישות</div>
+                        ${chordData.label ? `<div class="chord-label">${chordData.label}</div>` : ""}
+                    `;
+                }
 
                 // Highlight if selected
                 if (selectedChordLineIndex === lineIdx && selectedChordIndexInLine === chordIdx) {
@@ -276,7 +461,7 @@
 
         if (selectedChordLineIndex !== null && selectedChordIndexInLine !== null) {
             // Get chord
-            const chord = songChords[selectedChordLineIndex][selectedChordIndexInLine];
+            const chordData = songChords[selectedChordLineIndex][selectedChordIndexInLine];
             // Edit button
             const editBtn = document.createElement("button");
             editBtn.className = "edit-btn";
@@ -295,9 +480,21 @@
 
     // Edit chord: loads the values to the picker and removes from list
     function editChord(lineIdx, chordIdx) {
-        const chord = songChords[lineIdx][chordIdx];
+        const chordData = songChords[lineIdx][chordIdx];
+        let chordName;
+
+        // Handle both old and new formats
+        if (typeof chordData === 'string') {
+            chordName = chordData;
+        } else if (typeof chordData === 'object' && chordData.chord) {
+            chordName = chordData.chord;
+            // If it's a measure object, also populate the beats and label inputs
+            document.getElementById("beats-input").value = chordData.beats || 4;
+            document.getElementById("label-input").value = chordData.label || "";
+        }
+
         // Regex to parse chord parts (example: "C#m7" => letter=C, acc=#, type=m7)
-        const chordMatch = chord.match(/^([A-G])([#b]?)(.*)$/);
+        const chordMatch = chordName.match(/^([A-G])([#b]?)(.*)$/);
         if (chordMatch) {
             selectedLetter = chordMatch[1];
             accidentalIndex = accidentalOptions.indexOf(chordMatch[2]);
@@ -369,4 +566,5 @@
         });
     });
 </script>
+<script src="{{ url_for('static', filename='js/measure.js') }}"></script>
 {% endblock %}

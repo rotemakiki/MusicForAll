@@ -14,7 +14,6 @@
         <button onclick="resetBpm()">🌀 אפס BPM</button>
     </div>
 
-
     <div style="margin-top: 10px;">
         <label>🔊 ווליום המטרונום:</label>
         <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
@@ -26,7 +25,6 @@
         <button onclick="stopPlayback()">עצור</button>
     </div>
 </div>
-
 
 <div id="chord-container">
     <h3>אקורדים</h3>
@@ -52,11 +50,11 @@
         border: 2px solid #aaa;
         border-radius: 10px;
         width: 120px;
-        height: 90px;
+        height: 100px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         font-weight: bold;
         font-size: 18px;
         padding: 6px 0;
@@ -123,8 +121,8 @@
 </style>
 
 <script>
+    // קבלת רשימת האקורדים במבנה החדש (אובייקט)
     const chords = {{ song.chords | tojson }};
-    const beatsPerChord = {{ song.beats }};
     let bpm = {{ song.bpm }};
     let intervalMs = 60000 / bpm;
 
@@ -138,30 +136,53 @@
 
     const metronome = document.getElementById("metronome-sound");
 
+    // English comment: Render the chords on the page
     function renderChords() {
         const wrapper = document.getElementById("chords-wrapper");
         wrapper.innerHTML = "";
 
-        let chordNumber = 1; // cumulative
+        let chordNumber = 1; // cumulative for all chords
 
         chords.forEach((line, lineIdx) => {
             const rowDiv = document.createElement("div");
             rowDiv.className = "chord-row";
-            rowDiv.style.direction = "ltr"; // Force LTR per row
+            rowDiv.style.direction = "ltr"; // Left to right display
 
-            line.forEach((chord, chordIdx) => {
+            line.forEach((chordObj, chordIdx) => {
                 const box = document.createElement("div");
                 box.className = "chord-box";
 
-                // Cumulative bar number on top
+                // Display cumulative number
                 const barNumber = document.createElement("div");
                 barNumber.style.fontSize = "13px";
                 barNumber.style.color = "#888";
                 barNumber.innerText = chordNumber;
                 box.appendChild(barNumber);
 
-                // ... (המשך הלוגיקה כרגיל – כמו ששלחתי בתשובה הקודמת) ...
+                // Show chord name
+                const chordName = document.createElement("div");
+                chordName.style.fontSize = "20px";
+                chordName.style.fontWeight = "bold";
+                chordName.innerText = chordObj.chord;
+                box.appendChild(chordName);
 
+                // Show beats
+                const chordBeats = document.createElement("div");
+                chordBeats.style.fontSize = "16px";
+                chordBeats.style.color = "#226";
+                chordBeats.innerText = chordObj.beats + " נקישות";
+                box.appendChild(chordBeats);
+
+                // Show label if exists
+                if (chordObj.label) {
+                    const chordLabel = document.createElement("div");
+                    chordLabel.style.fontSize = "14px";
+                    chordLabel.style.color = "#444";
+                    chordLabel.innerText = chordObj.label;
+                    box.appendChild(chordLabel);
+                }
+
+                // Highlight if selected or playing
                 const isCurrent = lineIdx === currentLineIndex && chordIdx === currentChordIndexInLine;
                 const isPast = (
                     lineIdx < currentLineIndex ||
@@ -169,11 +190,13 @@
                 );
                 const isSelected = lineIdx === selectedStartLine && chordIdx === selectedStartChord;
                 if (isSelected) box.classList.add("selected-chord-box");
+                if (isPast) box.classList.add("active");
 
+                // Show beat indicators only for current chord
                 if (isCurrent) {
                     const indicators = document.createElement("div");
                     indicators.className = "beat-indicators";
-                    for (let j = 0; j < beatsPerChord; j++) {
+                    for (let j = 0; j < chordObj.beats; j++) {
                         const dot = document.createElement("div");
                         dot.className = "beat-dot";
                         if (j < currentBeat) dot.classList.add("active-dot");
@@ -181,14 +204,13 @@
                     }
                     box.appendChild(indicators);
                 } else {
+                    // Spacer for layout
                     const spacer = document.createElement("div");
                     spacer.style.height = "16px";
                     box.appendChild(spacer);
                 }
 
-                box.appendChild(document.createTextNode(chord));
-                if (isPast) box.classList.add("active");
-
+                // Click to select chord as starting point
                 box.addEventListener("click", () => {
                     selectedStartLine = lineIdx;
                     selectedStartChord = chordIdx;
@@ -196,28 +218,27 @@
                 });
 
                 rowDiv.appendChild(box);
-
-                chordNumber++; // cumulative
+                chordNumber++; // For cumulative numbering
             });
 
             wrapper.appendChild(rowDiv);
         });
     }
 
-
-
+    // English comment: Play metronome sound
     function playMetronome() {
         metronome.currentTime = 0;
         metronome.play().catch(() => {});
     }
 
+    // English comment: Start the playback of the song by chords and beats
     function startPlayback() {
         stopPlayback();
         bpm = parseInt(document.getElementById("bpm-slider").value);
         intervalMs = 60000 / bpm;
         document.getElementById("current-bpm").innerText = bpm;
 
-        // Use selection if exists
+        // Start from selected, or from beginning
         currentLineIndex = selectedStartLine !== null ? selectedStartLine : 0;
         currentChordIndexInLine = selectedStartChord !== null ? selectedStartChord : 0;
         currentBeat = 0;
@@ -226,17 +247,19 @@
         playMetronome();
 
         interval = setInterval(() => {
+            const line = chords[currentLineIndex];
+            const chordObj = line[currentChordIndexInLine];
+            const beatsThisChord = chordObj.beats || 4;
+
             playMetronome();
             currentBeat++;
 
-            if (currentBeat > beatsPerChord) {
+            if (currentBeat > beatsThisChord) {
                 currentBeat = 1;
                 currentChordIndexInLine++;
-
                 if (currentChordIndexInLine >= chords[currentLineIndex].length) {
                     currentChordIndexInLine = 0;
                     currentLineIndex++;
-
                     if (currentLineIndex >= chords.length) {
                         stopPlayback();
                         return;
@@ -267,7 +290,6 @@
         const bpmSlider = document.getElementById("bpm-slider");
         const bpmInput = document.getElementById("bpm-input");
 
-        // כשהסליידר משתנה, לעדכן גם את ה־input
         bpmSlider.addEventListener("input", (e) => {
             bpm = parseInt(e.target.value);
             bpmInput.value = bpm;
@@ -275,7 +297,6 @@
             intervalMs = 60000 / bpm;
         });
 
-        // Fixed BPM input handler - only validate when user finishes editing
         bpmInput.addEventListener("change", (e) => {
             let val = parseInt(e.target.value);
             if (isNaN(val) || val < 40) val = 40;
@@ -292,7 +313,7 @@
     });
 
     document.getElementById("volume-slider").addEventListener("input", (e) => {
-    metronome.volume = parseFloat(e.target.value);
+        metronome.volume = parseFloat(e.target.value);
     });
 
     function resetBpm() {
@@ -303,7 +324,6 @@
         document.getElementById("bpm-input").value = bpm;
         document.getElementById("current-bpm").innerText = bpm;
     }
-
 
 </script>
 {% endblock %}
