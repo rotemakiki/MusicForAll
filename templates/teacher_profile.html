@@ -9,7 +9,7 @@
         <img src="{{ teacher.profile_image }}" alt="תמונת פרופיל" style="width: 150px; border-radius: 50%; margin-bottom: 20px;">
     {% endif %}
 
-    <form action="{{ url_for('routes.upload_profile_image') }}" method="POST" enctype="multipart/form-data" style="margin-bottom: 20px;">
+    <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" style="margin-bottom: 20px;">
         <input type="file" name="profile_image" accept="image/*" required style="margin-bottom: 10px;">
         <input type="hidden" name="user_id" value="{{ teacher.id }}">
         <button type="submit" class="btn">⬆️ העלה תמונת פרופיל</button>
@@ -38,11 +38,11 @@
     <p><strong>ותק באתר:</strong> {{ days_on_site }} ימים</p>
 
     <a href="#" class="btn">צור קשר עם המורה (בקרוב)</a>
-    <a href="{{ url_for('routes.edit_teacher_profile', teacher_id=teacher.id) }}" class="btn">✏️ ערוך פרופיל</a>
+    <a href="{{ url_for('teachers.edit_teacher_profile', teacher_id=teacher.id) }}" class="btn">✏️ ערוך פרופיל</a>
 
     <hr>
     <h3>📤 העלאת סרטון חדש</h3>
-    <form action="{{ url_for('routes.upload_video') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ url_for('teachers.upload_video') }}" method="POST" enctype="multipart/form-data">
         <input type="text" name="title" placeholder="כותרת הסרטון" required>
         <input type="text" name="description" placeholder="תיאור קצר" required>
         <input type="file" name="video_file" accept="video/*" required>
@@ -64,7 +64,7 @@
                 </div>
             {% endfor %}
 
-        <a href="{{ url_for('routes.videos') }}" class="btn">צפייה בכל הסרטונים</a>
+        <a href="{{ url_for('videos.videos') }}" class="btn">צפייה בכל הסרטונים</a>
     {% else %}
         <p>אין סרטונים להצגה.</p>
     {% endif %}

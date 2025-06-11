@@ -33,7 +33,7 @@ def register():
         existing_users = db.collection("users").where("email", "==", email).get()
         if existing_users:
             flash("Email is already registered!", "error")
-            return redirect(url_for('routes.register'))
+            return redirect(url_for('auth.register'))
 
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
@@ -60,12 +60,12 @@ def register():
         if role == 'teacher':
             # נקבל את ה-ID של המורה החדש
             doc_ref = db.collection("users").where("email", "==", email).get()[0]
-            return redirect(url_for('routes.edit_teacher_profile', teacher_id=doc_ref.id))
+            return redirect(url_for('teachers.edit_teacher_profile', teacher_id=doc_ref.id))
         #dskdaskdas
 
 
         flash("Registration successful! Please log in.", "success")
-        return redirect(url_for('routes.login'))
+        return redirect(url_for('auth.login'))
 
     return render_template('register.html')
 
@@ -81,7 +81,7 @@ def login():
 
         if not user_query:
             flash("Invalid email or password!", "error")
-            return redirect(url_for('routes.login'))
+            return redirect(url_for('auth.login'))
 
         user_doc = user_query[0]
         user = user_doc.to_dict()
@@ -89,12 +89,12 @@ def login():
         # בדיקה אם המשתמש כבר מחובר ממקום אחר
         if user.get('is_logged_in'):
             flash("המשתמש כבר מחובר ממכשיר אחר!", "error")
-            return redirect(url_for('routes.login'))
+            return redirect(url_for('auth.login'))
 
         # בדיקת סיסמה
         if not check_password_hash(user['password'], password):
             flash("Invalid email or password!", "error")
-            return redirect(url_for('routes.login'))
+            return redirect(url_for('auth.login'))
 
         # התחברות מוצלחת - שמירה ב-session
         session['user_id'] = user_doc.id
@@ -106,7 +106,7 @@ def login():
         db.collection("users").document(user_doc.id).update({"is_logged_in": True})
 
         flash("Login successful!", "success")
-        return redirect(url_for('routes.home'))
+        return redirect(url_for('home'))
 
     return render_template('login.html')
 
@@ -293,7 +293,7 @@ def list_teachers():
 def edit_teacher_profile(teacher_id):
     if 'user_id' not in session or session['user_id'] != teacher_id:
         flash("אין לך הרשאה לגשת לעמוד זה", "error")
-        return redirect(url_for('routes.home'))
+        return redirect(url_for('home'))
 
     doc = db.collection("users").document(teacher_id).get()
     if not doc.exists:
@@ -317,7 +317,7 @@ def edit_teacher_profile(teacher_id):
         })
 
         flash("הפרופיל עודכן בהצלחה!", "success")
-        return redirect(url_for('routes.teacher_profile', teacher_id=teacher_id))
+        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
 
     teacher["id"] = teacher_id
     return render_template("edit_teacher_profile.html", teacher=teacher)
@@ -377,7 +377,7 @@ def upload_video():
     })
 
     flash("🎉 הסרטון עלה בהצלחה!", "success")
-    return redirect(url_for('routes.teacher_profile', teacher_id=teacher_id))
+    return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
 
 @routes.route('/logout')
 def logout():
@@ -387,14 +387,14 @@ def logout():
         db.collection("users").document(user_id).update({"is_logged_in": False})
     session.clear()
     flash("התנתקת מהמערכת", "success")
-    return redirect(url_for('routes.home'))
+    return redirect(url_for('home'))
 
 
 @routes.route('/profile')
 def user_profile():
     if 'user_id' not in session:
         flash("יש להתחבר כדי לגשת לפרופיל", "error")
-        return redirect(url_for('routes.login'))
+        return redirect(url_for('auth.login'))
 
     user_id = session['user_id']
     user_doc = db.collection("users").document(user_id).get()
@@ -407,7 +407,7 @@ def user_profile():
 
     roles = user.get("roles", [])
     if "teacher" in roles:
-        return redirect(url_for('routes.teacher_profile', teacher_id=user_id))
+        return redirect(url_for('teachers.teacher_profile', teacher_id=user_id))
     elif "student" in roles:
         return render_template("student_profile.html", student=user)
     elif "admin" in roles:
@@ -462,7 +462,7 @@ def update_student_profile(student_id):
 def edit_song(song_id):
     if 'user_id' not in session:
         flash("יש להתחבר כדי לערוך שיר", "error")
-        return redirect(url_for('routes.login'))
+        return redirect(url_for('auth.login'))
 
     doc = db.collection("songs").document(song_id).get()
     if not doc.exists:
@@ -473,7 +473,7 @@ def edit_song(song_id):
     user_roles = session.get("roles", [])
     if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
         flash("אין לך הרשאה לערוך שיר זה", "error")
-        return redirect(url_for('routes.songs'))
+        return redirect(url_for('songs.songs'))
 
     # Handle the old POST method for backward compatibility (if needed)
     if request.method == 'POST':
@@ -489,7 +489,7 @@ def edit_song(song_id):
         }
         db.collection("songs").document(song_id).update(updated_fields)
         flash("🎵 השיר עודכן בהצלחה!", "success")
-        return redirect(url_for('routes.chords', song_id=song_id))
+        return redirect(url_for('songs.chords', song_id=song_id))
 
     # Prepare song data for template
     song["id"] = song_id
@@ -510,7 +510,7 @@ def tutorials():
 def upload_profile_image():
     if 'user_id' not in session:
         flash("יש להתחבר כדי להעלות תמונה", "error")
-        return redirect(url_for('routes.login'))
+        return redirect(url_for('auth.login'))
 
     file = request.files.get('profile_image')
     user_id = request.form.get('user_id')
@@ -521,7 +521,7 @@ def upload_profile_image():
 
     if session['user_id'] != user_id:
         flash("אין לך הרשאה לשנות תמונה זו", "error")
-        return redirect(url_for('routes.home'))
+        return redirect(url_for('home'))
 
     # שמירת קובץ זמנית
     filename = secure_filename(file.filename)
@@ -549,9 +549,9 @@ def upload_profile_image():
 
     # הפנייה חכמה
     if "teacher" in session.get("roles", []):
-        return redirect(url_for('routes.teacher_profile', teacher_id=user_id))
+        return redirect(url_for('teachers.teacher_profile', teacher_id=user_id))
     else:
-        return redirect(url_for('routes.user_profile'))
+        return redirect(url_for('students.user_profile'))
 
 from flask import request
 from datetime import datetime
@@ -592,7 +592,7 @@ def info_page():
                 "created_by": session.get("user_id")
             })
             flash("הפוסט פורסם בהצלחה!", "success")
-            return redirect(url_for('routes.info_page'))
+            return redirect(url_for('info.info_page'))
 
     return render_template("info.html", posts=posts)
 

@@ -27,21 +27,22 @@
         <ul class="nav-links" id="nav-links">
             {% set roles = session.get('roles', []) %}
             {% if session.get('user_id') %}
-                <li><a href="{{ url_for('routes.home') }}">דף הבית</a></li>
-                <li><a href="{{ url_for('routes.videos') }}">שיעורים</a></li>
-                <li><a href="{{ url_for('routes.songs') }}">שירים</a></li>
-                <li><a href="{{ url_for('routes.list_teachers') }}">רשימת מורים</a></li>
-                <li><a href="{{ url_for('routes.tutorials') }}">📘 עמוד הדרכה</a></li>
-                <li><a href="{{ url_for('routes.info_page') }}">עמוד מידע</a></li>
-                <li><a href="{{ url_for('routes.user_profile') }}">👤 {{ session.get('username') }}</a></li>
+                <li><a href="{{ url_for('home') }}">דף הבית</a></li>
+                <li><a href="{{ url_for('videos.videos') }}">שיעורים</a></li>
+                <li><a href="{{ url_for('songs.songs') }}">שירים</a></li>
+                <li><a href="{{ url_for('teachers.list_teachers') }}">רשימת מורים</a></li>
+                <li><a href="{{ url_for('tutorials.tutorials') }}">📘 עמוד הדרכה</a></li>
+                <li><a href="{{ url_for('info.info_page') }}">עמוד מידע</a></li>
+                <li><a href="{{ url_for('students.user_profile') }}">👤 {{ session.get('username') }}</a></li>
                 {% if 'teacher' in roles or 'admin' in roles %}
-                    <li><a href="{{ url_for('routes.add_song_page') }}">➕ הוספת שיר</a></li>
+                    <li><a href="{{ url_for('songs.add_song_page') }}">➕ הוספת שיר</a></li>
                 {% endif %}
-                <li><a href="{{ url_for('routes.logout') }}">🚪 התנתק</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">🚪 התנתק</a></li>
             {% else %}
-                <li><a href="{{ url_for('routes.home') }}">דף הבית</a></li>
-                <li><a href="{{ url_for('routes.songs') }}">רשימת שירים</a></li>
-                <li><a href="{{ url_for('routes.tutorials') }}">📘 עמוד הדרכה</a></li>
+                <li><a href="{{ url_for('home') }}">דף הבית</a></li>
+                <li><a href="{{ url_for('songs.songs') }}">רשימת שירים</a></li>
+                <li><a href="{{ url_for('tutorials.tutorials') }}">📘 עמוד הדרכה</a></li>
+
             {% endif %}
         </ul>
     </nav>

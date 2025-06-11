@@ -10,7 +10,7 @@
         <img src="{{ student.profile_image }}" alt="תמונת פרופיל" style="width: 150px; border-radius: 50%; margin-bottom: 20px;">
     {% endif %}
 
-    <form action="{{ url_for('routes.upload_profile_image') }}" method="POST" enctype="multipart/form-data" style="margin-bottom: 20px;">
+    <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" style="margin-bottom: 20px;">
         <input type="file" name="profile_image" accept="image/*" required style="margin-bottom: 10px;">
         <input type="hidden" name="user_id" value="{{ student.id }}">
         <button type="submit" class="btn">⬆️ העלה תמונת פרופיל</button>

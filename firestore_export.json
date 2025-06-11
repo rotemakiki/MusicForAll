@@ -29,51 +29,54 @@
       "email": "saargura@gmail.com",
       "instruments": "",
       "username": "Saar Gur",
-      "is_logged_in": true
+      "is_logged_in": false
     }
   },
   "songs": {
-    "4idtYpfbMm4RhZXcircI": {
-      "created_at": "2025-06-08T08:52:41.750828+00:00",
-      "video_url": "https://www.youtube.com/embed/hbLgszfXTAY",
+    "5cY0qii5yRtN65vOIsuW": {
+      "created_at": "2025-06-09T07:43:18.207896+00:00",
+      "video_url": "https://www.youtube.com/embed/6zPIWva7760",
       "key": "D",
-      "chords": "[[\"Dmaj7\", \"Dmaj7\"], [\"A#m\", \"A#m\", \"A#m\"]]",
-      "artist": "hhh",
+      "chords": "[[\"D#dim\", \"D#dim\"], [\"Abm\", \"Abm\", \"Abm\"], [\"Ebaug\", \"Ebaug\", \"Ebaug\", \"Ebaug\"]]",
+      "artist": "דגככגד",
       "bpm": 100,
-      "title": "hhhh",
-      "created_by": "OLKXZUtvyZ6EosAkJHJj",
-      "key_type": "minor",
-      "difficulty": "beginner",
-      "time_signature": "7/8",
-      "difficulty_approved": false
-    },
-    "ViGlci8uZSfh24dWgooU": {
-      "created_at": "2025-06-08T07:25:37.608035+00:00",
-      "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
-      "key": "C",
-      "chords": "[[\"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"D#maj7\"], [\"D#maj7\", \"D#maj7\", \"D#maj7\", \"D#maj7\"], [\"D#\", \"D#\", \"D#\", \"D#\", \"D#\"]]",
-      "artist": "הפיג'מות",
-      "bpm": 100,
-      "title": "שיר המכולת",
-      "created_by": "OLKXZUtvyZ6EosAkJHJj",
-      "key_type": "minor",
-      "difficulty": "intermediate",
-      "time_signature": "4/4",
-      "difficulty_approved": false
-    },
-    "w7DoslS196OUOVfKoO9h": {
-      "created_at": "2025-06-08T08:24:35.041577+00:00",
-      "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
-      "key": "C",
-      "chords": "[[\"Dmaj7\", \"Dmaj7\", \"Dmaj7\", \"Dmaj7\"], [\"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"Cmaj7\", \"Cmaj7\"]]",
-      "artist": "גכגכ",
-      "bpm": 100,
-      "title": "גכגכ",
+      "title": "תיק קטן",
       "created_by": "OLKXZUtvyZ6EosAkJHJj",
       "key_type": "major",
-      "difficulty": "intermediate",
-      "time_signature": "2/4",
-      "difficulty_approved": false
+      "updated_at": "2025-06-09T08:05:19.738032+00:00",
+      "difficulty": "beginner",
+      "difficulty_approved": false,
+      "time_signature": "4/4"
+    },
+    "7Bxe8WXGkCtSIROxVmOC": {
+      "created_at": "2025-06-09T07:38:54.314036+00:00",
+      "video_url": "https://www.youtube.com/embed/Ft6WbN10p68",
+      "key": "D",
+      "chords": "[[\"D\"], [\"Dmaj7\", \"Dmaj7\", \"Dmaj7\", \"Dmaj7\", \"Dmaj7\"], [\"Ddim\", \"Ddim\", \"Dmaj7\"]]",
+      "artist": "עגעג",
+      "bpm": 100,
+      "title": "גכעכ",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "melodic_minor",
+      "updated_at": "2025-06-09T08:37:07.604886+00:00",
+      "difficulty": "beginner",
+      "difficulty_approved": false,
+      "time_signature": "4/4"
+    },
+    "ecABU15RSa9VupLNQsq2": {
+      "created_at": "2025-06-09T09:10:11.774116+00:00",
+      "video_url": "https://www.youtube.com/embed/pQJayF2tNDg",
+      "key": "C",
+      "chords": "[[\"Ddim\", \"Ddim\", \"Ddim\", \"Ddim\"], [\"Amaj7\", \"Amaj7\", \"Amaj7\", \"Amaj7\"], [\"Emaj7\", \"Emaj7\"]]",
+      "artist": "עייע",
+      "bpm": 100,
+      "title": "יעיע",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "major",
+      "updated_at": "2025-06-09T09:12:32.054946+00:00",
+      "difficulty": "beginner",
+      "difficulty_approved": false,
+      "time_signature": "6/8"
     }
   },
   "videos": {

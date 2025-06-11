@@ -34,8 +34,8 @@
 <audio id="metronome-sound" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
 
 <div class="buttons" style="margin-top: 20px;">
-    <a href="{{ url_for('routes.chords', song_id=song.id) }}" class="btn">🎼 חזרה לעמוד השיר</a>
-    <a href="{{ url_for('routes.songs') }}" class="btn">📚 חזרה לרשימת השירים</a>
+    <a href="{{ url_for('songs.chords', song_id=song.id) }}" class="btn">🎼 חזרה לעמוד השיר</a>
+    <a href="{{ url_for('songs.songs') }}" class="btn">📚 חזרה לרשימת השירים</a>
 </div>
 
 <style>
