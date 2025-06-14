@@ -1,0 +1,29 @@
+<!-- Current Measure Builder -->
+<div class="measure-builder">
+    <h3>📦 בניית תיבה נוכחית</h3>
+
+    <div class="measure-controls">
+        <div class="input-group">
+            <label>🔢 מספר נקישות בתיבה:</label>
+            <input type="number" id="measure-beats" value="4" min="1" max="16">
+            <button class="btn small-btn" onclick="createNewMeasure()">צור תיבה חדשה</button>
+        </div>
+    </div>
+
+    <!-- Current Measure Preview -->
+    <div id="current-measure-container" class="measure-container">
+        <div class="measure-placeholder">
+            <p>👈 לחץ "צור תיבה חדשה" כדי להתחיל</p>
+        </div>
+    </div>
+
+    <!-- Measure Action Buttons -->
+    <div class="measure-actions">
+        <button class="btn" onclick="addMeasureToLine()" id="add-to-line-btn" disabled>
+            ⬅️ הוסף תיבה לשורה
+        </button>
+        <button class="btn secondary-btn" onclick="createNewLine()">
+            ⬇️ שורה חדשה
+        </button>
+    </div>
+</div>

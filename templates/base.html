@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}מוזיקה לכולם{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block head %}{% endblock %}
     <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
 </head>
 <body>
@@ -14,14 +15,11 @@
         {% if session.get('user_id') %}
             {% set profile_image = session.get('profile_image', '') %}
             {% if profile_image %}
-                <!-- תמונת פרופיל במקום המבורגר -->
                 <img src="{{ profile_image }}" alt="תמונת פרופיל" class="profile-icon" onclick="toggleMenu()" style="width: 44px; height: 44px; object-fit: cover; border-radius: 50%; cursor: pointer;">
             {% else %}
-                <!-- אייקון המבורגר רגיל -->
                 <div class="menu-icon" onclick="toggleMenu()">☰</div>
             {% endif %}
         {% else %}
-            <!-- לא מחובר: תמיד המבורגר -->
             <div class="menu-icon" onclick="toggleMenu()">☰</div>
         {% endif %}
         <ul class="nav-links" id="nav-links">
@@ -42,7 +40,6 @@
                 <li><a href="{{ url_for('home') }}">דף הבית</a></li>
                 <li><a href="{{ url_for('songs.songs') }}">רשימת שירים</a></li>
                 <li><a href="{{ url_for('tutorials.tutorials') }}">📘 עמוד הדרכה</a></li>
-
             {% endif %}
         </ul>
     </nav>
@@ -52,7 +49,6 @@
     </div>
 
     <style>
-        /* הוספת עיצוב לתמונת פרופיל בתפריט */
         .profile-icon {
             border: 2px solid #fff;
             box-shadow: 0 2px 8px #0002;
@@ -62,5 +58,7 @@
             border: 2px solid #007bff;
         }
     </style>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

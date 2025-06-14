@@ -1,0 +1,39 @@
+<!-- Enhanced Chord Selector Sidebar -->
+<div class="chord-sidebar">
+    <h3>🎸 בחירת אקורדים</h3>
+
+    <div class="sidebar-content">
+        <!-- Root Note Selection -->
+        <div class="section">
+            <h4>בחר תו יסוד</h4>
+            <div id="root-letters" class="button-grid"></div>
+        </div>
+
+        <!-- Accidental Toggle -->
+        <button id="toggle-accidental" class="accidental-btn">♮ ללא סימן</button>
+
+        <!-- Chord Type Selection -->
+        <div class="section">
+            <h4>סוג אקורד</h4>
+            <div id="chord-types" class="chord-types-grid"></div>
+        </div>
+
+        <!-- Current Selection Display -->
+        <div class="current-selection">
+            <strong>אקורד נבחר</strong>
+            <div id="current-chord-display">—</div>
+        </div>
+
+        <!-- Add Chord Button -->
+        <button class="add-chord-btn" onclick="addChordToCurrentMeasure()" disabled>
+            ➕ הוסף אקורד לתיבה
+        </button>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="btn small-btn secondary-btn" onclick="clearCurrentMeasure()" id="clear-measure-btn" disabled>
+                🗑️ נקה תיבה
+            </button>
+        </div>
+    </div>
+</div>

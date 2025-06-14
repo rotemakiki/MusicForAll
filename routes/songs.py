@@ -152,7 +152,7 @@ def delete_song(song_id):
 
 @songs_bp.route('/add-chords')
 def add_chords_page():
-    return render_template('add_chords.html')
+    return render_template('add_chords_base.html')
 
 @songs_bp.route('/play/<string:song_id>')
 def play_song(song_id):

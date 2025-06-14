@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}הוספת אקורדים לשיר{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_chords.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="main-content">
+        {% include "add_chords/measure_builder.html" %}
+        {% include "add_chords/song_structure.html" %}
+    </div>
+    {% include "add_chords/chord_sidebar.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/add_chords.js') }}"></script>
+{% endblock %}
