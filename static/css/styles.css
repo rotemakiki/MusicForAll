@@ -159,3 +159,15 @@ body {
 .chord-row {
     direction: ltr;
 }
+
+.resize-handle {
+    width: 6px;
+    cursor: ew-resize;
+    background-color: #aaa;
+    margin: 0 2px;
+    border-radius: 3px;
+    transition: background 0.2s;
+}
+.resize-handle:hover {
+    background-color: #777;
+}

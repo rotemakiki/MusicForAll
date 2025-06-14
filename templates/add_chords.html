@@ -1,570 +1,1085 @@
-{% extends "base.html" %}
-{% block title %}הוספת אקורדים{% endblock %}
 
-{% block content %}
-<div class="container">
-    <h1>🎸 הוספת אקורדים לשיר</h1>
 
-    <!-- בורר אקורד -->
-    <div style="margin-bottom: 20px;">
-        <h3>בחר אקורד:</h3>
-        <div id="root-letters" class="button-row"></div>
 
-        <button id="toggle-accidental" class="btn accidental-btn">♮ ללא סימן</button>
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הוספת אקורדים לשיר</title>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <h1>🎵 הוספת אקורדים לשיר</h1>
 
-        <h4 style="margin-top: 20px;">בחר סוג אקורד:</h4>
-        <div id="chord-types" class="button-row"></div>
+            <!-- Current Measure Builder -->
+            <div class="measure-builder">
+                <h3>📦 בניית תיבה נוכחית</h3>
 
-        <p style="margin-top: 10px;">אקורד נבחר: <strong id="current-selection">—</strong></p>
-    </div>
+                <div class="measure-controls">
+                    <div class="input-group">
+                        <label>🔢 מספר נקישות בתיבה:</label>
+                        <input type="number" id="measure-beats" value="4" min="1" max="16">
+                        <button class="btn small-btn" onclick="createNewMeasure()">צור תיבה חדשה</button>
+                    </div>
+                </div>
 
-    <!-- אזור יצירת תיבה חדשה -->
-    <div class="measure-box-creator">
-        <h3>יצירת תיבה חדשה</h3>
-        <div class="input-group">
-            <label>מספר נקישות בתיבה:</label>
-            <input type="number" id="beats-input" value="4" min="1" max="12" class="beats-input">
+                <!-- Current Measure Preview -->
+                <div id="current-measure-container" class="measure-container">
+                    <div class="measure-placeholder">
+                        <p>👈 לחץ "צור תיבה חדשה" כדי להתחיל</p>
+                    </div>
+                </div>
+
+                <!-- Measure Action Buttons -->
+                <div class="measure-actions">
+                    <button class="btn" onclick="addMeasureToLine()" id="add-to-line-btn" disabled>
+                        ⬅️ הוסף תיבה לשורה
+                    </button>
+                    <button class="btn secondary-btn" onclick="createNewLine()">
+                        ⬇️ שורה חדשה
+                    </button>
+                </div>
+            </div>
+
+            <!-- Song Structure Display -->
+            <div class="song-structure">
+                <h3>🎼 מבנה השיר</h3>
+                <div id="song-lines"></div>
+
+                <div class="finish-controls">
+                    <button class="btn finish-btn" onclick="finishAndReturn()">
+                        ✅ סיים והמשך
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="input-group">
-            <label>שם תיבה (לא חובה):</label>
-            <input type="text" id="label-input" placeholder="" class="label-input">
-        </div>
-        <div class="create-btn-container">
-            <button type="button" class="btn create-btn" onclick="createMeasureBox()">צור תיבה</button>
-        </div>
-        <!-- הצגת התיבה שיצרת -->
-        <div id="current-measure-box"></div>
-        <button type="button" class="btn add-measure-btn" id="add-measure-btn" onclick="addMeasureToLine()">הוסף תיבה לשורה</button>
-    </div>
 
-    <!-- מבנה השיר -->
-    <div class="chords-layout">
-        <div class="chord-builder">
-            <h3>רשימת אקורדים לשיר</h3>
-            <div id="chord-lines"></div>
+        <!-- Chord Selector Sidebar -->
+        <div class="chord-sidebar">
+            <h3>🎸 בחר אקורד</h3>
 
-            <!-- Edit/Delete controls will appear here dynamically -->
-            <div id="edit-delete-controls"></div>
+            <!-- Root Note Selection -->
+            <div class="section">
+                <h4>בחר תו יסוד:</h4>
+                <div id="root-letters" class="button-grid"></div>
+            </div>
 
-            <div class="builder-buttons">
-                <button type="button" class="btn new-line-btn" onclick="addNewLine()">⬇️ ירידת שורה</button>
-                <button type="button" class="btn finish-btn" onclick="finishAndReturn()">✅ סיים והמשך</button>
+            <!-- Accidental Toggle -->
+            <button id="toggle-accidental" class="accidental-btn">♮ ללא סימן</button>
+
+            <!-- Chord Type Selection -->
+            <div class="section">
+                <h4>בחר סוג אקורד:</h4>
+                <div id="chord-types" class="button-grid"></div>
+            </div>
+
+            <!-- Current Selection Display -->
+            <div class="current-selection">
+                <strong>אקורד נבחר:</strong>
+                <div id="current-chord-display">—</div>
+            </div>
+
+            <!-- Add Chord Button -->
+            <button class="btn add-chord-btn" onclick="addChordToCurrentMeasure()" disabled>
+                ➕ הוסף אקורד לתיבה
+            </button>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="btn small-btn secondary-btn" onclick="clearCurrentMeasure()" id="clear-measure-btn" disabled>
+                    🗑️ נקה תיבה
+                </button>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-    .container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .chords-layout {
-        display: flex;
-        justify-content: center;
-        margin-top: 30px;
-    }
-
-    .chord-builder {
-        width: 100%;
-        max-width: 800px;
-    }
-
-    .chord-line {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 18px;
-        padding: 12px 14px;
-        background: #f8faff;
-        border: 2px solid #b4d7ff;
-        border-radius: 16px;
-        min-height: 54px;
-        direction: ltr;
-        box-shadow: 0 2px 8px rgba(135,180,255,0.07);
-        transition: background 0.2s;
-        align-items: center;
-    }
-
-    .chord-box {
-        padding: 13px 18px;
-        border: 2px solid #007bff;
-        border-radius: 12px;
-        font-weight: bold;
-        background: #e9f4ff;
-        min-width: 80px;
-        min-height: 64px;
-        text-align: center;
-        cursor: pointer;
-        position: relative;
-        transition: all 0.15s;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .chord-box.selected {
-        border: 2.5px solid #007bff;
-        box-shadow: 0 0 9px #a5d4ff;
-        background: #d4edff;
-    }
-
-    .chord-box .chord-name {
-        font-size: 20px;
-        font-weight: bold;
-        line-height: 1;
-    }
-
-    .chord-box .chord-beats {
-        font-size: 16px;
-        color: #226;
-        line-height: 1;
-        margin-top: 2px;
-    }
-
-    .chord-box .chord-label {
-        font-size: 14px;
-        color: #444;
-        margin-top: 3px;
-        line-height: 1;
-    }
-
-    .measure-box-creator {
-        margin-bottom: 32px;
-        border: 1px solid #cce;
-        border-radius: 10px;
-        padding: 18px;
-        background: #fafbff;
-    }
-
-    .input-group {
-        margin-bottom: 12px;
-    }
-
-    .input-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
-    }
-
-    .beats-input {
-        width: 80px;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 16px;
-    }
-
-    .label-input {
-        width: 200px;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 16px;
-    }
-
-    .create-btn-container {
-        margin: 16px 0;
-    }
-
-    .edit-btn, .delete-btn {
-        margin-right: 8px;
-        background: none;
-        border: none;
-        color: #007bff;
-        font-size: 16px;
-        cursor: pointer;
-        padding: 8px 12px;
-        border-radius: 4px;
-        transition: all 0.2s;
-    }
-
-    .delete-btn {
-        color: #e74c3c;
-    }
-
-    .edit-btn:hover {
-        color: #0056b3;
-        background: #f0f8ff;
-    }
-
-    .delete-btn:hover {
-        color: #b81e1e;
-        background: #fff0f0;
-    }
-
-    .builder-buttons {
-        margin-top: 20px;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .btn {
-        background-color: #007bff;
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 500;
-        transition: all 0.2s;
-        min-width: 120px;
-    }
-
-    .btn:hover {
-        background-color: #0056b3;
-        transform: translateY(-1px);
-    }
-
-    .accidental-btn {
-        margin-top: 10px;
-        min-width: 140px;
-    }
-
-    .create-btn {
-        background-color: #28a745;
-    }
-
-    .create-btn:hover {
-        background-color: #218838;
-    }
-
-    .add-measure-btn {
-        display: none;
-        margin-top: 12px;
-        background-color: #17a2b8;
-    }
-
-    .add-measure-btn:hover {
-        background-color: #138496;
-    }
-
-    .new-line-btn {
-        background-color: #6c757d;
-    }
-
-    .new-line-btn:hover {
-        background-color: #545b62;
-    }
-
-    .finish-btn {
-        background-color: #28a745;
-        min-width: 150px;
-    }
-
-    .finish-btn:hover {
-        background-color: #218838;
-    }
-
-    .letter-button, .type-button {
-        padding: 12px 16px;
-        background: #f8f9fa;
-        border: 2px solid #dee2e6;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        min-width: 50px;
-        text-align: center;
-    }
-
-    .letter-button:hover, .type-button:hover {
-        background: #e9ecef;
-        border-color: #adb5bd;
-    }
-
-    .letter-button.selected, .type-button.selected {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-
-    .button-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-bottom: 10px;
-    }
-
-    #edit-delete-controls {
-        margin-bottom: 15px;
-        text-align: center;
-    }
-
-    #current-measure-box {
-        margin-top: 14px;
-        text-align: center;
-    }
-
-    h1 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 30px;
-    }
-
-    h3 {
-        color: #555;
-        margin-bottom: 15px;
-    }
-
-    h4 {
-        color: #666;
-        margin-bottom: 10px;
-    }
-</style>
-
-<script>
-    const rootLetters = ["A", "B", "C", "D", "E", "F", "G"];
-    const accidentalOptions = ["", "#", "b"];
-    const chordTypes = ["", "m", "7", "maj7", "dim", "sus4", "aug", "m7"];
-
-    let accidentalIndex = 0;
-    let selectedLetter = null;
-    let selectedType = "";
-    let selectedChord = null;
-
-    // Load chords from localStorage if exist, else start new
-    let songChords;
-    try {
-        const saved = localStorage.getItem("chords");
-        songChords = saved ? JSON.parse(saved) : [[]];
-    } catch {
-        songChords = [[]];
-    }
-
-    // For selecting an existing chord to edit/delete
-    let selectedChordLineIndex = null;
-    let selectedChordIndexInLine = null;
-
-    function getCurrentAccidental() {
-        return accidentalOptions[accidentalIndex];
-    }
-
-    function updateSelectedChord() {
-        if (!selectedLetter) {
-            selectedChord = null;
-            document.getElementById("current-selection").innerText = "—";
-            return;
-        }
-        selectedChord = selectedLetter + getCurrentAccidental() + selectedType;
-        document.getElementById("current-selection").innerText = selectedChord;
-    }
-
-    function renderRootButtons() {
-        const container = document.getElementById("root-letters");
-        container.innerHTML = "";
-        rootLetters.forEach(letter => {
-            const fullChord = letter + getCurrentAccidental();
-            const btn = document.createElement("div");
-            btn.className = "letter-button";
-            btn.innerText = fullChord;
-            if (selectedLetter === letter) btn.classList.add("selected");
-            btn.addEventListener("click", () => {
-                selectedLetter = letter;
-                updateSelectedChord();
-                renderRootButtons();
-            });
-            container.appendChild(btn);
-        });
-    }
-
-    function renderTypeButtons() {
-        const container = document.getElementById("chord-types");
-        container.innerHTML = "";
-        chordTypes.forEach(type => {
-            const btn = document.createElement("div");
-            btn.className = "type-button";
-            btn.innerText = type || "רגיל";
-            if (selectedType === type) btn.classList.add("selected");
-            btn.addEventListener("click", () => {
-                selectedType = type;
-                updateSelectedChord();
-                renderTypeButtons();
-            });
-            container.appendChild(btn);
-        });
-    }
-
-    function toggleAccidental() {
-        accidentalIndex = (accidentalIndex + 1) % accidentalOptions.length;
-        const labelMap = {
-            "": "♮ ללא סימן",
-            "#": "♯ דיאז",
-            "b": "♭ במול"
-        };
-        document.getElementById("toggle-accidental").innerText = labelMap[getCurrentAccidental()];
-        updateSelectedChord();
-        renderRootButtons();
-    }
-
-    function addNewLine() {
-        songChords.push([]);
-        renderChordLines();
-        selectedChordLineIndex = null;
-        selectedChordIndexInLine = null;
-        renderEditDeleteControls();
-    }
-
-    function renderChordLines() {
-        const container = document.getElementById("chord-lines");
-        container.innerHTML = "";
-        songChords.forEach((line, lineIdx) => {
-            const lineDiv = document.createElement("div");
-            lineDiv.className = "chord-line";
-            line.forEach((chordData, chordIdx) => {
-                const box = document.createElement("div");
-                box.className = "chord-box";
-
-                // Handle both old string format and new measure object format
-                if (typeof chordData === 'string') {
-                    // Old format - just chord name
-                    box.innerHTML = `<div class="chord-name">${chordData}</div>`;
-                } else if (typeof chordData === 'object' && chordData.chord) {
-                    // New format - measure object
-                    box.innerHTML = `
-                        <div class="chord-name">${chordData.chord}</div>
-                        <div class="chord-beats">${chordData.beats} נקישות</div>
-                        ${chordData.label ? `<div class="chord-label">${chordData.label}</div>` : ""}
-                    `;
-                }
-
-                // Highlight if selected
-                if (selectedChordLineIndex === lineIdx && selectedChordIndexInLine === chordIdx) {
-                    box.classList.add("selected");
-                }
-
-                // Clicking a chord selects it for edit/delete
-                box.addEventListener("click", (e) => {
-                    selectedChordLineIndex = lineIdx;
-                    selectedChordIndexInLine = chordIdx;
-                    renderChordLines();
-                    renderEditDeleteControls();
-                    e.stopPropagation();
-                });
-
-                lineDiv.appendChild(box);
-            });
-            container.appendChild(lineDiv);
-        });
-    }
-
-    function renderEditDeleteControls() {
-        const controlsDiv = document.getElementById("edit-delete-controls");
-        controlsDiv.innerHTML = "";
-
-        if (selectedChordLineIndex !== null && selectedChordIndexInLine !== null) {
-            // Get chord
-            const chordData = songChords[selectedChordLineIndex][selectedChordIndexInLine];
-            // Edit button
-            const editBtn = document.createElement("button");
-            editBtn.className = "edit-btn";
-            editBtn.innerHTML = "🖉 ערוך";
-            editBtn.onclick = () => editChord(selectedChordLineIndex, selectedChordIndexInLine);
-            controlsDiv.appendChild(editBtn);
-
-            // Delete button
-            const deleteBtn = document.createElement("button");
-            deleteBtn.className = "delete-btn";
-            deleteBtn.innerHTML = "🗑 מחק";
-            deleteBtn.onclick = () => deleteChord(selectedChordLineIndex, selectedChordIndexInLine);
-            controlsDiv.appendChild(deleteBtn);
-        }
-    }
-
-    // Edit chord: loads the values to the picker and removes from list
-    function editChord(lineIdx, chordIdx) {
-        const chordData = songChords[lineIdx][chordIdx];
-        let chordName;
-
-        // Handle both old and new formats
-        if (typeof chordData === 'string') {
-            chordName = chordData;
-        } else if (typeof chordData === 'object' && chordData.chord) {
-            chordName = chordData.chord;
-            // If it's a measure object, also populate the beats and label inputs
-            document.getElementById("beats-input").value = chordData.beats || 4;
-            document.getElementById("label-input").value = chordData.label || "";
+    <style>
+        * {
+            box-sizing: border-box;
         }
 
-        // Regex to parse chord parts (example: "C#m7" => letter=C, acc=#, type=m7)
-        const chordMatch = chordName.match(/^([A-G])([#b]?)(.*)$/);
-        if (chordMatch) {
-            selectedLetter = chordMatch[1];
-            accidentalIndex = accidentalOptions.indexOf(chordMatch[2]);
-            selectedType = chordMatch[3] || "";
-            updateSelectedChord();
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f7fa;
+            direction: rtl;
+            user-select: none;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+            gap: 20px;
+        }
+
+        /* Chord Sidebar */
+        .chord-sidebar {
+            width: 280px;
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .chord-sidebar h3 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h4 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .chord-btn {
+            padding: 12px 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chord-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .chord-btn.selected {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .accidental-btn {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #6c757d;
+            border-radius: 8px;
+            background: #6c757d;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+
+        .accidental-btn:hover {
+            background: #545b62;
+            border-color: #545b62;
+        }
+
+        .current-selection {
+            background: #f8f9ff;
+            border: 2px solid #b4d7ff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #current-chord-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin-top: 8px;
+        }
+
+        .add-chord-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            max-width: calc(100vw - 320px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .measure-builder {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .measure-builder h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .measure-controls {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .input-group input {
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 80px;
+        }
+
+        .measure-container {
+            border: 3px dashed #ccc;
+            border-radius: 12px;
+            min-height: 120px;
+            margin-bottom: 20px;
+            position: relative;
+            background: #fafbfc;
+        }
+
+        .measure-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 120px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .measure-preview {
+            display: flex;
+            align-items: stretch;
+            height: 120px;
+            padding: 15px;
+            gap: 0;
+            position: relative;
+        }
+
+        .chord-in-measure {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 2px solid transparent;
+            margin: 0 1px;
+            min-width: 60px;
+        }
+
+        .chord-in-measure:hover {
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            z-index: 10;
+        }
+
+        .chord-in-measure.selected {
+            border-color: #ff4757;
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .chord-name {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .chord-beats {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .chord-remove {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chord-in-measure:hover .chord-remove {
+            display: flex;
+        }
+
+        .resize-handle {
+            width: 12px;
+            cursor: ew-resize;
+            background: linear-gradient(to bottom, #28a745, #1e7e34);
+            border-radius: 6px;
+            position: relative;
+            transition: all 0.2s;
+            margin: 10px 0;
+            opacity: 0.7;
+        }
+
+        .resize-handle:hover {
+            background: linear-gradient(to bottom, #ffd700, #ffc107);
+            width: 16px;
+            opacity: 1;
+        }
+
+        .resize-handle.dragging {
+            background: linear-gradient(to bottom, #ff4757, #ff3838);
+            width: 20px;
+            opacity: 1;
+        }
+
+        .resize-handle::before {
+            content: '⋮⋮';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            line-height: 0.6;
+        }
+
+        .measure-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .song-structure {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .song-structure h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .song-line {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8faff;
+            border: 2px solid #e3f2fd;
+            border-radius: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            direction: ltr;
+        }
+
+        .measure-in-line {
+            display: flex;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 120px;
+            height: 60px;
+        }
+
+        .finish-controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        /* Button Styles */
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .small-btn {
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+
+        .secondary-btn {
+            background: #6c757d;
+        }
+
+        .secondary-btn:hover {
+            background: #545b62;
+        }
+
+        .finish-btn {
+            background: #28a745;
+            padding: 15px 30px;
+            font-size: 16px;
+        }
+
+        .finish-btn:hover {
+            background: #218838;
+        }
+
+        /* Width input popup */
+        .width-input-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid #007bff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .width-input-popup.show {
+            display: block;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .popup-overlay.show {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .chord-sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+
+            .main-content {
+                max-width: 100%;
+            }
+
+            .button-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+
+    <script>
+        // Chord system configuration
+        const rootLetters = ["A", "B", "C", "D", "E", "F", "G"];
+        const accidentalOptions = ["", "#", "b"];
+        const chordTypes = ["", "m", "7", "maj7", "dim", "sus4", "aug", "m7"];
+
+        // State variables
+        let accidentalIndex = 0;
+        let selectedLetter = null;
+        let selectedType = "";
+        let currentMeasure = null;
+        let songStructure = [[]]; // Array of lines, each line contains measures
+        let selectedChordIndex = -1;
+
+        // Drag and resize state
+        let isDragging = false;
+        let dragIndex = null;
+        let startX = 0;
+        let originalWidths = [];
+
+        // Initialize the page
+        function init() {
             renderRootButtons();
             renderTypeButtons();
+            renderSongStructure();
+            updateAccidentalButton();
         }
-        // Remove the chord from the array
-        songChords[lineIdx].splice(chordIdx, 1);
-        // If line is empty after deletion, remove the line
-        if (songChords[lineIdx].length === 0 && songChords.length > 1) {
-            songChords.splice(lineIdx, 1);
+
+        // Get current accidental symbol
+        function getCurrentAccidental() {
+            return accidentalOptions[accidentalIndex];
         }
-        // Clear selection
-        selectedChordLineIndex = null;
-        selectedChordIndexInLine = null;
-        renderChordLines();
-        renderEditDeleteControls();
-    }
 
-    // Delete chord: removes chord from line
-    function deleteChord(lineIdx, chordIdx) {
-        songChords[lineIdx].splice(chordIdx, 1);
-        // If line is empty after deletion, remove the line
-        if (songChords[lineIdx].length === 0 && songChords.length > 1) {
-            songChords.splice(lineIdx, 1);
+        // Update the selected chord display
+        function updateSelectedChord() {
+            const display = document.getElementById("current-chord-display");
+            const addButton = document.querySelector(".add-chord-btn");
+
+            if (!selectedLetter) {
+                display.textContent = "—";
+                addButton.disabled = true;
+                return;
+            }
+
+            const chord = selectedLetter + getCurrentAccidental() + selectedType;
+            display.textContent = chord;
+            addButton.disabled = !currentMeasure;
         }
-        // Clear selection
-        selectedChordLineIndex = null;
-        selectedChordIndexInLine = null;
-        renderChordLines();
-        renderEditDeleteControls();
-    }
 
-    function finishAndReturn() {
-        localStorage.setItem("chords", JSON.stringify(songChords));
-        localStorage.setItem("justReturnedFromChords", "true");
+        // Render root note buttons
+        function renderRootButtons() {
+            const container = document.getElementById("root-letters");
+            container.innerHTML = "";
 
-        // Check if we're editing an existing song
-        const editingSongId = localStorage.getItem("editingSongId");
-        if (editingSongId) {
-            // We're editing - go back to edit song page
-            window.location.href = `/edit_song/${editingSongId}`;
-        } else {
-            // We're adding a new song - go to add song page
-            window.location.href = "/add_song";
+            rootLetters.forEach(letter => {
+                const btn = document.createElement("div");
+                btn.className = "chord-btn";
+                btn.textContent = letter + getCurrentAccidental();
+
+                if (selectedLetter === letter) {
+                    btn.classList.add("selected");
+                }
+
+                btn.onclick = () => {
+                    selectedLetter = letter;
+                    updateSelectedChord();
+                    renderRootButtons();
+                };
+
+                container.appendChild(btn);
+            });
         }
-    }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        renderRootButtons();
-        renderTypeButtons();
-        renderChordLines();
-        renderEditDeleteControls();
+        // Render chord type buttons
+        function renderTypeButtons() {
+            const container = document.getElementById("chord-types");
+            container.innerHTML = "";
 
-        document.getElementById("toggle-accidental").addEventListener("click", toggleAccidental);
+            chordTypes.forEach(type => {
+                const btn = document.createElement("div");
+                btn.className = "chord-btn";
+                btn.textContent = type || "רגיל";
 
-        // Clicking outside deselects
-        document.body.addEventListener("click", () => {
-            selectedChordLineIndex = null;
-            selectedChordIndexInLine = null;
-            renderChordLines();
-            renderEditDeleteControls();
-        });
-        // Prevent click inside builder from deselecting
-        document.querySelector('.chord-builder').addEventListener("click", (e) => {
+                if (selectedType === type) {
+                    btn.classList.add("selected");
+                }
+
+                btn.onclick = () => {
+                    selectedType = type;
+                    updateSelectedChord();
+                    renderTypeButtons();
+                };
+
+                container.appendChild(btn);
+            });
+        }
+
+        // Toggle accidental (natural, sharp, flat)
+        function toggleAccidental() {
+            accidentalIndex = (accidentalIndex + 1) % accidentalOptions.length;
+            updateAccidentalButton();
+            updateSelectedChord();
+            renderRootButtons();
+        }
+
+        // Update accidental button text
+        function updateAccidentalButton() {
+            const button = document.getElementById("toggle-accidental");
+            const labels = {
+                "": "♮ ללא סימן",
+                "#": "♯ דיאז",
+                "b": "♭ במול"
+            };
+            button.textContent = labels[getCurrentAccidental()];
+        }
+
+        // Create a new empty measure
+        function createNewMeasure() {
+            const beats = parseInt(document.getElementById("measure-beats").value);
+            if (isNaN(beats) || beats < 1) {
+                alert("יש להזין מספר נקישות תקין");
+                return;
+            }
+
+            currentMeasure = {
+                beats: beats,
+                chords: []
+            };
+
+            selectedChordIndex = -1;
+            renderCurrentMeasure();
+            updateButtons();
+        }
+
+        // Add selected chord to current measure
+        function addChordToCurrentMeasure() {
+            if (!currentMeasure) {
+                alert("יש ליצור תיבה קודם");
+                return;
+            }
+
+            if (!selectedLetter) {
+                alert("יש לבחור אקורד");
+                return;
+            }
+
+            const chordName = selectedLetter + getCurrentAccidental() + selectedType;
+
+            // Calculate remaining space
+            const usedBeats = currentMeasure.chords.reduce((sum, chord) => sum + chord.width, 0);
+            const remainingBeats = currentMeasure.beats - usedBeats;
+
+            if (remainingBeats < 0.25) {
+                alert("התיבה מלאה - אין מקום לאקורד נוסף");
+                return;
+            }
+
+            // Add new chord with minimum width
+            const newWidth = Math.min(1, remainingBeats);
+            currentMeasure.chords.push({
+                chord: chordName,
+                width: newWidth
+            });
+
+            renderCurrentMeasure();
+            updateButtons();
+        }
+
+        // Remove chord from current measure
+        function removeChordFromMeasure(index) {
+            if (!currentMeasure || index < 0 || index >= currentMeasure.chords.length) return;
+
+            currentMeasure.chords.splice(index, 1);
+            selectedChordIndex = -1;
+
+            renderCurrentMeasure();
+            updateButtons();
+        }
+
+        // Select chord in measure
+        function selectChordInMeasure(index) {
+            selectedChordIndex = selectedChordIndex === index ? -1 : index;
+            renderCurrentMeasure();
+        }
+
+        // Clear current measure
+        function clearCurrentMeasure() {
+            if (!currentMeasure) return;
+
+            currentMeasure.chords = [];
+            selectedChordIndex = -1;
+            renderCurrentMeasure();
+            updateButtons();
+        }
+
+        // Update button states
+        function updateButtons() {
+            const addToLineBtn = document.getElementById("add-to-line-btn");
+            const clearBtn = document.getElementById("clear-measure-btn");
+
+            addToLineBtn.disabled = !currentMeasure || currentMeasure.chords.length === 0;
+            clearBtn.disabled = !currentMeasure || currentMeasure.chords.length === 0;
+
+            document.querySelector(".add-chord-btn").disabled = !currentMeasure || !selectedLetter;
+        }
+
+        // Render current measure being built
+        function renderCurrentMeasure() {
+            const container = document.getElementById("current-measure-container");
+
+            if (!currentMeasure) {
+                container.innerHTML = '<div class="measure-placeholder"><p>👈 לחץ "צור תיבה חדשה" כדי להתחיל</p></div>';
+                return;
+            }
+
+            if (currentMeasure.chords.length === 0) {
+                container.innerHTML = '<div class="measure-placeholder"><p>🎵 הוסף אקורדים לתיבה</p></div>';
+                return;
+            }
+
+            const measureDiv = document.createElement("div");
+            measureDiv.className = "measure-preview";
+
+            // Calculate flex basis for each chord
+            const totalBeats = currentMeasure.beats;
+
+            currentMeasure.chords.forEach((chord, index) => {
+                // Create chord element
+                const chordDiv = document.createElement("div");
+                chordDiv.className = "chord-in-measure";
+                if (selectedChordIndex === index) {
+                    chordDiv.classList.add("selected");
+                }
+
+                const flexBasis = (chord.width / totalBeats) * 100;
+                chordDiv.style.flexBasis = `${flexBasis}%`;
+                chordDiv.style.flexGrow = '0';
+                chordDiv.style.flexShrink = '0';
+
+                chordDiv.innerHTML = `
+                    <div class="chord-name">${chord.chord}</div>
+                    <div class="chord-beats">${chord.width.toFixed(2)} נקישות</div>
+                    <button class="chord-remove" onclick="removeChordFromMeasure(${index}); event.stopPropagation();">×</button>
+                `;
+
+                // Add click to select chord
+                chordDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    selectChordInMeasure(index);
+                };
+
+                // Add double-click to edit width
+                chordDiv.ondblclick = (e) => {
+                    e.stopPropagation();
+                    editChordWidth(index);
+                };
+
+                measureDiv.appendChild(chordDiv);
+
+                // Add resize handle (except for last chord)
+                if (index < currentMeasure.chords.length - 1) {
+                    const handle = document.createElement("div");
+                    handle.className = "resize-handle";
+                    handle.onmousedown = (e) => startResize(e, index);
+                    measureDiv.appendChild(handle);
+                }
+            });
+
+            // Show remaining space info
+            const usedBeats = currentMeasure.chords.reduce((sum, chord) => sum + chord.width, 0);
+            const remainingBeats = currentMeasure.beats - usedBeats;
+
+            if (remainingBeats > 0.01) {
+                const spacerDiv = document.createElement("div");
+                spacerDiv.style.flexBasis = `${(remainingBeats / totalBeats) * 100}%`;
+                spacerDiv.style.border = "2px dashed #ccc";
+                spacerDiv.style.borderRadius = "8px";
+                spacerDiv.style.display = "flex";
+                spacerDiv.style.alignItems = "center";
+                spacerDiv.style.justifyContent = "center";
+                spacerDiv.style.color = "#999";
+                spacerDiv.style.fontSize = "12px";
+                spacerDiv.style.margin = "0 1px";
+                spacerDiv.textContent = `${remainingBeats.toFixed(2)} נקישות פנויות`;
+                measureDiv.appendChild(spacerDiv);
+            }
+
+            container.innerHTML = "";
+            container.appendChild(measureDiv);
+        }
+
+        // Edit chord width with popup
+        function editChordWidth(index) {
+            if (!currentMeasure || index < 0 || index >= currentMeasure.chords.length) return;
+
+            const chord = currentMeasure.chords[index];
+            const newWidth = prompt(`הזן רוחב חדש לאקורד ${chord.chord} (נקישות):`, chord.width.toFixed(2));
+
+            if (newWidth === null) return; // User cancelled
+
+            const width = parseFloat(newWidth);
+            if (isNaN(width) || width <= 0) {
+                alert("יש להזין מספר חיובי");
+                return;
+            }
+
+            // Check if total doesn't exceed measure beats
+            const otherChordsWidth = currentMeasure.chords
+                .filter((_, i) => i !== index)
+                .reduce((sum, c) => sum + c.width, 0);
+
+            if (otherChordsWidth + width > currentMeasure.beats) {
+                alert(`הרוחב גדול מדי. מקסימום: ${(currentMeasure.beats - otherChordsWidth).toFixed(2)}`);
+                return;
+            }
+
+            chord.width = width;
+            renderCurrentMeasure();
+        }
+
+        // Start resize operation
+        function startResize(e, index) {
+            e.preventDefault();
             e.stopPropagation();
+
+            isDragging = true;
+            dragIndex = index;
+            startX = e.clientX;
+
+            originalWidths = currentMeasure.chords.map(chord => chord.width);
+
+            const handle = e.target;
+            handle.classList.add('dragging');
+
+            document.addEventListener("mousemove", onResize);
+            document.addEventListener("mouseup", stopResize);
+
+            document.body.style.cursor = "ew-resize";
+        }
+
+        // Handle resize dragging
+        function onResize(e) {
+            if (!isDragging || dragIndex === null) return;
+
+            const deltaX = e.clientX - startX;
+            const container = document.querySelector(".measure-preview");
+            const containerWidth = container.offsetWidth - 30; // Account for padding
+            const deltaBeats = (deltaX / containerWidth) * currentMeasure.beats;
+
+            const leftChord = currentMeasure.chords[dragIndex];
+            const rightChord = currentMeasure.chords[dragIndex + 1];
+
+            const newLeftWidth = originalWidths[dragIndex] + deltaBeats;
+            const newRightWidth = originalWidths[dragIndex + 1] - deltaBeats;
+
+            // Ensure minimum widths
+            const minWidth = 0.25;
+            if (newLeftWidth >= minWidth && newRightWidth >= minWidth) {
+                leftChord.width = Math.round(newLeftWidth * 100) / 100; // Round to 2 decimal places
+                rightChord.width = Math.round(newRightWidth * 100) / 100;
+                renderCurrentMeasure();
+            }
+        }
+
+        // Stop resize operation
+        function stopResize() {
+            isDragging = false;
+            dragIndex = null;
+
+            document.body.style.cursor = "";
+            document.querySelectorAll('.resize-handle').forEach(handle => {
+                handle.classList.remove('dragging');
+            });
+
+            document.removeEventListener("mousemove", onResize);
+            document.removeEventListener("mouseup", stopResize);
+        }
+
+        // Add current measure to current line
+        function addMeasureToLine() {
+            if (!currentMeasure || currentMeasure.chords.length === 0) {
+                alert("אין תיבה להוספה");
+                return;
+            }
+
+            // Add to current line (last line)
+            songStructure[songStructure.length - 1].push({...currentMeasure});
+
+            // Reset current measure
+            currentMeasure = null;
+            selectedChordIndex = -1;
+            renderCurrentMeasure();
+            renderSongStructure();
+            updateButtons();
+        }
+
+        // Create new line
+        function createNewLine() {
+            songStructure.push([]);
+            renderSongStructure();
+        }
+
+        // Render the entire song structure
+        function renderSongStructure() {
+            const container = document.getElementById("song-lines");
+            container.innerHTML = "";
+
+            songStructure.forEach((line, lineIndex) => {
+                if (line.length === 0 && lineIndex === songStructure.length - 1) {
+                    // Don't show empty last line
+                    return;
+                }
+
+                const lineDiv = document.createElement("div");
+                lineDiv.className = "song-line";
+
+                if (line.length === 0) {
+                    lineDiv.innerHTML = '<p style="color: #999; font-style: italic;">שורה ריקה</p>';
+                } else {
+                    line.forEach((measure) => {
+                        const measureDiv = document.createElement("div");
+                        measureDiv.className = "measure-in-line";
+
+                        measure.chords.forEach(chord => {
+                            const chordDiv = document.createElement("div");
+                            chordDiv.className = "chord-in-measure";
+                            chordDiv.style.flex = chord.width;
+                            chordDiv.innerHTML = `
+                                <div class="chord-name">${chord.chord}</div>
+                                <div class="chord-beats">${chord.width.toFixed(1)}</div>
+                            `;
+                            measureDiv.appendChild(chordDiv);
+                        });
+
+                        lineDiv.appendChild(measureDiv);
+                    });
+                }
+
+                container.appendChild(lineDiv);
+            });
+        }
+
+            function finishAndReturn() {
+                // Convert song structure into flat chord lines
+                const chordLines = songStructure.filter(line => line.length > 0).map(line => {
+                    return line.flatMap(measure =>
+                        measure.chords.map(chord => ({
+                            chord: chord.chord,
+                            beats: chord.width,
+                            label: ""
+                        }))
+                    );
+                });
+
+                try {
+                    // Save chord data to localStorage
+                    localStorage.setItem("chords", JSON.stringify(chordLines));
+                    localStorage.setItem("justReturnedFromChords", "true");
+                } catch (e) {
+                    console.log("localStorage not available - data stored in memory only");
+                }
+
+                // Navigate to the add song page
+                window.location.href = "/add_song";
+            }
+
+
+        // Keyboard shortcuts
+        function handleKeydown(e) {
+            if (!currentMeasure) return;
+
+            // Delete selected chord
+            if (e.key === 'Delete' && selectedChordIndex >= 0) {
+                removeChordFromMeasure(selectedChordIndex);
+            }
+
+            // Navigate between chords
+            if (e.key === 'ArrowLeft' && currentMeasure.chords.length > 0) {
+                selectedChordIndex = selectedChordIndex <= 0 ?
+                    currentMeasure.chords.length - 1 : selectedChordIndex - 1;
+                renderCurrentMeasure();
+            }
+
+            if (e.key === 'ArrowRight' && currentMeasure.chords.length > 0) {
+                selectedChordIndex = selectedChordIndex >= currentMeasure.chords.length - 1 ?
+                    0 : selectedChordIndex + 1;
+                renderCurrentMeasure();
+            }
+
+            // Add chord with Enter
+            if (e.key === 'Enter' && selectedLetter) {
+                addChordToCurrentMeasure();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener("DOMContentLoaded", () => {
+            init();
+
+            // Setup accidental toggle
+            document.getElementById("toggle-accidental").onclick = toggleAccidental;
+
+            // Add keyboard support
+            document.addEventListener("keydown", handleKeydown);
+
+            // Prevent context menu on right click for better UX
+            document.addEventListener("contextmenu", (e) => {
+                if (e.target.closest('.measure-preview')) {
+                    e.preventDefault();
+                }
+            });
         });
-    });
-</script>
-<script src="{{ url_for('static', filename='js/measure.js') }}"></script>
-{% endblock %}
+
+        // Touch support for mobile
+        let touchStartX = 0;
+        let touchStartTime = 0;
+
+        function handleTouchStart(e, index) {
+            touchStartX = e.touches[0].clientX;
+            touchStartTime = Date.now();
+        }
+
+        function handleTouchEnd(e, index) {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndTime = Date.now();
+            const deltaX = Math.abs(touchEndX - touchStartX);
+            const deltaTime = touchEndTime - touchStartTime;
+
+            // If it's a tap (not a swipe), select the chord
+            if (deltaX < 10 && deltaTime < 300) {
+                selectChordInMeasure(index);
+            }
+        }
+    </script>
+</body>
+</html>
