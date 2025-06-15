@@ -2,328 +2,108 @@
 
 {% block title %}נגן שיר - {{ song.title }}{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/play_song.css') }}">
+{% endblock %}
+
 {% block content %}
-<h2>{{ song.title }}</h2>
+<div class="play-song-container">
+    <header class="song-header">
+        <h1>🎵 {{ song.title }}</h1>
+        <div class="song-info">
+            <span class="original-bpm-display">
+                <span class="bpm-icon">🎼</span>
+                <span class="label">BPM מקורי:</span>
+                <span class="original-bpm">{{ song.bpm }}</span>
+            </span>
+            <span class="current-bpm-display">
+                <span class="bpm-icon">⚡</span>
+                <span class="label">BPM נוכחי:</span>
+                <span id="current-bpm">{{ song.bpm }}</span>
+            </span>
+        </div>
+    </header>
 
-<div id="bpm-info">BPM: {{ song.bpm }}</div>
-<div id="controls" style="margin: 20px 0;">
-    <div>
-        <label>הקצב הנוכחי: <span id="current-bpm">{{ song.bpm }}</span> BPM</label><br>
-        <input type="range" id="bpm-slider" min="40" max="200" value="{{ song.bpm }}">
-        <input type="number" id="bpm-input" min="40" max="200" value="{{ song.bpm }}" style="width: 70px; margin-right: 15px;">
-        <button onclick="resetBpm()">🌀 אפס BPM</button>
+    <div class="main-layout">
+        <div class="controls-panel">
+            <div class="control-group">
+                <label class="control-label">
+                    <span class="control-icon">🎛️</span>
+                    הקצב הנוכחי
+                </label>
+                <div class="bpm-controls">
+                    <input type="range" id="bpm-slider" min="40" max="200" value="{{ song.bpm }}" class="bpm-slider">
+                    <input type="number" id="bpm-input" min="40" max="200" value="{{ song.bpm }}" class="bpm-input">
+                    <button onclick="resetBpm()" class="reset-btn" title="אפס לקצב המקורי">
+                        <span class="reset-icon">🔄</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">
+                    <span class="control-icon">🔊</span>
+                    ווליום המטרונום
+                </label>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" class="volume-slider">
+            </div>
+
+            <div class="playback-controls">
+                <button onclick="startPlayback()" class="control-btn play-btn">
+                    <span class="btn-icon">▶️</span>
+                    <span class="btn-text">החל לנגן</span>
+                </button>
+                <button onclick="restartPlayback()" class="control-btn restart-btn">
+                    <span class="btn-icon">⏮️</span>
+                    <span class="btn-text">התחל מחדש</span>
+                </button>
+                <button onclick="stopPlayback()" class="control-btn stop-btn">
+                    <span class="btn-icon">⏹️</span>
+                    <span class="btn-text">עצור</span>
+                </button>
+            </div>
+
+            <div class="navigation-panel">
+                <a href="{{ url_for('songs.chords', song_id=song.id) }}" class="nav-btn primary">
+                    <span class="btn-icon">🎼</span>
+                    <span class="btn-text">חזרה לעמוד השיר</span>
+                </a>
+                <a href="{{ url_for('songs.songs') }}" class="nav-btn secondary">
+                    <span class="btn-icon">📚</span>
+                    <span class="btn-text">רשימת השירים</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="chord-section">
+            <h2 class="section-title">
+                <span class="title-icon">🎸</span>
+                אקורדים
+            </h2>
+
+            <div class="selected-measure-info" id="selected-measure-info" style="display: none;">
+                <div class="info-content">
+                    <span class="info-icon">📍</span>
+                    <span class="info-text">לחץ על תיבה כדי להתחיל לנגן ממנה</span>
+                </div>
+            </div>
+
+            <div id="chords-wrapper" class="chords-wrapper"></div>
+        </div>
     </div>
-
-    <div style="margin-top: 10px;">
-        <label>🔊 ווליום המטרונום:</label>
-        <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
-    </div>
-
-    <div style="margin-top: 10px;">
-        <button onclick="startPlayback()">החל לנגן</button>
-        <button onclick="restartPlayback()">התחל מחדש</button>
-        <button onclick="stopPlayback()">עצור</button>
-    </div>
-</div>
-
-<div id="chord-container">
-    <h3>אקורדים</h3>
-    <div id="chords-wrapper"></div>
 </div>
 
 <audio id="metronome-sound" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
 
-<div class="buttons" style="margin-top: 20px;">
-    <a href="{{ url_for('songs.chords', song_id=song.id) }}" class="btn">🎼 חזרה לעמוד השיר</a>
-    <a href="{{ url_for('songs.songs') }}" class="btn">📚 חזרה לרשימת השירים</a>
-</div>
-
-<style>
-    .chord-row {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-
-    .chord-box {
-        border: 2px solid #aaa;
-        border-radius: 10px;
-        width: 120px;
-        height: 100px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        font-weight: bold;
-        font-size: 18px;
-        padding: 6px 0;
-        box-sizing: border-box;
-        transition: background-color 0.3s ease;
-        position: relative;
-        cursor: pointer;
-    }
-
-    .active {
-        background-color: lightgreen;
-        border-color: green;
-    }
-
-    .selected-chord-box {
-        border: 2px solid blue !important;
-        box-shadow: 0 0 8px blue;
-    }
-
-    .beat-indicators {
-        display: flex;
-        gap: 4px;
-        justify-content: center;
-        margin-top: 4px;
-    }
-
-    .beat-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background-color: #ccc;
-    }
-
-    .beat-dot.active-dot {
-        background-color: #007bff;
-    }
-
-    #bpm-info {
-        margin-bottom: 10px;
-        font-weight: bold;
-        font-size: 16px;
-    }
-
-    .buttons {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        background-color: #007bff;
-        color: white;
-        padding: 10px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        transition: background 0.3s ease;
-    }
-
-    .btn:hover {
-        background-color: #0056b3;
-    }
-</style>
-
 <script>
-    // קבלת רשימת האקורדים במבנה החדש (אובייקט)
-    const chords = {{ song.chords | tojson }};
-    let bpm = {{ song.bpm }};
-    let intervalMs = 60000 / bpm;
-
-    let currentLineIndex = 0;
-    let currentChordIndexInLine = 0;
-    let currentBeat = 0;
-    let interval = null;
-
-    let selectedStartLine = null;
-    let selectedStartChord = null;
-
-    const metronome = document.getElementById("metronome-sound");
-
-    // English comment: Render the chords on the page
-    function renderChords() {
-        const wrapper = document.getElementById("chords-wrapper");
-        wrapper.innerHTML = "";
-
-        let chordNumber = 1; // cumulative for all chords
-
-        chords.forEach((line, lineIdx) => {
-            const rowDiv = document.createElement("div");
-            rowDiv.className = "chord-row";
-            rowDiv.style.direction = "ltr"; // Left to right display
-
-            line.forEach((chordObj, chordIdx) => {
-                const box = document.createElement("div");
-                box.className = "chord-box";
-
-                // Display cumulative number
-                const barNumber = document.createElement("div");
-                barNumber.style.fontSize = "13px";
-                barNumber.style.color = "#888";
-                barNumber.innerText = chordNumber;
-                box.appendChild(barNumber);
-
-                // Show chord name
-                const chordName = document.createElement("div");
-                chordName.style.fontSize = "20px";
-                chordName.style.fontWeight = "bold";
-                chordName.innerText = chordObj.chord;
-                box.appendChild(chordName);
-
-                // Show beats
-                const chordBeats = document.createElement("div");
-                chordBeats.style.fontSize = "16px";
-                chordBeats.style.color = "#226";
-                chordBeats.innerText = chordObj.beats + " נקישות";
-                box.appendChild(chordBeats);
-
-                // Show label if exists
-                if (chordObj.label) {
-                    const chordLabel = document.createElement("div");
-                    chordLabel.style.fontSize = "14px";
-                    chordLabel.style.color = "#444";
-                    chordLabel.innerText = chordObj.label;
-                    box.appendChild(chordLabel);
-                }
-
-                // Highlight if selected or playing
-                const isCurrent = lineIdx === currentLineIndex && chordIdx === currentChordIndexInLine;
-                const isPast = (
-                    lineIdx < currentLineIndex ||
-                    (lineIdx === currentLineIndex && chordIdx < currentChordIndexInLine)
-                );
-                const isSelected = lineIdx === selectedStartLine && chordIdx === selectedStartChord;
-                if (isSelected) box.classList.add("selected-chord-box");
-                if (isPast) box.classList.add("active");
-
-                // Show beat indicators only for current chord
-                if (isCurrent) {
-                    const indicators = document.createElement("div");
-                    indicators.className = "beat-indicators";
-                    for (let j = 0; j < chordObj.beats; j++) {
-                        const dot = document.createElement("div");
-                        dot.className = "beat-dot";
-                        if (j < currentBeat) dot.classList.add("active-dot");
-                        indicators.appendChild(dot);
-                    }
-                    box.appendChild(indicators);
-                } else {
-                    // Spacer for layout
-                    const spacer = document.createElement("div");
-                    spacer.style.height = "16px";
-                    box.appendChild(spacer);
-                }
-
-                // Click to select chord as starting point
-                box.addEventListener("click", () => {
-                    selectedStartLine = lineIdx;
-                    selectedStartChord = chordIdx;
-                    renderChords();
-                });
-
-                rowDiv.appendChild(box);
-                chordNumber++; // For cumulative numbering
-            });
-
-            wrapper.appendChild(rowDiv);
-        });
-    }
-
-    // English comment: Play metronome sound
-    function playMetronome() {
-        metronome.currentTime = 0;
-        metronome.play().catch(() => {});
-    }
-
-    // English comment: Start the playback of the song by chords and beats
-    function startPlayback() {
-        stopPlayback();
-        bpm = parseInt(document.getElementById("bpm-slider").value);
-        intervalMs = 60000 / bpm;
-        document.getElementById("current-bpm").innerText = bpm;
-
-        // Start from selected, or from beginning
-        currentLineIndex = selectedStartLine !== null ? selectedStartLine : 0;
-        currentChordIndexInLine = selectedStartChord !== null ? selectedStartChord : 0;
-        currentBeat = 0;
-
-        renderChords();
-        playMetronome();
-
-        interval = setInterval(() => {
-            const line = chords[currentLineIndex];
-            const chordObj = line[currentChordIndexInLine];
-            const beatsThisChord = chordObj.beats || 4;
-
-            playMetronome();
-            currentBeat++;
-
-            if (currentBeat > beatsThisChord) {
-                currentBeat = 1;
-                currentChordIndexInLine++;
-                if (currentChordIndexInLine >= chords[currentLineIndex].length) {
-                    currentChordIndexInLine = 0;
-                    currentLineIndex++;
-                    if (currentLineIndex >= chords.length) {
-                        stopPlayback();
-                        return;
-                    }
-                }
-            }
-
-            renderChords();
-        }, intervalMs);
-    }
-
-    function stopPlayback() {
-        clearInterval(interval);
-        interval = null;
-    }
-
-    function restartPlayback() {
-        stopPlayback();
-        currentLineIndex = 0;
-        currentChordIndexInLine = 0;
-        currentBeat = 0;
-        selectedStartLine = null;
-        selectedStartChord = null;
-        renderChords();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const bpmSlider = document.getElementById("bpm-slider");
-        const bpmInput = document.getElementById("bpm-input");
-
-        bpmSlider.addEventListener("input", (e) => {
-            bpm = parseInt(e.target.value);
-            bpmInput.value = bpm;
-            document.getElementById("current-bpm").innerText = bpm;
-            intervalMs = 60000 / bpm;
-        });
-
-        bpmInput.addEventListener("change", (e) => {
-            let val = parseInt(e.target.value);
-            if (isNaN(val) || val < 40) val = 40;
-            if (val > 200) val = 200;
-
-            bpmInput.value = val;
-            bpmSlider.value = val;
-            bpm = val;
-            document.getElementById("current-bpm").innerText = bpm;
-            intervalMs = 60000 / bpm;
-        });
-
-        renderChords();
-    });
-
-    document.getElementById("volume-slider").addEventListener("input", (e) => {
-        metronome.volume = parseFloat(e.target.value);
-    });
-
-    function resetBpm() {
-        const defaultBpm = {{ song.bpm }};
-        bpm = defaultBpm;
-        intervalMs = 60000 / bpm;
-        document.getElementById("bpm-slider").value = bpm;
-        document.getElementById("bpm-input").value = bpm;
-        document.getElementById("current-bpm").innerText = bpm;
-    }
-
+    // Pass data from Flask to JavaScript
+    window.songData = {
+        chords: {{ song.chords | tojson }},
+        originalBpm: {{ song.bpm }}
+    };
 </script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/play_song.js') }}"></script>
 {% endblock %}

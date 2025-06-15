@@ -6,7 +6,7 @@
       "profile_image": "https://storage.googleapis.com/music-for-all-f5d9c.firebasestorage.app/profile_images/OLKXZUtvyZ6EosAkJHJj_16a7d2f87a0a4f4b8378c406667eacc1_1_.jpg",
       "is_available": true,
       "created_at": "2025-06-05T07:27:54.079935+00:00",
-      "is_logged_in": false,
+      "is_logged_in": true,
       "roles": [
         "teacher",
         "admin"
@@ -47,17 +47,31 @@
     }
   },
   "songs": {
-    "waDSyMfCN9tWFdcXRJYK": {
-      "created_at": "2025-06-11T16:23:24.798870+00:00",
-      "video_url": "https://www.youtube.com/embed/JfP7zfeQrG4",
-      "key": "G",
-      "chords": "[[{\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Cmaj7\", \"beats\": 5, \"label\": \"\"}, {\"chord\": \"A#\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#m\", \"beats\": 4, \"label\": \"\"}]]",
-      "artist": "חדש",
+    "HkhP5Eau8upfcCZcqmNW": {
+      "created_at": "2025-06-14T10:25:12.507296+00:00",
+      "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
+      "key": "Gb",
+      "chords": "[[{\"chord\": \"A\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 1, \"label\": \"\"}]]",
+      "artist": "עככעעגכ",
       "bpm": 100,
-      "title": "שיר",
+      "title": "עכעכעכ",
       "created_by": "OLKXZUtvyZ6EosAkJHJj",
-      "key_type": "natural_minor",
-      "difficulty": "beginner",
+      "key_type": "minor_pentatonic",
+      "difficulty": "intermediate",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
+    "HtTwMPYpSiVROIVPiuDi": {
+      "created_at": "2025-06-15T06:56:50.128760+00:00",
+      "video_url": "https://www.youtube.com/embed/Ft6WbN10p68",
+      "key": "A",
+      "chords": "[[{\"chord\": \"A\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"A7\", \"beats\": 3.36, \"label\": \"\"}, {\"chord\": \"B#\", \"beats\": 2.64, \"label\": \"\"}], [{\"chord\": \"A#m7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Fbmaj7\", \"beats\": 4, \"label\": \"\"}]]",
+      "artist": "fsdfds",
+      "bpm": 100,
+      "title": "sdfds",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "whole_tone",
+      "difficulty": "intermediate",
       "time_signature": "4/4",
       "difficulty_approved": false
     }

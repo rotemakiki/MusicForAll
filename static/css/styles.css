@@ -171,3 +171,7 @@ body {
 .resize-handle:hover {
     background-color: #777;
 }
+
+.beat-dot {
+    transition: background-color 0.2s;
+}
