@@ -8,14 +8,16 @@ let accidentalIndex = 0;
 let selectedLetter = null;
 let selectedType = "";
 let currentMeasure = null;
-let songStructure = [[]]; // Array of lines, each line contains measures
+let currentMeasureNumber = 1;
 let selectedChordIndex = -1;
 
-// Drag and resize state
-let isDragging = false;
-let dragIndex = null;
-let startX = 0;
-let originalWidths = [];
+// Loop and song structure
+let currentLoop = {
+    type: "verse",
+    repeats: 1,
+    measures: []
+};
+let songLoops = [];
 
 // Initialize the page
 function init() {
@@ -23,6 +25,7 @@ function init() {
     renderTypeButtons();
     renderSongStructure();
     updateAccidentalButton();
+    updateMeasureCounter();
 }
 
 // Get current accidental symbol
@@ -41,16 +44,45 @@ function updateSelectedChord() {
         return;
     }
 
-    const chord = selectedLetter + getCurrentAccidental() + selectedType;
+    let chord;
+    if (selectedLetter === "EMPTY") {
+        chord = "🔇 תו ריק";
+    } else {
+        chord = selectedLetter + getCurrentAccidental() + selectedType;
+    }
+
     display.textContent = chord;
     addButton.disabled = !currentMeasure;
 }
 
-// Render root note buttons
+// Update measure counter
+function updateMeasureCounter() {
+    const counterElement = document.getElementById("current-measure-number");
+    if (counterElement) {
+        counterElement.textContent = currentMeasureNumber;
+    }
+}
+
+// Render root note buttons (including empty chord option)
 function renderRootButtons() {
     const container = document.getElementById("root-letters");
     container.innerHTML = "";
 
+    // Add empty chord option as first button
+    const emptyBtn = document.createElement("div");
+    emptyBtn.className = "chord-btn empty-option";
+    emptyBtn.textContent = "🔇 ריק";
+    if (selectedLetter === "EMPTY") {
+        emptyBtn.classList.add("selected");
+    }
+    emptyBtn.onclick = () => {
+        selectedLetter = "EMPTY";
+        renderRootButtons();
+        updateSelectedChord();
+    };
+    container.appendChild(emptyBtn);
+
+    // Add regular note buttons
     rootLetters.forEach(letter => {
         const btn = document.createElement("div");
         btn.className = "chord-btn";
@@ -62,8 +94,8 @@ function renderRootButtons() {
 
         btn.onclick = () => {
             selectedLetter = letter;
-            renderRootButtons(); // Re-render buttons to show selection
-            updateSelectedChord(); // Update the display
+            renderRootButtons();
+            updateSelectedChord();
         };
 
         container.appendChild(btn);
@@ -86,8 +118,8 @@ function renderTypeButtons() {
 
         btn.onclick = () => {
             selectedType = type;
-            renderTypeButtons(); // Re-render buttons to show selection
-            updateSelectedChord(); // Update the display
+            renderTypeButtons();
+            updateSelectedChord();
         };
 
         container.appendChild(btn);
@@ -98,8 +130,8 @@ function renderTypeButtons() {
 function toggleAccidental() {
     accidentalIndex = (accidentalIndex + 1) % accidentalOptions.length;
     updateAccidentalButton();
-    renderRootButtons(); // Re-render root buttons with new accidental
-    updateSelectedChord(); // Update the display
+    renderRootButtons();
+    updateSelectedChord();
 }
 
 // Update accidental button text
@@ -123,7 +155,8 @@ function createNewMeasure() {
 
     currentMeasure = {
         beats: beats,
-        chords: []
+        chords: [],
+        isEmpty: false
     };
 
     selectedChordIndex = -1;
@@ -131,14 +164,22 @@ function createNewMeasure() {
     updateButtons();
 }
 
-// Redistribute chord widths equally across the measure
-function redistributeChordsEqually() {
-    if (!currentMeasure || currentMeasure.chords.length === 0) return;
-    
-    const equalWidth = currentMeasure.beats / currentMeasure.chords.length;
-    currentMeasure.chords.forEach(chord => {
-        chord.width = equalWidth;
-    });
+// Create a completely empty measure
+function createEmptyMeasure() {
+    const beats = parseInt(document.getElementById("measure-beats").value);
+    if (isNaN(beats) || beats < 1) {
+        alert("יש להזין מספר נקישות תקין");
+        return;
+    }
+
+    currentMeasure = {
+        beats: beats,
+        chords: [],
+        isEmpty: true
+    };
+
+    // Automatically move to next measure for empty measures
+    nextMeasure();
 }
 
 // Add selected chord to current measure
@@ -153,19 +194,52 @@ function addChordToCurrentMeasure() {
         return;
     }
 
-    const chordName = selectedLetter + getCurrentAccidental() + selectedType;
+    let chordName;
+    if (selectedLetter === "EMPTY") {
+        chordName = "🔇";
+    } else {
+        chordName = selectedLetter + getCurrentAccidental() + selectedType;
+    }
 
-    // Add new chord (width will be calculated by redistributeChordsEqually)
+    // Add new chord with equal distribution
     currentMeasure.chords.push({
         chord: chordName,
-        width: 1 // Initial width, will be recalculated
+        width: 1,
+        isEmpty: selectedLetter === "EMPTY"
     });
 
     // Redistribute all chords equally
     redistributeChordsEqually();
-
     renderCurrentMeasure();
     updateButtons();
+}
+
+// Add empty chord (quick action)
+function addEmptyChord() {
+    if (!currentMeasure) {
+        alert("יש ליצור תיבה קודם");
+        return;
+    }
+
+    currentMeasure.chords.push({
+        chord: "🔇",
+        width: 1,
+        isEmpty: true
+    });
+
+    redistributeChordsEqually();
+    renderCurrentMeasure();
+    updateButtons();
+}
+
+// Redistribute chord widths equally across the measure
+function redistributeChordsEqually() {
+    if (!currentMeasure || currentMeasure.chords.length === 0) return;
+
+    const equalWidth = currentMeasure.beats / currentMeasure.chords.length;
+    currentMeasure.chords.forEach(chord => {
+        chord.width = equalWidth;
+    });
 }
 
 // Remove chord from current measure
@@ -177,7 +251,6 @@ function removeChordFromMeasure(index) {
 
     // Redistribute remaining chords equally
     redistributeChordsEqually();
-
     renderCurrentMeasure();
     updateButtons();
 }
@@ -200,13 +273,83 @@ function clearCurrentMeasure() {
 
 // Update button states
 function updateButtons() {
-    const addToLineBtn = document.getElementById("add-to-line-btn");
+    const nextMeasureBtn = document.getElementById("next-measure-btn");
     const clearBtn = document.getElementById("clear-measure-btn");
+    const addEmptyBtn = document.getElementById("add-empty-chord-btn");
 
-    addToLineBtn.disabled = !currentMeasure || currentMeasure.chords.length === 0;
-    clearBtn.disabled = !currentMeasure || currentMeasure.chords.length === 0;
+    if (nextMeasureBtn) {
+        nextMeasureBtn.disabled = !currentMeasure || (currentMeasure.chords.length === 0 && !currentMeasure.isEmpty);
+    }
+    if (clearBtn) {
+        clearBtn.disabled = !currentMeasure || (currentMeasure.chords.length === 0 && !currentMeasure.isEmpty);
+    }
+    if (addEmptyBtn) {
+        addEmptyBtn.disabled = !currentMeasure;
+    }
 
     document.querySelector(".add-chord-btn").disabled = !currentMeasure || !selectedLetter;
+}
+
+// Move to next measure (replaces addMeasureToLine)
+function nextMeasure() {
+    if (!currentMeasure) {
+        alert("אין תיבה להוספה");
+        return;
+    }
+
+    if (!currentMeasure.isEmpty && currentMeasure.chords.length === 0) {
+        alert("התיבה ריקה - הוסף אקורדים או צור תיבה ריקה");
+        return;
+    }
+
+    // Add current measure to current loop
+    currentLoop.measures.push({...currentMeasure});
+
+    // Check if we need to create a new line (every 4 measures)
+    if (currentLoop.measures.length % 4 === 0) {
+        console.log("ירידת שורה אוטומטית אחרי 4 תיבות");
+    }
+
+    // Reset current measure and increment counter
+    currentMeasure = null;
+    selectedChordIndex = -1;
+    currentMeasureNumber++;
+
+    renderCurrentMeasure();
+    renderSongStructure();
+    updateButtons();
+    updateMeasureCounter();
+}
+
+// Finish current loop and start new one
+function finishCurrentLoop() {
+    if (currentLoop.measures.length === 0) {
+        alert("הלופ ריק - הוסף תיבות קודם");
+        return;
+    }
+
+    // Get loop settings
+    const loopType = document.getElementById("loop-type").value;
+    const loopRepeats = parseInt(document.getElementById("loop-repeats").value);
+
+    currentLoop.type = loopType;
+    currentLoop.repeats = loopRepeats;
+
+    // Add current loop to song structure
+    songLoops.push({...currentLoop});
+
+    // Reset for new loop
+    currentLoop = {
+        type: "verse",
+        repeats: 1,
+        measures: []
+    };
+
+    // Reset measure counter for new loop
+    currentMeasureNumber = 1;
+    updateMeasureCounter();
+
+    renderSongStructure();
 }
 
 // Render current measure being built
@@ -218,6 +361,11 @@ function renderCurrentMeasure() {
         return;
     }
 
+    if (currentMeasure.isEmpty) {
+        container.innerHTML = '<div class="measure-placeholder"><p>📦 תיבה ריקה - לחץ "מעבר לתיבה הבאה"</p></div>';
+        return;
+    }
+
     if (currentMeasure.chords.length === 0) {
         container.innerHTML = '<div class="measure-placeholder"><p>🎵 הוסף אקורדים לתיבה</p></div>';
         return;
@@ -226,13 +374,16 @@ function renderCurrentMeasure() {
     const measureDiv = document.createElement("div");
     measureDiv.className = "measure-preview";
 
-    // Calculate flex basis for each chord
     const totalBeats = currentMeasure.beats;
 
     currentMeasure.chords.forEach((chord, index) => {
-        // Create chord element
         const chordDiv = document.createElement("div");
         chordDiv.className = "chord-in-measure";
+
+        if (chord.isEmpty) {
+            chordDiv.classList.add("empty-chord");
+        }
+
         if (selectedChordIndex === index) {
             chordDiv.classList.add("selected");
         }
@@ -254,11 +405,16 @@ function renderCurrentMeasure() {
             selectChordInMeasure(index);
         };
 
-        // Add double-click to edit width (note: this will break equal distribution)
-        chordDiv.ondblclick = (e) => {
-            e.stopPropagation();
-            editChordWidth(index);
-        };
+        // Add drag functionality for better visual feedback
+        chordDiv.draggable = true;
+        chordDiv.addEventListener('dragstart', (e) => {
+            chordDiv.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        chordDiv.addEventListener('dragend', (e) => {
+            chordDiv.classList.remove('dragging');
+        });
 
         measureDiv.appendChild(chordDiv);
 
@@ -271,60 +427,153 @@ function renderCurrentMeasure() {
         }
     });
 
-    // Since chords now fill the entire measure, we don't show remaining space
-    // unless there's rounding error
-    const usedBeats = currentMeasure.chords.reduce((sum, chord) => sum + chord.width, 0);
-    const remainingBeats = currentMeasure.beats - usedBeats;
-
-    if (Math.abs(remainingBeats) > 0.01) {
-        const spacerDiv = document.createElement("div");
-        spacerDiv.style.flexBasis = `${Math.abs(remainingBeats / totalBeats) * 100}%`;
-        spacerDiv.style.border = "2px dashed #ccc";
-        spacerDiv.style.borderRadius = "8px";
-        spacerDiv.style.display = "flex";
-        spacerDiv.style.alignItems = "center";
-        spacerDiv.style.justifyContent = "center";
-        spacerDiv.style.color = "#999";
-        spacerDiv.style.fontSize = "12px";
-        spacerDiv.style.margin = "0 1px";
-        spacerDiv.textContent = `${Math.abs(remainingBeats).toFixed(2)} נקישות ${remainingBeats > 0 ? 'פנויות' : 'עודפות'}`;
-        measureDiv.appendChild(spacerDiv);
-    }
-
     container.innerHTML = "";
     container.appendChild(measureDiv);
 }
 
-// Edit chord width with popup (this will break equal distribution)
-function editChordWidth(index) {
-    if (!currentMeasure || index < 0 || index >= currentMeasure.chords.length) return;
+// Render the entire song structure with loops
+function renderSongStructure() {
+    const container = document.getElementById("song-loops");
+    if (!container) return;
 
-    const chord = currentMeasure.chords[index];
-    const newWidth = prompt(`הזן רוחב חדש לאקורד ${chord.chord} (נקישות):`, chord.width.toFixed(2));
+    container.innerHTML = "";
 
-    if (newWidth === null) return; // User cancelled
+    // Render completed loops
+    songLoops.forEach((loop, loopIndex) => {
+        const loopDiv = document.createElement("div");
+        loopDiv.className = "loop-display";
 
-    const width = parseFloat(newWidth);
-    if (isNaN(width) || width <= 0) {
-        alert("יש להזין מספר חיובי");
-        return;
+        const loopTypeNames = {
+            verse: "בית",
+            chorus: "פזמון",
+            bridge: "C part",
+            transition: "מעבר"
+        };
+
+        loopDiv.innerHTML = `
+            <div class="loop-title">
+                <span>🔄 ${loopTypeNames[loop.type] || loop.type}</span>
+                <span>חוזר ${loop.repeats} פעמים</span>
+            </div>
+        `;
+
+        // Group measures into lines (4 measures per line)
+        const lines = [];
+        for (let i = 0; i < loop.measures.length; i += 4) {
+            lines.push(loop.measures.slice(i, i + 4));
+        }
+
+        lines.forEach(line => {
+            const lineDiv = document.createElement("div");
+            lineDiv.className = "song-line";
+
+            line.forEach(measure => {
+                const measureDiv = document.createElement("div");
+
+                if (measure.isEmpty) {
+                    measureDiv.className = "measure-in-line empty-measure";
+                } else {
+                    measureDiv.className = "measure-in-line";
+
+                    measure.chords.forEach(chord => {
+                        const chordDiv = document.createElement("div");
+                        chordDiv.className = "chord-in-measure";
+
+                        if (chord.isEmpty) {
+                            chordDiv.classList.add("empty-chord");
+                        }
+
+                        chordDiv.style.flex = chord.width;
+                        chordDiv.innerHTML = `
+                            <div class="chord-name">${chord.chord}</div>
+                            <div class="chord-beats">${chord.width.toFixed(1)}</div>
+                        `;
+                        measureDiv.appendChild(chordDiv);
+                    });
+                }
+
+                lineDiv.appendChild(measureDiv);
+            });
+
+            loopDiv.appendChild(lineDiv);
+        });
+
+        container.appendChild(loopDiv);
+    });
+
+    // Show current loop in progress
+    if (currentLoop.measures.length > 0) {
+        const currentLoopDiv = document.createElement("div");
+        currentLoopDiv.className = "loop-display";
+        currentLoopDiv.style.border = "2px dashed #667eea";
+        currentLoopDiv.style.background = "linear-gradient(145deg, #e8f4fd, #f8f9ff)";
+
+        const loopTypeNames = {
+            verse: "בית",
+            chorus: "פזמון",
+            bridge: "C part",
+            transition: "מעבר"
+        };
+
+        const currentLoopType = document.getElementById("loop-type").value;
+        currentLoopDiv.innerHTML = `
+            <div class="loop-title">
+                <span>🔄 ${loopTypeNames[currentLoopType]} (בעבודה...)</span>
+                <span>${currentLoop.measures.length} תיבות</span>
+            </div>
+        `;
+
+        // Group current measures into lines
+        const currentLines = [];
+        for (let i = 0; i < currentLoop.measures.length; i += 4) {
+            currentLines.push(currentLoop.measures.slice(i, i + 4));
+        }
+
+        currentLines.forEach(line => {
+            const lineDiv = document.createElement("div");
+            lineDiv.className = "song-line";
+
+            line.forEach(measure => {
+                const measureDiv = document.createElement("div");
+
+                if (measure.isEmpty) {
+                    measureDiv.className = "measure-in-line empty-measure";
+                } else {
+                    measureDiv.className = "measure-in-line";
+
+                    measure.chords.forEach(chord => {
+                        const chordDiv = document.createElement("div");
+                        chordDiv.className = "chord-in-measure";
+
+                        if (chord.isEmpty) {
+                            chordDiv.classList.add("empty-chord");
+                        }
+
+                        chordDiv.style.flex = chord.width;
+                        chordDiv.innerHTML = `
+                            <div class="chord-name">${chord.chord}</div>
+                            <div class="chord-beats">${chord.width.toFixed(1)}</div>
+                        `;
+                        measureDiv.appendChild(chordDiv);
+                    });
+                }
+
+                lineDiv.appendChild(measureDiv);
+            });
+
+            currentLoopDiv.appendChild(lineDiv);
+        });
+
+        container.appendChild(currentLoopDiv);
     }
-
-    // Check if total doesn't exceed measure beats
-    const otherChordsWidth = currentMeasure.chords
-        .filter((_, i) => i !== index)
-        .reduce((sum, c) => sum + c.width, 0);
-
-    if (otherChordsWidth + width > currentMeasure.beats) {
-        alert(`הרוחב גדול מדי. מקסימום: ${(currentMeasure.beats - otherChordsWidth).toFixed(2)}`);
-        return;
-    }
-
-    chord.width = width;
-    renderCurrentMeasure();
 }
 
-// Start resize operation
+// Resize functionality (simplified for better performance)
+let isDragging = false;
+let dragIndex = null;
+let startX = 0;
+let originalWidths = [];
+
 function startResize(e, index) {
     e.preventDefault();
     e.stopPropagation();
@@ -344,13 +593,12 @@ function startResize(e, index) {
     document.body.style.cursor = "ew-resize";
 }
 
-// Handle resize dragging
 function onResize(e) {
     if (!isDragging || dragIndex === null) return;
 
     const deltaX = e.clientX - startX;
     const container = document.querySelector(".measure-preview");
-    const containerWidth = container.offsetWidth - 30; // Account for padding
+    const containerWidth = container.offsetWidth - 40;
     const deltaBeats = (deltaX / containerWidth) * currentMeasure.beats;
 
     const leftChord = currentMeasure.chords[dragIndex];
@@ -359,16 +607,14 @@ function onResize(e) {
     const newLeftWidth = originalWidths[dragIndex] + deltaBeats;
     const newRightWidth = originalWidths[dragIndex + 1] - deltaBeats;
 
-    // Ensure minimum widths
     const minWidth = 0.25;
     if (newLeftWidth >= minWidth && newRightWidth >= minWidth) {
-        leftChord.width = Math.round(newLeftWidth * 100) / 100; // Round to 2 decimal places
+        leftChord.width = Math.round(newLeftWidth * 100) / 100;
         rightChord.width = Math.round(newRightWidth * 100) / 100;
         renderCurrentMeasure();
     }
 }
 
-// Stop resize operation
 function stopResize() {
     isDragging = false;
     dragIndex = null;
@@ -382,91 +628,62 @@ function stopResize() {
     document.removeEventListener("mouseup", stopResize);
 }
 
-// Add current measure to current line
-function addMeasureToLine() {
-    if (!currentMeasure || currentMeasure.chords.length === 0) {
-        alert("אין תיבה להוספה");
+// Finish and return to main page
+function finishAndReturn() {
+    // Finish current loop if it has measures
+    if (currentLoop.measures.length > 0) {
+        finishCurrentLoop();
+    }
+
+    if (songLoops.length === 0) {
+        alert("לא נוצרו לופים - הוסף תיבות ולופים קודם");
         return;
     }
 
-    // Add to current line (last line)
-    songStructure[songStructure.length - 1].push({...currentMeasure});
+    // Convert loops to flat chord structure for compatibility
+    const chordLines = [];
 
-    // Reset current measure
-    currentMeasure = null;
-    selectedChordIndex = -1;
-    renderCurrentMeasure();
-    renderSongStructure();
-    updateButtons();
-}
+    songLoops.forEach(loop => {
+        // Add loop repeats
+        for (let repeat = 0; repeat < loop.repeats; repeat++) {
+            // Group measures into lines (4 per line)
+            for (let i = 0; i < loop.measures.length; i += 4) {
+                const lineChords = [];
+                const lineMeasures = loop.measures.slice(i, i + 4);
 
-// Create new line
-function createNewLine() {
-    songStructure.push([]);
-    renderSongStructure();
-}
-
-// Render the entire song structure
-function renderSongStructure() {
-    const container = document.getElementById("song-lines");
-    container.innerHTML = "";
-
-    songStructure.forEach((line, lineIndex) => {
-        if (line.length === 0 && lineIndex === songStructure.length - 1) {
-            // Don't show empty last line
-            return;
-        }
-
-        const lineDiv = document.createElement("div");
-        lineDiv.className = "song-line";
-
-        if (line.length === 0) {
-            lineDiv.innerHTML = '<p style="color: #999; font-style: italic;">שורה ריקה</p>';
-        } else {
-            line.forEach((measure) => {
-                const measureDiv = document.createElement("div");
-                measureDiv.className = "measure-in-line";
-
-                measure.chords.forEach(chord => {
-                    const chordDiv = document.createElement("div");
-                    chordDiv.className = "chord-in-measure";
-                    chordDiv.style.flex = chord.width;
-                    chordDiv.innerHTML = `
-                        <div class="chord-name">${chord.chord}</div>
-                        <div class="chord-beats">${chord.width.toFixed(1)}</div>
-                    `;
-                    measureDiv.appendChild(chordDiv);
+                lineMeasures.forEach(measure => {
+                    if (measure.isEmpty) {
+                        // Add empty measure as single empty chord
+                        lineChords.push({
+                            chord: "REST",
+                            beats: measure.beats,
+                            label: ""
+                        });
+                    } else {
+                        measure.chords.forEach(chord => {
+                            lineChords.push({
+                                chord: chord.isEmpty ? "REST" : chord.chord,
+                                beats: chord.width,
+                                label: ""
+                            });
+                        });
+                    }
                 });
 
-                lineDiv.appendChild(measureDiv);
-            });
+                if (lineChords.length > 0) {
+                    chordLines.push(lineChords);
+                }
+            }
         }
-
-        container.appendChild(lineDiv);
-    });
-}
-
-function finishAndReturn() {
-    // Convert song structure into flat chord lines
-    const chordLines = songStructure.filter(line => line.length > 0).map(line => {
-        return line.flatMap(measure =>
-            measure.chords.map(chord => ({
-                chord: chord.chord,
-                beats: chord.width,
-                label: ""
-            }))
-        );
     });
 
     try {
-        // Save chord data to localStorage
         localStorage.setItem("chords", JSON.stringify(chordLines));
         localStorage.setItem("justReturnedFromChords", "true");
     } catch (e) {
         console.log("localStorage not available - data stored in memory only");
     }
 
-    // Navigate to the add song page
     window.location.href = "/add_song";
 }
 
@@ -474,12 +691,10 @@ function finishAndReturn() {
 function handleKeydown(e) {
     if (!currentMeasure) return;
 
-    // Delete selected chord
     if (e.key === 'Delete' && selectedChordIndex >= 0) {
         removeChordFromMeasure(selectedChordIndex);
     }
 
-    // Navigate between chords
     if (e.key === 'ArrowLeft' && currentMeasure.chords.length > 0) {
         selectedChordIndex = selectedChordIndex <= 0 ?
             currentMeasure.chords.length - 1 : selectedChordIndex - 1;
@@ -492,9 +707,14 @@ function handleKeydown(e) {
         renderCurrentMeasure();
     }
 
-    // Add chord with Enter
     if (e.key === 'Enter' && selectedLetter) {
         addChordToCurrentMeasure();
+    }
+
+    // New shortcut: Space for next measure
+    if (e.key === ' ') {
+        e.preventDefault();
+        nextMeasure();
     }
 }
 
@@ -502,37 +722,13 @@ function handleKeydown(e) {
 document.addEventListener("DOMContentLoaded", () => {
     init();
 
-    // Setup accidental toggle
     document.getElementById("toggle-accidental").onclick = toggleAccidental;
-
-    // Add keyboard support
     document.addEventListener("keydown", handleKeydown);
 
-    // Prevent context menu on right click for better UX
+    // Prevent context menu for better UX
     document.addEventListener("contextmenu", (e) => {
         if (e.target.closest('.measure-preview')) {
             e.preventDefault();
         }
     });
 });
-
-// Touch support for mobile
-let touchStartX = 0;
-let touchStartTime = 0;
-
-function handleTouchStart(e, index) {
-    touchStartX = e.touches[0].clientX;
-    touchStartTime = Date.now();
-}
-
-function handleTouchEnd(e, index) {
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndTime = Date.now();
-    const deltaX = Math.abs(touchEndX - touchStartX);
-    const deltaTime = touchEndTime - touchStartTime;
-
-    // If it's a tap (not a swipe), select the chord
-    if (deltaX < 10 && deltaTime < 300) {
-        selectChordInMeasure(index);
-    }
-}

@@ -47,6 +47,34 @@
     }
   },
   "songs": {
+    "3mkxHtL60rUhgMRFAj41": {
+      "created_at": "2025-06-16T14:12:10.378616+00:00",
+      "video_url": "https://www.youtube.com/embed/JIx2H-plXdU",
+      "key": "E",
+      "chords": "[[{\"chord\": \"Em\", \"beats\": 1.5, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 2.5, \"label\": \"\"}], [{\"chord\": \"C#\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"G#\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"F#\", \"beats\": 2, \"label\": \"\"}], [{\"chord\": \"Em\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 1, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 1, \"label\": \"\"}]]",
+      "artist": "Nirvana",
+      "bpm": 132,
+      "title": "About a girl",
+      "created_by": "XKqTtu31QK1g5agkyLG2",
+      "key_type": "natural_minor",
+      "difficulty": "intermediate",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
+    "C68g9JXBwMcIoLqcfu7k": {
+      "created_at": "2025-06-16T14:31:23.706246+00:00",
+      "video_url": "https://www.youtube.com/embed/-zzdy7rITrs",
+      "key": "A",
+      "chords": "[[{\"chord\": \"Am\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 2, \"label\": \"\"}]]",
+      "artist": "אברהם טל",
+      "bpm": 99,
+      "title": "אורות",
+      "created_by": "XKqTtu31QK1g5agkyLG2",
+      "key_type": "natural_minor",
+      "difficulty": "beginner",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
     "HkhP5Eau8upfcCZcqmNW": {
       "created_at": "2025-06-14T10:25:12.507296+00:00",
       "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
@@ -72,6 +100,34 @@
       "created_by": "OLKXZUtvyZ6EosAkJHJj",
       "key_type": "whole_tone",
       "difficulty": "intermediate",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
+    "SiWpYTsef2jZmu25I12W": {
+      "created_at": "2025-06-16T13:23:22.455187+00:00",
+      "video_url": "https://www.youtube.com/embed/6rrM8eUfZn8",
+      "key": "B",
+      "chords": "[[{\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F#\", \"beats\": 4, \"label\": \"\"}]]",
+      "artist": "עטר מיינר",
+      "bpm": 92,
+      "title": "להתעורר",
+      "created_by": "XKqTtu31QK1g5agkyLG2",
+      "key_type": "natural_minor",
+      "difficulty": "intermediate",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
+    "kNE5sjobpY6GkM2F0PaC": {
+      "created_at": "2025-06-16T11:15:22.565643+00:00",
+      "video_url": "https://www.youtube.com/embed/O-sVpVIovKk",
+      "key": "G",
+      "chords": "[[{\"chord\": \"G\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}]]",
+      "artist": "Bob Dylan",
+      "bpm": 70,
+      "title": "Knocking on heaven's door",
+      "created_by": "XKqTtu31QK1g5agkyLG2",
+      "key_type": "major",
+      "difficulty": "beginner",
       "time_signature": "4/4",
       "difficulty_approved": false
     }

@@ -1,12 +1,32 @@
+<!-- Current Loop Section -->
+<div class="loop-section">
+    <div class="loop-header">
+        <h3>🔄 לופ נוכחי</h3>
+        <div class="loop-controls">
+            <select class="loop-type-select" id="loop-type">
+                <option value="verse">בית</option>
+                <option value="chorus">פזמון</option>
+                <option value="bridge">C part</option>
+                <option value="transition">מעבר</option>
+            </select>
+            <label>חזרות:</label>
+            <input type="number" class="loop-repeat-input" id="loop-repeats" value="1" min="1" max="8">
+            <button class="btn" onclick="finishCurrentLoop()">סיים לופ</button>
+        </div>
+    </div>
+</div>
+
 <!-- Current Measure Builder -->
 <div class="measure-builder">
-    <h3>📦 בניית תיבה נוכחית</h3>
-
     <div class="measure-controls">
         <div class="input-group">
+            <div class="measure-counter">
+                תיבה <span id="current-measure-number">1</span>
+            </div>
             <label>🔢 מספר נקישות בתיבה:</label>
             <input type="number" id="measure-beats" value="4" min="1" max="16">
             <button class="btn small-btn" onclick="createNewMeasure()">צור תיבה חדשה</button>
+            <button class="btn small-btn secondary-btn" onclick="createEmptyMeasure()">צור תיבה ריקה</button>
         </div>
     </div>
 
@@ -19,11 +39,8 @@
 
     <!-- Measure Action Buttons -->
     <div class="measure-actions">
-        <button class="btn" onclick="addMeasureToLine()" id="add-to-line-btn" disabled>
-            ⬅️ הוסף תיבה לשורה
-        </button>
-        <button class="btn secondary-btn" onclick="createNewLine()">
-            ⬇️ שורה חדשה
+        <button class="btn next-measure" onclick="nextMeasure()" id="next-measure-btn" disabled>
+            ➡️ מעבר לתיבה הבאה
         </button>
     </div>
 </div>
