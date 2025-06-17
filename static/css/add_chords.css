@@ -134,26 +134,37 @@ body {
     transform: translateY(-1px);
 }
 
+/* עדכון כפתורי הסימנים - 3 כפתורים נפרדים */
+.accidental-buttons {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
 .accidental-btn {
-    width: 100%;
-    padding: 10px;
+    flex: 1;
+    padding: 8px 6px;
     border: none;
     border-radius: 8px;
     background: linear-gradient(135deg, #34495e, #2c3e50);
     color: white;
     cursor: pointer;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 12px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 3px 10px rgba(52, 73, 94, 0.3);
-    margin-bottom: 12px;
-    flex-shrink: 0;
 }
 
 .accidental-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 15px rgba(52, 73, 94, 0.4);
     background: linear-gradient(135deg, #2c3e50, #34495e);
+}
+
+.accidental-btn.selected {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
 }
 
 .current-selection {
@@ -361,6 +372,7 @@ body {
     gap: 12px;
     margin-bottom: 12px;
     flex-wrap: wrap;
+    direction: ltr;
 }
 
 .measure-in-song {
@@ -394,6 +406,7 @@ body {
     gap: 2px;
     margin-bottom: 8px;
     min-height: 35px;
+    direction: ltr;
 }
 
 .chord-in-song {
@@ -552,6 +565,65 @@ h1 {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* כפתור חצאי ספירות */
+.half-beats-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.half-beats-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.half-beats-checkbox input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.half-beats-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.half-beats-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .half-beats-slider {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+input:checked + .half-beats-slider:before {
+    transform: translateX(26px);
+}
+
+.half-beats-label {
+    font-weight: 600;
+    color: #34495e;
+    font-size: 13px;
+}
+
 /* Beat dots above measure */
 .beats-display {
     display: flex;
@@ -578,6 +650,13 @@ h1 {
     font-size: 8px;
     color: #667eea;
     position: relative;
+}
+
+.beat-dot.half-beat {
+    width: 8px;
+    height: 8px;
+    background-color: #e9ecef;
+    border: 1px solid #667eea;
 }
 
 .beat-dot::after {
@@ -620,24 +699,93 @@ h1 {
     padding: 12px;
     gap: 0;
     position: relative;
+    direction: ltr;
 }
 
+/* אקורדים עם יכולת גרירה והגדלה */
 .chord-in-measure {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border-radius: 8px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     font-weight: 700;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
     border: 2px solid transparent;
     margin: 0 1px;
     min-width: 50px;
     box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    overflow: visible;
+}
+
+.resizable-chord {
+    position: relative;
+}
+
+.chord-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: auto;
+}
+
+.chord-content:hover {
+    cursor: grab;
+}
+
+.chord-content:active {
+    cursor: grabbing;
+}
+
+/* Resize Handles */
+.resize-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: ew-resize;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 3;
+    border-radius: 4px;
+}
+
+.resize-handle:hover {
+    background: rgba(255, 255, 255, 0.6);
+    opacity: 1;
+}
+
+.left-handle {
+    left: -4px;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.right-handle {
+    right: -4px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.chord-in-measure:hover .resize-handle {
+    opacity: 0.7;
+}
+
+.chord-in-measure:hover .resize-handle:hover {
+    opacity: 1;
+}
+
+/* Visual feedback for resizing */
+.chord-in-measure.resizing {
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 /* Empty chord styling */
@@ -655,12 +803,6 @@ h1 {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     z-index: 10;
-}
-
-.chord-in-measure.selected {
-    border-color: #ff4757;
-    box-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
-    transform: translateY(-1px);
 }
 
 .chord-name {
@@ -695,6 +837,7 @@ h1 {
     justify-content: center;
     box-shadow: 0 2px 6px rgba(255, 71, 87, 0.4);
     transition: all 0.3s;
+    z-index: 4;
 }
 
 .chord-in-measure:hover .chord-remove {
@@ -787,16 +930,19 @@ h1 {
     color: #2c3e50;
 }
 
+/* תיקון תיבות בלופ */
 .loop-measures-preview {
     display: flex;
     gap: 3px;
     margin-top: 8px;
     flex-wrap: wrap;
+    direction: ltr;
+    justify-content: flex-start;
 }
 
 .mini-measure {
-    width: 60px;
-    height: 40px;
+    width: 50px;
+    height: 35px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border: 2px solid #e1e8ed;
     border-radius: 6px;
@@ -805,8 +951,8 @@ h1 {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 8px;
-    font-weight: 600;
+    font-size: 9px;
+    font-weight: 700;
     color: #34495e;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -820,8 +966,9 @@ h1 {
     display: flex;
     gap: 1px;
     margin-bottom: 2px;
-    max-width: 56px;
+    max-width: 46px;
     overflow: hidden;
+    direction: ltr;
 }
 
 .mini-chord {
@@ -829,7 +976,8 @@ h1 {
     color: white;
     border-radius: 2px;
     padding: 1px 2px;
-    font-size: 6px;
+    font-size: 7px;
+    font-weight: 700;
     min-width: 8px;
     text-align: center;
     height: 12px;
@@ -1123,4 +1271,18 @@ h1 {
 .saved-loop:focus {
     outline: 3px solid rgba(102, 126, 234, 0.5);
     outline-offset: 2px;
+}
+
+/* מניעת בחירת טקסט בזמן גרירה */
+.chord-in-measure * {
+    user-select: none;
+}
+
+/* מצב גרירה גלובלי */
+body.dragging {
+    cursor: grabbing !important;
+}
+
+body.resizing {
+    cursor: ew-resize !important;
 }
