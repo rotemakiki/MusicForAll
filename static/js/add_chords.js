@@ -307,7 +307,6 @@ function nextMeasure() {
 
     // Move to next measure
     currentMeasureNumber++;
-    document.getElementById("current-measure-number").textContent = currentMeasureNumber;
 
     // Create new measure with same beats
     const beats = currentMeasure.beats;
@@ -326,20 +325,15 @@ function saveCurrentLoop() {
         return;
     }
 
-    const loopType = document.getElementById("loop-type").value;
-    const loopTypeNames = {
-        verse: "בית",
-        chorus: "פזמון",
-        bridge: "C part",
-        transition: "מעבר",
-        intro: "פתיחה",
-        outro: "סיום"
-    };
+    const loopName = document.getElementById("loop-name").value.trim();
+    if (!loopName) {
+        alert("יש להזין שם ללופ");
+        return;
+    }
 
     const newLoop = {
         id: Date.now(),
-        type: loopType,
-        typeName: loopTypeNames[loopType],
+        customName: loopName,
         measures: [...currentLoop],
         measureCount: currentLoop.length
     };
@@ -349,7 +343,7 @@ function saveCurrentLoop() {
     // Clear current loop
     currentLoop = [];
     currentMeasureNumber = 1;
-    document.getElementById("current-measure-number").textContent = currentMeasureNumber;
+    document.getElementById("loop-name").value = "";
 
     renderSavedLoops();
     updateLoopDisplay();
@@ -366,7 +360,6 @@ function discardCurrentLoop() {
     if (confirm("האם אתה בטוח שברצונך לבטל את הלופ הנוכחי?")) {
         currentLoop = [];
         currentMeasureNumber = 1;
-        document.getElementById("current-measure-number").textContent = currentMeasureNumber;
         updateLoopDisplay();
         updateButtons();
     }
@@ -377,16 +370,37 @@ function updateLoopDisplay() {
     // Update current loop count
     document.getElementById("current-loop-count").textContent = currentLoop.length;
 
-    // Update current loop preview
+    // Update current loop preview with detailed chord info
     const preview = document.getElementById("current-loop-preview");
     preview.innerHTML = "";
 
     currentLoop.forEach(measure => {
         const miniMeasure = document.createElement("div");
         miniMeasure.className = "mini-measure";
+
         if (measure.chords.length === 0 || measure.chords.every(c => c.isEmpty)) {
             miniMeasure.classList.add("empty");
+        } else {
+            // Show chords in mini measure
+            const chordsDiv = document.createElement("div");
+            chordsDiv.className = "mini-measure-chords";
+
+            measure.chords.forEach(chord => {
+                const miniChord = document.createElement("div");
+                miniChord.className = "mini-chord";
+                if (chord.isEmpty) {
+                    miniChord.classList.add("empty-chord");
+                    miniChord.textContent = "—";
+                } else {
+                    miniChord.textContent = chord.chord;
+                }
+                miniChord.style.flex = chord.width;
+                chordsDiv.appendChild(miniChord);
+            });
+
+            miniMeasure.appendChild(chordsDiv);
         }
+
         preview.appendChild(miniMeasure);
     });
 
@@ -412,15 +426,45 @@ function renderSavedLoops() {
         loopDiv.draggable = true;
         loopDiv.dataset.loopId = loop.id;
 
+        // Create detailed loop preview
+        const loopPreview = document.createElement("div");
+        loopPreview.className = "loop-measures-preview";
+
+        loop.measures.forEach(measure => {
+            const miniMeasure = document.createElement("div");
+            miniMeasure.className = "mini-measure";
+
+            if (measure.chords.length === 0 || measure.chords.every(c => c.isEmpty)) {
+                miniMeasure.classList.add("empty");
+            } else {
+                const chordsDiv = document.createElement("div");
+                chordsDiv.className = "mini-measure-chords";
+
+                measure.chords.forEach(chord => {
+                    const miniChord = document.createElement("div");
+                    miniChord.className = "mini-chord";
+                    if (chord.isEmpty) {
+                        miniChord.classList.add("empty-chord");
+                        miniChord.textContent = "—";
+                    } else {
+                        miniChord.textContent = chord.chord;
+                    }
+                    miniChord.style.flex = chord.width;
+                    chordsDiv.appendChild(miniChord);
+                });
+
+                miniMeasure.appendChild(chordsDiv);
+            }
+
+            loopPreview.appendChild(miniMeasure);
+        });
+
         loopDiv.innerHTML = `
-            <div class="loop-title">${loop.typeName}</div>
+            <div class="loop-title">${loop.customName}</div>
             <div class="loop-info">${loop.measureCount} תיבות</div>
-            <div class="loop-measures-preview">
-                ${loop.measures.map(measure =>
-                    `<div class="mini-measure ${measure.chords.length === 0 || measure.chords.every(c => c.isEmpty) ? 'empty' : ''}"></div>`
-                ).join('')}
-            </div>
         `;
+
+        loopDiv.appendChild(loopPreview);
 
         // Add drag events
         loopDiv.addEventListener('dragstart', handleDragStart);
@@ -437,7 +481,7 @@ function renderSongStructure() {
     if (songStructure.length === 0) {
         container.className = "drop-zone";
         container.innerHTML = `
-            <div>🎵 גרור לופים מהסרגל הימני כדי לבנות את השיר</div>
+            <div>🎵 גרור לופים מהסרגל השמאלי כדי לבנות את השיר</div>
             <div style="font-size: 14px; opacity: 0.7; margin-top: 5px;">או שמור את הלופ הנוכחי ואז גרור אותו לכאן</div>
         `;
         return;
@@ -453,7 +497,7 @@ function renderSongStructure() {
         loopDiv.dataset.songIndex = loopIndex;
 
         // Count occurrences of this loop type
-        const sameTypeLoops = songStructure.filter((l, i) => i <= loopIndex && l.type === loop.type);
+        const sameTypeLoops = songStructure.filter((l, i) => i <= loopIndex && l.customName === loop.customName);
         const loopNumber = sameTypeLoops.length;
 
         const loopHeader = document.createElement("div");
@@ -462,7 +506,7 @@ function renderSongStructure() {
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span class="drag-handle">⋮⋮</span>
                 <div>
-                    <div class="loop-title-in-song">${loop.typeName} ${loopNumber > 1 ? `מספר ${loopNumber}` : ''}</div>
+                    <div class="loop-title-in-song">${loop.customName} ${loopNumber > 1 ? `(${loopNumber})` : ''}</div>
                     <div class="loop-measures-count">${loop.measureCount} תיבות</div>
                 </div>
             </div>
@@ -484,14 +528,17 @@ function renderSongStructure() {
                 measureDiv.className = "measure-in-song";
 
                 const actualMeasureNumber = i + measureIndex + 1;
+                const chordsHtml = measure.chords.map(chord => `
+                    <div class="chord-in-song ${chord.isEmpty ? 'empty-chord' : ''}" style="flex: ${chord.width}">
+                        <div class="chord-name-small">${chord.chord}</div>
+                        <div class="chord-beats-small">${chord.width.toFixed(1)}</div>
+                    </div>
+                `).join('');
+
                 measureDiv.innerHTML = `
                     <div class="measure-title-in-song">תיבה ${actualMeasureNumber}</div>
                     <div class="chords-in-song-measure">
-                        ${measure.chords.map(chord => `
-                            <div class="chord-in-song ${chord.isEmpty ? 'empty-chord' : ''}" style="flex: ${chord.width}">
-                                <div class="chord-beats-small">${chord.width.toFixed(1)}</div>
-                            </div>
-                        `).join('')}
+                        ${chordsHtml}
                     </div>
                     <div class="beats-in-song">
                         ${Array.from({length: Math.round(measure.beats)}, (_, i) =>
