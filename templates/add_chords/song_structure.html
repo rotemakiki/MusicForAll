@@ -1,11 +1,48 @@
-<!-- Song Structure Display -->
-<div class="song-structure">
-    <h3>🎼 מבנה השיר</h3>
-    <div id="song-loops"></div>
+<!-- Loops Sidebar -->
+<div class="loops-sidebar">
+    <h3>🔄 לופים</h3>
+    <div class="loops-content">
+        <!-- Current Loop Section -->
+        <div class="current-loop-section">
+            <div class="loop-header">
+                <h4>לופ נוכחי</h4>
+                <select class="loop-type-select" id="loop-type">
+                    <option value="verse">בית</option>
+                    <option value="chorus">פזמון</option>
+                    <option value="bridge">C part</option>
+                    <option value="transition">מעבר</option>
+                    <option value="intro">פתיחה</option>
+                    <option value="outro">סיום</option>
+                </select>
+            </div>
 
-    <div class="finish-controls">
-        <button class="btn finish-btn" onclick="finishAndReturn()">
-            ✅ סיים והמשך
-        </button>
+            <div class="current-loop-measures">
+                <div>תיבות בלופ: <span id="current-loop-count">0</span></div>
+                <div id="current-loop-preview" class="loop-measures-preview"></div>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <button class="btn success-btn" onclick="saveCurrentLoop()" id="save-loop-btn" disabled>
+                    💾 שמור לופ
+                </button>
+                <button class="btn warning-btn" onclick="discardCurrentLoop()" id="discard-loop-btn" disabled>
+                    🗑️ בטל לופ
+                </button>
+            </div>
+        </div>
+
+        <!-- Saved Loops Section -->
+        <div class="saved-loops-section">
+            <h4>לופים שמורים</h4>
+            <div id="saved-loops-container">
+                <p style="color: #999; font-style: italic; text-align: center;">
+                    עדיין לא נשמרו לופים
+                </p>
+            </div>
+
+            <div style="margin-top: 10px; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; font-size: 12px; color: #667eea;">
+                💡 <strong>טיפ:</strong> גרור לופים שמורים למרכז כדי לבנות את השיר
+            </div>
+        </div>
     </div>
 </div>

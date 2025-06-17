@@ -8,11 +8,11 @@
 
 {% block content %}
 <div class="main-container">
+    {% include "add_chords/chord_sidebar.html" %}
     <div class="main-content">
         {% include "add_chords/measure_builder.html" %}
-        {% include "add_chords/song_structure.html" %}
     </div>
-    {% include "add_chords/chord_sidebar.html" %}
+    {% include "add_chords/song_structure.html" %}
 </div>
 {% endblock %}
 
