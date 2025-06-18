@@ -28,6 +28,17 @@
       "email": "saargurr@gmail.com",
       "instruments": "",
       "username": "saar gur",
+      "is_logged_in": true
+    },
+    "y1RIBovYkpzdkktXR9zG": {
+      "password": "pbkdf2:sha256:600000$NLCjYEZeZ0fpv2FV$d8fabd049a48475850f262e603936627e5ac864252b65df603e2d0b2c80feb5c",
+      "created_at": "2025-06-17T19:08:25.863781+00:00",
+      "profile_image": "",
+      "roles": [
+        "student"
+      ],
+      "email": "Shirajudes@gmail.com",
+      "username": "shiraj",
       "is_logged_in": false
     },
     "z3oSwSkZoqAiAoNM3Ks4": {
@@ -103,6 +114,20 @@
       "time_signature": "4/4",
       "difficulty_approved": false
     },
+    "JnPx7yvDkhDe2qkmxt2D": {
+      "created_at": "2025-06-17T16:16:46.114228+00:00",
+      "video_url": "https://www.youtube.com/embed/wIweXB1cihs",
+      "key": "B",
+      "chords": "[[{\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F#7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F#7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Dmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Dmaj7\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F#7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F#7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Dmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Dmaj7\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F#7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}]]",
+      "artist": "גיל ויין ונתן גושן",
+      "bpm": 125,
+      "title": "בעולם הזה",
+      "created_by": "XKqTtu31QK1g5agkyLG2",
+      "key_type": "natural_minor",
+      "difficulty": "intermediate",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
     "SiWpYTsef2jZmu25I12W": {
       "created_at": "2025-06-16T13:23:22.455187+00:00",
       "video_url": "https://www.youtube.com/embed/6rrM8eUfZn8",
@@ -117,6 +142,20 @@
       "time_signature": "4/4",
       "difficulty_approved": false
     },
+    "ZOH0C4CB2N6yiUBWCoiJ": {
+      "created_at": "2025-06-17T10:53:08.250527+00:00",
+      "video_url": "https://www.youtube.com/embed/4pZzLJp5drI",
+      "key": "G",
+      "chords": "[[{\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Bm\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Gmaj7\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"A#maj7\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F#maj7\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"G#maj7\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"B#\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"E#\", \"beats\": 4, \"label\": \"\"}]]",
+      "artist": "אאא",
+      "bpm": 100,
+      "title": "אאא",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "chromatic",
+      "difficulty": "beginner",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
     "kNE5sjobpY6GkM2F0PaC": {
       "created_at": "2025-06-16T11:15:22.565643+00:00",
       "video_url": "https://www.youtube.com/embed/O-sVpVIovKk",
@@ -127,6 +166,48 @@
       "title": "Knocking on heaven's door",
       "created_by": "XKqTtu31QK1g5agkyLG2",
       "key_type": "major",
+      "difficulty": "beginner",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
+    "lL0o7BCwJY7i9ubwf8Wb": {
+      "created_at": "2025-06-17T08:57:49.390010+00:00",
+      "video_url": "https://www.youtube.com/embed/xkYwDJ5N-fE",
+      "key": "A#",
+      "chords": "[[{\"chord\": \"A\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"B\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"REST\", \"beats\": 1.3333333333333333, \"label\": \"\"}, {\"chord\": \"Cm\", \"beats\": 1.3333333333333333, \"label\": \"\"}, {\"chord\": \"Cm\", \"beats\": 1.3333333333333333, \"label\": \"\"}], [{\"chord\": \"D#7\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"D#sus4\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Bbsus4\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"REST\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"REST\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"REST\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Ab\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Cb\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"REST\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Abm\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"D7\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"D#7\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"D#sus4\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Bbsus4\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"REST\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"REST\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"REST\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Ab\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Cb\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"REST\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"Abm\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"D7\", \"beats\": 4, \"label\": \"\"}]]",
+      "artist": "טטט",
+      "bpm": 100,
+      "title": "טטט",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "whole_tone",
+      "difficulty": "beginner",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
+    "lQcWeoDUrEdDl3Xfyfg4": {
+      "created_at": "2025-06-17T13:16:51.582456+00:00",
+      "video_url": "https://www.youtube.com/embed/4pZzLJp5drI",
+      "key": "Bb",
+      "chords": "[[{\"chord\": \"A\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"B\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#m\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"F#m\", \"beats\": 2, \"label\": \"\"}], [{\"chord\": \"A#m\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#m\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#m\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#m\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"A\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"B\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"D\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"A#m\", \"beats\": 2, \"label\": \"\"}, {\"chord\": \"F#m\", \"beats\": 2, \"label\": \"\"}]]",
+      "artist": "ייי",
+      "bpm": 100,
+      "title": "ייי",
+      "created_by": "OLKXZUtvyZ6EosAkJHJj",
+      "key_type": "blues",
+      "difficulty": "beginner",
+      "time_signature": "4/4",
+      "difficulty_approved": false
+    },
+    "yRUvLxGwHaEPcCsAkBq7": {
+      "created_at": "2025-06-18T11:25:31.771416+00:00",
+      "video_url": "https://www.youtube.com/embed/kplT6ftFokA",
+      "key": "A",
+      "chords": "[[{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Em\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"F\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"G\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}, {\"chord\": \"C\", \"beats\": 4, \"label\": \"\"}], [{\"chord\": \"Am\", \"beats\": 4, \"label\": \"\"}]]",
+      "artist": "The Cure",
+      "bpm": 140,
+      "title": "Lovesong",
+      "created_by": "XKqTtu31QK1g5agkyLG2",
+      "key_type": "natural_minor",
       "difficulty": "beginner",
       "time_signature": "4/4",
       "difficulty_approved": false
