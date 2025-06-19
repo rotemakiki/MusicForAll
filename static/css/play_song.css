@@ -1,4 +1,4 @@
-/* PC-Optimized Play Song Styles - Updated for 4 measures per row */
+/* PC-Optimized Play Song Styles - Updated with loop sections and preparation measure */
 * {
     box-sizing: border-box;
 }
@@ -83,15 +83,17 @@ body {
     min-height: 600px;
 }
 
-/* Controls Panel - Left Side - Reduced width */
+/* Controls Panel - Left Side */
 .controls-panel {
-    width: 280px;
+    width: 320px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border-radius: 20px;
     padding: 20px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     border: 1px solid #e1e8ed;
     height: fit-content;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
     position: sticky;
     top: 20px;
     flex-shrink: 0;
@@ -184,6 +186,94 @@ body {
     box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
 }
 
+/* Preparation controls */
+.preparation-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.preparation-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.preparation-checkbox input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.preparation-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.preparation-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .preparation-slider {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+input:checked + .preparation-slider:before {
+    transform: translateX(26px);
+}
+
+.preparation-label {
+    font-weight: 600;
+    color: #34495e;
+    font-size: 13px;
+}
+
+/* Song parts controls */
+.song-parts-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.song-part-control {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.song-part-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.song-part-checkbox input {
+    accent-color: #667eea;
+}
+
+.song-part-name {
+    font-weight: 600;
+    color: #34495e;
+    font-size: 13px;
+}
+
 .playback-controls {
     display: flex;
     flex-direction: column;
@@ -263,7 +353,7 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Chord Section - Right Side - Increased space */
+/* Chord Section - Right Side */
 .chord-section {
     flex: 1;
     padding: 20px;
@@ -309,9 +399,100 @@ body {
 .chords-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
     direction: ltr;
     padding: 10px;
+}
+
+/* Loop sections */
+.loop-section {
+    border: 2px solid #e1e8ed;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #ffffff, #fafbff);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.loop-section.preparation-section {
+    border-color: #ffc107;
+    background: linear-gradient(145deg, #fff8e1, #fffde7);
+}
+
+.loop-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
+
+.preparation-section .loop-header {
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+}
+
+.loop-title-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.loop-toggle-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.loop-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.loop-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.loop-measures-count {
+    font-size: 13px;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.loop-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.loop-enable-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.loop-enable-checkbox input {
+    accent-color: white;
+    transform: scale(1.2);
+}
+
+.loop-checkbox-label {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.loop-content {
+    padding: 20px;
+    direction: ltr;
 }
 
 .chord-row {
@@ -319,10 +500,10 @@ body {
     justify-content: flex-start;
     gap: 12px;
     flex-wrap: wrap;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-/* Smaller Measure Boxes - 4 per row */
+/* Measure boxes */
 .measure-box {
     display: flex;
     flex-direction: column;
@@ -336,10 +517,20 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
-    /* Fixed smaller width for 4 measures per row */
     width: 180px;
     min-height: 120px;
     flex-shrink: 0;
+}
+
+.measure-box.preparation-measure {
+    border-color: #ffc107;
+    background: linear-gradient(145deg, #fff8e1, #fffde7);
+}
+
+.measure-box.disabled-measure {
+    opacity: 0.5;
+    border-style: dashed;
+    background: linear-gradient(145deg, #f5f5f5, #e9ecef);
 }
 
 .measure-box::before {
@@ -426,7 +617,12 @@ body {
     justify-content: center;
 }
 
-/* Smaller Beat Dots for smaller measures */
+.chord-box.preparation-chord {
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+    color: white;
+    border-color: #ff8f00;
+}
+
 .beats-display {
     display: flex;
     justify-content: space-between;
@@ -486,14 +682,14 @@ body {
     }
 }
 
-/* Responsive adjustments for different screen sizes */
+/* Responsive adjustments */
 @media (min-width: 1400px) {
     .play-song-container {
         max-width: 1800px;
     }
 
     .controls-panel {
-        width: 320px;
+        width: 360px;
     }
 
     .measure-box {
@@ -517,7 +713,7 @@ body {
     }
 
     .controls-panel {
-        width: 260px;
+        width: 280px;
     }
 }
 
@@ -531,6 +727,7 @@ body {
         width: 100%;
         order: 1;
         position: static;
+        max-height: none;
     }
 
     .chord-section {
@@ -545,6 +742,16 @@ body {
 
     .chord-row {
         justify-content: space-between;
+    }
+
+    .loop-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .loop-title-controls {
+        justify-content: center;
     }
 }
 

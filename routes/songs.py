@@ -175,7 +175,12 @@ def play_song(song_id):
     song = doc.to_dict()
     song["id"] = doc.id
 
-    chords_list = json.loads(song["chords"])
+    # Parse chord data
+    chords_list = []
+    try:
+        chords_list = json.loads(song.get("chords", "[]"))
+    except:
+        chords_list = []
 
     # Parse loops data
     loops_data = []

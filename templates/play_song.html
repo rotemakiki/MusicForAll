@@ -48,6 +48,21 @@
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" class="volume-slider">
             </div>
 
+            <!-- תיבה ריקה לתחילת השיר -->
+            <div class="control-group">
+                <label class="control-label">
+                    <span class="control-icon">⏳</span>
+                    הכנה לתחילת השיר
+                </label>
+                <div class="preparation-controls">
+                    <label class="preparation-checkbox">
+                        <input type="checkbox" id="add-preparation" checked>
+                        <span class="preparation-slider"></span>
+                    </label>
+                    <span class="preparation-label">הוסף תיבה ריקה לתחילה</span>
+                </div>
+            </div>
+
             <div class="playback-controls">
                 <button onclick="startPlayback()" class="control-btn play-btn">
                     <span class="btn-icon">▶️</span>
@@ -61,6 +76,17 @@
                     <span class="btn-icon">⏹️</span>
                     <span class="btn-text">עצור</span>
                 </button>
+            </div>
+
+            <!-- בקרת חלקי השיר -->
+            <div class="control-group">
+                <label class="control-label">
+                    <span class="control-icon">🎼</span>
+                    חלקי השיר
+                </label>
+                <div id="song-parts-controls" class="song-parts-controls">
+                    <!-- יוכנס דינמית -->
+                </div>
             </div>
 
             <div class="navigation-panel">
@@ -99,6 +125,7 @@
     // Pass data from Flask to JavaScript
     window.songData = {
         chords: {{ song.chords | tojson }},
+        loops: {{ song.loops | tojson }},
         originalBpm: {{ song.bpm }}
     };
 </script>

@@ -1,7 +1,8 @@
-// Enhanced Play Song JavaScript - Simplified and Optimized
+// Enhanced Play Song JavaScript - with loop management and preparation measure
 
 // Get song data from Flask
 const chords = window.songData.chords;
+const loops = window.songData.loops || [];
 const originalBpm = window.songData.originalBpm;
 
 // State variables
@@ -13,7 +14,16 @@ let currentBeat = 0;
 let interval = null;
 let selectedStartLine = null;
 let selectedStartChord = null;
+let addPreparationMeasure = true;
+let enabledLoops = new Set(); // Track which loops are enabled
+let loopStates = {}; // Track visibility state of each loop section
 const metronome = document.getElementById("metronome-sound");
+
+// Initialize enabled loops - all enabled by default
+loops.forEach((loop, index) => {
+    enabledLoops.add(index);
+    loopStates[index] = { visible: true, enabled: true };
+});
 
 // Single metronome sound function - stable and consistent
 function playMetronome() {
@@ -23,32 +33,69 @@ function playMetronome() {
     metronome.play().catch(() => {});
 }
 
-// Calculate smaller measure width - 4 measures per row
+// Check if a measure should be played based on loop settings
+function shouldPlayMeasure(measureData) {
+    if (measureData.loopIndex !== undefined) {
+        return enabledLoops.has(measureData.loopIndex);
+    }
+    return true; // Play non-loop measures by default
+}
+
+// Calculate measure width for display
 function calculateMeasureWidth(measure) {
     const totalBeats = measure.reduce((sum, chord) => sum + chord.beats, 0);
-    // Reduced width for 4 measures per row
     return Math.max(180, 140 + (totalBeats * 20));
 }
 
-// Enhanced chord rendering with 4 measures per row
+// Create preparation measure
+function createPreparationMeasure() {
+    return {
+        lineIdx: -1,
+        measureIndex: 0,
+        chords: [{ chord: "הכנה", beats: 4 }],
+        totalBeats: 4,
+        measureStartBeat: 0,
+        isCurrent: false,
+        isPast: false,
+        startChordIdx: 0,
+        isPreparation: true
+    };
+}
+
+// Enhanced chord rendering with loop organization and preparation measure
 function renderChords() {
     const wrapper = document.getElementById("chords-wrapper");
     wrapper.innerHTML = "";
 
     let globalBeatCount = 0;
     let currentGlobalBeat = 0;
-    let allMeasures = []; // Store all measures first
+    let allMeasures = [];
 
-    // Calculate current global beat position
-    for (let i = 0; i < chords.length; i++) {
-        for (let j = 0; j < chords[i].length; j++) {
-            if (i === currentLineIndex && j === currentChordIndexInLine) break;
-            currentGlobalBeat += chords[i][j].beats;
-        }
-        if (i === currentLineIndex) break;
+    // Add preparation measure if enabled
+    if (addPreparationMeasure) {
+        const prepMeasure = createPreparationMeasure();
+        allMeasures.push(prepMeasure);
+        globalBeatCount += 4;
     }
 
-    // First pass: create all measures
+    // Calculate current global beat position
+    const startBeat = addPreparationMeasure ? 4 : 0;
+    currentGlobalBeat = startBeat;
+
+    for (let i = 0; i < currentLineIndex; i++) {
+        for (let j = 0; j < chords[i].length; j++) {
+            currentGlobalBeat += chords[i][j].beats;
+        }
+    }
+    for (let j = 0; j < currentChordIndexInLine; j++) {
+        currentGlobalBeat += chords[currentLineIndex][j].beats;
+    }
+    currentGlobalBeat += currentBeat - 1;
+
+    // Process measures from chord data
+    let currentLoopIndex = 0;
+    let measureInLoop = 0;
+
     chords.forEach((line, lineIdx) => {
         let totalBeats = 0;
         let currentMeasure = [];
@@ -66,17 +113,29 @@ function renderChords() {
                 const isCurrent = currentGlobalBeat >= measureStartBeat && currentGlobalBeat <= measureEndBeat;
                 const isPast = currentGlobalBeat > measureEndBeat;
 
-                const globalMeasureIndex = allMeasures.length + 1; // הספירה הגלובלית החדשה
+                // Determine which loop this measure belongs to
+                let loopIndex = null;
+                if (loops.length > 0) {
+                    let totalMeasuresInPreviousLoops = 0;
+                    for (let i = 0; i < loops.length; i++) {
+                        if (allMeasures.length - (addPreparationMeasure ? 1 : 0) < totalMeasuresInPreviousLoops + loops[i].measureCount) {
+                            loopIndex = i;
+                            break;
+                        }
+                        totalMeasuresInPreviousLoops += loops[i].measureCount;
+                    }
+                }
 
                 const measureData = {
                     lineIdx,
-                    measureIndex: globalMeasureIndex, // השתמש במספר הגלובלי
+                    measureIndex: allMeasures.length + 1,
                     chords: [...currentMeasure],
                     totalBeats,
                     measureStartBeat,
                     isCurrent,
                     isPast,
-                    startChordIdx: chordIdx - currentMeasure.length + 1
+                    startChordIdx: chordIdx - currentMeasure.length + 1,
+                    loopIndex: loopIndex
                 };
 
                 allMeasures.push(measureData);
@@ -89,111 +148,269 @@ function renderChords() {
         });
     });
 
-    // Second pass: group measures into rows of 4
+    // Render measures organized by loops
+    if (loops.length > 0) {
+        renderMeasuresByLoops(wrapper, allMeasures);
+    } else {
+        renderMeasuresFlat(wrapper, allMeasures);
+    }
+
+    updateBeatDots();
+}
+
+// Render measures organized by loop sections
+function renderMeasuresByLoops(wrapper, allMeasures) {
+    let measureIndex = 0;
+
+    // Render preparation measure if exists
+    if (addPreparationMeasure && allMeasures[0].isPreparation) {
+        const prepSection = document.createElement("div");
+        prepSection.className = "loop-section preparation-section";
+
+        const prepHeader = document.createElement("div");
+        prepHeader.className = "loop-header";
+        prepHeader.innerHTML = `
+            <span class="loop-title">⏳ הכנה לתחילת השיר</span>
+        `;
+
+        const prepContent = document.createElement("div");
+        prepContent.className = "loop-content";
+
+        const prepRow = document.createElement("div");
+        prepRow.className = "chord-row";
+        prepRow.appendChild(createMeasureElement(allMeasures[0]));
+
+        prepContent.appendChild(prepRow);
+        prepSection.appendChild(prepHeader);
+        prepSection.appendChild(prepContent);
+        wrapper.appendChild(prepSection);
+
+        measureIndex = 1;
+    }
+
+    // Render loop sections
+    loops.forEach((loop, loopIdx) => {
+        const loopSection = document.createElement("div");
+        loopSection.className = "loop-section";
+        loopSection.dataset.loopIndex = loopIdx;
+
+        const loopHeader = document.createElement("div");
+        loopHeader.className = "loop-header";
+        loopHeader.innerHTML = `
+            <div class="loop-title-controls">
+                <button class="loop-toggle-btn" onclick="toggleLoopVisibility(${loopIdx})">
+                    ${loopStates[loopIdx].visible ? '📖' : '📕'}
+                </button>
+                <span class="loop-title">${loop.name}</span>
+                <span class="loop-measures-count">${loop.measureCount} תיבות</span>
+            </div>
+            <div class="loop-controls">
+                <label class="loop-enable-checkbox">
+                    <input type="checkbox" ${loopStates[loopIdx].enabled ? 'checked' : ''}
+                           onchange="toggleLoopEnabled(${loopIdx})">
+                    <span class="loop-checkbox-label">כלול בניגון</span>
+                </label>
+            </div>
+        `;
+
+        const loopContent = document.createElement("div");
+        loopContent.className = "loop-content";
+        loopContent.style.display = loopStates[loopIdx].visible ? 'block' : 'none';
+
+        // Add measures for this loop
+        const loopMeasures = allMeasures.slice(measureIndex, measureIndex + loop.measureCount);
+
+        // Group measures into rows of 4
+        for (let i = 0; i < loopMeasures.length; i += 4) {
+            const rowMeasures = loopMeasures.slice(i, i + 4);
+            const rowDiv = document.createElement("div");
+            rowDiv.className = "chord-row";
+
+            rowMeasures.forEach(measureData => {
+                rowDiv.appendChild(createMeasureElement(measureData));
+            });
+
+            loopContent.appendChild(rowDiv);
+        }
+
+        loopSection.appendChild(loopHeader);
+        loopSection.appendChild(loopContent);
+        wrapper.appendChild(loopSection);
+
+        measureIndex += loop.measureCount;
+    });
+}
+
+// Render measures in flat layout (fallback)
+function renderMeasuresFlat(wrapper, allMeasures) {
     for (let i = 0; i < allMeasures.length; i += 4) {
         const rowMeasures = allMeasures.slice(i, i + 4);
         const rowDiv = document.createElement("div");
         rowDiv.className = "chord-row";
 
         rowMeasures.forEach(measureData => {
-            const measureDiv = document.createElement("div");
-            measureDiv.className = "measure-box clickable";
-
-            // Smaller width for 4 measures per row
-            const measureWidth = calculateMeasureWidth(measureData.chords);
-            measureDiv.style.width = `${measureWidth}px`;
-            measureDiv.setAttribute('data-total-beats', Math.round(measureData.totalBeats));
-
-            if (measureData.isCurrent) {
-                measureDiv.classList.add("current");
-            } else if (measureData.isPast) {
-                measureDiv.classList.add("past");
-            }
-
-            // Measure title
-            const title = document.createElement("div");
-            title.className = "measure-title";
-            title.innerText = `תיבה ${measureData.measureIndex}`;
-            measureDiv.appendChild(title);
-
-            // Chords container
-            const chordsContainer = document.createElement("div");
-            chordsContainer.className = "chords-in-measure";
-
-            measureData.chords.forEach(chord => {
-                const chordBox = document.createElement("div");
-                chordBox.className = "chord-box";
-
-                const flexBasis = (chord.beats / measureData.totalBeats) * 100;
-                chordBox.style.flexBasis = `${flexBasis}%`;
-                chordBox.style.flexGrow = "0";
-                chordBox.style.flexShrink = "0";
-
-                chordBox.innerText = chord.chord;
-                chordsContainer.appendChild(chordBox);
-            });
-
-            measureDiv.appendChild(chordsContainer);
-
-            // Beats display
-            const beatsContainer = document.createElement("div");
-            beatsContainer.className = "beats-display";
-
-            const dotsToShow = Math.round(measureData.totalBeats);
-            for (let dotIdx = 0; dotIdx < dotsToShow; dotIdx++) {
-                const dot = document.createElement("div");
-                dot.className = "beat-dot";
-                dot.dataset.beatIndex = dotIdx;
-                dot.dataset.measureStartBeat = measureData.measureStartBeat;
-                beatsContainer.appendChild(dot);
-            }
-
-            measureDiv.appendChild(beatsContainer);
-
-            // Click handler
-            measureDiv.addEventListener("click", () => {
-                selectedStartLine = measureData.lineIdx;
-                selectedStartChord = measureData.startChordIdx;
-
-                document.querySelectorAll('.measure-box').forEach(box => {
-                    box.classList.remove('selected');
-                });
-                measureDiv.classList.add('selected');
-
-                const infoDiv = document.getElementById("selected-measure-info");
-                const infoText = infoDiv.querySelector('.info-text');
-                infoText.textContent = `נבחרה תיבה ${measureData.measureIndex} - לחץ "החל לנגן" כדי להתחיל מכאן`;
-                infoDiv.style.display = "block";
-
-                setTimeout(() => {
-                    infoDiv.style.opacity = "0";
-                    setTimeout(() => {
-                        infoDiv.style.display = "none";
-                        infoDiv.style.opacity = "1";
-                    }, 300);
-                }, 4000);
-            });
-
-            // Hover effects
-            measureDiv.addEventListener("mouseenter", () => {
-                if (!measureDiv.classList.contains('selected')) {
-                    measureDiv.style.borderColor = "#667eea";
-                }
-            });
-
-            measureDiv.addEventListener("mouseleave", () => {
-                if (!measureDiv.classList.contains('selected')) {
-                    measureDiv.style.borderColor = "#34495e";
-                }
-            });
-
-            rowDiv.appendChild(measureDiv);
+            rowDiv.appendChild(createMeasureElement(measureData));
         });
 
         wrapper.appendChild(rowDiv);
     }
+}
 
-    updateBeatDots();
+// Create individual measure element
+function createMeasureElement(measureData) {
+    const measureDiv = document.createElement("div");
+    measureDiv.className = "measure-box clickable";
+
+    if (measureData.isPreparation) {
+        measureDiv.classList.add("preparation-measure");
+    }
+
+    // Style based on loop enabled state
+    if (measureData.loopIndex !== undefined && !enabledLoops.has(measureData.loopIndex)) {
+        measureDiv.classList.add("disabled-measure");
+    }
+
+    const measureWidth = calculateMeasureWidth(measureData.chords);
+    measureDiv.style.width = `${measureWidth}px`;
+    measureDiv.setAttribute('data-total-beats', Math.round(measureData.totalBeats));
+
+    if (measureData.isCurrent) {
+        measureDiv.classList.add("current");
+    } else if (measureData.isPast) {
+        measureDiv.classList.add("past");
+    }
+
+    // Measure title
+    const title = document.createElement("div");
+    title.className = "measure-title";
+    title.innerText = measureData.isPreparation ? "הכנה" : `תיבה ${measureData.measureIndex}`;
+    measureDiv.appendChild(title);
+
+    // Chords container
+    const chordsContainer = document.createElement("div");
+    chordsContainer.className = "chords-in-measure";
+
+    measureData.chords.forEach(chord => {
+        const chordBox = document.createElement("div");
+        chordBox.className = "chord-box";
+
+        if (measureData.isPreparation) {
+            chordBox.classList.add("preparation-chord");
+        }
+
+        const flexBasis = (chord.beats / measureData.totalBeats) * 100;
+        chordBox.style.flexBasis = `${flexBasis}%`;
+        chordBox.style.flexGrow = "0";
+        chordBox.style.flexShrink = "0";
+
+        chordBox.innerText = chord.chord;
+        chordsContainer.appendChild(chordBox);
+    });
+
+    measureDiv.appendChild(chordsContainer);
+
+    // Beats display
+    const beatsContainer = document.createElement("div");
+    beatsContainer.className = "beats-display";
+
+    const dotsToShow = Math.round(measureData.totalBeats);
+    for (let dotIdx = 0; dotIdx < dotsToShow; dotIdx++) {
+        const dot = document.createElement("div");
+        dot.className = "beat-dot";
+        dot.dataset.beatIndex = dotIdx;
+        dot.dataset.measureStartBeat = measureData.measureStartBeat;
+        beatsContainer.appendChild(dot);
+    }
+
+    measureDiv.appendChild(beatsContainer);
+
+    // Click handler
+    measureDiv.addEventListener("click", () => {
+        if (measureData.isPreparation) {
+            selectedStartLine = null;
+            selectedStartChord = null;
+        } else {
+            selectedStartLine = measureData.lineIdx;
+            selectedStartChord = measureData.startChordIdx;
+        }
+
+        document.querySelectorAll('.measure-box').forEach(box => {
+            box.classList.remove('selected');
+        });
+        measureDiv.classList.add('selected');
+
+        const infoDiv = document.getElementById("selected-measure-info");
+        const infoText = infoDiv.querySelector('.info-text');
+        if (measureData.isPreparation) {
+            infoText.textContent = `נבחרה תיבת ההכנה - לחץ "החל לנגן" כדי להתחיל עם הכנה`;
+        } else {
+            infoText.textContent = `נבחרה תיבה ${measureData.measureIndex} - לחץ "החל לנגן" כדי להתחיל מכאן`;
+        }
+        infoDiv.style.display = "block";
+
+        setTimeout(() => {
+            infoDiv.style.opacity = "0";
+            setTimeout(() => {
+                infoDiv.style.display = "none";
+                infoDiv.style.opacity = "1";
+            }, 300);
+        }, 4000);
+    });
+
+    return measureDiv;
+}
+
+// Toggle loop visibility
+function toggleLoopVisibility(loopIndex) {
+    loopStates[loopIndex].visible = !loopStates[loopIndex].visible;
+    renderChords();
+}
+
+// Toggle loop enabled state
+function toggleLoopEnabled(loopIndex) {
+    loopStates[loopIndex].enabled = !loopStates[loopIndex].enabled;
+
+    if (loopStates[loopIndex].enabled) {
+        enabledLoops.add(loopIndex);
+    } else {
+        enabledLoops.delete(loopIndex);
+    }
+
+    renderChords();
+}
+
+// Initialize song parts controls
+function initializeSongPartsControls() {
+    const container = document.getElementById("song-parts-controls");
+    container.innerHTML = "";
+
+    if (loops.length === 0) {
+        container.innerHTML = '<p style="color: #666; font-size: 12px;">השיר לא מחולק ללופים</p>';
+        return;
+    }
+
+    loops.forEach((loop, index) => {
+        const controlDiv = document.createElement("div");
+        controlDiv.className = "song-part-control";
+        controlDiv.innerHTML = `
+            <label class="song-part-checkbox">
+                <input type="checkbox" ${enabledLoops.has(index) ? 'checked' : ''}
+                       onchange="toggleLoopFromControls(${index})">
+                <span class="song-part-name">${loop.name}</span>
+            </label>
+        `;
+        container.appendChild(controlDiv);
+    });
+}
+
+// Toggle loop from side controls
+function toggleLoopFromControls(loopIndex) {
+    toggleLoopEnabled(loopIndex);
+    // Also update the main loop checkbox
+    const mainCheckbox = document.querySelector(`[data-loop-index="${loopIndex}"] input[type="checkbox"]`);
+    if (mainCheckbox) {
+        mainCheckbox.checked = enabledLoops.has(loopIndex);
+    }
 }
 
 // Beat dots update - simplified
@@ -204,7 +421,8 @@ function updateBeatDots() {
     });
 
     // Calculate current global beat position
-    let currentGlobalBeat = 0;
+    let currentGlobalBeat = addPreparationMeasure ? 4 : 0;
+
     for (let i = 0; i < currentLineIndex; i++) {
         for (let j = 0; j < chords[i].length; j++) {
             currentGlobalBeat += chords[i][j].beats;
@@ -213,7 +431,7 @@ function updateBeatDots() {
     for (let j = 0; j < currentChordIndexInLine; j++) {
         currentGlobalBeat += chords[currentLineIndex][j].beats;
     }
-    currentGlobalBeat += currentBeat - 1; // currentBeat is 1-based
+    currentGlobalBeat += currentBeat - 1;
 
     // Update dots
     document.querySelectorAll(".beat-dot").forEach(dot => {
@@ -229,7 +447,7 @@ function updateBeatDots() {
     });
 }
 
-// Simplified playback with single metronome
+// Enhanced playback with loop support
 function startPlayback() {
     stopPlayback();
 
@@ -237,9 +455,21 @@ function startPlayback() {
     intervalMs = 60000 / bpm;
     document.getElementById("current-bpm").innerText = bpm;
 
-    currentLineIndex = selectedStartLine !== null ? selectedStartLine : 0;
-    currentChordIndexInLine = selectedStartChord !== null ? selectedStartChord : 0;
-    currentBeat = 0;
+    // Handle preparation measure or selected start position
+    if (selectedStartLine === null && selectedStartChord === null && addPreparationMeasure) {
+        // Start with preparation measure
+        currentLineIndex = -1; // Special value for preparation
+        currentChordIndexInLine = 0;
+        currentBeat = 0;
+    } else if (selectedStartLine !== null && selectedStartChord !== null) {
+        currentLineIndex = selectedStartLine;
+        currentChordIndexInLine = selectedStartChord;
+        currentBeat = 0;
+    } else {
+        currentLineIndex = 0;
+        currentChordIndexInLine = 0;
+        currentBeat = 0;
+    }
 
     renderChords();
 
@@ -250,14 +480,36 @@ function startPlayback() {
         updateBeatDots();
     }, 100);
 
-    // Main interval - consistent and stable
+    // Main interval
     interval = setInterval(() => {
+        // Handle preparation measure
+        if (currentLineIndex === -1) {
+            currentBeat++;
+            playMetronome();
+
+            if (currentBeat > 4) {
+                // Move to first actual measure
+                currentLineIndex = 0;
+                currentChordIndexInLine = 0;
+                currentBeat = 1;
+                playMetronome();
+            }
+            updateBeatDots();
+            return;
+        }
+
+        // Regular measure handling
+        if (currentLineIndex >= chords.length) {
+            stopPlayback();
+            return;
+        }
+
         const line = chords[currentLineIndex];
         const chordObj = line[currentChordIndexInLine];
         const beatsThisChord = chordObj.beats || 4;
 
         currentBeat++;
-        playMetronome(); // Single, consistent metronome sound
+        playMetronome();
 
         if (currentBeat > beatsThisChord) {
             currentBeat = 1;
@@ -265,7 +517,11 @@ function startPlayback() {
 
             if (currentChordIndexInLine >= chords[currentLineIndex].length) {
                 currentChordIndexInLine = 0;
-                currentLineIndex++;
+
+                // Skip to next enabled section
+                do {
+                    currentLineIndex++;
+                } while (currentLineIndex < chords.length && !shouldPlayCurrentMeasure());
 
                 if (currentLineIndex >= chords.length) {
                     stopPlayback();
@@ -276,6 +532,13 @@ function startPlayback() {
 
         updateBeatDots();
     }, intervalMs);
+}
+
+// Check if current measure should be played
+function shouldPlayCurrentMeasure() {
+    // This would need to be enhanced to properly map line/chord indices to loop indices
+    // For now, we'll assume all measures are played unless specifically disabled
+    return true;
 }
 
 function stopPlayback() {
@@ -313,6 +576,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const bpmSlider = document.getElementById("bpm-slider");
     const bpmInput = document.getElementById("bpm-input");
     const volumeSlider = document.getElementById("volume-slider");
+    const preparationCheckbox = document.getElementById("add-preparation");
 
     // BPM controls
     bpmSlider.addEventListener("input", (e) => {
@@ -321,7 +585,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("current-bpm").innerText = bpm;
         intervalMs = 60000 / bpm;
 
-        // If playing, restart with new tempo
         if (interval) {
             const wasPlaying = true;
             stopPlayback();
@@ -341,7 +604,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("current-bpm").innerText = bpm;
         intervalMs = 60000 / bpm;
 
-        // If playing, restart with new tempo
         if (interval) {
             const wasPlaying = true;
             stopPlayback();
@@ -354,6 +616,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Volume control
     volumeSlider.addEventListener("input", (e) => {
         metronome.volume = parseFloat(e.target.value);
+    });
+
+    // Preparation measure toggle
+    preparationCheckbox.addEventListener("change", (e) => {
+        addPreparationMeasure = e.target.checked;
+        renderChords();
     });
 
     // Keyboard shortcuts
@@ -402,7 +670,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Initial render
+    // Initialize everything
+    initializeSongPartsControls();
     renderChords();
 
     // Show keyboard shortcuts hint
