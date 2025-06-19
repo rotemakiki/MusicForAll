@@ -109,6 +109,7 @@
         </div>
         <button type="button" class="btn" id="chords-btn" onclick="goToChordsPage()">הוסף אקורדים</button>
         <input type="hidden" id="chords" name="chords" required>
+        <input type="hidden" id="loops" name="loops">
 
         <button type="submit" class="btn">➕ הוסף שיר</button>
     </form>
@@ -141,11 +142,15 @@
         const chordsSuccessDiv = document.getElementById("chords-success");
         const chordsBtn = document.getElementById("chords-btn");
         const savedChords = localStorage.getItem("chords");
+        const savedLoops = localStorage.getItem("loops");
         const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
 
         if (savedChords && justReturnedFromChords === "true") {
             // User just returned from chords page - show success message
             document.getElementById("chords").value = savedChords;
+            if (savedLoops) {
+                document.getElementById("loops").value = savedLoops;
+            }
             chordsSuccessDiv.style.display = "block";
             chordsBtn.textContent = "ערוך אקורדים";
             chordsBtn.onclick = editChords;
@@ -155,6 +160,9 @@
             // Chords exist but user didn't just return from chords page
             // (maybe from a previous session or refresh) - don't show success message
             document.getElementById("chords").value = savedChords;
+            if (savedLoops) {
+                document.getElementById("loops").value = savedLoops;
+            }
             chordsSuccessDiv.style.display = "none";
             chordsBtn.textContent = "ערוך אקורדים";
             chordsBtn.onclick = editChords;
@@ -191,6 +199,7 @@
         const bpm = document.getElementById("bpm").value;
         const videoUrl = document.getElementById("video_url").value;
         const chordsRaw = document.getElementById("chords").value;
+        const loopsRaw = document.getElementById("loops").value;
 
         let finalVideoUrl = videoUrl;
         const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
@@ -198,12 +207,21 @@
             finalVideoUrl = "https://www.youtube.com/embed/" + ytMatch[1];
         }
 
-        let chords;
+        let chords, loops = [];
         try {
             chords = JSON.parse(chordsRaw);
         } catch (e) {
             alert("שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.");
             return;
+        }
+
+        if (loopsRaw) {
+            try {
+                loops = JSON.parse(loopsRaw);
+            } catch (e) {
+                console.log("Error parsing loops data:", e);
+                loops = [];
+            }
         }
 
         fetch("/api/add_song", {
@@ -220,7 +238,8 @@
                 time_signature: timeSignature,
                 bpm: parseInt(bpm),
                 video_url: finalVideoUrl,
-                chords: chords
+                chords: chords,
+                loops: loops
             })
         })
         .then(response => response.json())
@@ -230,6 +249,7 @@
                 messageEl.textContent = "✅ " + data.message;
                 messageEl.style.color = "green";
                 localStorage.removeItem("chords");
+                localStorage.removeItem("loops");
                 localStorage.removeItem("songData"); // Clear after success
                 localStorage.removeItem("justReturnedFromChords"); // Clean up flag too
                 document.getElementById("chords-success").style.display = "none";

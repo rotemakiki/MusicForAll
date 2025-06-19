@@ -15,15 +15,9 @@ let selectedSavedLoop = null;
 let songStructure = [];
 let halfBeatsEnabled = false;
 
-// Dragging and resizing state
-let isDragging = false;
-let isResizing = false;
-let draggedChordIndex = -1;
-let resizeChordIndex = -1;
-let resizeDirection = ''; // 'left' or 'right'
-let initialMouseX = 0;
-let initialChordPosition = 0;
-let initialChordWidth = 0;
+// Edit state
+let editingLoop = null;
+let editingMeasureIndex = -1;
 
 // Initialize the page
 function init() {
@@ -33,13 +27,6 @@ function init() {
     createNewMeasure();
     updateLoopDisplay();
     setupHalfBeatsToggle();
-    setupMouseEvents();
-}
-
-// Setup mouse events for dragging and resizing
-function setupMouseEvents() {
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('mousemove', handleMouseMove);
 }
 
 // Update the selected chord display
@@ -192,214 +179,6 @@ function renderBeatsDisplay() {
     }
 }
 
-// Calculate snap positions for dragging
-function getSnapPositions() {
-    const positions = [];
-    const beats = currentMeasure ? currentMeasure.beats : 4;
-    const increment = halfBeatsEnabled ? 0.5 : 1;
-
-    for (let i = 0; i <= beats; i += increment) {
-        positions.push(i);
-    }
-
-    return positions;
-}
-
-// Find closest snap position
-function getClosestSnapPosition(position) {
-    const snapPositions = getSnapPositions();
-    let closest = snapPositions[0];
-    let minDistance = Math.abs(position - closest);
-
-    for (const snapPos of snapPositions) {
-        const distance = Math.abs(position - snapPos);
-        if (distance < minDistance) {
-            minDistance = distance;
-            closest = snapPos;
-        }
-    }
-
-    return closest;
-}
-
-// Convert pixel position to beat position
-function pixelToBeatPosition(pixelX, containerElement) {
-    const rect = containerElement.getBoundingClientRect();
-    const relativeX = pixelX - rect.left;
-    const percentage = relativeX / rect.width;
-    const beatPosition = percentage * currentMeasure.beats;
-    return Math.max(0, Math.min(currentMeasure.beats, beatPosition));
-}
-
-// Convert beat position to pixel position
-function beatToPixelPosition(beatPosition, containerElement) {
-    const rect = containerElement.getBoundingClientRect();
-    const percentage = beatPosition / currentMeasure.beats;
-    return rect.left + (percentage * rect.width);
-}
-
-// Handle mouse down for dragging and resizing
-function handleMouseDown(e, index, type) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const containerElement = document.querySelector('.measure-preview');
-    if (!containerElement) return;
-
-    initialMouseX = e.clientX;
-
-    if (type === 'drag') {
-        isDragging = true;
-        draggedChordIndex = index;
-        initialChordPosition = getChordPosition(index);
-        document.body.style.cursor = 'grabbing';
-    } else if (type === 'resize-left' || type === 'resize-right') {
-        isResizing = true;
-        resizeChordIndex = index;
-        resizeDirection = type.split('-')[1];
-        initialChordPosition = getChordPosition(index);
-        initialChordWidth = currentMeasure.chords[index].width;
-        document.body.style.cursor = 'ew-resize';
-    }
-}
-
-// Handle mouse move for dragging and resizing
-function handleMouseMove(e) {
-    if (!isDragging && !isResizing) return;
-
-    const containerElement = document.querySelector('.measure-preview');
-    if (!containerElement) return;
-
-    const currentBeatPosition = pixelToBeatPosition(e.clientX, containerElement);
-
-    if (isDragging && draggedChordIndex >= 0) {
-        handleChordDrag(currentBeatPosition);
-    } else if (isResizing && resizeChordIndex >= 0) {
-        handleChordResize(currentBeatPosition);
-    }
-}
-
-// Handle mouse up
-function handleMouseUp(e) {
-    if (isDragging || isResizing) {
-        isDragging = false;
-        isResizing = false;
-        draggedChordIndex = -1;
-        resizeChordIndex = -1;
-        resizeDirection = '';
-        document.body.style.cursor = 'default';
-
-        renderCurrentMeasure();
-        updateButtons();
-        updateLoopDisplay();
-    }
-}
-
-// Get chord position (cumulative beats from start)
-function getChordPosition(index) {
-    let position = 0;
-    for (let i = 0; i < index; i++) {
-        position += currentMeasure.chords[i].width;
-    }
-    return position;
-}
-
-// Handle chord dragging
-function handleChordDrag(beatPosition) {
-    if (draggedChordIndex < 0) return;
-
-    const chord = currentMeasure.chords[draggedChordIndex];
-    const snapPosition = getClosestSnapPosition(beatPosition - chord.width / 2);
-
-    // Calculate new position ensuring it doesn't go out of bounds
-    const newStartPosition = Math.max(0, Math.min(currentMeasure.beats - chord.width, snapPosition));
-
-    // Remove the chord from its current position
-    const draggedChord = currentMeasure.chords.splice(draggedChordIndex, 1)[0];
-
-    // Find where to insert it based on new position
-    let insertIndex = 0;
-    let cumulativePosition = 0;
-
-    for (let i = 0; i < currentMeasure.chords.length; i++) {
-        if (cumulativePosition >= newStartPosition) {
-            insertIndex = i;
-            break;
-        }
-        cumulativePosition += currentMeasure.chords[i].width;
-        insertIndex = i + 1;
-    }
-
-    // Insert the chord at the new position
-    currentMeasure.chords.splice(insertIndex, 0, draggedChord);
-    draggedChordIndex = insertIndex;
-
-    renderCurrentMeasure();
-}
-
-// Handle chord resizing
-function handleChordResize(beatPosition) {
-    if (resizeChordIndex < 0) return;
-
-    const chord = currentMeasure.chords[resizeChordIndex];
-    const chordStartPosition = getChordPosition(resizeChordIndex);
-    const minWidth = halfBeatsEnabled ? 0.5 : 1;
-
-    let newWidth = chord.width;
-
-    if (resizeDirection === 'right') {
-        // Resize from the right edge
-        const maxEnd = currentMeasure.beats;
-        if (resizeChordIndex < currentMeasure.chords.length - 1) {
-            // If not the last chord, limit by next chord's start
-            let nextChordStart = chordStartPosition + chord.width;
-            for (let i = resizeChordIndex + 1; i < currentMeasure.chords.length; i++) {
-                nextChordStart += currentMeasure.chords[i].width;
-            }
-            // Actually, we need to recalculate this properly
-            nextChordStart = chordStartPosition + chord.width;
-        }
-
-        const targetEnd = getClosestSnapPosition(beatPosition);
-        newWidth = Math.max(minWidth, Math.min(maxEnd - chordStartPosition, targetEnd - chordStartPosition));
-    } else if (resizeDirection === 'left') {
-        // Resize from the left edge
-        const targetStart = getClosestSnapPosition(beatPosition);
-        const chordEnd = chordStartPosition + chord.width;
-        newWidth = Math.max(minWidth, chordEnd - Math.max(0, targetStart));
-
-        // If we're resizing from the left, we also need to move preceding chords
-        if (targetStart < chordStartPosition) {
-            // Need to shrink preceding chords or move them
-            adjustPrecedingChords(resizeChordIndex, chordStartPosition - targetStart);
-        }
-    }
-
-    chord.width = newWidth;
-    renderCurrentMeasure();
-}
-
-// Adjust preceding chords when resizing from left
-function adjustPrecedingChords(chordIndex, spaceNeeded) {
-    // For now, just ensure the chord doesn't exceed bounds
-    // More sophisticated logic could be added here
-    const chord = currentMeasure.chords[chordIndex];
-    const chordStart = getChordPosition(chordIndex);
-
-    if (chordStart - spaceNeeded < 0) {
-        spaceNeeded = chordStart;
-    }
-
-    // Redistribute the space among preceding chords
-    let remainingSpace = spaceNeeded;
-    for (let i = chordIndex - 1; i >= 0 && remainingSpace > 0; i--) {
-        const availableReduction = currentMeasure.chords[i].width - (halfBeatsEnabled ? 0.5 : 1);
-        const reduction = Math.min(remainingSpace, availableReduction);
-        currentMeasure.chords[i].width -= reduction;
-        remainingSpace -= reduction;
-    }
-}
-
 // Add selected chord to current measure
 function addChordToCurrentMeasure() {
     if (!currentMeasure) {
@@ -505,7 +284,7 @@ function updateButtons() {
     document.querySelector(".add-chord-btn").disabled = !currentMeasure || !selectedLetter;
 }
 
-// Render current measure being built
+// Render current measure being built - simplified without drag/resize
 function renderCurrentMeasure() {
     const container = document.getElementById("current-measure-container");
 
@@ -523,13 +302,12 @@ function renderCurrentMeasure() {
     measureDiv.className = "measure-preview";
 
     // Calculate positions and render chords
-    let cumulativePosition = 0;
     const totalBeats = currentMeasure.beats;
 
     currentMeasure.chords.forEach((chord, index) => {
-        // Create chord element
+        // Create chord element - simplified without drag/resize
         const chordDiv = document.createElement("div");
-        chordDiv.className = "chord-in-measure resizable-chord";
+        chordDiv.className = "chord-in-measure";
 
         if (chord.isEmpty) {
             chordDiv.classList.add("empty-chord");
@@ -539,47 +317,15 @@ function renderCurrentMeasure() {
         chordDiv.style.flexBasis = `${flexBasis}%`;
         chordDiv.style.flexGrow = '0';
         chordDiv.style.flexShrink = '0';
-        chordDiv.style.position = 'relative';
 
-        // Chord content
-        const chordContent = document.createElement("div");
-        chordContent.className = "chord-content";
-        chordContent.innerHTML = `
+        // Chord content - simplified
+        chordDiv.innerHTML = `
             <div class="chord-name">${chord.chord}</div>
             <div class="chord-beats">${chord.width.toFixed(halfBeatsEnabled ? 1 : 0)} נקישות</div>
+            <button class="chord-remove" onclick="removeChordFromMeasure(${index})">×</button>
         `;
 
-        // Make the content draggable
-        chordContent.style.cursor = 'grab';
-        chordContent.addEventListener('mousedown', (e) => handleMouseDown(e, index, 'drag'));
-
-        // Left resize handle
-        const leftHandle = document.createElement("div");
-        leftHandle.className = "resize-handle left-handle";
-        leftHandle.addEventListener('mousedown', (e) => handleMouseDown(e, index, 'resize-left'));
-
-        // Right resize handle
-        const rightHandle = document.createElement("div");
-        rightHandle.className = "resize-handle right-handle";
-        rightHandle.addEventListener('mousedown', (e) => handleMouseDown(e, index, 'resize-right'));
-
-        // Remove button
-        const removeBtn = document.createElement("button");
-        removeBtn.className = "chord-remove";
-        removeBtn.textContent = "×";
-        removeBtn.onclick = (e) => {
-            e.stopPropagation();
-            removeChordFromMeasure(index);
-        };
-
-        // Assemble chord element
-        chordDiv.appendChild(leftHandle);
-        chordDiv.appendChild(chordContent);
-        chordDiv.appendChild(rightHandle);
-        chordDiv.appendChild(removeBtn);
-
         measureDiv.appendChild(chordDiv);
-        cumulativePosition += chord.width;
     });
 
     container.innerHTML = "";
@@ -593,8 +339,17 @@ function nextMeasure() {
         return;
     }
 
-    // Add current measure to current loop
-    currentLoop.push({...currentMeasure});
+    // If we're editing, update the existing measure in the loop
+    if (editingLoop && editingMeasureIndex >= 0) {
+        editingLoop.measures[editingMeasureIndex] = {...currentMeasure};
+        // Exit edit mode
+        editingLoop = null;
+        editingMeasureIndex = -1;
+        updateMeasureCounter();
+    } else {
+        // Add current measure to current loop
+        currentLoop.push({...currentMeasure});
+    }
 
     // Move to next measure
     currentMeasureNumber++;
@@ -607,6 +362,20 @@ function nextMeasure() {
 
     renderBeatsDisplay();
     updateLoopDisplay();
+    renderSavedLoops();
+    renderSongStructure();
+}
+
+// Update measure counter to show edit state
+function updateMeasureCounter() {
+    const counter = document.querySelector(".measure-counter");
+    if (editingLoop && editingMeasureIndex >= 0) {
+        counter.textContent = `עריכת תיבה ${editingMeasureIndex + 1} בלופ "${editingLoop.customName}"`;
+        counter.style.background = "linear-gradient(135deg, #ffc107, #ff8f00)";
+    } else {
+        counter.textContent = "תיבה נוכחית";
+        counter.style.background = "linear-gradient(135deg, #667eea, #764ba2)";
+    }
 }
 
 // Save current loop
@@ -639,6 +408,34 @@ function saveCurrentLoop() {
     renderSavedLoops();
     updateLoopDisplay();
     updateButtons();
+}
+
+// Edit specific measure in a loop
+function editMeasure(loopId, measureIndex) {
+    const loop = savedLoops.find(l => l.id === loopId);
+    if (!loop || measureIndex < 0 || measureIndex >= loop.measures.length) {
+        alert("תיבה לא נמצאה");
+        return;
+    }
+
+    // Set edit state
+    editingLoop = loop;
+    editingMeasureIndex = measureIndex;
+
+    // Load measure into current editor
+    const measureToEdit = loop.measures[measureIndex];
+    currentMeasure = JSON.parse(JSON.stringify(measureToEdit)); // Deep copy
+
+    // Update UI
+    document.getElementById("measure-beats").value = currentMeasure.beats;
+    renderBeatsDisplay();
+    renderCurrentMeasure();
+    updateButtons();
+    updateMeasureCounter();
+
+    // Update next button text
+    const nextBtn = document.getElementById("next-measure-btn");
+    nextBtn.textContent = "💾 שמור שינויים";
 }
 
 // Discard current loop
@@ -700,7 +497,7 @@ function updateLoopDisplay() {
     discardBtn.disabled = currentLoop.length === 0;
 }
 
-// Render saved loops
+// Render saved loops with edit functionality
 function renderSavedLoops() {
     const container = document.getElementById("saved-loops-container");
 
@@ -717,16 +514,33 @@ function renderSavedLoops() {
         loopDiv.draggable = true;
         loopDiv.dataset.loopId = loop.id;
 
-        // Create detailed loop preview
-        const loopPreview = document.createElement("div");
-        loopPreview.className = "loop-measures-preview";
+        // Loop header with title and edit info
+        const loopHeader = document.createElement("div");
+        loopHeader.className = "loop-header";
+        loopHeader.innerHTML = `
+            <div class="loop-title">${loop.customName}</div>
+            <div class="loop-info">${loop.measureCount} תיבות</div>
+        `;
 
-        loop.measures.forEach(measure => {
-            const miniMeasure = document.createElement("div");
-            miniMeasure.className = "mini-measure";
+        // Create measures grid for editing
+        const measuresGrid = document.createElement("div");
+        measuresGrid.className = "measures-edit-grid";
+
+        loop.measures.forEach((measure, measureIndex) => {
+            const measureDiv = document.createElement("div");
+            measureDiv.className = "mini-measure clickable";
+            measureDiv.title = "לחץ לעריכה";
+            measureDiv.onclick = () => editMeasure(loop.id, measureIndex);
+
+            // Add measure number
+            const measureNumber = document.createElement("div");
+            measureNumber.className = "measure-number";
+            measureNumber.textContent = measureIndex + 1;
+            measureDiv.appendChild(measureNumber);
 
             if (measure.chords.length === 0 || measure.chords.every(c => c.isEmpty)) {
-                miniMeasure.classList.add("empty");
+                measureDiv.classList.add("empty");
+                measureDiv.innerHTML += '<div class="empty-indicator">ריק</div>';
             } else {
                 const chordsDiv = document.createElement("div");
                 chordsDiv.className = "mini-measure-chords";
@@ -744,18 +558,14 @@ function renderSavedLoops() {
                     chordsDiv.appendChild(miniChord);
                 });
 
-                miniMeasure.appendChild(chordsDiv);
+                measureDiv.appendChild(chordsDiv);
             }
 
-            loopPreview.appendChild(miniMeasure);
+            measuresGrid.appendChild(measureDiv);
         });
 
-        loopDiv.innerHTML = `
-            <div class="loop-title">${loop.customName}</div>
-            <div class="loop-info">${loop.measureCount} תיבות</div>
-        `;
-
-        loopDiv.appendChild(loopPreview);
+        loopDiv.appendChild(loopHeader);
+        loopDiv.appendChild(measuresGrid);
 
         // Add drag events
         loopDiv.addEventListener('dragstart', handleDragStart);
@@ -924,7 +734,7 @@ function removeSongLoop(index) {
     }
 }
 
-// Finish and return to add song page
+// Finish and return to add song page - now includes loops data
 function finishAndReturn() {
     if (songStructure.length === 0) {
         alert("יש להוסיף לפחות לופ אחד לשיר");
@@ -950,11 +760,20 @@ function finishAndReturn() {
         }
     });
 
+    // Prepare loops data for DB storage
+    const loopsData = songStructure.map(loop => ({
+        name: loop.customName,
+        measures: loop.measures,
+        measureCount: loop.measureCount
+    }));
+
     try {
-        // Save chord data to localStorage
+        // Save both chord data and loops data to localStorage
         localStorage.setItem("chords", JSON.stringify(chordLines));
+        localStorage.setItem("loops", JSON.stringify(loopsData));
         localStorage.setItem("justReturnedFromChords", "true");
         console.log("Saved chords:", chordLines);
+        console.log("Saved loops:", loopsData);
     } catch (e) {
         console.log("localStorage not available - data stored in memory only");
     }

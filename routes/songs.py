@@ -28,6 +28,9 @@ def add_song():
         if field not in data or not data[field]:
             return jsonify({"error": f"Missing or empty field: {field}"}), 400
 
+    # Handle loops data if provided
+    loops_data = data.get("loops", [])
+
     new_song = {
         "title": data["title"],
         "artist": data["artist"],
@@ -39,6 +42,7 @@ def add_song():
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
         "chords": json.dumps(data["chords"]),
+        "loops": json.dumps(loops_data),  # Store loops data
         "created_at": datetime.utcnow(),
         "created_by": session.get("user_id"),
     }
@@ -98,6 +102,11 @@ def edit_song(song_id):
     except:
         song["chords"] = []
 
+    try:
+        song["loops"] = json.loads(song.get("loops", "[]"))
+    except:
+        song["loops"] = []
+
     return render_template("edit_song.html", song=song)
 
 @songs_bp.route('/api/edit_song/<string:song_id>', methods=['PUT'])
@@ -120,6 +129,9 @@ def edit_song_api(song_id):
         if field not in data or not data[field]:
             return jsonify({"error": f"Missing or empty field: {field}"}), 400
 
+    # Handle loops data if provided
+    loops_data = data.get("loops", [])
+
     updated_fields = {
         "title": data["title"],
         "artist": data["artist"],
@@ -130,6 +142,7 @@ def edit_song_api(song_id):
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
         "chords": json.dumps(data["chords"]),
+        "loops": json.dumps(loops_data),  # Update loops data
         "updated_at": datetime.utcnow()
     }
     firestore.client().collection("songs").document(song_id).update(updated_fields)
@@ -163,6 +176,14 @@ def play_song(song_id):
     song["id"] = doc.id
 
     chords_list = json.loads(song["chords"])
+
+    # Parse loops data
+    loops_data = []
+    try:
+        loops_data = json.loads(song.get("loops", "[]"))
+    except:
+        loops_data = []
+
     try:
         beats_per_measure = int(song["time_signature"].split("/")[0])
     except:
@@ -173,5 +194,6 @@ def play_song(song_id):
         "title": song["title"],
         "bpm": song["bpm"],
         "chords": chords_list,
+        "loops": loops_data,  # Pass loops data to template
         "beats": beats_per_measure
     })

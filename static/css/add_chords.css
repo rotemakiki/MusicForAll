@@ -534,6 +534,7 @@ h1 {
     font-weight: 600;
     font-size: 14px;
     box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s;
 }
 
 .beats-input-group {
@@ -684,6 +685,7 @@ input:checked + .half-beats-slider:before {
 
 .measure-placeholder {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100px;
@@ -697,95 +699,27 @@ input:checked + .half-beats-slider:before {
     align-items: stretch;
     height: 100px;
     padding: 12px;
-    gap: 0;
+    gap: 2px;
     position: relative;
     direction: ltr;
 }
 
-/* אקורדים עם יכולת גרירה והגדלה */
+/* אקורדים מפושטים ללא drag/resize */
 .chord-in-measure {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border-radius: 8px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 2px solid transparent;
-    margin: 0 1px;
     min-width: 50px;
     box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
-    overflow: visible;
-}
-
-.resizable-chord {
-    position: relative;
-}
-
-.chord-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    z-index: 2;
-    pointer-events: auto;
-}
-
-.chord-content:hover {
-    cursor: grab;
-}
-
-.chord-content:active {
-    cursor: grabbing;
-}
-
-/* Resize Handles */
-.resize-handle {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 8px;
-    background: rgba(255, 255, 255, 0.3);
-    cursor: ew-resize;
-    opacity: 0;
-    transition: all 0.3s;
-    z-index: 3;
-    border-radius: 4px;
-}
-
-.resize-handle:hover {
-    background: rgba(255, 255, 255, 0.6);
-    opacity: 1;
-}
-
-.left-handle {
-    left: -4px;
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-}
-
-.right-handle {
-    right: -4px;
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-}
-
-.chord-in-measure:hover .resize-handle {
-    opacity: 0.7;
-}
-
-.chord-in-measure:hover .resize-handle:hover {
-    opacity: 1;
-}
-
-/* Visual feedback for resizing */
-.chord-in-measure.resizing {
-    border-color: #ffd700;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    padding: 8px 4px;
 }
 
 /* Empty chord styling */
@@ -794,29 +728,23 @@ input:checked + .half-beats-slider:before {
     border: 2px dashed #bdc3c7;
 }
 
-.chord-in-measure.empty-chord .chord-name::before {
-    content: "🔇 ";
-}
-
 .chord-in-measure:hover {
-    border-color: #ffd700;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    z-index: 10;
 }
 
 .chord-name {
     font-size: 16px;
     line-height: 1;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    margin-bottom: 4px;
 }
 
 .chord-beats {
     font-size: 10px;
     opacity: 0.9;
-    margin-top: 4px;
     background: rgba(255,255,255,0.2);
-    padding: 1px 6px;
+    padding: 2px 6px;
     border-radius: 6px;
 }
 
@@ -930,7 +858,7 @@ input:checked + .half-beats-slider:before {
     color: #2c3e50;
 }
 
-/* תיקון תיבות בלופ */
+/* תיקון תיבות בלופ עם יכולת עריכה */
 .loop-measures-preview {
     display: flex;
     gap: 3px;
@@ -955,11 +883,53 @@ input:checked + .half-beats-slider:before {
     font-weight: 700;
     color: #34495e;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+}
+
+.mini-measure.clickable {
+    cursor: pointer;
+    border-style: dashed;
+}
+
+.mini-measure.clickable:hover {
+    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
 .mini-measure.empty {
     background: #95a5a6;
     border: 1px dashed #7f8c8d;
+}
+
+.measure-number {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    font-size: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.empty-indicator {
+    font-size: 8px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.measures-edit-grid {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    direction: ltr;
 }
 
 .mini-measure-chords {
@@ -1034,7 +1004,7 @@ input:checked + .half-beats-slider:before {
 .loop-info {
     font-size: 12px;
     color: #666;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 .finish-controls {
@@ -1271,18 +1241,4 @@ input:checked + .half-beats-slider:before {
 .saved-loop:focus {
     outline: 3px solid rgba(102, 126, 234, 0.5);
     outline-offset: 2px;
-}
-
-/* מניעת בחירת טקסט בזמן גרירה */
-.chord-in-measure * {
-    user-select: none;
-}
-
-/* מצב גרירה גלובלי */
-body.dragging {
-    cursor: grabbing !important;
-}
-
-body.resizing {
-    cursor: ew-resize !important;
 }
