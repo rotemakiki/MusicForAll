@@ -1,4 +1,4 @@
-// Enhanced Play Song JavaScript - with loop management and preparation measure
+// Enhanced Play Song JavaScript - with loop management, preparation measure and repeat display
 
 // Get song data from Flask
 const chords = window.songData.chords;
@@ -17,12 +17,14 @@ let selectedStartChord = null;
 let addPreparationMeasure = true;
 let enabledLoops = new Set(); // Track which loops are enabled
 let loopStates = {}; // Track visibility state of each loop section
+let currentRepeatCycle = {}; // Track current repeat for each loop
 const metronome = document.getElementById("metronome-sound");
 
 // Initialize enabled loops - all enabled by default
 loops.forEach((loop, index) => {
     enabledLoops.add(index);
     loopStates[index] = { visible: true, enabled: true };
+    currentRepeatCycle[index] = 1; // Start at repeat 1
 });
 
 // Single metronome sound function - stable and consistent
@@ -62,7 +64,7 @@ function createPreparationMeasure() {
     };
 }
 
-// Enhanced chord rendering with loop organization and preparation measure
+// Enhanced chord rendering with loop organization, preparation measure and repeat display
 function renderChords() {
     const wrapper = document.getElementById("chords-wrapper");
     wrapper.innerHTML = "";
@@ -82,20 +84,25 @@ function renderChords() {
     const startBeat = addPreparationMeasure ? 4 : 0;
     currentGlobalBeat = startBeat;
 
-    for (let i = 0; i < currentLineIndex; i++) {
-        for (let j = 0; j < chords[i].length; j++) {
-            currentGlobalBeat += chords[i][j].beats;
+    // Only calculate position if we're in normal playback mode (not preparation)
+    if (currentLineIndex >= 0) {
+        for (let i = 0; i < currentLineIndex; i++) {
+            for (let j = 0; j < chords[i].length; j++) {
+                currentGlobalBeat += chords[i][j].beats;
+            }
         }
+        for (let j = 0; j < currentChordIndexInLine; j++) {
+            if (chords[currentLineIndex] && chords[currentLineIndex][j]) {
+                currentGlobalBeat += chords[currentLineIndex][j].beats;
+            }
+        }
+        currentGlobalBeat += currentBeat - 1;
+    } else {
+        // In preparation mode
+        currentGlobalBeat = currentBeat - 1;
     }
-    for (let j = 0; j < currentChordIndexInLine; j++) {
-        currentGlobalBeat += chords[currentLineIndex][j].beats;
-    }
-    currentGlobalBeat += currentBeat - 1;
 
     // Process measures from chord data
-    let currentLoopIndex = 0;
-    let measureInLoop = 0;
-
     chords.forEach((line, lineIdx) => {
         let totalBeats = 0;
         let currentMeasure = [];
@@ -158,7 +165,7 @@ function renderChords() {
     updateBeatDots();
 }
 
-// Render measures organized by loop sections
+// Render measures organized by loop sections with repeat display
 function renderMeasuresByLoops(wrapper, allMeasures) {
     let measureIndex = 0;
 
@@ -188,55 +195,79 @@ function renderMeasuresByLoops(wrapper, allMeasures) {
         measureIndex = 1;
     }
 
-    // Render loop sections
+    // Render loop sections with repeat information
     loops.forEach((loop, loopIdx) => {
-        const loopSection = document.createElement("div");
-        loopSection.className = "loop-section";
-        loopSection.dataset.loopIndex = loopIdx;
+        const repeatCount = loop.repeatCount || 1;
+        const currentRepeat = currentRepeatCycle[loopIdx] || 1;
 
-        const loopHeader = document.createElement("div");
-        loopHeader.className = "loop-header";
-        loopHeader.innerHTML = `
-            <div class="loop-title-controls">
-                <button class="loop-toggle-btn" onclick="toggleLoopVisibility(${loopIdx})">
-                    ${loopStates[loopIdx].visible ? '📖' : '📕'}
-                </button>
-                <span class="loop-title">${loop.name}</span>
-                <span class="loop-measures-count">${loop.measureCount} תיבות</span>
-            </div>
-            <div class="loop-controls">
-                <label class="loop-enable-checkbox">
-                    <input type="checkbox" ${loopStates[loopIdx].enabled ? 'checked' : ''}
-                           onchange="toggleLoopEnabled(${loopIdx})">
-                    <span class="loop-checkbox-label">כלול בניגון</span>
-                </label>
-            </div>
-        `;
+        // Create multiple sections for each repeat if repeatCount > 1
+        for (let repeatNum = 1; repeatNum <= repeatCount; repeatNum++) {
+            const loopSection = document.createElement("div");
+            loopSection.className = "loop-section";
+            loopSection.dataset.loopIndex = loopIdx;
+            loopSection.dataset.repeatNumber = repeatNum;
 
-        const loopContent = document.createElement("div");
-        loopContent.className = "loop-content";
-        loopContent.style.display = loopStates[loopIdx].visible ? 'block' : 'none';
+            // Highlight current repeat
+            if (repeatNum === currentRepeat) {
+                loopSection.classList.add("current-repeat");
+            } else if (repeatNum < currentRepeat) {
+                loopSection.classList.add("past-repeat");
+            }
 
-        // Add measures for this loop
-        const loopMeasures = allMeasures.slice(measureIndex, measureIndex + loop.measureCount);
+            const loopHeader = document.createElement("div");
+            loopHeader.className = "loop-header";
 
-        // Group measures into rows of 4
-        for (let i = 0; i < loopMeasures.length; i += 4) {
-            const rowMeasures = loopMeasures.slice(i, i + 4);
-            const rowDiv = document.createElement("div");
-            rowDiv.className = "chord-row";
+            let titleText = loop.name;
+            if (repeatCount > 1) {
+                titleText += ` - חזרה ${repeatNum}/${repeatCount}`;
+            }
 
-            rowMeasures.forEach(measureData => {
-                rowDiv.appendChild(createMeasureElement(measureData));
-            });
+            loopHeader.innerHTML = `
+                <div class="loop-title-controls">
+                    <button class="loop-toggle-btn" onclick="toggleLoopVisibility(${loopIdx})">
+                        ${loopStates[loopIdx].visible ? '📖' : '📕'}
+                    </button>
+                    <span class="loop-title">${titleText}</span>
+                    <span class="loop-measures-count">${loop.measureCount} תיבות</span>
+                </div>
+                <div class="loop-controls">
+                    <label class="loop-enable-checkbox">
+                        <input type="checkbox" ${loopStates[loopIdx].enabled ? 'checked' : ''}
+                               onchange="toggleLoopEnabled(${loopIdx})">
+                        <span class="loop-checkbox-label">כלול בניגון</span>
+                    </label>
+                </div>
+            `;
 
-            loopContent.appendChild(rowDiv);
+            const loopContent = document.createElement("div");
+            loopContent.className = "loop-content";
+            loopContent.style.display = loopStates[loopIdx].visible ? 'block' : 'none';
+
+            // Add measures for this loop (same measures for each repeat)
+            const loopMeasures = allMeasures.slice(measureIndex, measureIndex + loop.measureCount);
+
+            // Group measures into rows of 4
+            for (let i = 0; i < loopMeasures.length; i += 4) {
+                const rowMeasures = loopMeasures.slice(i, i + 4);
+                const rowDiv = document.createElement("div");
+                rowDiv.className = "chord-row";
+
+                rowMeasures.forEach(measureData => {
+                    // Adjust measure numbering for repeats
+                    const adjustedMeasureData = {...measureData};
+                    adjustedMeasureData.measureIndex = measureData.measureIndex + ((repeatNum - 1) * loop.measureCount);
+                    rowDiv.appendChild(createMeasureElement(adjustedMeasureData));
+                });
+
+                loopContent.appendChild(rowDiv);
+            }
+
+            loopSection.appendChild(loopHeader);
+            loopSection.appendChild(loopContent);
+            wrapper.appendChild(loopSection);
         }
 
-        loopSection.appendChild(loopHeader);
-        loopSection.appendChild(loopContent);
-        wrapper.appendChild(loopSection);
-
+        // Only increment measureIndex once per original loop
         measureIndex += loop.measureCount;
     });
 }
@@ -413,7 +444,7 @@ function toggleLoopFromControls(loopIndex) {
     }
 }
 
-// Beat dots update - simplified
+// Beat dots update - fixed for preparation measure
 function updateBeatDots() {
     // Reset all dots
     document.querySelectorAll(".beat-dot").forEach(dot => {
@@ -421,17 +452,27 @@ function updateBeatDots() {
     });
 
     // Calculate current global beat position
-    let currentGlobalBeat = addPreparationMeasure ? 4 : 0;
+    let currentGlobalBeat = 0;
 
-    for (let i = 0; i < currentLineIndex; i++) {
-        for (let j = 0; j < chords[i].length; j++) {
-            currentGlobalBeat += chords[i][j].beats;
+    if (currentLineIndex === -1) {
+        // In preparation mode
+        currentGlobalBeat = currentBeat - 1;
+    } else {
+        // Normal playback mode
+        currentGlobalBeat = addPreparationMeasure ? 4 : 0;
+
+        for (let i = 0; i < currentLineIndex; i++) {
+            for (let j = 0; j < chords[i].length; j++) {
+                currentGlobalBeat += chords[i][j].beats;
+            }
         }
+        for (let j = 0; j < currentChordIndexInLine; j++) {
+            if (chords[currentLineIndex] && chords[currentLineIndex][j]) {
+                currentGlobalBeat += chords[currentLineIndex][j].beats;
+            }
+        }
+        currentGlobalBeat += currentBeat - 1;
     }
-    for (let j = 0; j < currentChordIndexInLine; j++) {
-        currentGlobalBeat += chords[currentLineIndex][j].beats;
-    }
-    currentGlobalBeat += currentBeat - 1;
 
     // Update dots
     document.querySelectorAll(".beat-dot").forEach(dot => {
@@ -447,13 +488,18 @@ function updateBeatDots() {
     });
 }
 
-// Enhanced playback with loop support
+// Enhanced playback with loop support and repeat management
 function startPlayback() {
     stopPlayback();
 
     bpm = parseInt(document.getElementById("bpm-slider").value);
     intervalMs = 60000 / bpm;
     document.getElementById("current-bpm").innerText = bpm;
+
+    // Reset repeat cycles
+    loops.forEach((loop, index) => {
+        currentRepeatCycle[index] = 1;
+    });
 
     // Handle preparation measure or selected start position
     if (selectedStartLine === null && selectedStartChord === null && addPreparationMeasure) {
@@ -478,6 +524,7 @@ function startPlayback() {
         playMetronome();
         currentBeat = 1;
         updateBeatDots();
+        renderChords(); // Re-render to show current state
     }, 100);
 
     // Main interval
@@ -495,6 +542,7 @@ function startPlayback() {
                 playMetronome();
             }
             updateBeatDots();
+            renderChords();
             return;
         }
 
@@ -505,6 +553,11 @@ function startPlayback() {
         }
 
         const line = chords[currentLineIndex];
+        if (!line || currentChordIndexInLine >= line.length) {
+            stopPlayback();
+            return;
+        }
+
         const chordObj = line[currentChordIndexInLine];
         const beatsThisChord = chordObj.beats || 4;
 
@@ -531,6 +584,7 @@ function startPlayback() {
         }
 
         updateBeatDots();
+        renderChords();
     }, intervalMs);
 }
 
@@ -553,6 +607,11 @@ function restartPlayback() {
     currentBeat = 0;
     selectedStartLine = null;
     selectedStartChord = null;
+
+    // Reset repeat cycles
+    loops.forEach((loop, index) => {
+        currentRepeatCycle[index] = 1;
+    });
 
     // Reset visual state
     document.getElementById("selected-measure-info").style.display = "none";

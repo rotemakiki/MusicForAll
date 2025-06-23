@@ -267,6 +267,17 @@ function clearCurrentMeasure() {
     updateLoopDisplay();
 }
 
+// Remove measure from current loop
+function removeMeasureFromCurrentLoop(measureIndex) {
+    if (measureIndex < 0 || measureIndex >= currentLoop.length) return;
+
+    if (confirm("האם אתה בטוח שברצונך למחוק תיבה זו מהלופ הנוכחי?")) {
+        currentLoop.splice(measureIndex, 1);
+        updateLoopDisplay();
+        updateButtons();
+    }
+}
+
 // Update button states
 function updateButtons() {
     const nextMeasureBtn = document.getElementById("next-measure-btn");
@@ -462,7 +473,7 @@ function updateLoopDisplay() {
     const preview = document.getElementById("current-loop-preview");
     preview.innerHTML = "";
 
-    currentLoop.forEach(measure => {
+    currentLoop.forEach((measure, measureIndex) => {
         const miniMeasure = document.createElement("div");
         miniMeasure.className = "mini-measure";
 
@@ -488,6 +499,16 @@ function updateLoopDisplay() {
 
             miniMeasure.appendChild(chordsDiv);
         }
+
+        // Add remove button for current loop measures
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "mini-measure-remove";
+        removeBtn.innerHTML = "×";
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeMeasureFromCurrentLoop(measureIndex);
+        };
+        miniMeasure.appendChild(removeBtn);
 
         preview.appendChild(miniMeasure);
     });
@@ -611,7 +632,14 @@ function renderSongStructure() {
                     <div class="loop-measures-count">${loop.measureCount} תיבות</div>
                 </div>
             </div>
-            <button class="remove-loop-btn" onclick="removeSongLoop(${loopIndex})">×</button>
+            <div class="loop-controls-group">
+                <div class="loop-repeat-controls">
+                    <span class="repeat-label">חזרות:</span>
+                    <input type="number" class="repeat-input" value="${loop.repeatCount || 1}" min="1" max="10"
+                           onchange="updateLoopRepeat(${loopIndex}, this.value)">
+                </div>
+                <button class="remove-loop-btn" onclick="removeSongLoop(${loopIndex})">×</button>
+            </div>
         `;
 
         const loopContent = document.createElement("div");
@@ -665,6 +693,14 @@ function renderSongStructure() {
     });
 }
 
+// Update loop repeat count
+function updateLoopRepeat(loopIndex, repeatCount) {
+    const count = Math.max(1, Math.min(10, parseInt(repeatCount) || 1));
+    if (songStructure[loopIndex]) {
+        songStructure[loopIndex].repeatCount = count;
+    }
+}
+
 // Drag and drop handlers for saved loops
 let draggedLoop = null;
 
@@ -708,8 +744,9 @@ function dropLoop(e) {
     e.currentTarget.classList.remove('drag-over');
 
     if (draggedLoop) {
-        // Add loop to song structure
-        songStructure.push({...draggedLoop});
+        // Add loop to song structure with repeat count
+        const loopCopy = {...draggedLoop, repeatCount: 1};
+        songStructure.push(loopCopy);
         renderSongStructure();
     } else if (draggedSongLoop !== null) {
         // Handle reordering within song structure
@@ -734,37 +771,43 @@ function removeSongLoop(index) {
     }
 }
 
-// Finish and return to add song page - now includes loops data
+// Finish and return to add song page - now includes loops data with repeats
 function finishAndReturn() {
     if (songStructure.length === 0) {
         alert("יש להוסיף לפחות לופ אחד לשיר");
         return;
     }
 
-    // Convert song structure into flat chord lines
+    // Convert song structure into flat chord lines with repeats
     const chordLines = [];
 
     songStructure.forEach(loop => {
-        // Group measures into lines of 4 measures each
-        const measuresPerLine = 4;
-        for (let i = 0; i < loop.measures.length; i += measuresPerLine) {
-            const lineMeasures = loop.measures.slice(i, i + measuresPerLine);
-            const lineChords = lineMeasures.flatMap(measure =>
-                measure.chords.map(chord => ({
-                    chord: chord.isEmpty ? "—" : chord.chord,
-                    beats: chord.width,
-                    label: ""
-                }))
-            );
-            chordLines.push(lineChords);
+        const repeatCount = loop.repeatCount || 1;
+
+        // Repeat the loop the specified number of times
+        for (let repeat = 0; repeat < repeatCount; repeat++) {
+            // Group measures into lines of 4 measures each
+            const measuresPerLine = 4;
+            for (let i = 0; i < loop.measures.length; i += measuresPerLine) {
+                const lineMeasures = loop.measures.slice(i, i + measuresPerLine);
+                const lineChords = lineMeasures.flatMap(measure =>
+                    measure.chords.map(chord => ({
+                        chord: chord.isEmpty ? "—" : chord.chord,
+                        beats: chord.width,
+                        label: ""
+                    }))
+                );
+                chordLines.push(lineChords);
+            }
         }
     });
 
-    // Prepare loops data for DB storage
+    // Prepare loops data for DB storage with repeat information
     const loopsData = songStructure.map(loop => ({
         name: loop.customName,
         measures: loop.measures,
-        measureCount: loop.measureCount
+        measureCount: loop.measureCount,
+        repeatCount: loop.repeatCount || 1
     }));
 
     try {
