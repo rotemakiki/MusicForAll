@@ -32,7 +32,6 @@
             <option value="A#">לה דיאז - A#</option>
             <option value="Bb">סי במול - Bb</option>
             <option value="B">סי - B</option>
-
         </select>
 
         <label for="key_type">סוג סולם:</label>
@@ -118,19 +117,51 @@
 </div>
 
 <script>
-    // Button navigation
+    // Clear any existing editing data when starting a new song
+    function clearEditingData() {
+        localStorage.removeItem("editingSongId");
+        localStorage.removeItem("editSongData");
+        localStorage.removeItem("justReturnedFromChords");
+        console.log("Cleared editing data for new song");
+    }
+
+    // Button navigation for new song
     function goToChordsPage() {
+        // Save current form data before going to chords page
+        saveNewSongFormData();
+        // Clear any editing flags to ensure we're in "new song" mode
+        localStorage.removeItem("editingSongId");
+        localStorage.setItem("addingNewSong", "true");
         window.location.href = "/add-chords";
     }
 
-    // Show success message if chords were added (and stay even after refresh)
-    function editChords() {
+    // Edit chords for new song
+    function editNewSongChords() {
+        saveNewSongFormData();
+        localStorage.setItem("addingNewSong", "true");
         window.location.href = "/add-chords";
     }
 
-    // --- Prefill form from localStorage if exists ---
+    function saveNewSongFormData() {
+        const formData = {
+            title: document.getElementById("title").value,
+            artist: document.getElementById("artist").value,
+            key: document.getElementById("key").value,
+            key_type: document.getElementById("key_type").value,
+            difficulty: document.getElementById("difficulty").value,
+            time_signature: document.getElementById("time_signature").value,
+            bpm: document.getElementById("bpm").value,
+            video_url: document.getElementById("video_url").value
+        };
+        localStorage.setItem("songData", JSON.stringify(formData));
+    }
+
+    // --- Initialize page ---
     document.addEventListener("DOMContentLoaded", function () {
-        // Prefill fields from localStorage
+        // Clear editing data when entering new song page
+        clearEditingData();
+
+        // Prefill fields from localStorage if exists (for new song in progress)
         const songData = JSON.parse(localStorage.getItem("songData") || "{}");
         for (const key in songData) {
             if (document.getElementById(key)) {
@@ -138,36 +169,37 @@
             }
         }
 
-        // Check if user just returned from chords page
+        // Check chords state for new song
         const chordsSuccessDiv = document.getElementById("chords-success");
         const chordsBtn = document.getElementById("chords-btn");
         const savedChords = localStorage.getItem("chords");
         const savedLoops = localStorage.getItem("loops");
         const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
+        const addingNewSong = localStorage.getItem("addingNewSong");
 
-        if (savedChords && justReturnedFromChords === "true") {
-            // User just returned from chords page - show success message
+        // Only use saved chords if we're actually adding a new song (not editing existing)
+        if (savedChords && justReturnedFromChords === "true" && addingNewSong === "true") {
+            // User just returned from chords page for new song - show success message
             document.getElementById("chords").value = savedChords;
             if (savedLoops) {
                 document.getElementById("loops").value = savedLoops;
             }
             chordsSuccessDiv.style.display = "block";
-            chordsBtn.textContent = "ערוך אקורדים";
-            chordsBtn.onclick = editChords;
+            chordsBtn.textContent = "ערוך אקורדים שנוספו";
+            chordsBtn.onclick = editNewSongChords;
             // Clear the flag so it won't show again on refresh
             localStorage.removeItem("justReturnedFromChords");
-        } else if (savedChords) {
-            // Chords exist but user didn't just return from chords page
-            // (maybe from a previous session or refresh) - don't show success message
+        } else if (savedChords && addingNewSong === "true") {
+            // Chords exist for new song but user didn't just return from chords page
             document.getElementById("chords").value = savedChords;
             if (savedLoops) {
                 document.getElementById("loops").value = savedLoops;
             }
             chordsSuccessDiv.style.display = "none";
-            chordsBtn.textContent = "ערוך אקורדים";
-            chordsBtn.onclick = editChords;
+            chordsBtn.textContent = "ערוך אקורדים שנוספו";
+            chordsBtn.onclick = editNewSongChords;
         } else {
-            // No chords saved - show regular button
+            // No chords saved for new song - show regular button
             chordsSuccessDiv.style.display = "none";
             chordsBtn.textContent = "הוסף אקורדים";
             chordsBtn.onclick = goToChordsPage;
@@ -248,15 +280,24 @@
             if (data.message) {
                 messageEl.textContent = "✅ " + data.message;
                 messageEl.style.color = "green";
+
+                // Clear all localStorage data after successful creation
                 localStorage.removeItem("chords");
                 localStorage.removeItem("loops");
-                localStorage.removeItem("songData"); // Clear after success
-                localStorage.removeItem("justReturnedFromChords"); // Clean up flag too
+                localStorage.removeItem("songData");
+                localStorage.removeItem("justReturnedFromChords");
+                localStorage.removeItem("addingNewSong");
+
                 document.getElementById("chords-success").style.display = "none";
-                // Reset chords button as well
+
+                // Reset chords button
                 const chordsBtn = document.getElementById("chords-btn");
                 chordsBtn.textContent = "הוסף אקורדים";
                 chordsBtn.onclick = goToChordsPage;
+
+                // Reset form
+                document.getElementById("add-song-form").reset();
+                document.getElementById("bpm").value = "100";
             } else {
                 messageEl.textContent = "❌ שגיאה בהוספת השיר, נסה שוב";
                 messageEl.style.color = "red";

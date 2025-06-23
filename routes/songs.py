@@ -97,14 +97,27 @@ def edit_song(song_id):
         return redirect(url_for('songs.chords', song_id=song_id))
 
     song["id"] = song_id
+
+    # Parse chords safely
     try:
-        song["chords"] = json.loads(song.get("chords", "[]"))
-    except:
+        chords_str = song.get("chords", "[]")
+        if isinstance(chords_str, str):
+            song["chords"] = json.loads(chords_str)
+        else:
+            song["chords"] = chords_str if chords_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing chords for song {song_id}: {e}")
         song["chords"] = []
 
+    # Parse loops safely
     try:
-        song["loops"] = json.loads(song.get("loops", "[]"))
-    except:
+        loops_str = song.get("loops", "[]")
+        if isinstance(loops_str, str):
+            song["loops"] = json.loads(loops_str)
+        else:
+            song["loops"] = loops_str if loops_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing loops for song {song_id}: {e}")
         song["loops"] = []
 
     return render_template("edit_song.html", song=song)
@@ -178,15 +191,25 @@ def play_song(song_id):
     # Parse chord data
     chords_list = []
     try:
-        chords_list = json.loads(song.get("chords", "[]"))
-    except:
+        chords_str = song.get("chords", "[]")
+        if isinstance(chords_str, str):
+            chords_list = json.loads(chords_str)
+        else:
+            chords_list = chords_str if chords_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing chords for song {song_id}: {e}")
         chords_list = []
 
     # Parse loops data
     loops_data = []
     try:
-        loops_data = json.loads(song.get("loops", "[]"))
-    except:
+        loops_str = song.get("loops", "[]")
+        if isinstance(loops_str, str):
+            loops_data = json.loads(loops_str)
+        else:
+            loops_data = loops_str if loops_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing loops for song {song_id}: {e}")
         loops_data = []
 
     try:

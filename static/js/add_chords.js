@@ -27,6 +27,210 @@ function init() {
     createNewMeasure();
     updateLoopDisplay();
     setupHalfBeatsToggle();
+
+    // Load existing data if editing
+    loadExistingData();
+}
+
+function loadExistingData() {
+    const mode = determineMode();
+    console.log("Current mode:", mode);
+
+    if (mode === "editing") {
+        // עריכת שיר קיים - טען את האקורדים הקיימים
+        console.log("Loading existing song data for editing...");
+        loadExistingSongData();
+    } else if (mode === "new_song") {
+        // שיר חדש - בדוק אם יש אקורדים בתהליך
+        console.log("New song mode - checking for chords in progress...");
+        loadNewSongChordsInProgress();
+    } else {
+        // מצב לא מוכר - נקה הכל
+        console.log("Unknown mode - clearing all data");
+        clearAllData();
+    }
+}
+
+function loadExistingSongData() {
+    try {
+        const savedChords = localStorage.getItem("chords");
+        const savedLoops = localStorage.getItem("loops");
+
+        if (!savedChords) {
+            console.log("No saved chords found for editing");
+            return;
+        }
+
+        let existingChords;
+        try {
+            existingChords = JSON.parse(savedChords);
+            console.log("Successfully parsed existing chords:", existingChords);
+        } catch (e) {
+            console.error("Error parsing saved chords:", e);
+            return;
+        }
+
+        if (savedLoops && savedLoops !== "[]") {
+            try {
+                const existingLoops = JSON.parse(savedLoops);
+                console.log("Loading existing loops for editing:", existingLoops);
+
+                // Clear existing data
+                savedLoops.splice(0, savedLoops.length);
+                songStructure.splice(0, songStructure.length);
+
+                // טען לופים קיימים
+                existingLoops.forEach(loopData => {
+                    const restoredLoop = {
+                        id: Date.now() + Math.random(),
+                        customName: loopData.name,
+                        measures: loopData.measures,
+                        measureCount: loopData.measureCount,
+                        repeatCount: loopData.repeatCount || 1
+                    };
+                    savedLoops.push(restoredLoop);
+                });
+
+                songStructure.push(...existingLoops.map(loop => ({
+                    ...loop,
+                    id: Date.now() + Math.random(),
+                    repeatCount: loop.repeatCount || 1
+                })));
+
+                console.log("Successfully loaded loops from existing data");
+            } catch (e) {
+                console.log("Error parsing existing loops, converting from chords...");
+                convertChordsToLoops(existingChords);
+            }
+        } else {
+            console.log("No existing loops found, converting chords to loops");
+            convertChordsToLoops(existingChords);
+        }
+
+        renderSavedLoops();
+        renderSongStructure();
+        console.log("Successfully loaded existing song data");
+    } catch (e) {
+        console.error("Error loading existing song data:", e);
+        clearAllData();
+    }
+}
+
+function loadNewSongChordsInProgress() {
+    try {
+        const savedChords = localStorage.getItem("chords");
+        const savedLoops = localStorage.getItem("loops");
+        const addingNewSong = localStorage.getItem("addingNewSong");
+
+        // רק אם זה באמת שיר חדש ויש אקורדים שנוספו בתהליך
+        if (addingNewSong === "true" && savedChords) {
+            const newSongChords = JSON.parse(savedChords);
+            console.log("Loading new song chords in progress:", newSongChords);
+
+            if (savedLoops && savedLoops !== "[]") {
+                const newSongLoops = JSON.parse(savedLoops);
+                console.log("Loading new song loops in progress:", newSongLoops);
+
+                newSongLoops.forEach(loopData => {
+                    const restoredLoop = {
+                        id: Date.now() + Math.random(),
+                        customName: loopData.name,
+                        measures: loopData.measures,
+                        measureCount: loopData.measureCount,
+                        repeatCount: loopData.repeatCount || 1
+                    };
+                    savedLoops.push(restoredLoop);
+                });
+
+                songStructure.push(...newSongLoops.map(loop => ({
+                    ...loop,
+                    id: Date.now() + Math.random(),
+                    repeatCount: loop.repeatCount || 1
+                })));
+            } else {
+                convertChordsToLoops(newSongChords);
+            }
+
+            renderSavedLoops();
+            renderSongStructure();
+            console.log("Successfully loaded new song chords in progress");
+        } else {
+            // אין אקורדים בתהליך לשיר חדש - התחל נקי
+            console.log("No chords in progress for new song - starting clean");
+            clearAllData();
+        }
+    } catch (e) {
+        console.log("Error loading new song chords in progress:", e);
+        clearAllData();
+    }
+}
+
+function clearAllData() {
+    console.log("Clearing all chord/loop data for fresh start");
+    savedLoops.splice(0, savedLoops.length); // נקה את המערך
+    songStructure.splice(0, songStructure.length); // נקה את המערך
+    currentLoop.splice(0, currentLoop.length); // נקה את המערך
+    renderSavedLoops();
+    renderSongStructure();
+    updateLoopDisplay();
+}
+
+// Convert flat chord structure back to loop measures
+function convertChordsToLoops(chordLines) {
+    if (!chordLines || chordLines.length === 0) return;
+
+    const measures = [];
+
+    chordLines.forEach(line => {
+        let currentMeasure = {
+            beats: 4,
+            chords: [],
+            isEmpty: false
+        };
+
+        let totalBeats = 0;
+        line.forEach(chordData => {
+            currentMeasure.chords.push({
+                chord: chordData.chord === "—" ? "—" : chordData.chord,
+                width: chordData.beats || 1,
+                isEmpty: chordData.chord === "—",
+                position: totalBeats
+            });
+            totalBeats += (chordData.beats || 1);
+        });
+
+        if (currentMeasure.chords.length > 0) {
+            measures.push(currentMeasure);
+        }
+    });
+
+    if (measures.length > 0) {
+        const defaultLoop = {
+            id: Date.now(),
+            customName: "חלק ראשי",
+            measures: measures,
+            measureCount: measures.length,
+            repeatCount: 1
+        };
+
+        savedLoops.push(defaultLoop);
+        songStructure.push({...defaultLoop});
+    }
+}
+
+function determineMode() {
+    const editingSongId = localStorage.getItem("editingSongId");
+    const addingNewSong = localStorage.getItem("addingNewSong");
+
+    console.log("Determining mode - editingSongId:", editingSongId, "addingNewSong:", addingNewSong);
+
+    if (editingSongId && editingSongId !== "null" && editingSongId !== "undefined") {
+        return "editing";
+    } else if (addingNewSong === "true") {
+        return "new_song";
+    } else {
+        return "unknown";
+    }
 }
 
 // Update the selected chord display
@@ -784,9 +988,7 @@ function finishAndReturn() {
     songStructure.forEach(loop => {
         const repeatCount = loop.repeatCount || 1;
 
-        // Repeat the loop the specified number of times
         for (let repeat = 0; repeat < repeatCount; repeat++) {
-            // Group measures into lines of 4 measures each
             const measuresPerLine = 4;
             for (let i = 0; i < loop.measures.length; i += measuresPerLine) {
                 const lineMeasures = loop.measures.slice(i, i + measuresPerLine);
@@ -802,7 +1004,7 @@ function finishAndReturn() {
         }
     });
 
-    // Prepare loops data for DB storage with repeat information
+    // Prepare loops data for DB storage
     const loopsData = songStructure.map(loop => ({
         name: loop.customName,
         measures: loop.measures,
@@ -811,7 +1013,6 @@ function finishAndReturn() {
     }));
 
     try {
-        // Save both chord data and loops data to localStorage
         localStorage.setItem("chords", JSON.stringify(chordLines));
         localStorage.setItem("loops", JSON.stringify(loopsData));
         localStorage.setItem("justReturnedFromChords", "true");
@@ -821,8 +1022,17 @@ function finishAndReturn() {
         console.log("localStorage not available - data stored in memory only");
     }
 
-    // Navigate to the add song page
-    window.location.href = "/add_song";
+    // Determine where to return based on mode
+    const mode = determineMode();
+
+    if (mode === "editing") {
+        // Return to edit song page
+        const editingSongId = localStorage.getItem("editingSongId");
+        window.location.href = `/edit_song/${editingSongId}`;
+    } else {
+        // Return to add song page (for new songs)
+        window.location.href = "/add_song";
+    }
 }
 
 // Event listeners

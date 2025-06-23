@@ -118,23 +118,72 @@
 
 <script>
     const songId = "{{ song.id }}";
-    const existingChords = {{ song.chords|safe }};
 
-    // Button navigation
+    // Parse existing chords and loops from server-side data
+    let existingChords = [];
+    let existingLoops = [];
+
+    try {
+        existingChords = {{ song.chords|safe }};
+        console.log("Loaded existing chords:", existingChords);
+    } catch (e) {
+        console.error("Error parsing existing chords:", e);
+        existingChords = [];
+    }
+
+    try {
+        const loopsData = "{{ song.loops|default('[]')|safe }}";
+        if (loopsData && loopsData !== '[]') {
+            existingLoops = JSON.parse(loopsData);
+            console.log("Loaded existing loops:", existingLoops);
+        }
+    } catch (e) {
+        console.error("Error parsing existing loops:", e);
+        existingLoops = [];
+    }
+
+    // Clear any conflicting localStorage data when entering edit mode
+    function clearConflictingData() {
+        localStorage.removeItem("addingNewSong");
+        localStorage.removeItem("songData");
+        console.log("Cleared conflicting localStorage data for song editing");
+    }
+
+    // Button navigation - עריכת שיר קיים
     function goToChordsPage() {
+        // Clear conflicting data
+        clearConflictingData();
+
         // Save current form data before going to chords page
         saveFormData();
-        // Store existing chords for editing
-        localStorage.setItem("chords", JSON.stringify(existingChords));
-        localStorage.setItem("editingSongId", songId);
+
+        // Store existing chords and loops for editing
+        try {
+            localStorage.setItem("chords", JSON.stringify(existingChords));
+            localStorage.setItem("loops", JSON.stringify(existingLoops));
+            localStorage.setItem("editingSongId", songId);
+            console.log("Stored data for editing - chords:", existingChords, "loops:", existingLoops);
+        } catch (e) {
+            console.error("Error storing data for editing:", e);
+        }
+
         window.location.href = "/add-chords";
     }
 
-    // Show success message if chords were added (and stay even after refresh)
+    // Edit chords for existing song
     function editChords() {
+        clearConflictingData();
         saveFormData();
-        localStorage.setItem("chords", JSON.stringify(existingChords));
-        localStorage.setItem("editingSongId", songId);
+
+        try {
+            localStorage.setItem("chords", JSON.stringify(existingChords));
+            localStorage.setItem("loops", JSON.stringify(existingLoops));
+            localStorage.setItem("editingSongId", songId);
+            console.log("Stored updated data for editing");
+        } catch (e) {
+            console.error("Error storing updated data for editing:", e);
+        }
+
         window.location.href = "/add-chords";
     }
 
@@ -154,6 +203,9 @@
 
     // --- Prefill form from localStorage if exists ---
     document.addEventListener("DOMContentLoaded", function () {
+        // Clear conflicting data on page load
+        clearConflictingData();
+
         // Load existing chords into hidden field
         document.getElementById("chords").value = JSON.stringify(existingChords);
 
@@ -175,12 +227,21 @@
 
         if (savedChords && justReturnedFromChords === "true" && editingSongId === songId) {
             // User just returned from chords page - show success message
-            document.getElementById("chords").value = savedChords;
-            chordsSuccessDiv.style.display = "block";
-            chordsBtn.textContent = "ערוך אקורדים";
-            chordsBtn.onclick = editChords;
-            // Clear the flag so it won't show again on refresh
-            localStorage.removeItem("justReturnedFromChords");
+            try {
+                const parsedChords = JSON.parse(savedChords);
+                document.getElementById("chords").value = savedChords;
+                existingChords = parsedChords; // Update the existing chords
+
+                chordsSuccessDiv.style.display = "block";
+                chordsBtn.textContent = "ערוך אקורדים";
+                chordsBtn.onclick = editChords;
+                // Clear the flag so it won't show again on refresh
+                localStorage.removeItem("justReturnedFromChords");
+
+                console.log("Successfully updated chords from localStorage");
+            } catch (e) {
+                console.error("Error parsing returned chords:", e);
+            }
         } else {
             // Show regular edit chords button
             chordsSuccessDiv.style.display = "none";
@@ -256,6 +317,8 @@
                 localStorage.removeItem("editSongData");
                 localStorage.removeItem("justReturnedFromChords");
                 localStorage.removeItem("editingSongId");
+                localStorage.removeItem("chords");
+                localStorage.removeItem("loops");
                 // Redirect to song page after short delay
                 setTimeout(() => {
                     window.location.href = `/chords/${songId}`;
