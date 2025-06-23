@@ -109,6 +109,8 @@
         </div>
         <button type="button" class="btn" id="chords-btn" onclick="goToChordsPage()">ערוך אקורדים</button>
         <input type="hidden" id="chords" name="chords" required>
+        <!-- הוספת שדה נסתר ללופים -->
+        <input type="hidden" id="loops" name="loops">
 
         <button type="submit" class="btn">💾 שמור שינויים</button>
     </form>
@@ -206,8 +208,9 @@
         // Clear conflicting data on page load
         clearConflictingData();
 
-        // Load existing chords into hidden field
+        // Load existing chords and loops into hidden fields
         document.getElementById("chords").value = JSON.stringify(existingChords);
+        document.getElementById("loops").value = JSON.stringify(existingLoops);
 
         // Prefill fields from localStorage if user was editing
         const editSongData = JSON.parse(localStorage.getItem("editSongData") || "{}");
@@ -222,6 +225,7 @@
         const chordsSuccessDiv = document.getElementById("chords-success");
         const chordsBtn = document.getElementById("chords-btn");
         const savedChords = localStorage.getItem("chords");
+        const savedLoops = localStorage.getItem("loops");
         const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
         const editingSongId = localStorage.getItem("editingSongId");
 
@@ -229,8 +233,13 @@
             // User just returned from chords page - show success message
             try {
                 const parsedChords = JSON.parse(savedChords);
+                const parsedLoops = savedLoops ? JSON.parse(savedLoops) : [];
+
                 document.getElementById("chords").value = savedChords;
+                document.getElementById("loops").value = savedLoops || "[]";
+
                 existingChords = parsedChords; // Update the existing chords
+                existingLoops = parsedLoops; // Update the existing loops
 
                 chordsSuccessDiv.style.display = "block";
                 chordsBtn.textContent = "ערוך אקורדים";
@@ -238,9 +247,9 @@
                 // Clear the flag so it won't show again on refresh
                 localStorage.removeItem("justReturnedFromChords");
 
-                console.log("Successfully updated chords from localStorage");
+                console.log("Successfully updated chords and loops from localStorage");
             } catch (e) {
-                console.error("Error parsing returned chords:", e);
+                console.error("Error parsing returned chords/loops:", e);
             }
         } else {
             // Show regular edit chords button
@@ -275,6 +284,7 @@
         const bpm = document.getElementById("bpm").value;
         const videoUrl = document.getElementById("video_url").value;
         const chordsRaw = document.getElementById("chords").value;
+        const loopsRaw = document.getElementById("loops").value; // הוספה חדשה
 
         let finalVideoUrl = videoUrl;
         const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
@@ -282,12 +292,22 @@
             finalVideoUrl = "https://www.youtube.com/embed/" + ytMatch[1];
         }
 
-        let chords;
+        let chords, loops = [];
         try {
             chords = JSON.parse(chordsRaw);
         } catch (e) {
             alert("שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.");
             return;
+        }
+
+        // הוספה חדשה - קריאת נתוני הלופים
+        if (loopsRaw) {
+            try {
+                loops = JSON.parse(loopsRaw);
+            } catch (e) {
+                console.log("Error parsing loops data:", e);
+                loops = [];
+            }
         }
 
         fetch(`/api/edit_song/${songId}`, {
@@ -304,7 +324,8 @@
                 time_signature: timeSignature,
                 bpm: parseInt(bpm),
                 video_url: finalVideoUrl,
-                chords: chords
+                chords: chords,
+                loops: loops // הוספה חדשה - שליחת נתוני הלופים
             })
         })
         .then(response => response.json())
