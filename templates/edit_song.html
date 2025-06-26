@@ -340,9 +340,9 @@
                 localStorage.removeItem("editingSongId");
                 localStorage.removeItem("chords");
                 localStorage.removeItem("loops");
-                // Redirect to song page after short delay
+                // Redirect to song page after short delay - עדכון להפנייה לעמוד הנגן
                 setTimeout(() => {
-                    window.location.href = `/chords/${songId}`;
+                    window.location.href = `/play/${songId}`;
                 }, 1500);
             } else {
                 messageEl.textContent = "❌ שגיאה בעדכון השיר, נסה שוב";

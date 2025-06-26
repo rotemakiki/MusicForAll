@@ -42,7 +42,7 @@ def add_song():
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
         "chords": json.dumps(data["chords"]),
-        "loops": json.dumps(loops_data),  # Store loops data
+        "loops": json.dumps(loops_data),
         "created_at": datetime.utcnow(),
         "created_by": session.get("user_id"),
     }
@@ -56,14 +56,10 @@ def add_song():
 def add_song_page():
     return render_template('add_song.html')
 
+# מיזוג - route האקורדים הישן מפנה לנגן
 @songs_bp.route('/chords/<string:song_id>')
 def chords(song_id):
-    doc = firestore.client().collection("songs").document(song_id).get()
-    if not doc.exists:
-        return "שיר לא נמצא", 404
-    song = doc.to_dict()
-    song["id"] = doc.id
-    return render_template('chords.html', song=song)
+    return redirect(url_for('songs.play_song', song_id=song_id))
 
 @songs_bp.route('/edit_song/<string:song_id>', methods=['GET', 'POST'])
 def edit_song(song_id):
@@ -94,7 +90,7 @@ def edit_song(song_id):
         }
         firestore.client().collection("songs").document(song_id).update(updated_fields)
         flash("🎵 השיר עודכן בהצלחה!", "success")
-        return redirect(url_for('songs.chords', song_id=song_id))
+        return redirect(url_for('songs.play_song', song_id=song_id))
 
     song["id"] = song_id
 
@@ -155,7 +151,7 @@ def edit_song_api(song_id):
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
         "chords": json.dumps(data["chords"]),
-        "loops": json.dumps(loops_data),  # Update loops data
+        "loops": json.dumps(loops_data),
         "updated_at": datetime.utcnow()
     }
     firestore.client().collection("songs").document(song_id).update(updated_fields)
@@ -217,11 +213,20 @@ def play_song(song_id):
     except:
         beats_per_measure = 4
 
+    # העברת כל הנתונים הנדרשים לטמפלייט המעודכן
     return render_template("play_song.html", song={
         "id": song_id,
         "title": song["title"],
+        "artist": song["artist"],
+        "key": song["key"],
+        "key_type": song["key_type"],
+        "difficulty": song.get("difficulty", ""),
+        "difficulty_approved": song.get("difficulty_approved", False),
+        "time_signature": song["time_signature"],
         "bpm": song["bpm"],
+        "video_url": song["video_url"],
         "chords": chords_list,
-        "loops": loops_data,  # Pass loops data to template
-        "beats": beats_per_measure
+        "loops": loops_data,
+        "beats": beats_per_measure,
+        "created_by": song.get("created_by", None)
     })

@@ -13,7 +13,7 @@
     <ul id="song-list">
         {% for song in songs %}
             <li id="song-{{ song.id }}">
-                <a href="{{ url_for('songs.chords', song_id=song.id) }}">{{ song.title }} - {{ song.artist }}</a>
+                <a href="{{ url_for('songs.play_song', song_id=song.id) }}">{{ song.title }} - {{ song.artist }}</a>
 
                 {% if session.get('user_id') == song.created_by %}
                     <button class="delete-btn" onclick="deleteSong('{{ song.id }}')">🗑 מחק</button>

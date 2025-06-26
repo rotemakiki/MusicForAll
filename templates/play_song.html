@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}נגן שיר - {{ song.title }}{% endblock %}
+{% block title %}{{ song.title }} - {{ song.artist }}{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/play_song.css') }}">
@@ -10,7 +10,63 @@
 <div class="play-song-container">
     <header class="song-header">
         <h1>🎵 {{ song.title }}</h1>
-        <div class="song-info">
+        <h2 class="artist-name">{{ song.artist }}</h2>
+
+        <!-- פרטי השיר במתואם ללא הטרדה -->
+        <div class="song-details">
+            <div class="song-info-row">
+                <span class="detail-item">
+                    <span class="detail-icon">🎼</span>
+                    <span class="detail-label">סולם:</span>
+                    <span class="detail-value">{{ song.key }} ({{ song.key_type }})</span>
+                </span>
+                <span class="detail-item">
+                    <span class="detail-icon">⏱️</span>
+                    <span class="detail-label">מקצב:</span>
+                    <span class="detail-value">{{ song.time_signature }}</span>
+                </span>
+                {% if song.difficulty %}
+                <span class="detail-item">
+                    <span class="detail-icon">⭐</span>
+                    <span class="detail-label">רמת קושי:</span>
+                    <span class="detail-value">{{ song.difficulty }}
+                        {% if not song.difficulty_approved %}
+                            <span class="pending-approval">*</span>
+                        {% endif %}
+                    </span>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- נגן יוטיוב קטן -->
+        <div class="youtube-player-section">
+            <button class="youtube-toggle-btn" onclick="toggleYouTubePlayer()">
+                <span class="youtube-icon">📺</span>
+                <span>צפה בסרטון המקורי</span>
+            </button>
+            <div id="youtube-player-container" class="youtube-player-container" style="display: none;">
+                <iframe id="youtube-iframe" width="400" height="225" src="{{ song.video_url }}" frameborder="0" allowfullscreen></iframe>
+                <button class="close-youtube-btn" onclick="toggleYouTubePlayer()">✕</button>
+            </div>
+        </div>
+
+        <!-- כפתורי פעולה -->
+        <div class="action-buttons">
+            {% if session.get('user_id') == song.created_by %}
+                <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
+                    <span class="btn-icon">✏️</span>
+                    <span class="btn-text">ערוך שיר</span>
+                </a>
+            {% endif %}
+            <a href="{{ url_for('songs.songs') }}" class="action-btn list-btn">
+                <span class="btn-icon">📚</span>
+                <span class="btn-text">רשימת השירים</span>
+            </a>
+        </div>
+
+        <!-- BPM Display -->
+        <div class="bpm-info">
             <span class="original-bpm-display">
                 <span class="bpm-icon">🎼</span>
                 <span class="label">BPM מקורי:</span>
@@ -88,17 +144,6 @@
                     <!-- יוכנס דינמית -->
                 </div>
             </div>
-
-            <div class="navigation-panel">
-                <a href="{{ url_for('songs.chords', song_id=song.id) }}" class="nav-btn primary">
-                    <span class="btn-icon">🎼</span>
-                    <span class="btn-text">חזרה לעמוד השיר</span>
-                </a>
-                <a href="{{ url_for('songs.songs') }}" class="nav-btn secondary">
-                    <span class="btn-icon">📚</span>
-                    <span class="btn-text">רשימת השירים</span>
-                </a>
-            </div>
         </div>
 
         <div class="chord-section">
@@ -128,6 +173,27 @@
         loops: {{ song.loops | tojson }},
         originalBpm: {{ song.bpm }}
     };
+
+    // נגן יוטיוב
+    function toggleYouTubePlayer() {
+        const container = document.getElementById('youtube-player-container');
+        const isVisible = container.style.display !== 'none';
+
+        if (isVisible) {
+            container.style.display = 'none';
+            // עצור וידאו אם נסגר
+            const iframe = document.getElementById('youtube-iframe');
+            const src = iframe.src;
+            iframe.src = '';
+            iframe.src = src;
+        } else {
+            container.style.display = 'block';
+        }
+    }
+
+    // נקה מזהים מהוספה/עריכה קודמים
+    localStorage.removeItem("editingSongId");
+    localStorage.removeItem("editSongData");
 </script>
 {% endblock %}
 

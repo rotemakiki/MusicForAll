@@ -1,4 +1,4 @@
-/* PC-Optimized Play Song Styles - Updated with loop sections, preparation measure and repeat styles */
+/* PC-Optimized Play Song Styles - Updated with song details and YouTube player */
 * {
     box-sizing: border-box;
 }
@@ -26,7 +26,7 @@ body {
     min-height: calc(100vh - 30px);
 }
 
-/* Header Section */
+/* Header Section - Updated */
 .song-header {
     text-align: center;
     margin-bottom: 20px;
@@ -35,17 +35,202 @@ body {
 }
 
 .song-header h1 {
-    margin: 0 0 15px 0;
+    margin: 0 0 8px 0;
     color: #2c3e50;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.song-info {
+.artist-name {
+    margin: 0 0 20px 0;
+    color: #667eea;
+    font-size: 20px;
+    font-weight: 500;
+    font-style: italic;
+}
+
+/* Song Details Section */
+.song-details {
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
+    border-radius: 15px;
+    padding: 15px;
+    border: 2px solid #e1e8ed;
+}
+
+.song-info-row {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.detail-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.detail-icon {
+    font-size: 16px;
+}
+
+.detail-label {
+    color: #34495e;
+    font-size: 13px;
+}
+
+.detail-value {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.pending-approval {
+    color: orange;
+    font-size: 0.9em;
+    margin-left: 3px;
+}
+
+/* YouTube Player Section */
+.youtube-player-section {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.youtube-toggle-btn {
+    background: linear-gradient(135deg, #ff4757, #ff3838);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto;
+}
+
+.youtube-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+    background: linear-gradient(135deg, #ff3838, #ff2f2f);
+}
+
+.youtube-icon {
+    font-size: 16px;
+}
+
+.youtube-player-container {
+    position: relative;
+    margin-top: 15px;
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.youtube-player-container iframe {
+    width: 100%;
+    max-width: 400px;
+    height: 225px;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+}
+
+.close-youtube-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #2c3e50;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-youtube-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+.edit-btn {
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+    color: #2c3e50;
+}
+
+.list-btn {
+    background: linear-gradient(135deg, #6c757d, #545b62);
+    color: white;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* BPM Info - Redesigned */
+.bpm-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
     flex-wrap: wrap;
 }
 
@@ -53,11 +238,11 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 20px;
     font-weight: 600;
-    font-size: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
 .original-bpm-display {
@@ -71,7 +256,7 @@ body {
 }
 
 .label {
-    font-size: 14px;
+    font-size: 12px;
     opacity: 0.9;
 }
 
@@ -79,8 +264,8 @@ body {
 .main-layout {
     display: flex;
     gap: 20px;
-    height: calc(100vh - 200px);
-    min-height: 600px;
+    height: calc(100vh - 350px);
+    min-height: 500px;
 }
 
 /* Controls Panel - Left Side */
@@ -92,7 +277,7 @@ body {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     border: 1px solid #e1e8ed;
     height: fit-content;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 350px);
     overflow-y: auto;
     position: sticky;
     top: 20px;
@@ -317,42 +502,6 @@ input:checked + .preparation-slider:before {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-.navigation-panel {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.nav-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-}
-
-.nav-btn.primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-}
-
-.nav-btn.secondary {
-    background: linear-gradient(135deg, #6c757d, #545b62);
-    color: white;
-}
-
-.nav-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
 /* Chord Section - Right Side */
 .chord-section {
     flex: 1;
@@ -362,7 +511,7 @@ input:checked + .preparation-slider:before {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     border: 1px solid #e1e8ed;
     overflow-y: auto;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 350px);
 }
 
 .section-title {
@@ -776,6 +925,29 @@ input:checked + .preparation-slider:before {
 
     .loop-title-controls {
         justify-content: center;
+    }
+
+    .song-info-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .bpm-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .youtube-player-container iframe {
+        max-width: 300px;
+        height: 169px;
     }
 }
 
