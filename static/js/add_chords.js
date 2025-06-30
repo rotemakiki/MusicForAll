@@ -385,7 +385,6 @@ function renderBeatsDisplay() {
             }
         }
     }
-
 }
 
 // Add selected chord to current measure
@@ -402,12 +401,12 @@ function addChordToCurrentMeasure() {
 
     const chordName = selectedLetter + selectedAccidental + selectedType;
 
-    // Add new chord (width will be calculated by redistributeChordsEqually)
+    // Add new chord with default width
     currentMeasure.chords.push({
         chord: chordName,
-        width: 1, // Initial width, will be recalculated
+        width: 1, // Default width
         isEmpty: false,
-        position: 0 // Will be calculated
+        position: 0
     });
 
     // Redistribute all chords equally
@@ -449,6 +448,62 @@ function redistributeChordsEqually() {
     currentMeasure.chords.forEach((chord, index) => {
         chord.width = equalWidth;
         chord.position = index * equalWidth;
+    });
+}
+
+// New function: Increase chord size by 0.5 beats
+function increaseChordSize(chordIndex) {
+    if (!currentMeasure || chordIndex < 0 || chordIndex >= currentMeasure.chords.length) return;
+
+    const chord = currentMeasure.chords[chordIndex];
+    const nextChordIndex = chordIndex + 1;
+
+    // Check if there's a next chord and if it has enough width
+    if (nextChordIndex < currentMeasure.chords.length) {
+        const nextChord = currentMeasure.chords[nextChordIndex];
+
+        // Only increase if next chord has at least 0.5 beats to give
+        if (nextChord.width >= 1) { // Minimum 0.5 after reduction
+            chord.width += 0.5;
+            nextChord.width -= 0.5;
+
+            // Recalculate positions
+            recalculatePositions();
+            renderCurrentMeasure();
+            updateLoopDisplay();
+        }
+    }
+}
+
+// New function: Decrease chord size by 0.5 beats
+function decreaseChordSize(chordIndex) {
+    if (!currentMeasure || chordIndex < 0 || chordIndex >= currentMeasure.chords.length) return;
+
+    const chord = currentMeasure.chords[chordIndex];
+    const nextChordIndex = chordIndex + 1;
+
+    // Only decrease if current chord has enough width and there's a next chord
+    if (chord.width >= 1 && nextChordIndex < currentMeasure.chords.length) { // Minimum 0.5 after reduction
+        const nextChord = currentMeasure.chords[nextChordIndex];
+
+        chord.width -= 0.5;
+        nextChord.width += 0.5;
+
+        // Recalculate positions
+        recalculatePositions();
+        renderCurrentMeasure();
+        updateLoopDisplay();
+    }
+}
+
+// New function: Recalculate chord positions after size changes
+function recalculatePositions() {
+    if (!currentMeasure || currentMeasure.chords.length === 0) return;
+
+    let currentPosition = 0;
+    currentMeasure.chords.forEach(chord => {
+        chord.position = currentPosition;
+        currentPosition += chord.width;
     });
 }
 
@@ -504,7 +559,7 @@ function updateButtons() {
     document.querySelector(".add-chord-btn").disabled = !currentMeasure || !selectedLetter;
 }
 
-// Render current measure being built - simplified without drag/resize
+// Enhanced render current measure with size control buttons
 function renderCurrentMeasure() {
     const container = document.getElementById("current-measure-container");
 
@@ -521,11 +576,21 @@ function renderCurrentMeasure() {
     const measureDiv = document.createElement("div");
     measureDiv.className = "measure-preview";
 
-    // Calculate positions and render chords
+    // Calculate positions and render chords with control buttons
     const totalBeats = currentMeasure.beats;
 
     currentMeasure.chords.forEach((chord, index) => {
-        // Create chord element - simplified without drag/resize
+        // Create chord container
+        const chordContainer = document.createElement("div");
+        chordContainer.className = "chord-container";
+
+        // Calculate flex basis
+        const flexBasis = (chord.width / totalBeats) * 100;
+        chordContainer.style.flexBasis = `${flexBasis}%`;
+        chordContainer.style.flexGrow = '0';
+        chordContainer.style.flexShrink = '0';
+
+        // Create chord element
         const chordDiv = document.createElement("div");
         chordDiv.className = "chord-in-measure";
 
@@ -533,19 +598,41 @@ function renderCurrentMeasure() {
             chordDiv.classList.add("empty-chord");
         }
 
-        const flexBasis = (chord.width / totalBeats) * 100;
-        chordDiv.style.flexBasis = `${flexBasis}%`;
-        chordDiv.style.flexGrow = '0';
-        chordDiv.style.flexShrink = '0';
-
-        // Chord content - simplified
+        // Chord content
         chordDiv.innerHTML = `
             <div class="chord-name">${chord.chord}</div>
-            <div class="chord-beats">${chord.width.toFixed(halfBeatsEnabled ? 1 : 0)} נקישות</div>
+            <div class="chord-beats">${chord.width.toFixed(1)} נקישות</div>
             <button class="chord-remove" onclick="removeChordFromMeasure(${index})">×</button>
         `;
 
-        measureDiv.appendChild(chordDiv);
+        // Create size control buttons container
+        const controlsDiv = document.createElement("div");
+        controlsDiv.className = "chord-size-controls";
+
+        // Decrease button (only if chord has enough width and not last chord)
+        const canDecrease = chord.width >= 1 && index < currentMeasure.chords.length - 1;
+        const decreaseBtn = document.createElement("button");
+        decreaseBtn.className = "size-control-btn decrease-btn";
+        decreaseBtn.innerHTML = "−";
+        decreaseBtn.disabled = !canDecrease;
+        decreaseBtn.onclick = () => decreaseChordSize(index);
+
+        // Increase button (only if there's next chord with enough width)
+        const nextChord = currentMeasure.chords[index + 1];
+        const canIncrease = nextChord && nextChord.width >= 1;
+        const increaseBtn = document.createElement("button");
+        increaseBtn.className = "size-control-btn increase-btn";
+        increaseBtn.innerHTML = "+";
+        increaseBtn.disabled = !canIncrease;
+        increaseBtn.onclick = () => increaseChordSize(index);
+
+        controlsDiv.appendChild(decreaseBtn);
+        controlsDiv.appendChild(increaseBtn);
+
+        // Assemble chord container
+        chordContainer.appendChild(chordDiv);
+        chordContainer.appendChild(controlsDiv);
+        measureDiv.appendChild(chordContainer);
     });
 
     container.innerHTML = "";

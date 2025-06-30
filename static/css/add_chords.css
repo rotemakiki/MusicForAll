@@ -705,6 +705,7 @@ input:checked + .half-beats-slider:before {
     margin-bottom: -3px;
     z-index: 1;
     position: relative;
+    flex-direction: row-reverse; /* מימין לשמאל */
 }
 
 .beat-dot {
@@ -741,7 +742,7 @@ input:checked + .half-beats-slider:before {
 .measure-container {
     border: 3px dashed #cbd5e0;
     border-radius: 0 0 12px 12px;
-    min-height: 100px;
+    min-height: 120px; /* גדול יותר לכפתורי הבקרה */
     margin-bottom: 15px;
     position: relative;
     background: linear-gradient(145deg, #f8f9ff, #ffffff);
@@ -758,7 +759,7 @@ input:checked + .half-beats-slider:before {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100px;
+    height: 120px;
     color: #64748b;
     font-size: 14px;
     font-weight: 500;
@@ -767,14 +768,21 @@ input:checked + .half-beats-slider:before {
 .measure-preview {
     display: flex;
     align-items: stretch;
-    height: 100px;
+    height: 120px; /* גדול יותר לכפתורי הבקרה */
     padding: 12px;
-    gap: 2px;
+    gap: 4px;
     position: relative;
     direction: ltr;
 }
 
-/* אקורדים מפושטים ללא drag/resize */
+/* New Chord Container and Size Controls */
+.chord-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-width: 60px;
+}
+
 .chord-in-measure {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
@@ -790,6 +798,8 @@ input:checked + .half-beats-slider:before {
     min-width: 50px;
     box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
     padding: 8px 4px;
+    flex: 1;
+    margin-bottom: 8px;
 }
 
 /* Empty chord styling */
@@ -845,6 +855,53 @@ input:checked + .half-beats-slider:before {
 .chord-remove:hover {
     transform: scale(1.1);
     box-shadow: 0 3px 10px rgba(255, 71, 87, 0.6);
+}
+
+/* New Size Control Buttons */
+.chord-size-controls {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 2px 0;
+}
+
+.size-control-btn {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.size-control-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+.size-control-btn:disabled {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+}
+
+.increase-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.decrease-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc3545, #c82333);
 }
 
 .measure-actions {
@@ -927,7 +984,6 @@ input:checked + .half-beats-slider:before {
     font-size: 13px;
     color: #2c3e50;
 }
-
 
 /* תיקון תיבות בלופ עם יכולת עריכה ומחיקה */
 .loop-measures-preview {
@@ -1025,7 +1081,6 @@ input:checked + .half-beats-slider:before {
     transform: scale(1.2);
     box-shadow: 0 3px 6px rgba(255, 71, 87, 0.6);
 }
-
 
 .measures-edit-grid {
     display: flex;
@@ -1306,6 +1361,20 @@ input:checked + .half-beats-slider:before {
     .chord-types-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .chord-size-controls {
+        gap: 2px;
+    }
+
+    .size-control-btn {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+    }
+
+    .chord-container {
+        min-width: 40px;
+    }
 }
 
 /* Smooth animations */
@@ -1341,7 +1410,8 @@ input:checked + .half-beats-slider:before {
 .btn:focus,
 .accidental-btn:focus,
 .song-loop:focus,
-.saved-loop:focus {
+.saved-loop:focus,
+.size-control-btn:focus {
     outline: 3px solid rgba(102, 126, 234, 0.5);
     outline-offset: 2px;
 }
@@ -1366,8 +1436,4 @@ input:checked + .half-beats-slider:before {
     .repeat-label {
         font-size: 11px;
     }
-}
-
-.beats-display {
-    flex-direction: row-reverse; /* מימין לשמאל */
 }
