@@ -374,13 +374,18 @@ function renderBeatsDisplay() {
         container.appendChild(dot);
 
         // Add half beat if enabled
-        if (halfBeatsEnabled && i < beats) {
-            const halfDot = document.createElement("div");
-            halfDot.className = "beat-dot half-beat";
-            halfDot.setAttribute("data-beat", i + 0.5);
-            container.appendChild(halfDot);
+        if (halfBeatsEnabled) {
+            const isLast = i === beats;
+            const shouldAddHalf = i < beats || isLast;
+            if (shouldAddHalf) {
+                const halfDot = document.createElement("div");
+                halfDot.className = "beat-dot half-beat";
+                halfDot.setAttribute("data-beat", i + 0.5);
+                container.appendChild(halfDot);
+            }
         }
     }
+
 }
 
 // Add selected chord to current measure
