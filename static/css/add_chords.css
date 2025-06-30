@@ -1367,3 +1367,7 @@ input:checked + .half-beats-slider:before {
         font-size: 11px;
     }
 }
+
+.beats-display {
+    flex-direction: row-reverse; /* מימין לשמאל */
+}
