@@ -15,6 +15,10 @@ let selectedSavedLoop = null;
 let songStructure = [];
 let halfBeatsEnabled = false;
 
+// New: Recently used chords
+let recentlyUsedChords = [];
+const MAX_RECENT_CHORDS = 12;
+
 // Edit state
 let editingLoop = null;
 let editingMeasureIndex = -1;
@@ -27,6 +31,7 @@ function init() {
     createNewMeasure();
     updateLoopDisplay();
     setupHalfBeatsToggle();
+    renderRecentlyUsedChords();
 
     // Load existing data if editing
     loadExistingData();
@@ -50,7 +55,6 @@ function loadExistingData() {
         clearAllData();
     }
 }
-// החלף את הפונקציה loadExistingSongData ב-add_chords.js
 
 async function loadExistingSongData() {
     try {
@@ -63,14 +67,12 @@ async function loadExistingSongData() {
 
         console.log("Loading song data from API for song:", editingSongId);
 
-        // טען נתונים מה-API במקום מ-localStorage
         try {
             const response = await fetch(`/api/get_song/${editingSongId}`);
             const songData = await response.json();
 
             if (!response.ok) {
                 console.error("Error loading song from API:", songData.error);
-                // אם יש שגיאה, נסה לטעון מ-localStorage כגיבוי
                 loadFromLocalStorageBackup();
                 return;
             }
@@ -97,7 +99,6 @@ async function loadExistingSongData() {
                     savedLoops.push(restoredLoop);
                 });
 
-                // העתק ללופים למבנה השיר
                 songStructure.push(...songData.loops.map((loop, index) => ({
                     id: Date.now() + index + 1000,
                     customName: loop.name,
@@ -108,12 +109,10 @@ async function loadExistingSongData() {
 
                 console.log("Successfully loaded loops from API");
             } else if (songData.chords && songData.chords.length > 0) {
-                // אם אין לופים אבל יש אקורדים - המר אותם ללופים
                 console.log("No loops found, converting chords to loops");
                 convertChordsToLoops(songData.chords);
             }
 
-            // עדכן localStorage עם הנתונים החדשים לשמירה זמנית
             localStorage.setItem("chords", JSON.stringify(songData.chords));
             localStorage.setItem("loops", JSON.stringify(songData.loops));
 
@@ -125,7 +124,6 @@ async function loadExistingSongData() {
 
         } catch (apiError) {
             console.error("API call failed:", apiError);
-            // נסה לטעון מ-localStorage כגיבוי
             loadFromLocalStorageBackup();
         }
 
@@ -135,7 +133,6 @@ async function loadExistingSongData() {
     }
 }
 
-// פונקציית גיבוי לטעינה מ-localStorage
 function loadFromLocalStorageBackup() {
     console.log("Falling back to localStorage");
 
@@ -151,7 +148,6 @@ function loadFromLocalStorageBackup() {
         let existingChords = JSON.parse(savedChords);
         console.log("Using localStorage backup for chords:", existingChords);
 
-        // נקה מערכים קיימים
         savedLoops.length = 0;
         songStructure.length = 0;
 
@@ -197,13 +193,13 @@ function loadFromLocalStorageBackup() {
         clearAllData();
     }
 }
+
 function loadNewSongChordsInProgress() {
     try {
         const savedChords = localStorage.getItem("chords");
         const savedLoops = localStorage.getItem("loops");
         const addingNewSong = localStorage.getItem("addingNewSong");
 
-        // רק אם זה באמת שיר חדש ויש אקורדים שנוספו בתהליך
         if (addingNewSong === "true" && savedChords) {
             const newSongChords = JSON.parse(savedChords);
             console.log("Loading new song chords in progress:", newSongChords);
@@ -236,7 +232,6 @@ function loadNewSongChordsInProgress() {
             renderSongStructure();
             console.log("Successfully loaded new song chords in progress");
         } else {
-            // אין אקורדים בתהליך לשיר חדש - התחל נקי
             console.log("No chords in progress for new song - starting clean");
             clearAllData();
         }
@@ -248,15 +243,14 @@ function loadNewSongChordsInProgress() {
 
 function clearAllData() {
     console.log("Clearing all chord/loop data for fresh start");
-    savedLoops.splice(0, savedLoops.length); // נקה את המערך
-    songStructure.splice(0, songStructure.length); // נקה את המערך
-    currentLoop.splice(0, currentLoop.length); // נקה את המערך
+    savedLoops.splice(0, savedLoops.length);
+    songStructure.splice(0, songStructure.length);
+    currentLoop.splice(0, currentLoop.length);
     renderSavedLoops();
     renderSongStructure();
     updateLoopDisplay();
 }
 
-// Convert flat chord structure back to loop measures
 function convertChordsToLoops(chordLines) {
     if (!chordLines || chordLines.length === 0) return;
 
@@ -314,7 +308,77 @@ function determineMode() {
     }
 }
 
-// Update the selected chord display
+// Add chord to recently used chords
+function addToRecentlyUsed(chordName) {
+    // Remove if already exists
+    const existingIndex = recentlyUsedChords.indexOf(chordName);
+    if (existingIndex !== -1) {
+        recentlyUsedChords.splice(existingIndex, 1);
+    }
+
+    // Add to beginning
+    recentlyUsedChords.unshift(chordName);
+
+    // Limit size
+    if (recentlyUsedChords.length > MAX_RECENT_CHORDS) {
+        recentlyUsedChords = recentlyUsedChords.slice(0, MAX_RECENT_CHORDS);
+    }
+
+    renderRecentlyUsedChords();
+}
+
+// Render recently used chords
+function renderRecentlyUsedChords() {
+    const container = document.getElementById("recently-used-chords");
+    container.innerHTML = "";
+
+    if (recentlyUsedChords.length === 0) {
+        container.innerHTML = '<p style="color: #999; font-size: 12px; text-align: center;">אקורדים שנוספו יוצגו כאן</p>';
+        return;
+    }
+
+    recentlyUsedChords.forEach(chord => {
+        const btn = document.createElement("div");
+        btn.className = "recent-chord-btn";
+        btn.textContent = chord;
+        btn.onclick = () => {
+            // Parse the chord back to components
+            parseAndSelectChord(chord);
+            updateSelectedChord();
+        };
+        container.appendChild(btn);
+    });
+}
+
+// Parse chord string and select its components
+function parseAndSelectChord(chordStr) {
+    // Reset selections
+    selectedLetter = null;
+    selectedAccidental = "";
+    selectedType = "";
+
+    if (!chordStr || chordStr === "—") return;
+
+    // Parse root note and accidental
+    let rootPart = chordStr.charAt(0);
+    let remaining = chordStr.slice(1);
+
+    // Check for accidental
+    if (remaining.length > 0 && (remaining.charAt(0) === '#' || remaining.charAt(0) === 'b')) {
+        selectedAccidental = remaining.charAt(0);
+        remaining = remaining.slice(1);
+    }
+
+    // The rest is the chord type
+    selectedType = remaining;
+    selectedLetter = rootPart;
+
+    // Update UI
+    renderRootButtons();
+    renderTypeButtons();
+    renderAccidentalButtons();
+}
+
 function updateSelectedChord() {
     const display = document.getElementById("current-chord-display");
     const addButton = document.querySelector(".add-chord-btn");
@@ -330,7 +394,6 @@ function updateSelectedChord() {
     addButton.disabled = !currentMeasure;
 }
 
-// Render root note buttons
 function renderRootButtons() {
     const container = document.getElementById("root-letters");
     container.innerHTML = "";
@@ -354,7 +417,6 @@ function renderRootButtons() {
     });
 }
 
-// Render chord type buttons
 function renderTypeButtons() {
     const container = document.getElementById("chord-types");
     container.innerHTML = "";
@@ -378,7 +440,6 @@ function renderTypeButtons() {
     });
 }
 
-// Render accidental buttons (3 separate buttons)
 function renderAccidentalButtons() {
     const container = document.getElementById("accidental-buttons");
     container.innerHTML = "";
@@ -409,7 +470,6 @@ function renderAccidentalButtons() {
     });
 }
 
-// Setup half beats toggle
 function setupHalfBeatsToggle() {
     const checkbox = document.getElementById("half-beats-checkbox");
     if (checkbox) {
@@ -421,7 +481,6 @@ function setupHalfBeatsToggle() {
     }
 }
 
-// Create a new measure
 function createNewMeasure() {
     const beats = parseInt(document.getElementById("measure-beats").value);
     if (isNaN(beats) || beats < 1) {
@@ -440,7 +499,6 @@ function createNewMeasure() {
     updateButtons();
 }
 
-// Render beat dots above measure
 function renderBeatsDisplay() {
     const container = document.getElementById("beats-display");
     const beats = currentMeasure ? currentMeasure.beats : 4;
@@ -468,7 +526,6 @@ function renderBeatsDisplay() {
     }
 }
 
-// Add selected chord to current measure
 function addChordToCurrentMeasure() {
     if (!currentMeasure) {
         alert("אין תיבה פעילה");
@@ -482,6 +539,9 @@ function addChordToCurrentMeasure() {
 
     const chordName = selectedLetter + selectedAccidental + selectedType;
 
+    // Add to recently used chords
+    addToRecentlyUsed(chordName);
+
     // Add new chord with default width
     currentMeasure.chords.push({
         chord: chordName,
@@ -490,15 +550,14 @@ function addChordToCurrentMeasure() {
         position: 0
     });
 
-    // Redistribute all chords equally
-    redistributeChordsEqually();
+    // Redistribute all chords based on halves only
+    redistributeChordsWithHalvesOnly();
 
     renderCurrentMeasure();
     updateButtons();
     updateLoopDisplay();
 }
 
-// Add empty chord to current measure
 function addEmptyChord() {
     if (!currentMeasure) {
         alert("אין תיבה פעילה");
@@ -513,33 +572,39 @@ function addEmptyChord() {
         position: 0
     });
 
-    // Redistribute all chords equally
-    redistributeChordsEqually();
+    // Redistribute all chords based on halves only
+    redistributeChordsWithHalvesOnly();
 
     renderCurrentMeasure();
     updateButtons();
     updateLoopDisplay();
 }
 
-// Redistribute chord widths equally across the measure
-function redistributeChordsEqually() {
+// Updated redistribution function - only halves allowed
+function redistributeChordsWithHalvesOnly() {
     if (!currentMeasure || currentMeasure.chords.length === 0) return;
 
-    const equalWidth = currentMeasure.beats / currentMeasure.chords.length;
+    const totalBeats = currentMeasure.beats;
+    const numChords = currentMeasure.chords.length;
+
+    // Calculate equal distribution in halves
+    const baseWidth = Math.floor((totalBeats * 2) / numChords) / 2; // Convert to halves and back
+    const remainder = (totalBeats * 2) % numChords; // Remaining half-beats
+
     currentMeasure.chords.forEach((chord, index) => {
-        chord.width = equalWidth;
-        chord.position = index * equalWidth;
+        // Give base width plus extra 0.5 to first 'remainder' chords
+        chord.width = baseWidth + (index < remainder ? 0.5 : 0);
+        chord.position = index === 0 ? 0 : currentMeasure.chords.slice(0, index).reduce((sum, c) => sum + c.width, 0);
     });
 }
 
-// New function: Increase chord size by 0.5 beats
+// Updated size control functions - only 0.5 increments
 function increaseChordSize(chordIndex) {
     if (!currentMeasure || chordIndex < 0 || chordIndex >= currentMeasure.chords.length) return;
 
     const chord = currentMeasure.chords[chordIndex];
     const nextChordIndex = chordIndex + 1;
 
-    // Check if there's a next chord and if it has enough width
     if (nextChordIndex < currentMeasure.chords.length) {
         const nextChord = currentMeasure.chords[nextChordIndex];
 
@@ -548,7 +613,6 @@ function increaseChordSize(chordIndex) {
             chord.width += 0.5;
             nextChord.width -= 0.5;
 
-            // Recalculate positions
             recalculatePositions();
             renderCurrentMeasure();
             updateLoopDisplay();
@@ -556,7 +620,6 @@ function increaseChordSize(chordIndex) {
     }
 }
 
-// New function: Decrease chord size by 0.5 beats
 function decreaseChordSize(chordIndex) {
     if (!currentMeasure || chordIndex < 0 || chordIndex >= currentMeasure.chords.length) return;
 
@@ -570,14 +633,12 @@ function decreaseChordSize(chordIndex) {
         chord.width -= 0.5;
         nextChord.width += 0.5;
 
-        // Recalculate positions
         recalculatePositions();
         renderCurrentMeasure();
         updateLoopDisplay();
     }
 }
 
-// New function: Recalculate chord positions after size changes
 function recalculatePositions() {
     if (!currentMeasure || currentMeasure.chords.length === 0) return;
 
@@ -588,21 +649,19 @@ function recalculatePositions() {
     });
 }
 
-// Remove chord from current measure
 function removeChordFromMeasure(index) {
     if (!currentMeasure || index < 0 || index >= currentMeasure.chords.length) return;
 
     currentMeasure.chords.splice(index, 1);
 
-    // Redistribute remaining chords equally
-    redistributeChordsEqually();
+    // Redistribute remaining chords with halves only
+    redistributeChordsWithHalvesOnly();
 
     renderCurrentMeasure();
     updateButtons();
     updateLoopDisplay();
 }
 
-// Clear current measure
 function clearCurrentMeasure() {
     if (!currentMeasure) return;
 
@@ -612,7 +671,6 @@ function clearCurrentMeasure() {
     updateLoopDisplay();
 }
 
-// Remove measure from current loop
 function removeMeasureFromCurrentLoop(measureIndex) {
     if (measureIndex < 0 || measureIndex >= currentLoop.length) return;
 
@@ -623,7 +681,6 @@ function removeMeasureFromCurrentLoop(measureIndex) {
     }
 }
 
-// Update button states
 function updateButtons() {
     const nextMeasureBtn = document.getElementById("next-measure-btn");
     const clearBtn = document.getElementById("clear-measure-btn");
@@ -640,7 +697,6 @@ function updateButtons() {
     document.querySelector(".add-chord-btn").disabled = !currentMeasure || !selectedLetter;
 }
 
-// Enhanced render current measure with size control buttons
 function renderCurrentMeasure() {
     const container = document.getElementById("current-measure-container");
 
@@ -657,21 +713,17 @@ function renderCurrentMeasure() {
     const measureDiv = document.createElement("div");
     measureDiv.className = "measure-preview";
 
-    // Calculate positions and render chords with control buttons
     const totalBeats = currentMeasure.beats;
 
     currentMeasure.chords.forEach((chord, index) => {
-        // Create chord container
         const chordContainer = document.createElement("div");
         chordContainer.className = "chord-container";
 
-        // Calculate flex basis
         const flexBasis = (chord.width / totalBeats) * 100;
         chordContainer.style.flexBasis = `${flexBasis}%`;
         chordContainer.style.flexGrow = '0';
         chordContainer.style.flexShrink = '0';
 
-        // Create chord element
         const chordDiv = document.createElement("div");
         chordDiv.className = "chord-in-measure";
 
@@ -679,18 +731,15 @@ function renderCurrentMeasure() {
             chordDiv.classList.add("empty-chord");
         }
 
-        // Chord content
         chordDiv.innerHTML = `
             <div class="chord-name">${chord.chord}</div>
-            <div class="chord-beats">${chord.width.toFixed(1)} נקישות</div>
+            <div class="chord-beats">${chord.width} נקישות</div>
             <button class="chord-remove" onclick="removeChordFromMeasure(${index})">×</button>
         `;
 
-        // Create size control buttons container
         const controlsDiv = document.createElement("div");
         controlsDiv.className = "chord-size-controls";
 
-        // Decrease button (only if chord has enough width and not last chord)
         const canDecrease = chord.width >= 1 && index < currentMeasure.chords.length - 1;
         const decreaseBtn = document.createElement("button");
         decreaseBtn.className = "size-control-btn decrease-btn";
@@ -698,7 +747,6 @@ function renderCurrentMeasure() {
         decreaseBtn.disabled = !canDecrease;
         decreaseBtn.onclick = () => decreaseChordSize(index);
 
-        // Increase button (only if there's next chord with enough width)
         const nextChord = currentMeasure.chords[index + 1];
         const canIncrease = nextChord && nextChord.width >= 1;
         const increaseBtn = document.createElement("button");
@@ -710,7 +758,6 @@ function renderCurrentMeasure() {
         controlsDiv.appendChild(decreaseBtn);
         controlsDiv.appendChild(increaseBtn);
 
-        // Assemble chord container
         chordContainer.appendChild(chordDiv);
         chordContainer.appendChild(controlsDiv);
         measureDiv.appendChild(chordContainer);
@@ -720,29 +767,23 @@ function renderCurrentMeasure() {
     container.appendChild(measureDiv);
 }
 
-// Move to next measure
 function nextMeasure() {
     if (!currentMeasure || currentMeasure.chords.length === 0) {
         alert("אין אקורדים בתיבה הנוכחית");
         return;
     }
 
-    // If we're editing, update the existing measure in the loop
     if (editingLoop && editingMeasureIndex >= 0) {
         editingLoop.measures[editingMeasureIndex] = {...currentMeasure};
-        // Exit edit mode
         editingLoop = null;
         editingMeasureIndex = -1;
         updateMeasureCounter();
     } else {
-        // Add current measure to current loop
         currentLoop.push({...currentMeasure});
     }
 
-    // Move to next measure
     currentMeasureNumber++;
 
-    // Create new measure with same beats
     const beats = currentMeasure.beats;
     createNewMeasure();
     document.getElementById("measure-beats").value = beats;
@@ -754,7 +795,6 @@ function nextMeasure() {
     renderSongStructure();
 }
 
-// Update measure counter to show edit state
 function updateMeasureCounter() {
     const counter = document.querySelector(".measure-counter");
     if (editingLoop && editingMeasureIndex >= 0) {
@@ -766,7 +806,6 @@ function updateMeasureCounter() {
     }
 }
 
-// Save current loop
 function saveCurrentLoop() {
     if (currentLoop.length === 0) {
         alert("אין תיבות בלופ הנוכחי");
@@ -788,7 +827,6 @@ function saveCurrentLoop() {
 
     savedLoops.push(newLoop);
 
-    // Clear current loop
     currentLoop = [];
     currentMeasureNumber = 1;
     document.getElementById("loop-name").value = "";
@@ -798,7 +836,6 @@ function saveCurrentLoop() {
     updateButtons();
 }
 
-// Edit specific measure in a loop
 function editMeasure(loopId, measureIndex) {
     const loop = savedLoops.find(l => l.id === loopId);
     if (!loop || measureIndex < 0 || measureIndex >= loop.measures.length) {
@@ -806,27 +843,22 @@ function editMeasure(loopId, measureIndex) {
         return;
     }
 
-    // Set edit state
     editingLoop = loop;
     editingMeasureIndex = measureIndex;
 
-    // Load measure into current editor
     const measureToEdit = loop.measures[measureIndex];
-    currentMeasure = JSON.parse(JSON.stringify(measureToEdit)); // Deep copy
+    currentMeasure = JSON.parse(JSON.stringify(measureToEdit));
 
-    // Update UI
     document.getElementById("measure-beats").value = currentMeasure.beats;
     renderBeatsDisplay();
     renderCurrentMeasure();
     updateButtons();
     updateMeasureCounter();
 
-    // Update next button text
     const nextBtn = document.getElementById("next-measure-btn");
     nextBtn.textContent = "💾 שמור שינויים";
 }
 
-// Discard current loop
 function discardCurrentLoop() {
     if (currentLoop.length === 0) {
         alert("אין לופ לבטל");
@@ -841,12 +873,9 @@ function discardCurrentLoop() {
     }
 }
 
-// Update loop display
 function updateLoopDisplay() {
-    // Update current loop count
     document.getElementById("current-loop-count").textContent = currentLoop.length;
 
-    // Update current loop preview with detailed chord info
     const preview = document.getElementById("current-loop-preview");
     preview.innerHTML = "";
 
@@ -857,7 +886,6 @@ function updateLoopDisplay() {
         if (measure.chords.length === 0 || measure.chords.every(c => c.isEmpty)) {
             miniMeasure.classList.add("empty");
         } else {
-            // Show chords in mini measure
             const chordsDiv = document.createElement("div");
             chordsDiv.className = "mini-measure-chords";
 
@@ -877,7 +905,6 @@ function updateLoopDisplay() {
             miniMeasure.appendChild(chordsDiv);
         }
 
-        // Add remove button for current loop measures
         const removeBtn = document.createElement("button");
         removeBtn.className = "mini-measure-remove";
         removeBtn.innerHTML = "×";
@@ -890,12 +917,10 @@ function updateLoopDisplay() {
         preview.appendChild(miniMeasure);
     });
 
-    // Update buttons
     const discardBtn = document.getElementById("discard-loop-btn");
     discardBtn.disabled = currentLoop.length === 0;
 }
 
-// Render saved loops with edit functionality
 function renderSavedLoops() {
     const container = document.getElementById("saved-loops-container");
 
@@ -912,7 +937,6 @@ function renderSavedLoops() {
         loopDiv.draggable = true;
         loopDiv.dataset.loopId = loop.id;
 
-        // Loop header with title and edit info
         const loopHeader = document.createElement("div");
         loopHeader.className = "loop-header";
         loopHeader.innerHTML = `
@@ -920,7 +944,6 @@ function renderSavedLoops() {
             <div class="loop-info">${loop.measureCount} תיבות</div>
         `;
 
-        // Create measures grid for editing
         const measuresGrid = document.createElement("div");
         measuresGrid.className = "measures-edit-grid";
 
@@ -930,7 +953,6 @@ function renderSavedLoops() {
             measureDiv.title = "לחץ לעריכה";
             measureDiv.onclick = () => editMeasure(loop.id, measureIndex);
 
-            // Add measure number
             const measureNumber = document.createElement("div");
             measureNumber.className = "measure-number";
             measureNumber.textContent = measureIndex + 1;
@@ -965,7 +987,6 @@ function renderSavedLoops() {
         loopDiv.appendChild(loopHeader);
         loopDiv.appendChild(measuresGrid);
 
-        // Add drag events
         loopDiv.addEventListener('dragstart', handleDragStart);
         loopDiv.addEventListener('dragend', handleDragEnd);
 
@@ -973,7 +994,6 @@ function renderSavedLoops() {
     });
 }
 
-// Render song structure in main content
 function renderSongStructure() {
     const container = document.getElementById("song-structure-content");
 
@@ -995,7 +1015,6 @@ function renderSongStructure() {
         loopDiv.draggable = true;
         loopDiv.dataset.songIndex = loopIndex;
 
-        // Count occurrences of this loop type
         const sameTypeLoops = songStructure.filter((l, i) => i <= loopIndex && l.customName === loop.customName);
         const loopNumber = sameTypeLoops.length;
 
@@ -1022,7 +1041,6 @@ function renderSongStructure() {
         const loopContent = document.createElement("div");
         loopContent.className = "loop-content";
 
-        // Group measures into rows of 4
         const measuresPerRow = 4;
         for (let i = 0; i < loop.measures.length; i += measuresPerRow) {
             const measuresRow = document.createElement("div");
@@ -1037,7 +1055,7 @@ function renderSongStructure() {
                 const chordsHtml = measure.chords.map(chord => `
                     <div class="chord-in-song ${chord.isEmpty ? 'empty-chord' : ''}" style="flex: ${chord.width}">
                         <div class="chord-name-small">${chord.chord}</div>
-                        <div class="chord-beats-small">${chord.width.toFixed(1)}</div>
+                        <div class="chord-beats-small">${chord.width}</div>
                     </div>
                 `).join('');
 
@@ -1062,7 +1080,6 @@ function renderSongStructure() {
         loopDiv.appendChild(loopHeader);
         loopDiv.appendChild(loopContent);
 
-        // Add drag events for reordering
         loopDiv.addEventListener('dragstart', handleSongLoopDragStart);
         loopDiv.addEventListener('dragend', handleSongLoopDragEnd);
 
@@ -1070,7 +1087,6 @@ function renderSongStructure() {
     });
 }
 
-// Update loop repeat count
 function updateLoopRepeat(loopIndex, repeatCount) {
     const count = Math.max(1, Math.min(10, parseInt(repeatCount) || 1));
     if (songStructure[loopIndex]) {
@@ -1078,7 +1094,6 @@ function updateLoopRepeat(loopIndex, repeatCount) {
     }
 }
 
-// Drag and drop handlers for saved loops
 let draggedLoop = null;
 
 function handleDragStart(e) {
@@ -1092,7 +1107,6 @@ function handleDragEnd(e) {
     draggedLoop = null;
 }
 
-// Drag and drop handlers for song structure reordering
 let draggedSongLoop = null;
 
 function handleSongLoopDragStart(e) {
@@ -1106,7 +1120,6 @@ function handleSongLoopDragEnd(e) {
     draggedSongLoop = null;
 }
 
-// Drop zone handlers
 function allowDrop(e) {
     e.preventDefault();
     e.currentTarget.classList.add('drag-over');
@@ -1121,17 +1134,14 @@ function dropLoop(e) {
     e.currentTarget.classList.remove('drag-over');
 
     if (draggedLoop) {
-        // Add loop to song structure with repeat count
         const loopCopy = {...draggedLoop, repeatCount: 1};
         songStructure.push(loopCopy);
         renderSongStructure();
     } else if (draggedSongLoop !== null) {
-        // Handle reordering within song structure
         const dropTarget = e.target.closest('.song-loop');
         if (dropTarget && dropTarget.dataset.songIndex) {
             const targetIndex = parseInt(dropTarget.dataset.songIndex);
             if (targetIndex !== draggedSongLoop) {
-                // Reorder loops
                 const movedLoop = songStructure.splice(draggedSongLoop, 1)[0];
                 songStructure.splice(targetIndex, 0, movedLoop);
                 renderSongStructure();
@@ -1140,7 +1150,6 @@ function dropLoop(e) {
     }
 }
 
-// Remove loop from song structure
 function removeSongLoop(index) {
     if (confirm("האם אתה בטוח שברצונך להסיר את הלופ מהשיר?")) {
         songStructure.splice(index, 1);
@@ -1148,14 +1157,12 @@ function removeSongLoop(index) {
     }
 }
 
-// Finish and return to add song page - now includes loops data with repeats
 function finishAndReturn() {
     if (songStructure.length === 0) {
         alert("יש להוסיף לפחות לופ אחד לשיר");
         return;
     }
 
-    // Convert song structure into flat chord lines with repeats
     const chordLines = [];
 
     songStructure.forEach(loop => {
@@ -1177,7 +1184,6 @@ function finishAndReturn() {
         }
     });
 
-    // Prepare loops data for DB storage
     const loopsData = songStructure.map(loop => ({
         name: loop.customName,
         measures: loop.measures,
@@ -1195,30 +1201,25 @@ function finishAndReturn() {
         console.log("localStorage not available - data stored in memory only");
     }
 
-    // Determine where to return based on mode
     const mode = determineMode();
 
     if (mode === "editing") {
-        // Return to edit song page
         const editingSongId = localStorage.getItem("editingSongId");
         window.location.href = `/edit_song/${editingSongId}`;
     } else {
-        // Return to add song page (for new songs)
         window.location.href = "/add_song";
     }
 }
 
-// Event listeners
 document.addEventListener("DOMContentLoaded", () => {
     init();
 
-    // Setup beats input change
     document.getElementById("measure-beats").addEventListener("change", () => {
         if (currentMeasure) {
             const newBeats = parseInt(document.getElementById("measure-beats").value);
             if (newBeats && newBeats > 0) {
                 currentMeasure.beats = newBeats;
-                redistributeChordsEqually();
+                redistributeChordsWithHalvesOnly();
                 renderBeatsDisplay();
                 renderCurrentMeasure();
             }
