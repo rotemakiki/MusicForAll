@@ -620,13 +620,17 @@ input:checked + .preparation-slider:before {
 .loop-header {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    padding: 6px 10px;
+    padding: 1px 4px;         /* הקטן את ה-padding האנכי */
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 10px;          /* הקטן את הטקסט אם תרצה */
+    min-height: unset;        /* הסר גובה מינימלי */
+    height: auto;             /* אפשר לגובה להתאים לתוכן */
+    line-height: 1.2;         /* צמצם רווח בין שורות הטקסט */
 }
+
 
 .preparation-section .loop-header {
     background: linear-gradient(135deg, #ffc107, #ff8f00);
@@ -635,18 +639,25 @@ input:checked + .preparation-slider:before {
 .loop-title-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;            /* אפשר להקטין את המרווח */
+    padding: 0;          /* מסיר רווחים מיותרים */
+    min-height: unset;
+    height: auto;
 }
+
 
 .loop-toggle-btn {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 3px;
-    padding: 2px 4px;
+    padding: 0 2px;          /* הקטן את ה-padding האנכי לגמרי */
     cursor: pointer;
-    font-size: 12px;
+    font-size: 9px;          /* הקטן את גודל הטקסט בכפתור */
+    min-height: unset;
+    height: auto;
     transition: all 0.3s;
 }
+
 
 .loop-toggle-btn:hover {
     background: rgba(255, 255, 255, 0.3);
@@ -716,7 +727,9 @@ input:checked + .preparation-slider:before {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
-    width: 80px;
+    flex: 1 1 0;          /* כל תיבה תתפוס חלק שווה מרוחב השורה */
+    min-width: 60px;      /* רוחב מינימלי כדי לא לקרוס */
+    border: 0.5px solid #34495e;
     min-height: 50px;
     flex-shrink: 0;
 }
@@ -810,7 +823,7 @@ input:checked + .preparation-slider:before {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 2px;
     font-weight: 600;
-    font-size: 7px;
+    font-size: 11px;
     color: #2c3e50;
     transition: all 0.3s;
     min-width: 10px;
@@ -981,7 +994,7 @@ input:checked + .preparation-slider:before {
     }
 
     .measure-title {
-        font-size: 9px;
+        font-size: 12px;
     }
 }
 
@@ -1045,12 +1058,11 @@ input:checked + .preparation-slider:before {
     }
 
     .loop-header {
-        flex-direction: column;
-        gap: 4px;
-        text-align: center;
-        padding: 4px 8px;
+        padding: 1px 4px;      /* הקטן משמעותית את ה-padding האנכי */
+        font-size: 10px;       /* הקטן את הטקסט אם אתה רוצה */
+        min-height: unset;     /* ודא שאין גובה מינימלי שמונע הקטנה */
+        line-height: 1.2;      /* צמצם רווח בין שורות אם יש */
     }
-
     .loop-title-controls {
         justify-content: center;
     }
@@ -1200,12 +1212,12 @@ input:checked + .preparation-slider:before {
 /* Ensure clickable areas are large enough even with smaller visual elements */
 .measure-box {
     min-width: 70px;
-    min-height: 45px;
+    min-height: 70px;
 }
 
 .beat-dot {
-    min-width: 6px;
-    min-height: 6px;
+    min-width: 8px;
+    min-height: 8px;
     cursor: pointer;
 }
 

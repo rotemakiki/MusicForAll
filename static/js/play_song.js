@@ -282,7 +282,6 @@ function createMeasureElement(measureData) {
 
     // קבע רוחב תיבה בהתאם לסך כל הנקישות
     const measureWidth = calculateMeasureWidth(measureData.totalBeats);
-    measureDiv.style.width = `${measureWidth}px`;
     measureDiv.setAttribute('data-total-beats', Math.round(measureData.totalBeats));
 
     // Set current/past state
