@@ -1,4 +1,4 @@
-// Enhanced Play Song JavaScript - תיקון חזרות לופים
+// Enhanced Play Song JavaScript - תיקון מלא של מערכת הנגן
 
 // Get song data from Flask
 const chords = window.songData.chords;
@@ -8,27 +8,27 @@ const originalBpm = window.songData.originalBpm;
 // State variables
 let bpm = originalBpm;
 let intervalMs = 60000 / bpm;
-let currentLineIndex = 0;
-let currentChordIndexInLine = 0;
-let currentBeat = 0;
 let interval = null;
-let selectedStartLine = null;
-let selectedStartChord = null;
+let selectedStartMeasure = null;
 let addPreparationMeasure = true;
-let enabledLoops = new Set(); // Track which loops are enabled
-let loopStates = {}; // Track visibility state of each loop section
-let currentRepeatCycle = {}; // Track current repeat for each loop
-let currentGlobalMeasureIndex = 0; // מעקב על מיקום התיבה הגלובלי הנוכחי
+let enabledLoops = new Set();
+let loopStates = {};
 const metronome = document.getElementById("metronome-sound");
+
+// נתונים לניהול מיקום הנגינה
+let currentGlobalMeasureIndex = 0;
+let currentBeatInMeasure = 0;
+let selectedStartBeat = 0;
+let allMeasures = [];
+let isPlaying = false;
 
 // Initialize enabled loops - all enabled by default
 loops.forEach((loop, index) => {
     enabledLoops.add(index);
     loopStates[index] = { visible: true, enabled: true };
-    currentRepeatCycle[index] = 1; // Start at repeat 1
 });
 
-// Single metronome sound function - stable and consistent
+// Single metronome sound function
 function playMetronome() {
     const volume = document.getElementById("volume-slider").value;
     metronome.volume = parseFloat(volume);
@@ -36,365 +36,241 @@ function playMetronome() {
     metronome.play().catch(() => {});
 }
 
-// פונקציה חדשה לחישוב מיקום גלובלי של תיבות כולל חזרות
-function calculateGlobalMeasurePositions() {
-    let positions = [];
+// בניית מערך של כל התיבות כולל חזרות
+function buildAllMeasures() {
+    allMeasures = [];
     let globalIndex = 0;
 
-    // אם יש תיבת הכנה
+    // הוסף תיבת הכנה
     if (addPreparationMeasure) {
-        positions.push({
+        allMeasures.push({
             globalIndex: globalIndex++,
             isPreparation: true,
+            chords: [{ chord: "הכנה", beats: 4 }],
+            totalBeats: 4,
             loopIndex: null,
             repeatNumber: null,
-            measureInLoop: null
+            measureInLoop: null,
+            lineIdx: -1,
+            startChordIdx: 0
         });
     }
 
-    // עבור כל לופ ועבור כל חזרה שלו
-    loops.forEach((loop, loopIndex) => {
-        const repeatCount = loop.repeatCount || 1;
+    // בנה תיבות מהאקורדים עם מיפוי ללופים ולחזרות
+    if (loops.length > 0) {
+        // אם יש לופים, בנה לפי הלופים והחזרות שלהם
+        loops.forEach((loop, loopIdx) => {
+            const repeatCount = loop.repeatCount || 1;
 
-        for (let repeatNum = 1; repeatNum <= repeatCount; repeatNum++) {
-            for (let measureInLoop = 0; measureInLoop < loop.measureCount; measureInLoop++) {
-                positions.push({
-                    globalIndex: globalIndex++,
-                    isPreparation: false,
-                    loopIndex: loopIndex,
-                    repeatNumber: repeatNum,
-                    measureInLoop: measureInLoop,
-                    loop: loop
-                });
-            }
-        }
-    });
+            for (let repeatNum = 1; repeatNum <= repeatCount; repeatNum++) {
+                // עבור כל תיבה בלופ
+                for (let measureInLoop = 0; measureInLoop < loop.measureCount; measureInLoop++) {
+                    const measure = loop.measures[measureInLoop];
 
-    return positions;
-}
-
-// פונקציה חדשה לחישוב מיקום הנגינה הנוכחי
-function calculateCurrentPosition() {
-    if (currentLineIndex === -1) {
-        // במצב הכנה
-        return {
-            globalMeasureIndex: 0,
-            beatInMeasure: currentBeat - 1
-        };
-    }
-
-    // חישוב התיבה הגלובלית הנוכחית בהתבסס על הנתונים
-    let globalMeasureIndex = addPreparationMeasure ? 1 : 0;
-    let totalBeatsProcessed = addPreparationMeasure ? 4 : 0;
-
-    // ספירת beats עד המיקום הנוכחי
-    for (let lineIdx = 0; lineIdx < currentLineIndex; lineIdx++) {
-        for (let chordIdx = 0; chordIdx < chords[lineIdx].length; chordIdx++) {
-            totalBeatsProcessed += chords[lineIdx][chordIdx].beats;
-        }
-    }
-
-    for (let chordIdx = 0; chordIdx < currentChordIndexInLine; chordIdx++) {
-        if (chords[currentLineIndex] && chords[currentLineIndex][chordIdx]) {
-            totalBeatsProcessed += chords[currentLineIndex][chordIdx].beats;
-        }
-    }
-
-    // חישוב באיזו תיבה אנחנו נמצאים
-    let currentBeatCount = addPreparationMeasure ? 4 : 0;
-
-    loops.forEach((loop, loopIndex) => {
-        const repeatCount = loop.repeatCount || 1;
-
-        for (let repeatNum = 1; repeatNum <= repeatCount; repeatNum++) {
-            for (let measureInLoop = 0; measureInLoop < loop.measureCount; measureInLoop++) {
-                const measureStartBeat = currentBeatCount;
-                const measureEndBeat = currentBeatCount + 4; // נניח שכל תיבה היא 4 beats
-
-                if (totalBeatsProcessed + currentBeat - 1 >= measureStartBeat &&
-                    totalBeatsProcessed + currentBeat - 1 < measureEndBeat) {
-                    globalMeasureIndex = addPreparationMeasure ?
-                        1 + (loopIndex * loop.measureCount * repeatCount) + ((repeatNum - 1) * loop.measureCount) + measureInLoop :
-                        (loopIndex * loop.measureCount * repeatCount) + ((repeatNum - 1) * loop.measureCount) + measureInLoop;
-
-                    // עדכון החזרה הנוכחית ללופ זה
-                    currentRepeatCycle[loopIndex] = repeatNum;
-                    return;
+                    allMeasures.push({
+                        globalIndex: globalIndex++,
+                        isPreparation: false,
+                        chords: measure.chords,
+                        totalBeats: measure.beats,
+                        loopIndex: loopIdx,
+                        repeatNumber: repeatNum,
+                        measureInLoop: measureInLoop,
+                        lineIdx: -1, // לא רלוונטי כשיש לופים
+                        startChordIdx: 0
+                    });
                 }
-
-                currentBeatCount += 4;
             }
-        }
-    });
+        });
+    } else {
+        // אם אין לופים, בנה מהאקורדים הישנים
+        chords.forEach((line, lineIdx) => {
+            let totalBeats = 0;
+            let currentMeasure = [];
+            let chordIdx = 0;
 
-    return {
-        globalMeasureIndex: globalMeasureIndex,
-        beatInMeasure: (totalBeatsProcessed + currentBeat - 1) % 4
-    };
-}
+            line.forEach((chordObj) => {
+                currentMeasure.push(chordObj);
+                totalBeats += chordObj.beats;
 
-// Check if a measure should be played based on loop settings
-function shouldPlayMeasure(measureData) {
-    if (measureData.loopIndex !== undefined) {
-        return enabledLoops.has(measureData.loopIndex);
+                // צור תיבה כשמגיעים ל-4 נקישות או בסוף השורה
+                if (Math.abs(totalBeats - 4) < 0.01 || totalBeats > 4 || chordIdx === line.length - 1) {
+                    allMeasures.push({
+                        globalIndex: globalIndex++,
+                        isPreparation: false,
+                        chords: [...currentMeasure],
+                        totalBeats: totalBeats,
+                        loopIndex: null,
+                        repeatNumber: null,
+                        measureInLoop: null,
+                        lineIdx: lineIdx,
+                        startChordIdx: chordIdx - currentMeasure.length + 1
+                    });
+
+                    totalBeats = 0;
+                    currentMeasure = [];
+                }
+                chordIdx++;
+            });
+        });
     }
-    return true; // Play non-loop measures by default
+
+    return allMeasures;
 }
 
-// Calculate measure width for display
-function calculateMeasureWidth(measure) {
-    const totalBeats = measure.reduce((sum, chord) => sum + chord.beats, 0);
-    return Math.max(180, 140 + (totalBeats * 20));
-}
-
-// Create preparation measure
-function createPreparationMeasure() {
-    return {
-        lineIdx: -1,
-        measureIndex: 0,
-        chords: [{ chord: "הכנה", beats: 4 }],
-        totalBeats: 4,
-        measureStartBeat: 0,
-        isCurrent: false,
-        isPast: false,
-        startChordIdx: 0,
-        isPreparation: true
-    };
-}
-
-// Enhanced chord rendering with loop organization, preparation measure and repeat display
+// Enhanced chord rendering עם אפשרות לקליק על תיבות ספציפיות
 function renderChords() {
     const wrapper = document.getElementById("chords-wrapper");
     wrapper.innerHTML = "";
 
-    let globalBeatCount = 0;
-    let allMeasures = [];
-
-    // חישוב המיקום הנוכחי
-    const currentPosition = calculateCurrentPosition();
-
-    // Add preparation measure if enabled
-    if (addPreparationMeasure) {
-        const prepMeasure = createPreparationMeasure();
-        prepMeasure.isCurrent = (currentPosition.globalMeasureIndex === 0);
-        prepMeasure.isPast = (currentPosition.globalMeasureIndex > 0);
-        allMeasures.push(prepMeasure);
-        globalBeatCount += 4;
-    }
-
-    // Process measures from chord data
-    chords.forEach((line, lineIdx) => {
-        let totalBeats = 0;
-        let currentMeasure = [];
-
-        line.forEach((chordObj, chordIdx) => {
-            currentMeasure.push(chordObj);
-            totalBeats += chordObj.beats;
-
-            const isLast = chordIdx === line.length - 1;
-
-            // Create measure when we reach 4 beats or it's the last chord
-            if (Math.abs(totalBeats - 4) < 0.01 || totalBeats > 4 || isLast) {
-                const measureStartBeat = globalBeatCount;
-                const measureGlobalIndex = allMeasures.length;
-
-                // קביעה האם זו התיבה הנוכחית או שעברה
-                const isCurrent = (measureGlobalIndex === currentPosition.globalMeasureIndex);
-                const isPast = (measureGlobalIndex < currentPosition.globalMeasureIndex);
-
-                // Determine which loop this measure belongs to
-                let loopIndex = null;
-                if (loops.length > 0) {
-                    let totalMeasuresInPreviousLoops = 0;
-                    for (let i = 0; i < loops.length; i++) {
-                        const measuresInThisLoop = loops[i].measureCount * (loops[i].repeatCount || 1);
-                        if (allMeasures.length - (addPreparationMeasure ? 1 : 0) < totalMeasuresInPreviousLoops + measuresInThisLoop) {
-                            loopIndex = i;
-                            break;
-                        }
-                        totalMeasuresInPreviousLoops += measuresInThisLoop;
-                    }
-                }
-
-                const measureData = {
-                    lineIdx,
-                    measureIndex: allMeasures.length + 1,
-                    chords: [...currentMeasure],
-                    totalBeats,
-                    measureStartBeat,
-                    isCurrent,
-                    isPast,
-                    startChordIdx: chordIdx - currentMeasure.length + 1,
-                    loopIndex: loopIndex,
-                    globalIndex: measureGlobalIndex
-                };
-
-                allMeasures.push(measureData);
-                globalBeatCount += totalBeats;
-
-                // Reset for next measure
-                totalBeats = 0;
-                currentMeasure = [];
-            }
-        });
-    });
-
-    // Render measures organized by loops
-    if (loops.length > 0) {
-        renderMeasuresByLoops(wrapper, allMeasures);
-    } else {
-        renderMeasuresFlat(wrapper, allMeasures);
-    }
-
-    updateBeatDots();
-}
-
-// Render measures organized by loop sections with repeat display
-function renderMeasuresByLoops(wrapper, allMeasures) {
-    let measureIndex = 0;
+    const measures = buildAllMeasures();
 
     // Render preparation measure if exists
-    if (addPreparationMeasure && allMeasures[0].isPreparation) {
+    if (addPreparationMeasure && measures[0] && measures[0].isPreparation) {
         const prepSection = document.createElement("div");
         prepSection.className = "loop-section preparation-section";
 
         const prepHeader = document.createElement("div");
         prepHeader.className = "loop-header";
-        prepHeader.innerHTML = `
-            <span class="loop-title">⏳ הכנה לתחילת השיר</span>
-        `;
+        prepHeader.innerHTML = `<span class="loop-title">⏳ הכנה לתחילת השיר</span>`;
 
         const prepContent = document.createElement("div");
         prepContent.className = "loop-content";
 
         const prepRow = document.createElement("div");
         prepRow.className = "chord-row";
-        prepRow.appendChild(createMeasureElement(allMeasures[0], 0));
+        prepRow.appendChild(createMeasureElement(measures[0]));
 
         prepContent.appendChild(prepRow);
         prepSection.appendChild(prepHeader);
         prepSection.appendChild(prepContent);
         wrapper.appendChild(prepSection);
-
-        measureIndex = 1;
     }
 
-    // Render loop sections with repeat information
-    loops.forEach((loop, loopIdx) => {
-        const repeatCount = loop.repeatCount || 1;
-        const currentRepeat = currentRepeatCycle[loopIdx] || 1;
+    // Render loop sections with proper repeat handling
+    if (loops.length > 0) {
+        renderMeasuresByLoops(wrapper, measures);
+    } else {
+        renderMeasuresFlat(wrapper, measures);
+    }
 
-        // Create multiple sections for each repeat if repeatCount > 1
-        for (let repeatNum = 1; repeatNum <= repeatCount; repeatNum++) {
-            const loopSection = document.createElement("div");
-            loopSection.className = "loop-section";
-            loopSection.dataset.loopIndex = loopIdx;
-            loopSection.dataset.repeatNumber = repeatNum;
+    updateBeatDots();
+}
 
-            // Highlight current repeat
-            if (repeatNum === currentRepeat) {
-                loopSection.classList.add("current-repeat");
-            } else if (repeatNum < currentRepeat) {
-                loopSection.classList.add("past-repeat");
-            }
+// Render measures organized by loop sections
+function renderMeasuresByLoops(wrapper, measures) {
+    const loopSections = new Map();
 
-            const loopHeader = document.createElement("div");
-            loopHeader.className = "loop-header";
+    // Group measures by loop and repeat
+    measures.forEach(measure => {
+        if (measure.isPreparation) return;
 
-            let titleText = loop.name;
-            if (repeatCount > 1) {
-                titleText += ` - חזרה ${repeatNum}/${repeatCount}`;
-            }
+        if (measure.loopIndex !== null) {
+            const loop = loops[measure.loopIndex];
+            const key = `${measure.loopIndex}-${measure.repeatNumber}`;
 
-            loopHeader.innerHTML = `
-                <div class="loop-title-controls">
-                    <button class="loop-toggle-btn" onclick="toggleLoopVisibility(${loopIdx})">
-                        ${loopStates[loopIdx].visible ? '📖' : '📕'}
-                    </button>
-                    <span class="loop-title">${titleText}</span>
-                    <span class="loop-measures-count">${loop.measureCount} תיבות</span>
-                </div>
-                <div class="loop-controls">
-                    <label class="loop-enable-checkbox">
-                        <input type="checkbox" ${loopStates[loopIdx].enabled ? 'checked' : ''}
-                               onchange="toggleLoopEnabled(${loopIdx})">
-                        <span class="loop-checkbox-label">כלול בניגון</span>
-                    </label>
-                </div>
-            `;
-
-            const loopContent = document.createElement("div");
-            loopContent.className = "loop-content";
-            loopContent.style.display = loopStates[loopIdx].visible ? 'block' : 'none';
-
-            // Add measures for this loop (same measures for each repeat)
-            const loopMeasures = allMeasures.slice(measureIndex, measureIndex + loop.measureCount);
-
-            // Group measures into rows of 4
-            for (let i = 0; i < loopMeasures.length; i += 4) {
-                const rowMeasures = loopMeasures.slice(i, i + 4);
-                const rowDiv = document.createElement("div");
-                rowDiv.className = "chord-row";
-
-                rowMeasures.forEach((measureData, idx) => {
-                    // עדכון הגלובל אינדקס עבור כל חזרה
-                    const adjustedMeasureData = {...measureData};
-                    const originalMeasureIndex = measureIndex + i + idx;
-                    const adjustedGlobalIndex = addPreparationMeasure ?
-                        1 + (loopIdx * loop.measureCount * repeatCount) + ((repeatNum - 1) * loop.measureCount) + (i + idx) :
-                        (loopIdx * loop.measureCount * repeatCount) + ((repeatNum - 1) * loop.measureCount) + (i + idx);
-
-                    adjustedMeasureData.globalIndex = adjustedGlobalIndex;
-                    adjustedMeasureData.measureIndex = adjustedGlobalIndex + 1;
-
-                    // עדכון סטטוס current/past בהתבסס על המיקום הגלובלי המעודכן
-                    const currentPosition = calculateCurrentPosition();
-                    adjustedMeasureData.isCurrent = (adjustedGlobalIndex === currentPosition.globalMeasureIndex);
-                    adjustedMeasureData.isPast = (adjustedGlobalIndex < currentPosition.globalMeasureIndex);
-
-                    rowDiv.appendChild(createMeasureElement(adjustedMeasureData, adjustedGlobalIndex));
+            if (!loopSections.has(key)) {
+                loopSections.set(key, {
+                    loop: loop,
+                    loopIndex: measure.loopIndex,
+                    repeatNumber: measure.repeatNumber,
+                    measures: []
                 });
-
-                loopContent.appendChild(rowDiv);
             }
 
-            loopSection.appendChild(loopHeader);
-            loopSection.appendChild(loopContent);
-            wrapper.appendChild(loopSection);
+            loopSections.get(key).measures.push(measure);
+        }
+    });
+
+    // Render each loop section
+    loopSections.forEach(section => {
+        const loopSection = document.createElement("div");
+        loopSection.className = "loop-section";
+        loopSection.dataset.loopIndex = section.loopIndex;
+        loopSection.dataset.repeatNumber = section.repeatNumber;
+
+        // Highlight current section
+        const currentMeasure = measures[currentGlobalMeasureIndex];
+        if (currentMeasure && currentMeasure.loopIndex === section.loopIndex &&
+            currentMeasure.repeatNumber === section.repeatNumber && isPlaying) {
+            loopSection.classList.add("current-repeat");
         }
 
-        // Only increment measureIndex once per original loop
-        measureIndex += loop.measureCount;
+        const loopHeader = document.createElement("div");
+        loopHeader.className = "loop-header";
+
+        let titleText = section.loop.name;
+        const totalRepeats = section.loop.repeatCount || 1;
+        if (totalRepeats > 1) {
+            titleText += ` - חזרה ${section.repeatNumber}/${totalRepeats}`;
+        }
+
+        loopHeader.innerHTML = `
+            <div class="loop-title-controls">
+                <button class="loop-toggle-btn" onclick="toggleLoopVisibility(${section.loopIndex})">
+                    ${loopStates[section.loopIndex].visible ? '📖' : '📕'}
+                </button>
+                <span class="loop-title">${titleText}</span>
+                <span class="loop-measures-count">${section.loop.measureCount} תיבות</span>
+            </div>
+            <div class="loop-controls">
+                <label class="loop-enable-checkbox">
+                    <input type="checkbox" ${loopStates[section.loopIndex].enabled ? 'checked' : ''}
+                           onchange="toggleLoopEnabled(${section.loopIndex})">
+                    <span class="loop-checkbox-label">כלול בניגון</span>
+                </label>
+            </div>
+        `;
+
+        const loopContent = document.createElement("div");
+        loopContent.className = "loop-content";
+        loopContent.style.display = loopStates[section.loopIndex].visible ? 'block' : 'none';
+
+        // Group measures into rows of 4
+        for (let i = 0; i < section.measures.length; i += 4) {
+            const rowMeasures = section.measures.slice(i, i + 4);
+            const rowDiv = document.createElement("div");
+            rowDiv.className = "chord-row";
+
+            rowMeasures.forEach(measureData => {
+                rowDiv.appendChild(createMeasureElement(measureData));
+            });
+
+            loopContent.appendChild(rowDiv);
+        }
+
+        loopSection.appendChild(loopHeader);
+        loopSection.appendChild(loopContent);
+        wrapper.appendChild(loopSection);
     });
 }
 
 // Render measures in flat layout (fallback)
-function renderMeasuresFlat(wrapper, allMeasures) {
-    for (let i = 0; i < allMeasures.length; i += 4) {
-        const rowMeasures = allMeasures.slice(i, i + 4);
+function renderMeasuresFlat(wrapper, measures) {
+    for (let i = 0; i < measures.length; i += 4) {
+        const rowMeasures = measures.slice(i, i + 4);
         const rowDiv = document.createElement("div");
         rowDiv.className = "chord-row";
 
-        rowMeasures.forEach((measureData, idx) => {
-            rowDiv.appendChild(createMeasureElement(measureData, i + idx));
+        rowMeasures.forEach(measureData => {
+            rowDiv.appendChild(createMeasureElement(measureData));
         });
 
         wrapper.appendChild(rowDiv);
     }
 }
 
-// Create individual measure element
-function createMeasureElement(measureData, globalIndex) {
+// Create individual measure element with click functionality
+function createMeasureElement(measureData) {
     const measureDiv = document.createElement("div");
     measureDiv.className = "measure-box clickable";
-    measureDiv.dataset.globalIndex = globalIndex;
+    measureDiv.dataset.globalIndex = measureData.globalIndex;
 
     if (measureData.isPreparation) {
         measureDiv.classList.add("preparation-measure");
     }
 
     // Style based on loop enabled state
-    if (measureData.loopIndex !== undefined && !enabledLoops.has(measureData.loopIndex)) {
+    if (measureData.loopIndex !== null && !enabledLoops.has(measureData.loopIndex)) {
         measureDiv.classList.add("disabled-measure");
     }
 
@@ -402,25 +278,29 @@ function createMeasureElement(measureData, globalIndex) {
     measureDiv.style.width = `${measureWidth}px`;
     measureDiv.setAttribute('data-total-beats', Math.round(measureData.totalBeats));
 
-    if (measureData.isCurrent) {
+    // Set current/past state
+    if (measureData.globalIndex === currentGlobalMeasureIndex && isPlaying) {
         measureDiv.classList.add("current");
-    } else if (measureData.isPast) {
+    } else if (measureData.globalIndex < currentGlobalMeasureIndex && isPlaying) {
         measureDiv.classList.add("past");
     }
 
     // Measure title
     const title = document.createElement("div");
     title.className = "measure-title";
-    title.innerText = measureData.isPreparation ? "הכנה" : `תיבה ${measureData.measureIndex}`;
+    title.innerText = measureData.isPreparation ? "הכנה" : `תיבה ${measureData.globalIndex + 1}`;
     measureDiv.appendChild(title);
 
     // Chords container
     const chordsContainer = document.createElement("div");
     chordsContainer.className = "chords-in-measure";
 
-    measureData.chords.forEach(chord => {
+    let currentBeatPosition = 0;
+    measureData.chords.forEach((chord, chordIdx) => {
         const chordBox = document.createElement("div");
         chordBox.className = "chord-box";
+        chordBox.dataset.chordIndex = chordIdx;
+        chordBox.dataset.beatPosition = currentBeatPosition;
 
         if (measureData.isPreparation) {
             chordBox.classList.add("preparation-chord");
@@ -432,7 +312,41 @@ function createMeasureElement(measureData, globalIndex) {
         chordBox.style.flexShrink = "0";
 
         chordBox.innerText = chord.chord;
+
+        // הוסף אפשרות לקליק על אקורד ספציפי
+        chordBox.addEventListener("click", (e) => {
+            e.stopPropagation(); // מנע קליק על התיבה
+            selectedStartMeasure = measureData.globalIndex;
+            selectedStartBeat = currentBeatPosition;
+
+            // הסר בחירות קודמות
+            document.querySelectorAll('.measure-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+            document.querySelectorAll('.chord-box').forEach(box => {
+                box.classList.remove('selected-chord');
+            });
+
+            // סמן את התיבה והאקורד
+            measureDiv.classList.add('selected');
+            chordBox.classList.add('selected-chord');
+
+            const infoDiv = document.getElementById("selected-measure-info");
+            const infoText = infoDiv.querySelector('.info-text');
+            infoText.textContent = `נבחר אקורד ${chord.chord} בתיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`;
+            infoDiv.style.display = "block";
+
+            setTimeout(() => {
+                infoDiv.style.opacity = "0";
+                setTimeout(() => {
+                    infoDiv.style.display = "none";
+                    infoDiv.style.opacity = "1";
+                }, 300);
+            }, 4000);
+        });
+
         chordsContainer.appendChild(chordBox);
+        currentBeatPosition += chord.beats;
     });
 
     measureDiv.appendChild(chordsContainer);
@@ -446,21 +360,15 @@ function createMeasureElement(measureData, globalIndex) {
         const dot = document.createElement("div");
         dot.className = "beat-dot";
         dot.dataset.beatIndex = dotIdx;
-        dot.dataset.measureGlobalIndex = globalIndex;
+        dot.dataset.measureGlobalIndex = measureData.globalIndex;
         beatsContainer.appendChild(dot);
     }
 
     measureDiv.appendChild(beatsContainer);
 
-    // Click handler
+    // Click handler for starting playback from this measure
     measureDiv.addEventListener("click", () => {
-        if (measureData.isPreparation) {
-            selectedStartLine = null;
-            selectedStartChord = null;
-        } else {
-            selectedStartLine = measureData.lineIdx;
-            selectedStartChord = measureData.startChordIdx;
-        }
+        selectedStartMeasure = measureData.globalIndex;
 
         document.querySelectorAll('.measure-box').forEach(box => {
             box.classList.remove('selected');
@@ -472,7 +380,7 @@ function createMeasureElement(measureData, globalIndex) {
         if (measureData.isPreparation) {
             infoText.textContent = `נבחרה תיבת ההכנה - לחץ "החל לנגן" כדי להתחיל עם הכנה`;
         } else {
-            infoText.textContent = `נבחרה תיבה ${measureData.measureIndex} - לחץ "החל לנגן" כדי להתחיל מכאן`;
+            infoText.textContent = `נבחרה תיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`;
         }
         infoDiv.style.display = "block";
 
@@ -486,6 +394,12 @@ function createMeasureElement(measureData, globalIndex) {
     });
 
     return measureDiv;
+}
+
+// Calculate measure width for display
+function calculateMeasureWidth(chords) {
+    const totalBeats = chords.reduce((sum, chord) => sum + chord.beats, 0);
+    return Math.max(180, 140 + (totalBeats * 20));
 }
 
 // Toggle loop visibility
@@ -534,40 +448,68 @@ function initializeSongPartsControls() {
 // Toggle loop from side controls
 function toggleLoopFromControls(loopIndex) {
     toggleLoopEnabled(loopIndex);
-    // Also update the main loop checkbox
-    const mainCheckbox = document.querySelector(`[data-loop-index="${loopIndex}"] input[type="checkbox"]`);
-    if (mainCheckbox) {
-        mainCheckbox.checked = enabledLoops.has(loopIndex);
-    }
 }
 
-// Beat dots update - תיקון לעבודה עם חזרות
+// Beat dots update with chord tracking
 function updateBeatDots() {
-    // Reset all dots
+    // Reset all dots and chords
     document.querySelectorAll(".beat-dot").forEach(dot => {
         dot.classList.remove("active", "played");
     });
 
-    const currentPosition = calculateCurrentPosition();
+    document.querySelectorAll(".chord-box").forEach(chord => {
+        chord.classList.remove("current-chord", "played-chord");
+    });
 
-    // Update dots
+    // Update dots and chords based on current position
+    const measures = buildAllMeasures();
+    const currentMeasure = measures[currentGlobalMeasureIndex];
+
+    if (!currentMeasure) return;
+
+    // Update beat dots
     document.querySelectorAll(".beat-dot").forEach(dot => {
         const measureGlobalIndex = parseInt(dot.dataset.measureGlobalIndex);
         const beatIndex = parseInt(dot.dataset.beatIndex);
 
-        if (measureGlobalIndex < currentPosition.globalMeasureIndex) {
+        if (measureGlobalIndex < currentGlobalMeasureIndex) {
             dot.classList.add("played");
-        } else if (measureGlobalIndex === currentPosition.globalMeasureIndex && beatIndex <= currentPosition.beatInMeasure) {
-            if (beatIndex === currentPosition.beatInMeasure) {
+        } else if (measureGlobalIndex === currentGlobalMeasureIndex && beatIndex <= currentBeatInMeasure) {
+            if (beatIndex === currentBeatInMeasure) {
                 dot.classList.add("active");
             } else {
                 dot.classList.add("played");
             }
         }
     });
+
+    // Update current chord highlighting
+    if (isPlaying && currentMeasure) {
+        const measureElement = document.querySelector(`[data-global-index="${currentGlobalMeasureIndex}"]`);
+        if (measureElement) {
+            const chordBoxes = measureElement.querySelectorAll('.chord-box');
+            let currentBeatPosition = 0;
+
+            chordBoxes.forEach((chordBox, index) => {
+                const chord = currentMeasure.chords[index];
+                if (!chord) return;
+
+                const chordStartBeat = currentBeatPosition;
+                const chordEndBeat = currentBeatPosition + chord.beats;
+
+                if (currentBeatInMeasure >= chordStartBeat && currentBeatInMeasure < chordEndBeat) {
+                    chordBox.classList.add("current-chord");
+                } else if (currentBeatInMeasure >= chordEndBeat) {
+                    chordBox.classList.add("played-chord");
+                }
+
+                currentBeatPosition += chord.beats;
+            });
+        }
+    }
 }
 
-// Enhanced playback with loop support and repeat management
+// Enhanced playback with proper measure and beat tracking
 function startPlayback() {
     stopPlayback();
 
@@ -575,135 +517,133 @@ function startPlayback() {
     intervalMs = 60000 / bpm;
     document.getElementById("current-bpm").innerText = bpm;
 
-    // Reset repeat cycles
-    loops.forEach((loop, index) => {
-        currentRepeatCycle[index] = 1;
-    });
+    const measures = buildAllMeasures();
 
-    // Handle preparation measure or selected start position
-    if (selectedStartLine === null && selectedStartChord === null && addPreparationMeasure) {
-        // Start with preparation measure
-        currentLineIndex = -1; // Special value for preparation
-        currentChordIndexInLine = 0;
-        currentBeat = 0;
-        currentGlobalMeasureIndex = 0;
-    } else if (selectedStartLine !== null && selectedStartChord !== null) {
-        currentLineIndex = selectedStartLine;
-        currentChordIndexInLine = selectedStartChord;
-        currentBeat = 0;
-        // חישוב המיקום הגלובלי על בסיס הבחירה
-        currentGlobalMeasureIndex = calculateCurrentPosition().globalMeasureIndex;
+    // Set starting position
+    if (selectedStartMeasure !== null) {
+        currentGlobalMeasureIndex = selectedStartMeasure;
     } else {
-        currentLineIndex = 0;
-        currentChordIndexInLine = 0;
-        currentBeat = 0;
-        currentGlobalMeasureIndex = addPreparationMeasure ? 1 : 0;
+        currentGlobalMeasureIndex = 0;
     }
 
+    currentBeatInMeasure = 0;
+    isPlaying = true;
+
     renderChords();
+
+    // Check if starting measure should be played
+    const startMeasure = measures[currentGlobalMeasureIndex];
+    if (startMeasure && startMeasure.loopIndex !== null && !enabledLoops.has(startMeasure.loopIndex)) {
+        // Skip to next enabled measure
+        findNextEnabledMeasure(measures);
+    }
 
     // First beat - play immediately
     setTimeout(() => {
         playMetronome();
-        currentBeat = 1;
+        currentBeatInMeasure = 0;
         updateBeatDots();
-        renderChords(); // Re-render to show current state
+        renderChords();
     }, 100);
 
     // Main interval
     interval = setInterval(() => {
-        // Handle preparation measure
-        if (currentLineIndex === -1) {
-            currentBeat++;
-            playMetronome();
+        const currentMeasure = measures[currentGlobalMeasureIndex];
 
-            if (currentBeat > 4) {
-                // Move to first actual measure
-                currentLineIndex = 0;
-                currentChordIndexInLine = 0;
-                currentBeat = 1;
-                currentGlobalMeasureIndex = 1;
-                playMetronome();
-            }
-            updateBeatDots();
-            renderChords();
-            return;
-        }
-
-        // Regular measure handling
-        if (currentLineIndex >= chords.length) {
+        if (!currentMeasure) {
             stopPlayback();
             return;
         }
 
-        const line = chords[currentLineIndex];
-        if (!line || currentChordIndexInLine >= line.length) {
-            stopPlayback();
+        // Check if current measure should be played
+        if (currentMeasure.loopIndex !== null && !enabledLoops.has(currentMeasure.loopIndex)) {
+            findNextEnabledMeasure(measures);
             return;
         }
 
-        const chordObj = line[currentChordIndexInLine];
-        const beatsThisChord = chordObj.beats || 4;
-
-        currentBeat++;
+        currentBeatInMeasure++;
         playMetronome();
 
-        if (currentBeat > beatsThisChord) {
-            currentBeat = 1;
-            currentChordIndexInLine++;
+        // Check if we've completed this measure
+        if (currentBeatInMeasure >= Math.round(currentMeasure.totalBeats)) {
+            currentGlobalMeasureIndex++;
+            currentBeatInMeasure = 0;
 
-            if (currentChordIndexInLine >= chords[currentLineIndex].length) {
-                currentChordIndexInLine = 0;
-
-                // Skip to next enabled section
-                do {
-                    currentLineIndex++;
-                    // עדכון מיקום גלובלי כשעוברים לשורה הבאה
-                    currentGlobalMeasureIndex++;
-                } while (currentLineIndex < chords.length && !shouldPlayCurrentMeasure());
-
-                if (currentLineIndex >= chords.length) {
-                    stopPlayback();
-                    return;
-                }
+            // Check if we've reached the end
+            if (currentGlobalMeasureIndex >= measures.length) {
+                stopPlayback();
+                return;
             }
         }
 
         updateBeatDots();
         renderChords();
+        updatePlayingInfo();
     }, intervalMs);
 }
 
-// Check if current measure should be played
-function shouldPlayCurrentMeasure() {
-    // This would need to be enhanced to properly map line/chord indices to loop indices
-    // For now, we'll assume all measures are played unless specifically disabled
-    return true;
+// Find next enabled measure
+function findNextEnabledMeasure(measures) {
+    while (currentGlobalMeasureIndex < measures.length) {
+        const measure = measures[currentGlobalMeasureIndex];
+        if (!measure) break;
+
+        if (measure.isPreparation || measure.loopIndex === null || enabledLoops.has(measure.loopIndex)) {
+            break;
+        }
+
+        currentGlobalMeasureIndex++;
+    }
+
+    if (currentGlobalMeasureIndex >= measures.length) {
+        stopPlayback();
+    }
 }
 
 function stopPlayback() {
     clearInterval(interval);
     interval = null;
+    isPlaying = false;
+    renderChords();
+    updatePlayingInfo();
+}
+
+// Update playing info display
+function updatePlayingInfo() {
+    const measures = buildAllMeasures();
+    const currentMeasure = measures[currentGlobalMeasureIndex];
+
+    if (!currentMeasure || !isPlaying) return;
+
+    // Find current chord
+    let currentBeatPosition = 0;
+    let currentChordName = "";
+
+    for (const chord of currentMeasure.chords) {
+        if (currentBeatInMeasure >= currentBeatPosition && currentBeatInMeasure < currentBeatPosition + chord.beats) {
+            currentChordName = chord.chord;
+            break;
+        }
+        currentBeatPosition += chord.beats;
+    }
+
+    console.log(`נוגן: תיבה ${currentGlobalMeasureIndex + 1}, נקישה ${currentBeatInMeasure + 1}, אקורד: ${currentChordName}`);
 }
 
 function restartPlayback() {
     stopPlayback();
-    currentLineIndex = 0;
-    currentChordIndexInLine = 0;
-    currentBeat = 0;
-    currentGlobalMeasureIndex = addPreparationMeasure ? 1 : 0;
-    selectedStartLine = null;
-    selectedStartChord = null;
-
-    // Reset repeat cycles
-    loops.forEach((loop, index) => {
-        currentRepeatCycle[index] = 1;
-    });
+    currentGlobalMeasureIndex = 0;
+    currentBeatInMeasure = 0;
+    selectedStartMeasure = null;
+    selectedStartBeat = 0;
 
     // Reset visual state
     document.getElementById("selected-measure-info").style.display = "none";
     document.querySelectorAll('.measure-box').forEach(box => {
         box.classList.remove('selected');
+    });
+    document.querySelectorAll('.chord-box').forEach(box => {
+        box.classList.remove('selected-chord');
     });
 
     renderChords();
@@ -732,11 +672,8 @@ document.addEventListener("DOMContentLoaded", () => {
         intervalMs = 60000 / bpm;
 
         if (interval) {
-            const wasPlaying = true;
             stopPlayback();
-            if (wasPlaying) {
-                startPlayback();
-            }
+            startPlayback();
         }
     });
 
@@ -751,11 +688,8 @@ document.addEventListener("DOMContentLoaded", () => {
         intervalMs = 60000 / bpm;
 
         if (interval) {
-            const wasPlaying = true;
             stopPlayback();
-            if (wasPlaying) {
-                startPlayback();
-            }
+            startPlayback();
         }
     });
 

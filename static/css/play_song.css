@@ -14,18 +14,18 @@ body {
 }
 
 .play-song-container {
-    max-width: 1800px; /* הגדלה לניצול מקסימלי של המסך */
+    max-width: 1800px;
     margin: 0 auto;
-    padding: 8px; /* הקטנה נוספת של הריפוד */
+    padding: 8px;
     background: rgba(255, 255, 255, 0.98);
-    border-radius: 15px; /* קטן יותר */
-    margin-top: 8px; /* הקטנה */
-    margin-bottom: 8px; /* הקטנה */
+    border-radius: 15px;
+    margin-top: 8px;
+    margin-bottom: 8px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
-    min-height: calc(100vh - 16px); /* מינימום גובה לכל המסך */
-    height: calc(100vh - 16px); /* גובה קבוע */
-    overflow: hidden; /* מונע גלילה של הקונטיינר הראשי */
+    min-height: calc(100vh - 16px);
+    height: calc(100vh - 16px);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
@@ -33,9 +33,9 @@ body {
 /* Header organization - multiple compact rows */
 .song-header {
     text-align: center;
-    margin-bottom: 5px; /* קטן מאוד */
-    padding-bottom: 5px; /* קטן מאוד */
-    border-bottom: 1px solid #e1e8ed; /* קו דק יותר */
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e1e8ed;
     flex-shrink: 0;
 }
 
@@ -54,7 +54,7 @@ body {
 .song-header h1 {
     margin: 0;
     color: #2c3e50;
-    font-size: 22px; /* קטן יותר */
+    font-size: 22px;
     font-weight: 700;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     display: inline-block;
@@ -64,7 +64,7 @@ body {
 .artist-name {
     margin: 0;
     color: #667eea;
-    font-size: 16px; /* קטן יותר */
+    font-size: 16px;
     font-weight: 500;
     font-style: italic;
     display: inline-block;
@@ -72,30 +72,30 @@ body {
 
 /* Song Details Section - Inline compact */
 .song-details {
-    margin-bottom: 3px; /* קטן מאוד */
+    margin-bottom: 3px;
     background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
-    border-radius: 8px; /* קטן יותר */
-    padding: 4px 8px; /* קטן מאוד */
-    border: 1px solid #e1e8ed; /* קו דק יותר */
-    display: inline-block; /* במקום block */
+    border-radius: 8px;
+    padding: 4px 8px;
+    border: 1px solid #e1e8ed;
+    display: inline-block;
 }
 
 .song-info-row {
     display: flex;
     justify-content: center;
-    gap: 12px; /* קטן יותר */
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .detail-item {
     display: flex;
     align-items: center;
-    gap: 3px; /* קטן מאוד */
-    padding: 3px 8px; /* קטן מאוד */
+    gap: 3px;
+    padding: 3px 8px;
     background: rgba(255, 255, 255, 0.8);
-    border-radius: 12px; /* קטן יותר */
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 11px; /* קטן יותר */
+    font-size: 11px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.3s;
 }
@@ -106,12 +106,12 @@ body {
 }
 
 .detail-icon {
-    font-size: 12px; /* קטן יותר */
+    font-size: 12px;
 }
 
 .detail-label {
     color: #34495e;
-    font-size: 10px; /* קטן יותר */
+    font-size: 10px;
 }
 
 .detail-value {
@@ -127,9 +127,9 @@ body {
 
 /* YouTube Player Section - Inline compact */
 .youtube-player-section {
-    margin-bottom: 3px; /* קטן מאוד */
+    margin-bottom: 3px;
     position: relative;
-    display: inline-block; /* במקום block */
+    display: inline-block;
     margin-left: 10px;
 }
 
@@ -137,9 +137,9 @@ body {
     background: linear-gradient(135deg, #ff4757, #ff3838);
     color: white;
     border: none;
-    border-radius: 15px; /* קטן יותר */
-    padding: 4px 10px; /* קטן מאוד */
-    font-size: 11px; /* קטן יותר */
+    border-radius: 15px;
+    padding: 4px 10px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -156,7 +156,7 @@ body {
 }
 
 .youtube-icon {
-    font-size: 12px; /* קטן יותר */
+    font-size: 12px;
 }
 
 .youtube-player-container {
@@ -164,15 +164,15 @@ body {
     margin-top: 12px;
     background: rgba(0, 0, 0, 0.9);
     border-radius: 12px;
-    padding: 12px; /* קטן יותר */
+    padding: 12px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
     animation: fadeIn 0.3s ease-out;
 }
 
 .youtube-player-container iframe {
     width: 100%;
-    max-width: 350px; /* קטן יותר */
-    height: 200px; /* קטן יותר */
+    max-width: 350px;
+    height: 200px;
     border-radius: 8px;
     display: block;
     margin: 0 auto;
@@ -186,7 +186,7 @@ body {
     color: #2c3e50;
     border: none;
     border-radius: 50%;
-    width: 26px; /* קטן יותר */
+    width: 26px;
     height: 26px;
     font-size: 14px;
     cursor: pointer;
@@ -214,22 +214,22 @@ body {
 
 /* Action Buttons - Inline compact */
 .action-buttons {
-    display: inline-flex; /* במקום flex */
+    display: inline-flex;
     justify-content: center;
-    gap: 6px; /* הקטנה נוספת */
-    margin-bottom: 3px; /* קטן מאוד */
+    gap: 6px;
+    margin-bottom: 3px;
     margin-left: 10px;
 }
 
 .action-btn {
     display: flex;
     align-items: center;
-    gap: 4px; /* קטן יותר */
-    padding: 4px 8px; /* קטן מאוד */
-    border-radius: 8px; /* קטן יותר */
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
-    font-size: 11px; /* קטן יותר */
+    font-size: 11px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
@@ -251,9 +251,9 @@ body {
 
 /* BPM Info - Inline compact */
 .bpm-info {
-    display: inline-flex; /* במקום flex */
+    display: inline-flex;
     justify-content: center;
-    gap: 8px; /* קטן יותר */
+    gap: 8px;
     flex-wrap: wrap;
     margin-left: 10px;
 }
@@ -261,11 +261,11 @@ body {
 .original-bpm-display, .current-bpm-display {
     display: flex;
     align-items: center;
-    gap: 4px; /* קטן יותר */
-    padding: 3px 8px; /* קטן מאוד */
-    border-radius: 12px; /* קטן יותר */
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 11px; /* קטן יותר */
+    font-size: 11px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -280,58 +280,58 @@ body {
 }
 
 .label {
-    font-size: 9px; /* קטן יותר */
+    font-size: 9px;
     opacity: 0.9;
 }
 
 /* Main Layout - Optimized for more content */
 .main-layout {
     display: flex;
-    gap: 15px; /* קטן יותר */
-    flex: 1; /* תופס את כל המקום הנותר */
-    min-height: 0; /* מאפשר כיווץ */
+    gap: 15px;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Controls Panel - Compact and Efficient */
 .controls-panel {
-    width: 350px; /* קטן יותר */
+    width: 350px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
-    border-radius: 12px; /* קטן יותר */
-    padding: 15px; /* קטן יותר */
+    border-radius: 12px;
+    padding: 15px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     border: 1px solid #e1e8ed;
-    height: 100%; /* תופס את כל הגובה הזמין */
+    height: 100%;
     overflow-y: auto;
     flex-shrink: 0;
 }
 
 .control-group {
-    margin-bottom: 18px; /* קטן יותר */
+    margin-bottom: 18px;
 }
 
 .control-label {
     display: flex;
     align-items: center;
-    gap: 8px; /* קטן יותר */
+    gap: 8px;
     font-weight: 600;
     color: #34495e;
-    margin-bottom: 10px; /* קטן יותר */
-    font-size: 15px; /* קטן יותר */
+    margin-bottom: 10px;
+    font-size: 15px;
 }
 
 .control-icon {
-    font-size: 16px; /* קטן יותר */
+    font-size: 16px;
 }
 
 .bpm-controls {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* קטן יותר */
+    gap: 10px;
 }
 
 .bpm-slider, .volume-slider {
     width: 100%;
-    height: 8px; /* קטן יותר */
+    height: 8px;
     border-radius: 4px;
     background: #e1e8ed;
     outline: none;
@@ -341,7 +341,7 @@ body {
 
 .bpm-slider::-webkit-slider-thumb, .volume-slider::-webkit-slider-thumb {
     appearance: none;
-    width: 20px; /* קטן יותר */
+    width: 20px;
     height: 20px;
     border-radius: 50%;
     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -351,16 +351,16 @@ body {
 }
 
 .bpm-slider::-webkit-slider-thumb:hover, .volume-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.15); /* קטן יותר */
+    transform: scale(1.15);
     box-shadow: 0 3px 12px rgba(102, 126, 234, 0.6);
 }
 
 .bpm-input {
     width: 100%;
-    padding: 10px; /* קטן יותר */
+    padding: 10px;
     border: 2px solid #e1e8ed;
-    border-radius: 8px; /* קטן יותר */
-    font-size: 16px; /* קטן יותר */
+    border-radius: 8px;
+    font-size: 16px;
     font-weight: 600;
     text-align: center;
     transition: all 0.3s;
@@ -376,7 +376,7 @@ body {
     background: linear-gradient(135deg, #ffc107, #ff8f00);
     border: none;
     border-radius: 50%;
-    width: 40px; /* קטן יותר */
+    width: 40px;
     height: 40px;
     cursor: pointer;
     transition: all 0.3s;
@@ -385,7 +385,7 @@ body {
     justify-content: center;
     box-shadow: 0 3px 12px rgba(255, 193, 7, 0.3);
     margin: 0 auto;
-    font-size: 16px; /* קטן יותר */
+    font-size: 16px;
 }
 
 .reset-btn:hover {
@@ -397,14 +397,14 @@ body {
 .preparation-controls {
     display: flex;
     align-items: center;
-    gap: 8px; /* קטן יותר */
+    gap: 8px;
 }
 
 .preparation-checkbox {
     position: relative;
     display: inline-block;
-    width: 45px; /* קטן יותר */
-    height: 22px; /* קטן יותר */
+    width: 45px;
+    height: 22px;
 }
 
 .preparation-checkbox input {
@@ -428,7 +428,7 @@ body {
 .preparation-slider:before {
     position: absolute;
     content: "";
-    height: 16px; /* קטן יותר */
+    height: 16px;
     width: 16px;
     left: 3px;
     bottom: 3px;
@@ -442,62 +442,62 @@ input:checked + .preparation-slider {
 }
 
 input:checked + .preparation-slider:before {
-    transform: translateX(23px); /* התאמה לגודל החדש */
+    transform: translateX(23px);
 }
 
 .preparation-label {
     font-weight: 600;
     color: #34495e;
-    font-size: 13px; /* קטן יותר */
+    font-size: 13px;
 }
 
 /* Song parts controls - Compact */
 .song-parts-controls {
     display: flex;
     flex-direction: column;
-    gap: 6px; /* קטן יותר */
+    gap: 6px;
 }
 
 .song-part-control {
     background: rgba(102, 126, 234, 0.1);
-    border-radius: 6px; /* קטן יותר */
-    padding: 8px 10px; /* קטן יותר */
+    border-radius: 6px;
+    padding: 8px 10px;
 }
 
 .song-part-checkbox {
     display: flex;
     align-items: center;
-    gap: 6px; /* קטן יותר */
+    gap: 6px;
     cursor: pointer;
 }
 
 .song-part-checkbox input {
     accent-color: #667eea;
-    transform: scale(1.1); /* קטן יותר */
+    transform: scale(1.1);
 }
 
 .song-part-name {
     font-weight: 600;
     color: #34495e;
-    font-size: 13px; /* קטן יותר */
+    font-size: 13px;
 }
 
 .playback-controls {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* קטן יותר */
-    margin-top: 20px; /* קטן יותר */
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .control-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px; /* קטן יותר */
-    padding: 12px 16px; /* קטן יותר */
+    gap: 6px;
+    padding: 12px 16px;
     border: none;
-    border-radius: 10px; /* קטן יותר */
-    font-size: 14px; /* קטן יותר */
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -521,31 +521,31 @@ input:checked + .preparation-slider:before {
 }
 
 .control-btn:hover {
-    transform: translateY(-3px); /* גדול יותר */
+    transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 /* Chord Section - More content visible */
 .chord-section {
     flex: 1;
-    padding: 15px; /* קטן יותר */
+    padding: 15px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border-radius: 15px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     border: 1px solid #e1e8ed;
     overflow-y: auto;
-    height: 100%; /* תופס את כל הגובה הזמין */
+    height: 100%;
 }
 
 .section-title {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* קטן יותר */
+    gap: 8px;
     color: #2c3e50;
-    font-size: 20px; /* קטן יותר */
+    font-size: 20px;
     font-weight: 600;
-    margin-bottom: 15px; /* קטן יותר */
+    margin-bottom: 15px;
     text-align: center;
 }
 
@@ -553,8 +553,8 @@ input:checked + .preparation-slider:before {
     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
     border: 2px solid #2196f3;
     border-radius: 10px;
-    padding: 12px; /* קטן יותר */
-    margin-bottom: 15px; /* קטן יותר */
+    padding: 12px;
+    margin-bottom: 15px;
     text-align: center;
     box-shadow: 0 3px 12px rgba(33, 150, 243, 0.2);
 }
@@ -563,29 +563,29 @@ input:checked + .preparation-slider:before {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* קטן יותר */
+    gap: 8px;
     font-weight: 600;
     color: #1976d2;
-    font-size: 14px; /* קטן יותר */
+    font-size: 14px;
 }
 
 .chords-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* קטן יותר */
+    gap: 12px;
     direction: ltr;
-    padding: 8px; /* קטן יותר */
+    padding: 8px;
 }
 
 /* Loop sections - More compact but still readable */
 .loop-section {
     border: 2px solid #e1e8ed;
-    border-radius: 10px; /* קטן יותר */
+    border-radius: 10px;
     background: linear-gradient(145deg, #ffffff, #fafbff);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     transition: all 0.3s;
-    margin-bottom: 10px; /* קטן יותר */
+    margin-bottom: 10px;
 }
 
 .loop-section.preparation-section {
@@ -619,12 +619,12 @@ input:checked + .preparation-slider:before {
 .loop-header {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    padding: 10px 15px; /* קטן יותר */
+    padding: 10px 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-weight: 600;
-    font-size: 14px; /* קטן יותר */
+    font-size: 14px;
 }
 
 .preparation-section .loop-header {
@@ -634,16 +634,16 @@ input:checked + .preparation-slider:before {
 .loop-title-controls {
     display: flex;
     align-items: center;
-    gap: 8px; /* קטן יותר */
+    gap: 8px;
 }
 
 .loop-toggle-btn {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 5px;
-    padding: 4px 6px; /* קטן יותר */
+    padding: 4px 6px;
     cursor: pointer;
-    font-size: 14px; /* קטן יותר */
+    font-size: 14px;
     transition: all 0.3s;
 }
 
@@ -653,52 +653,52 @@ input:checked + .preparation-slider:before {
 }
 
 .loop-title {
-    font-size: 15px; /* קטן יותר */
+    font-size: 15px;
     font-weight: 700;
 }
 
 .loop-measures-count {
-    font-size: 11px; /* קטן יותר */
+    font-size: 11px;
     opacity: 0.9;
     background: rgba(255, 255, 255, 0.2);
-    padding: 3px 6px; /* קטן יותר */
+    padding: 3px 6px;
     border-radius: 5px;
 }
 
 .loop-controls {
     display: flex;
     align-items: center;
-    gap: 6px; /* קטן יותר */
+    gap: 6px;
 }
 
 .loop-enable-checkbox {
     display: flex;
     align-items: center;
-    gap: 5px; /* קטן יותר */
+    gap: 5px;
     cursor: pointer;
 }
 
 .loop-enable-checkbox input {
     accent-color: white;
-    transform: scale(1.1); /* קטן יותר */
+    transform: scale(1.1);
 }
 
 .loop-checkbox-label {
-    font-size: 12px; /* קטן יותר */
+    font-size: 12px;
     font-weight: 500;
 }
 
 .loop-content {
-    padding: 12px; /* קטן יותר */
+    padding: 12px;
     direction: ltr;
 }
 
 .chord-row {
     display: flex;
     justify-content: flex-start;
-    gap: 8px; /* קטן יותר */
+    gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 8px; /* קטן יותר */
+    margin-bottom: 8px;
 }
 
 /* Measure boxes - Much more compact */
@@ -706,17 +706,17 @@ input:checked + .preparation-slider:before {
     display: flex;
     flex-direction: column;
     align-items: center;
-    border: 2px solid #34495e; /* דק יותר */
-    border-radius: 8px; /* קטן יותר */
-    padding: 6px; /* קטן יותר */
+    border: 2px solid #34495e;
+    border-radius: 8px;
+    padding: 6px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
-    width: 120px; /* קטן הרבה יותר */
-    min-height: 80px; /* קטן הרבה יותר */
+    width: 120px;
+    min-height: 80px;
     flex-shrink: 0;
 }
 
@@ -782,9 +782,9 @@ input:checked + .preparation-slider:before {
 }
 
 .measure-title {
-    font-size: 10px; /* קטן יותר */
+    font-size: 10px;
     font-weight: 700;
-    margin-bottom: 4px; /* קטן יותר */
+    margin-bottom: 4px;
     color: #2c3e50;
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -795,45 +795,115 @@ input:checked + .preparation-slider:before {
     display: flex;
     width: 100%;
     justify-content: center;
-    margin-bottom: 6px; /* קטן יותר */
+    margin-bottom: 6px;
     gap: 1px;
-    min-height: 24px; /* קטן יותר */
-    flex-wrap: wrap; /* לאפשר עטיפה */
+    min-height: 24px;
+    flex-wrap: wrap;
 }
 
 .chord-box {
-    padding: 3px 2px; /* קטן יותר */
+    padding: 3px 2px;
     text-align: center;
     border: 1px solid #bdc3c7;
     background: rgba(255, 255, 255, 0.9);
-    border-radius: 3px; /* קטן יותר */
+    border-radius: 3px;
     font-weight: 600;
-    font-size: 9px; /* קטן יותר */
+    font-size: 9px;
     color: #2c3e50;
     transition: all 0.3s;
-    min-width: 18px; /* קטן יותר */
+    min-width: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
+    cursor: pointer;
+    position: relative;
 }
 
 .chord-box.preparation-chord {
     background: linear-gradient(135deg, #ffc107, #ff8f00);
     color: white;
     border-color: #ff8f00;
+    cursor: default;
+}
+
+.chord-box.current-chord {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-color: #28a745;
+    animation: pulse-chord 0.6s infinite;
+}
+
+.chord-box.played-chord {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border-color: #6c757d;
+    opacity: 0.8;
+}
+
+@keyframes pulse-chord {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+}
+
+.chord-box::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.chord-box:active::after {
+    opacity: 1;
+}
+
+.chord-box.preparation-chord:hover {
+    transform: none;
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+}
+
+.chord-box:hover {
+    transform: scale(1.1);
+    z-index: 2;
+    background: rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+}
+
+.chord-box.selected-chord {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: #667eea;
+    transform: scale(1.15);
+    z-index: 3;
+    box-shadow: 0 0 12px rgba(102, 126, 234, 0.8);
 }
 
 .beats-display {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-top: 4px; /* קטן יותר */
-    padding: 0 4px; /* קטן יותר */
+    margin-top: 4px;
+    padding: 0 4px;
 }
 
 .beat-dot {
-    width: 8px; /* קטן יותר */
+    width: 8px;
     height: 8px;
     border-radius: 50%;
     background-color: #bdc3c7;
@@ -844,7 +914,7 @@ input:checked + .preparation-slider:before {
 
 .beat-dot.active {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    transform: scale(1.3); /* קטן יותר */
+    transform: scale(1.3);
     box-shadow: 0 0 8px rgba(102, 126, 234, 0.8);
     z-index: 2;
 }
@@ -855,7 +925,7 @@ input:checked + .preparation-slider:before {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 12px; /* קטן יותר */
+    width: 12px;
     height: 12px;
     background: rgba(102, 126, 234, 0.3);
     border-radius: 50%;
@@ -865,7 +935,7 @@ input:checked + .preparation-slider:before {
 .beat-dot.played {
     background: linear-gradient(135deg, #28a745, #20c997);
     box-shadow: 0 1px 4px rgba(40, 167, 69, 0.4);
-    transform: scale(1.1); /* קטן יותר */
+    transform: scale(1.1);
 }
 
 @keyframes pulse {
@@ -883,51 +953,46 @@ input:checked + .preparation-slider:before {
     }
 }
 
-/* Responsive adjustments - More content on larger screens */
+/* Responsive adjustments */
 @media (min-width: 1400px) {
     .play-song-container {
-        max-width: 2000px; /* גדול יותר */
+        max-width: 2000px;
     }
 
     .controls-panel {
-        width: 420px; /* גדול יותר */
+        width: 420px;
     }
 
     .measure-box {
-        width: 140px; /* גדול יותר במסכים גדולים */
+        width: 140px;
         min-height: 90px;
     }
 
     .chord-row {
         gap: 10px;
     }
-
-    /* יותר תיבות בשורה */
-    .chord-row {
-        flex-wrap: wrap;
-    }
 }
 
 @media (min-width: 1600px) {
     .measure-box {
-        width: 160px; /* עוד יותר גדול במסכים גדולים מאוד */
+        width: 160px;
         min-height: 100px;
     }
 
     .chord-box {
-        font-size: 10px; /* קצת גדול יותר */
+        font-size: 10px;
         min-width: 20px;
         padding: 4px 3px;
     }
 
     .measure-title {
-        font-size: 11px; /* קצת גדול יותר */
+        font-size: 11px;
     }
 }
 
 @media (max-width: 1200px) {
     .measure-box {
-        width: 100px; /* קטן יותר במסכים קטנים */
+        width: 100px;
         min-height: 70px;
     }
 
@@ -936,11 +1001,11 @@ input:checked + .preparation-slider:before {
     }
 
     .controls-panel {
-        width: 300px; /* קטן יותר */
+        width: 300px;
     }
 
     .chord-box {
-        font-size: 8px; /* קטן יותר */
+        font-size: 8px;
         min-width: 15px;
         padding: 2px 1px;
     }
@@ -966,7 +1031,7 @@ input:checked + .preparation-slider:before {
         order: 1;
         position: static;
         max-height: none;
-        padding: 12px; /* קטן יותר במובייל */
+        padding: 12px;
     }
 
     .chord-section {
@@ -975,7 +1040,7 @@ input:checked + .preparation-slider:before {
     }
 
     .measure-box {
-        width: calc(25% - 6px); /* 4 תיבות בשורה במובייל */
+        width: calc(25% - 6px);
         min-height: 60px;
     }
 
@@ -986,7 +1051,7 @@ input:checked + .preparation-slider:before {
 
     .loop-header {
         flex-direction: column;
-        gap: 6px; /* קטן יותר */
+        gap: 6px;
         text-align: center;
         padding: 8px 12px;
     }
@@ -998,17 +1063,17 @@ input:checked + .preparation-slider:before {
     .song-info-row {
         flex-direction: column;
         align-items: center;
-        gap: 4px; /* קטן יותר למובייל */
+        gap: 4px;
     }
 
     .action-buttons {
-        flex-direction: row; /* שמור אופקי גם במובייל */
+        flex-direction: row;
         justify-content: center;
         gap: 4px;
     }
 
     .bpm-info {
-        flex-direction: row; /* שמור אופקי גם במובייל */
+        flex-direction: row;
         justify-content: center;
         gap: 4px;
     }
@@ -1016,7 +1081,7 @@ input:checked + .preparation-slider:before {
     .youtube-player-section,
     .action-buttons,
     .bpm-info {
-        display: block; /* במובייל חזור לרכיבי block */
+        display: block;
         text-align: center;
         margin: 2px 0;
     }
@@ -1027,28 +1092,35 @@ input:checked + .preparation-slider:before {
     }
 
     .control-btn {
-        padding: 10px 15px; /* קטן יותר במובייל */
+        padding: 10px 15px;
         font-size: 14px;
     }
 
     .bpm-input {
-        padding: 8px; /* קטן יותר במובייל */
+        padding: 8px;
         font-size: 14px;
     }
 
     .reset-btn {
-        width: 35px; /* קטן יותר במובייל */
+        width: 35px;
         height: 35px;
         font-size: 14px;
     }
 
     .control-group {
-        margin-bottom: 12px; /* קטן יותר במובייל */
+        margin-bottom: 12px;
     }
 
     .control-label {
-        font-size: 13px; /* קטן יותר במובייל */
+        font-size: 13px;
         margin-bottom: 8px;
+    }
+
+    .chord-box {
+        min-width: 12px;
+        min-height: 16px;
+        font-size: 7px;
+        padding: 1px;
     }
 }
 
@@ -1087,12 +1159,11 @@ input:checked + .preparation-slider:before {
 
 /* Additional optimizations for better content density */
 .loop-section:not(.preparation-section) {
-    /* מרווח קטן יותר בין לופים רגילים */
     margin-bottom: 8px;
 }
 
 .chord-row:last-child {
-    margin-bottom: 0; /* הסרת מרווח מיותר בסוף */
+    margin-bottom: 0;
 }
 
 /* Optimize scrollbar appearance */
@@ -1133,22 +1204,22 @@ input:checked + .preparation-slider:before {
 
 /* Ensure clickable areas are large enough even with smaller visual elements */
 .measure-box {
-    min-width: 100px; /* מינימום לקליק נוח */
+    min-width: 100px;
     min-height: 70px;
 }
 
 .beat-dot {
-    min-width: 8px; /* מינימום לקליק */
+    min-width: 8px;
     min-height: 8px;
     cursor: pointer;
 }
 
 /* Hover states remain prominent for usability */
 .measure-box:hover {
-    border-width: 3px; /* עדיין בולט בהובר */
+    border-width: 3px;
 }
 
 .chord-box:hover {
-    transform: scale(1.1); /* אפקט הובר קל */
+    transform: scale(1.1);
     z-index: 2;
 }
