@@ -169,7 +169,7 @@
             console.error("Error storing data for editing:", e);
         }
 
-        window.location.href = "/add-chords";
+        window.location.href = `/edit-chords/${songId}`;
     }
 
     // Edit chords for existing song
@@ -186,7 +186,7 @@
             console.error("Error storing updated data for editing:", e);
         }
 
-        window.location.href = "/add-chords";
+        window.location.href = `/edit-chords/${songId}`;
     }
 
     function saveFormData() {

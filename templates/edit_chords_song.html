@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}עריכת אקורדים - {{ song.title }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_chords.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    {% include "add_chords/chord_sidebar.html" %}
+    <div class="main-content">
+        <h1>עריכת אקורדים: {{ song.title }} - {{ song.artist }}</h1>
+        {% include "add_chords/measure_builder.html" %}
+    </div>
+    {% include "add_chords/song_structure.html" %}
+</div>
+
+<script>
+    // העבר נתוני השיר ל-JavaScript
+    window.editingSong = {
+        id: "{{ song.id }}",
+        title: "{{ song.title }}",
+        artist: "{{ song.artist }}",
+        chords: {{ song.chords | tojson }},
+        loops: {{ song.loops | tojson }}
+    };
+
+    // סמן שזה עריכת שיר ספציפי
+    localStorage.setItem("editingSongId", "{{ song.id }}");
+    localStorage.setItem("chords", JSON.stringify({{ song.chords | tojson }}));
+    localStorage.setItem("loops", JSON.stringify({{ song.loops | tojson }}));
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/add_chords.js') }}"></script>
+<script>
+    // עדכן את הפונקציה finishAndReturn לחזרה לעמוד העריכה הנכון
+    function finishAndReturn() {
+        if (songStructure.length === 0) {
+            alert("יש להוסיף לפחות לופ אחד לשיר");
+            return;
+        }
+
+        // Convert song structure into flat chord lines with repeats
+        const chordLines = [];
+
+        songStructure.forEach(loop => {
+            const repeatCount = loop.repeatCount || 1;
+
+            for (let repeat = 0; repeat < repeatCount; repeat++) {
+                const measuresPerLine = 4;
+                for (let i = 0; i < loop.measures.length; i += measuresPerLine) {
+                    const lineMeasures = loop.measures.slice(i, i + measuresPerLine);
+                    const lineChords = lineMeasures.flatMap(measure =>
+                        measure.chords.map(chord => ({
+                            chord: chord.isEmpty ? "—" : chord.chord,
+                            beats: chord.width,
+                            label: ""
+                        }))
+                    );
+                    chordLines.push(lineChords);
+                }
+            }
+        });
+
+        // Prepare loops data for DB storage
+        const loopsData = songStructure.map(loop => ({
+            name: loop.customName,
+            measures: loop.measures,
+            measureCount: loop.measureCount,
+            repeatCount: loop.repeatCount || 1
+        }));
+
+        try {
+            localStorage.setItem("chords", JSON.stringify(chordLines));
+            localStorage.setItem("loops", JSON.stringify(loopsData));
+            localStorage.setItem("justReturnedFromChords", "true");
+            console.log("Saved chords:", chordLines);
+            console.log("Saved loops:", loopsData);
+        } catch (e) {
+            console.log("localStorage not available - data stored in memory only");
+        }
+
+        // חזור לעמוד עריכת השיר הספציפי
+        window.location.href = `/edit_song/{{ song.id }}`;
+    }
+</script>
+{% endblock %}

@@ -50,39 +50,45 @@ function loadExistingData() {
         clearAllData();
     }
 }
+// החלף את הפונקציה loadExistingSongData ב-add_chords.js
 
-function loadExistingSongData() {
+async function loadExistingSongData() {
     try {
-        const savedChords = localStorage.getItem("chords");
-        const savedLoops = localStorage.getItem("loops");
+        const editingSongId = localStorage.getItem("editingSongId");
 
-        if (!savedChords) {
-            console.log("No saved chords found for editing");
+        if (!editingSongId || editingSongId === "null" || editingSongId === "undefined") {
+            console.log("No song ID found for editing");
             return;
         }
 
-        let existingChords;
+        console.log("Loading song data from API for song:", editingSongId);
+
+        // טען נתונים מה-API במקום מ-localStorage
         try {
-            existingChords = JSON.parse(savedChords);
-            console.log("Successfully parsed existing chords:", existingChords);
-        } catch (e) {
-            console.error("Error parsing saved chords:", e);
-            return;
-        }
+            const response = await fetch(`/api/get_song/${editingSongId}`);
+            const songData = await response.json();
 
-        if (savedLoops && savedLoops !== "[]") {
-            try {
-                const existingLoops = JSON.parse(savedLoops);
-                console.log("Loading existing loops for editing:", existingLoops);
+            if (!response.ok) {
+                console.error("Error loading song from API:", songData.error);
+                // אם יש שגיאה, נסה לטעון מ-localStorage כגיבוי
+                loadFromLocalStorageBackup();
+                return;
+            }
 
-                // Clear existing data
-                savedLoops.splice(0, savedLoops.length);
-                songStructure.splice(0, songStructure.length);
+            console.log("Successfully loaded song data from API:", songData);
 
-                // טען לופים קיימים
-                existingLoops.forEach(loopData => {
+            // נקה מערכים קיימים
+            savedLoops.length = 0;
+            songStructure.length = 0;
+            currentLoop.length = 0;
+
+            // אם יש לופים - השתמש בהם
+            if (songData.loops && songData.loops.length > 0) {
+                console.log("Loading loops from API:", songData.loops);
+
+                songData.loops.forEach((loopData, index) => {
                     const restoredLoop = {
-                        id: Date.now() + Math.random(),
+                        id: Date.now() + index,
                         customName: loopData.name,
                         measures: loopData.measures,
                         measureCount: loopData.measureCount,
@@ -91,31 +97,106 @@ function loadExistingSongData() {
                     savedLoops.push(restoredLoop);
                 });
 
-                songStructure.push(...existingLoops.map(loop => ({
-                    ...loop,
-                    id: Date.now() + Math.random(),
+                // העתק ללופים למבנה השיר
+                songStructure.push(...songData.loops.map((loop, index) => ({
+                    id: Date.now() + index + 1000,
+                    customName: loop.name,
+                    measures: loop.measures,
+                    measureCount: loop.measureCount,
                     repeatCount: loop.repeatCount || 1
                 })));
 
-                console.log("Successfully loaded loops from existing data");
-            } catch (e) {
-                console.log("Error parsing existing loops, converting from chords...");
-                convertChordsToLoops(existingChords);
+                console.log("Successfully loaded loops from API");
+            } else if (songData.chords && songData.chords.length > 0) {
+                // אם אין לופים אבל יש אקורדים - המר אותם ללופים
+                console.log("No loops found, converting chords to loops");
+                convertChordsToLoops(songData.chords);
             }
-        } else {
-            console.log("No existing loops found, converting chords to loops");
-            convertChordsToLoops(existingChords);
+
+            // עדכן localStorage עם הנתונים החדשים לשמירה זמנית
+            localStorage.setItem("chords", JSON.stringify(songData.chords));
+            localStorage.setItem("loops", JSON.stringify(songData.loops));
+
+            renderSavedLoops();
+            renderSongStructure();
+            updateLoopDisplay();
+
+            console.log("Successfully loaded existing song data from API");
+
+        } catch (apiError) {
+            console.error("API call failed:", apiError);
+            // נסה לטעון מ-localStorage כגיבוי
+            loadFromLocalStorageBackup();
         }
 
-        renderSavedLoops();
-        renderSongStructure();
-        console.log("Successfully loaded existing song data");
     } catch (e) {
         console.error("Error loading existing song data:", e);
         clearAllData();
     }
 }
 
+// פונקציית גיבוי לטעינה מ-localStorage
+function loadFromLocalStorageBackup() {
+    console.log("Falling back to localStorage");
+
+    try {
+        const savedChords = localStorage.getItem("chords");
+        const savedLoops = localStorage.getItem("loops");
+
+        if (!savedChords) {
+            console.log("No saved chords found in localStorage backup");
+            return;
+        }
+
+        let existingChords = JSON.parse(savedChords);
+        console.log("Using localStorage backup for chords:", existingChords);
+
+        // נקה מערכים קיימים
+        savedLoops.length = 0;
+        songStructure.length = 0;
+
+        if (savedLoops && savedLoops !== "[]") {
+            try {
+                const existingLoops = JSON.parse(savedLoops);
+                console.log("Using localStorage backup for loops:", existingLoops);
+
+                existingLoops.forEach((loopData, index) => {
+                    const restoredLoop = {
+                        id: Date.now() + index,
+                        customName: loopData.name,
+                        measures: loopData.measures,
+                        measureCount: loopData.measureCount,
+                        repeatCount: loopData.repeatCount || 1
+                    };
+                    savedLoops.push(restoredLoop);
+                });
+
+                songStructure.push(...existingLoops.map((loop, index) => ({
+                    id: Date.now() + index + 1000,
+                    customName: loop.name,
+                    measures: loop.measures,
+                    measureCount: loop.measureCount,
+                    repeatCount: loop.repeatCount || 1
+                })));
+
+            } catch (e) {
+                console.log("Error parsing localStorage loops, converting from chords...");
+                convertChordsToLoops(existingChords);
+            }
+        } else {
+            console.log("No localStorage loops found, converting chords to loops");
+            convertChordsToLoops(existingChords);
+        }
+
+        renderSavedLoops();
+        renderSongStructure();
+        console.log("Successfully loaded from localStorage backup");
+
+    } catch (e) {
+        console.error("Error loading from localStorage backup:", e);
+        clearAllData();
+    }
+}
 function loadNewSongChordsInProgress() {
     try {
         const savedChords = localStorage.getItem("chords");

@@ -230,3 +230,114 @@ def play_song(song_id):
         "beats": beats_per_measure,
         "created_by": song.get("created_by", None)
     })
+
+# הוסף את הפונקציה הזו ל- routes/songs.py
+
+@songs_bp.route('/api/get_song/<string:song_id>', methods=['GET'])
+def get_song_data(song_id):
+    """API endpoint לטעינת נתוני שיר עבור עריכת אקורדים"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    doc = firestore.client().collection("songs").document(song_id).get()
+    if not doc.exists:
+        return jsonify({"error": "Song not found"}), 404
+
+    song = doc.to_dict()
+    user_roles = session.get("roles", [])
+
+    # בדוק הרשאות עריכה
+    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
+
+    # Parse chords safely
+    chords_data = []
+    try:
+        chords_str = song.get("chords", "[]")
+        if isinstance(chords_str, str):
+            chords_data = json.loads(chords_str)
+        else:
+            chords_data = chords_str if chords_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing chords for song {song_id}: {e}")
+        chords_data = []
+
+    # Parse loops safely
+    loops_data = []
+    try:
+        loops_str = song.get("loops", "[]")
+        if isinstance(loops_str, str):
+            loops_data = json.loads(loops_str)
+        else:
+            loops_data = loops_str if loops_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing loops for song {song_id}: {e}")
+        loops_data = []
+
+    return jsonify({
+        "id": song_id,
+        "title": song["title"],
+        "artist": song["artist"],
+        "chords": chords_data,
+        "loops": loops_data,
+        "success": True
+    }), 200
+
+
+
+# הוסף את הנתיב הזה ל- routes/songs.py
+
+@songs_bp.route('/edit-chords/<string:song_id>')
+def edit_chords_for_song(song_id):
+    """עמוד עריכת אקורדים לשיר ספציפי"""
+    if 'user_id' not in session:
+        flash("יש להתחבר כדי לערוך שיר", "error")
+        return redirect(url_for('auth.login'))
+
+    doc = firestore.client().collection("songs").document(song_id).get()
+    if not doc.exists:
+        return "שיר לא נמצא", 404
+
+    song = doc.to_dict()
+    user_roles = session.get("roles", [])
+    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        flash("אין לך הרשאה לערוך שיר זה", "error")
+        return redirect(url_for('songs.songs'))
+
+    # Parse chord data
+    chords_list = []
+    try:
+        chords_str = song.get("chords", "[]")
+        if isinstance(chords_str, str):
+            chords_list = json.loads(chords_str)
+        else:
+            chords_list = chords_str if chords_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing chords for song {song_id}: {e}")
+        chords_list = []
+
+    # Parse loops data
+    loops_data = []
+    try:
+        loops_str = song.get("loops", "[]")
+        if isinstance(loops_str, str):
+            loops_data = json.loads(loops_str)
+        else:
+            loops_data = loops_str if loops_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing loops for song {song_id}: {e}")
+        loops_data = []
+
+    return render_template('edit_chords_song.html', song={
+        "id": song_id,
+        "title": song["title"],
+        "artist": song["artist"],
+        "chords": chords_list,
+        "loops": loops_data
+    })
+
+
+
+
+
+
