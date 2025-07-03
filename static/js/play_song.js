@@ -1,4 +1,4 @@
-// Enhanced Play Song JavaScript - תיקון מלא של מערכת הנגן
+// Enhanced Play Song JavaScript - תיקון מלא של מערכת הנגן עם הצגה ויזואלית נכונה
 
 // Get song data from Flask
 const chords = window.songData.chords;
@@ -46,7 +46,7 @@ function buildAllMeasures() {
         allMeasures.push({
             globalIndex: globalIndex++,
             isPreparation: true,
-            chords: [{ chord: "הכנה", beats: 4 }],
+            chords: [{ chord: "הכנה", beats: 4, width: 4 }],
             totalBeats: 4,
             loopIndex: null,
             repeatNumber: null,
@@ -89,7 +89,11 @@ function buildAllMeasures() {
             let chordIdx = 0;
 
             line.forEach((chordObj) => {
-                currentMeasure.push(chordObj);
+                const chordWithWidth = {
+                    ...chordObj,
+                    width: chordObj.beats || 1  // הוסף width אם אין
+                };
+                currentMeasure.push(chordWithWidth);
                 totalBeats += chordObj.beats;
 
                 // צור תיבה כשמגיעים ל-4 נקישות או בסוף השורה
@@ -225,9 +229,10 @@ function renderMeasuresByLoops(wrapper, measures) {
         loopContent.className = "loop-content";
         loopContent.style.display = loopStates[section.loopIndex].visible ? 'block' : 'none';
 
-        // Group measures into rows of 4
-        for (let i = 0; i < section.measures.length; i += 4) {
-            const rowMeasures = section.measures.slice(i, i + 4);
+        // Group measures into rows - more measures per row for compact display
+        const measuresPerRow = 8; // הגדלנו מ-4 ל-8
+        for (let i = 0; i < section.measures.length; i += measuresPerRow) {
+            const rowMeasures = section.measures.slice(i, i + measuresPerRow);
             const rowDiv = document.createElement("div");
             rowDiv.className = "chord-row";
 
@@ -246,8 +251,9 @@ function renderMeasuresByLoops(wrapper, measures) {
 
 // Render measures in flat layout (fallback)
 function renderMeasuresFlat(wrapper, measures) {
-    for (let i = 0; i < measures.length; i += 4) {
-        const rowMeasures = measures.slice(i, i + 4);
+    const measuresPerRow = 8; // הגדלנו גם כאן
+    for (let i = 0; i < measures.length; i += measuresPerRow) {
+        const rowMeasures = measures.slice(i, i + measuresPerRow);
         const rowDiv = document.createElement("div");
         rowDiv.className = "chord-row";
 
@@ -259,7 +265,7 @@ function renderMeasuresFlat(wrapper, measures) {
     }
 }
 
-// Create individual measure element with click functionality
+// Create individual measure element with click functionality and proper chord sizing
 function createMeasureElement(measureData) {
     const measureDiv = document.createElement("div");
     measureDiv.className = "measure-box clickable";
@@ -274,7 +280,8 @@ function createMeasureElement(measureData) {
         measureDiv.classList.add("disabled-measure");
     }
 
-    const measureWidth = calculateMeasureWidth(measureData.chords);
+    // קבע רוחב תיבה בהתאם לסך כל הנקישות
+    const measureWidth = calculateMeasureWidth(measureData.totalBeats);
     measureDiv.style.width = `${measureWidth}px`;
     measureDiv.setAttribute('data-total-beats', Math.round(measureData.totalBeats));
 
@@ -306,7 +313,9 @@ function createMeasureElement(measureData) {
             chordBox.classList.add("preparation-chord");
         }
 
-        const flexBasis = (chord.beats / measureData.totalBeats) * 100;
+        // חישוב הרוחב היחסי של האקורד לפי כמות הנקישות שלו
+        const chordBeats = chord.width || chord.beats || 1;
+        const flexBasis = (chordBeats / measureData.totalBeats) * 100;
         chordBox.style.flexBasis = `${flexBasis}%`;
         chordBox.style.flexGrow = "0";
         chordBox.style.flexShrink = "0";
@@ -346,7 +355,7 @@ function createMeasureElement(measureData) {
         });
 
         chordsContainer.appendChild(chordBox);
-        currentBeatPosition += chord.beats;
+        currentBeatPosition += chordBeats;
     });
 
     measureDiv.appendChild(chordsContainer);
@@ -396,10 +405,12 @@ function createMeasureElement(measureData) {
     return measureDiv;
 }
 
-// Calculate measure width for display
-function calculateMeasureWidth(chords) {
-    const totalBeats = chords.reduce((sum, chord) => sum + chord.beats, 0);
-    return Math.max(180, 140 + (totalBeats * 20));
+// Calculate measure width based on beats - more compact calculation
+function calculateMeasureWidth(totalBeats) {
+    // רוחב בסיסי קטן יותר + רוחב פרופורציונלי לנקישות
+    const baseWidth = 60; // הקטנו מ-140
+    const beatWidth = 8;   // הקטנו מ-20
+    return Math.max(70, baseWidth + (totalBeats * beatWidth));
 }
 
 // Toggle loop visibility
@@ -494,8 +505,9 @@ function updateBeatDots() {
                 const chord = currentMeasure.chords[index];
                 if (!chord) return;
 
+                const chordBeats = chord.width || chord.beats || 1;
                 const chordStartBeat = currentBeatPosition;
-                const chordEndBeat = currentBeatPosition + chord.beats;
+                const chordEndBeat = currentBeatPosition + chordBeats;
 
                 if (currentBeatInMeasure >= chordStartBeat && currentBeatInMeasure < chordEndBeat) {
                     chordBox.classList.add("current-chord");
@@ -503,7 +515,7 @@ function updateBeatDots() {
                     chordBox.classList.add("played-chord");
                 }
 
-                currentBeatPosition += chord.beats;
+                currentBeatPosition += chordBeats;
             });
         }
     }
@@ -620,11 +632,12 @@ function updatePlayingInfo() {
     let currentChordName = "";
 
     for (const chord of currentMeasure.chords) {
-        if (currentBeatInMeasure >= currentBeatPosition && currentBeatInMeasure < currentBeatPosition + chord.beats) {
+        const chordBeats = chord.width || chord.beats || 1;
+        if (currentBeatInMeasure >= currentBeatPosition && currentBeatInMeasure < currentBeatPosition + chordBeats) {
             currentChordName = chord.chord;
             break;
         }
-        currentBeatPosition += chord.beats;
+        currentBeatPosition += chordBeats;
     }
 
     console.log(`נוגן: תיבה ${currentGlobalMeasureIndex + 1}, נקישה ${currentBeatInMeasure + 1}, אקורד: ${currentChordName}`);
