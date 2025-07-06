@@ -1,4 +1,4 @@
-/* My Songs Page Styling */
+/* My Songs Page Styling - Full Width Optimized */
 * {
     box-sizing: border-box;
 }
@@ -9,9 +9,10 @@ body {
 }
 
 .my-songs-container {
-    max-width: 1800px;
+    max-width: 98vw;
+    width: 98vw;
     margin: 20px auto;
-    padding: 0 40px;
+    padding: 0 20px;
 }
 
 .page-header {
@@ -63,8 +64,8 @@ body {
 
 .songs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
     margin-bottom: 30px;
 }
 
@@ -327,10 +328,66 @@ body {
     box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
 }
 
-/* Responsive Design */
+.single-action {
+    flex: none !important;
+    width: 100%;
+    justify-content: center;
+}
+
+/* רוחב מסך גדול מאוד */
+@media (min-width: 1800px) {
+    .songs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 25px;
+    }
+
+    .my-songs-container {
+        padding: 0 40px;
+    }
+}
+
+/* רוחב מסך בינוני-גדול */
+@media (min-width: 1400px) and (max-width: 1799px) {
+    .songs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 22px;
+    }
+
+    .my-songs-container {
+        padding: 0 30px;
+    }
+}
+
+/* רוחב מסך בינוני */
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .songs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+        gap: 20px;
+    }
+
+    .my-songs-container {
+        padding: 0 25px;
+    }
+}
+
+/* רוחב מסך קטן-בינוני */
+@media (min-width: 900px) and (max-width: 1199px) {
+    .songs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+    }
+
+    .my-songs-container {
+        padding: 0 20px;
+    }
+}
+
+/* Responsive Design for mobile */
 @media (max-width: 768px) {
     .my-songs-container {
         padding: 0 15px;
+        max-width: 95vw;
+        width: 95vw;
     }
 
     .songs-grid {
@@ -352,30 +409,5 @@ body {
 
     .action-btn {
         padding: 12px;
-    }
-}
-
-.single-action {
-    flex: none !important;
-    width: 100%;
-    justify-content: center;
-}
-
-/* Enhanced Responsive Design for wider screens */
-@media (min-width: 1400px) {
-    .songs-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 30px;
-    }
-
-    .my-songs-container {
-        padding: 0 60px;
-    }
-}
-
-@media (min-width: 1600px) {
-    .songs-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 35px;
     }
 }
