@@ -62,6 +62,12 @@
                         <span class="btn-text">ערוך</span>
                     </a>
                 {% endif %}
+                {% if session.get('user_id') %}
+                    <button id="my-songs-btn" class="action-btn my-songs-btn" onclick="toggleMySong()">
+                        <span class="btn-icon" id="my-songs-icon">❤️</span>
+                        <span class="btn-text" id="my-songs-text">הוסף לשירים שלי</span>
+                    </button>
+                {% endif %}
                 <a href="{{ url_for('songs.songs') }}" class="action-btn list-btn">
                     <span class="btn-icon">📚</span>
                     <span class="btn-text">רשימה</span>
@@ -181,6 +187,7 @@
 <script>
     // Pass data from Flask to JavaScript
     window.songData = {
+        songId: "{{ song.id }}", // הוסף את השורה הזו
         chords: {{ song.chords | tojson }},
         loops: {{ song.loops | tojson }},
         originalBpm: {{ song.bpm }}

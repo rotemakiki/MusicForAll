@@ -5,6 +5,7 @@ from routes.teachers import teachers_bp
 from routes.students import students_bp
 from routes.info import info_bp
 from routes.videos import videos_bp
+from routes.my_songs import my_songs_bp
 
 
 from routes.tutorials import tutorials_bp
@@ -28,6 +29,7 @@ app.register_blueprint(info_bp)
 app.register_blueprint(videos_bp)
 app.register_blueprint(tutorials_bp)
 app.register_blueprint(general_bp)
+app.register_blueprint(my_songs_bp)
 # דף הבית (אפשר להגדיר כאן או ב-blueprint ייעודי קטן)
 @app.route('/')
 def home():

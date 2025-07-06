@@ -1230,3 +1230,29 @@ input:checked + .preparation-slider:before {
     transform: scale(1.1);
     z-index: 2;
 }
+
+/* My Songs Button Styling */
+.my-songs-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.my-songs-btn:hover {
+    background: linear-gradient(135deg, #c0392b, #a93226);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+}
+
+.my-songs-btn.added {
+    background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+.my-songs-btn.added:hover {
+    background: linear-gradient(135deg, #229954, #1e8449);
+}
+
+.my-songs-btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}

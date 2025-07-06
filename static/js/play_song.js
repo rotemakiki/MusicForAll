@@ -773,3 +773,67 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Ctrl+S: Stop");
     console.log("Arrow Up/Down: Adjust BPM");
 });
+
+// My Songs functionality
+let isSongInMyList = false;
+
+// Check if song is already in my songs list
+async function checkIfSongInMyList() {
+    try {
+        const response = await fetch(`/api/my-songs/check/${window.songData.songId}`);
+        const data = await response.json();
+        isSongInMyList = data.inMyList;
+        updateMySongsButton();
+    } catch (error) {
+        console.error('Error checking my songs status:', error);
+    }
+}
+
+// Toggle song in my songs list
+async function toggleMySong() {
+    const btn = document.getElementById('my-songs-btn');
+    btn.classList.add('loading');
+
+    try {
+        const url = isSongInMyList ?
+            `/api/my-songs/remove/${window.songData.songId}` :
+            `/api/my-songs/add/${window.songData.songId}`;
+
+        const response = await fetch(url, { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            isSongInMyList = !isSongInMyList;
+            updateMySongsButton();
+        } else {
+            alert('שגיאה: ' + (data.error || 'לא ניתן לעדכן'));
+        }
+    } catch (error) {
+        console.error('Error toggling my song:', error);
+        alert('שגיאה בחיבור לשרת');
+    } finally {
+        btn.classList.remove('loading');
+    }
+}
+
+// Update button appearance based on status
+function updateMySongsButton() {
+    const btn = document.getElementById('my-songs-btn');
+    const icon = document.getElementById('my-songs-icon');
+    const text = document.getElementById('my-songs-text');
+
+    if (isSongInMyList) {
+        btn.classList.add('added');
+        icon.textContent = '💚';
+        text.textContent = 'בשירים שלי';
+    } else {
+        btn.classList.remove('added');
+        icon.textContent = '❤️';
+        text.textContent = 'הוסף לשירים שלי';
+    }
+}
+
+// Initialize my songs check when page loads
+if (typeof window.songData !== 'undefined') {
+    checkIfSongInMyList();
+}

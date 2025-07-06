@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}השירים שלי{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_songs.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="my-songs-container">
+    <div class="page-header">
+        <h1 class="page-title">💝 השירים שלי</h1>
+        <p class="page-subtitle">השירים שהוספת לרשימה האישית שלך</p>
+        <div class="songs-count">
+            <span class="count-number">{{ songs|length }}</span>
+            <span class="count-label">שירים ברשימה</span>
+        </div>
+    </div>
+
+    {% if songs %}
+        <div class="songs-grid">
+            {% for song in songs %}
+                <div class="song-card" data-song-id="{{ song.id }}">
+                    <div class="song-header">
+                        <div class="song-info">
+                            <h3 class="song-title">{{ song.title }}</h3>
+                            <p class="song-artist">{{ song.artist }}</p>
+                        </div>
+                        <button class="remove-btn" onclick="removeSong('{{ song.id }}', '{{ song.title }}')">
+                            <span>🗑️</span>
+                        </button>
+                    </div>
+
+                    <div class="song-details">
+                        <span class="detail-badge">🎼 {{ song.key }} {{ song.key_type }}</span>
+                        <span class="detail-badge">🎵 {{ song.time_signature }}</span>
+                        <span class="detail-badge">⚡ {{ song.bpm }} BPM</span>
+                        {% if song.difficulty %}
+                        <span class="detail-badge difficulty-{{ song.difficulty }}">
+                            ⭐ {{ song.difficulty }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="added-date">
+                        נוסף ב: {{ song.added_at.strftime('%d/%m/%Y %H:%M') }}
+                    </div>
+
+                    <div class="song-actions">
+                        <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="action-btn play-btn single-action">
+                            <span>🎵</span>
+                            <span>פתח שיר</span>
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🎵</div>
+            <h3>אין שירים ברשימה</h3>
+            <p>עדיין לא הוספת שירים לרשימה האישית שלך</p>
+            <a href="{{ url_for('songs.songs') }}" class="browse-btn">
+                <span>🔍</span>
+                <span>עיין בכל השירים</span>
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<div id="remove-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>הסרת שיר מהרשימה</h3>
+        <p id="remove-text">האם אתה בטוח שברצונך להסיר את השיר מהרשימה שלך?</p>
+        <div class="modal-actions">
+            <button class="confirm-btn" onclick="confirmRemove()">כן, הסר</button>
+            <button class="cancel-btn" onclick="cancelRemove()">ביטול</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/my_songs.js') }}"></script>
+{% endblock %}

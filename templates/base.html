@@ -30,6 +30,7 @@
                 <li><a href="{{ url_for('videos.videos') }}">שיעורים</a></li>
                 <li><a href="{{ url_for('songs.songs') }}">שירים</a></li>
                 <li><a href="{{ url_for('teachers.list_teachers') }}">רשימת מורים</a></li>
+                <li><a href="{{ url_for('my_songs.my_songs_page') }}">💝 השירים שלי</a></li>  <!-- הוסף את השורה הזו -->
                 <li><a href="{{ url_for('tutorials.tutorials') }}">📘 עמוד הדרכה</a></li>
                 <li><a href="{{ url_for('info.info_page') }}">עמוד מידע</a></li>
                 <li><a href="{{ url_for('students.user_profile') }}">👤 {{ session.get('username') }}</a></li>
