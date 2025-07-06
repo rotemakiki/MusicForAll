@@ -145,6 +145,7 @@ def edit_song_api(song_id):
     updated_fields = {
         "title": data["title"],
         "artist": data["artist"],
+        "genre": data["genre"],
         "key": data["key"],
         "key_type": data["key_type"],
         "difficulty": data["difficulty"],
@@ -219,6 +220,7 @@ def play_song(song_id):
         "id": song_id,
         "title": song["title"],
         "artist": song["artist"],
+        "genre": song.get("genre", "לא צוין"),
         "key": song["key"],
         "key_type": song["key_type"],
         "difficulty": song.get("difficulty", ""),
