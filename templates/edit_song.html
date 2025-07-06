@@ -2,399 +2,300 @@
 
 {% block title %}עריכת שיר - {{ song.title }}{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/edit_song.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>✏️ עריכת שיר</h1>
-    <form id="edit-song-form" class="styled-form">
-        <input type="hidden" id="song_id" name="song_id" value="{{ song.id }}">
-
-        <label for="title">שם השיר:</label>
-        <input type="text" id="title" name="title" value="{{ song.title }}" required>
-
-        <label for="artist">שם האמן:</label>
-        <input type="text" id="artist" name="artist" value="{{ song.artist }}" required>
-
-        <label for="key">סולם:</label>
-        <select id="key" name="key" required>
-            <option value="">בחר סולם</option>
-            <option value="C" {% if song.key == 'C' %}selected{% endif %}>דו - C</option>
-            <option value="C#" {% if song.key == 'C#' %}selected{% endif %}>דו דיאז - C#</option>
-            <option value="Db" {% if song.key == 'Db' %}selected{% endif %}>רה במול - Db</option>
-            <option value="D" {% if song.key == 'D' %}selected{% endif %}>רה - D</option>
-            <option value="D#" {% if song.key == 'D#' %}selected{% endif %}>רה דיאז - D#</option>
-            <option value="Eb" {% if song.key == 'Eb' %}selected{% endif %}>מי במול - Eb</option>
-            <option value="E" {% if song.key == 'E' %}selected{% endif %}>מי - E</option>
-            <option value="F" {% if song.key == 'F' %}selected{% endif %}>פה - F</option>
-            <option value="F#" {% if song.key == 'F#' %}selected{% endif %}>פה דיאז - F#</option>
-            <option value="Gb" {% if song.key == 'Gb' %}selected{% endif %}>סול במול - Gb</option>
-            <option value="G" {% if song.key == 'G' %}selected{% endif %}>סול - G</option>
-            <option value="G#" {% if song.key == 'G#' %}selected{% endif %}>סול דיאז - G#</option>
-            <option value="Ab" {% if song.key == 'Ab' %}selected{% endif %}>לה במול - Ab</option>
-            <option value="A" {% if song.key == 'A' %}selected{% endif %}>לה - A</option>
-            <option value="A#" {% if song.key == 'A#' %}selected{% endif %}>לה דיאז - A#</option>
-            <option value="Bb" {% if song.key == 'Bb' %}selected{% endif %}>סי במול - Bb</option>
-            <option value="B" {% if song.key == 'B' %}selected{% endif %}>סי - B</option>
-        </select>
-        <label for="key_type">סוג סולם:</label>
-        <select id="key_type" name="key_type" required>
-            <option value="">בחר סוג</option>
-            <option value="major" {% if song.key_type == 'major' %}selected{% endif %}>מז'ור - Major</option>
-            <option value="natural_minor" {% if song.key_type == 'natural_minor' %}selected{% endif %}>מינור טבעי - Natural Minor</option>
-            <option value="harmonic_minor" {% if song.key_type == 'harmonic_minor' %}selected{% endif %}>מינור הרמוני - Harmonic Minor</option>
-            <option value="melodic_minor" {% if song.key_type == 'melodic_minor' %}selected{% endif %}>מינור מלודי - Melodic Minor</option>
-
-            <option value="ionian" {% if song.key_type == 'ionian' %}selected{% endif %}>יוֹני - Ionian</option>
-            <option value="dorian" {% if song.key_type == 'dorian' %}selected{% endif %}>דוֹרי - Dorian</option>
-            <option value="phrygian" {% if song.key_type == 'phrygian' %}selected{% endif %}>פריגי - Phrygian</option>
-            <option value="lydian" {% if song.key_type == 'lydian' %}selected{% endif %}>לידי - Lydian</option>
-            <option value="mixolydian" {% if song.key_type == 'mixolydian' %}selected{% endif %}>מיקסולידי - Mixolydian</option>
-            <option value="aeolian" {% if song.key_type == 'aeolian' %}selected{% endif %}>אאולי - Aeolian</option>
-            <option value="locrian" {% if song.key_type == 'locrian' %}selected{% endif %}>לוֹקרי - Locrian</option>
-
-            <option value="major_pentatonic" {% if song.key_type == 'major_pentatonic' %}selected{% endif %}>פנטטוני מז'ורי - Major Pentatonic</option>
-            <option value="minor_pentatonic" {% if song.key_type == 'minor_pentatonic' %}selected{% endif %}>פנטטוני מינורי - Minor Pentatonic</option>
-
-            <option value="chromatic" {% if song.key_type == 'chromatic' %}selected{% endif %}>כרומטי - Chromatic</option>
-            <option value="whole_tone" {% if song.key_type == 'whole_tone' %}selected{% endif %}>שלם טונים - Whole Tone</option>
-            <option value="blues" {% if song.key_type == 'blues' %}selected{% endif %}>בלוז - Blues</option>
-            <option value="octatonic" {% if song.key_type == 'octatonic' %}selected{% endif %}>אוקטטוני / דימינישד - Octatonic / Diminished</option>
-        </select>
-
-        <label for="difficulty">רמת קושי:</label>
-        <select id="difficulty" name="difficulty" required>
-            <option value="">בחר רמת קושי</option>
-            <option value="beginner" {% if song.difficulty == 'beginner' %}selected{% endif %}>מתחילים</option>
-            <option value="intermediate" {% if song.difficulty == 'intermediate' %}selected{% endif %}>ביניים</option>
-            <option value="advanced" {% if song.difficulty == 'advanced' %}selected{% endif %}>מתקדמים</option>
-        </select>
-
-        <label for="time_signature">מקצב:</label>
-        <select id="time_signature" name="time_signature" required>
-            <option value="">בחר מקצב</option>
-            <option value="4/4" {% if song.time_signature == '4/4' %}selected{% endif %}>4/4 (הנפוץ ביותר)</option>
-            <option value="2/4" {% if song.time_signature == '2/4' %}selected{% endif %}>2/4</option>
-            <option value="3/4" {% if song.time_signature == '3/4' %}selected{% endif %}>3/4 (ולס)</option>
-            <option value="2/2" {% if song.time_signature == '2/2' %}selected{% endif %}>2/2 (Alla Breve)</option>
-            <option value="3/2" {% if song.time_signature == '3/2' %}selected{% endif %}>3/2</option>
-            <option value="3/8" {% if song.time_signature == '3/8' %}selected{% endif %}>3/8</option>
-
-            <option value="6/8" {% if song.time_signature == '6/8' %}selected{% endif %}>6/8 (בלוז/שירים קצביים)</option>
-            <option value="9/8" {% if song.time_signature == '9/8' %}selected{% endif %}>9/8</option>
-            <option value="12/8" {% if song.time_signature == '12/8' %}selected{% endif %}>12/8 (בלוז/גוספל)</option>
-            <option value="6/4" {% if song.time_signature == '6/4' %}selected{% endif %}>6/4</option>
-            <option value="9/4" {% if song.time_signature == '9/4' %}selected{% endif %}>9/4</option>
-            <option value="12/4" {% if song.time_signature == '12/4' %}selected{% endif %}>12/4</option>
-
-            <option value="5/4" {% if song.time_signature == '5/4' %}selected{% endif %}>5/4 (לא שגרתי)</option>
-            <option value="5/8" {% if song.time_signature == '5/8' %}selected{% endif %}>5/8</option>
-            <option value="7/4" {% if song.time_signature == '7/4' %}selected{% endif %}>7/4</option>
-            <option value="7/8" {% if song.time_signature == '7/8' %}selected{% endif %}>7/8 (מתקדם/אתני)</option>
-            <option value="11/4" {% if song.time_signature == '11/4' %}selected{% endif %}>11/4</option>
-            <option value="11/8" {% if song.time_signature == '11/8' %}selected{% endif %}>11/8</option>
-            <option value="13/4" {% if song.time_signature == '13/4' %}selected{% endif %}>13/4</option>
-            <option value="13/8" {% if song.time_signature == '13/8' %}selected{% endif %}>13/8</option>
-        </select>
-
-        <label for="bpm">BPM (מהירות):</label>
-        <input type="number" id="bpm" name="bpm" value="{{ song.bpm }}" required min="40" max="200" step="1">
-        <span style="font-size:0.95em;color:gray;">(40-200)</span>
-
-        <label for="video_url">🎥 קישור לסרטון:</label>
-        <input type="text" id="video_url" name="video_url" value="{{ song.video_url }}" required>
-
-        <label>🎸 אקורדים:</label>
-        <!-- הודעת הצלחה תוצג כאן, ומיד אחרי זה הכפתור -->
-        <div id="chords-success" style="display:none; margin: 6px 0 10px 0;">
-            <span style="color:green; font-weight:bold;">🎶 האקורדים נוספו בהצלחה!</span>
+<div class="edit-song-container">
+    <div class="edit-song-card">
+        <!-- Header -->
+        <div class="page-header">
+            <h1 class="page-title">✏️ עריכת שיר 🎶</h1>
+            <p class="page-subtitle">ערוך את פרטי השיר והאקורדים</p>
         </div>
-        <button type="button" class="btn" id="chords-btn" onclick="goToChordsPage()">ערוך אקורדים</button>
-        <input type="hidden" id="chords" name="chords" required>
-        <!-- הוספת שדה נסתר ללופים -->
-        <input type="hidden" id="loops" name="loops">
 
-        <button type="submit" class="btn">💾 שמור שינויים</button>
-    </form>
+        <!-- Current Song Info -->
+        <div class="song-info">
+            <h3>🎵 {{ song.title }} - {{ song.artist }}</h3>
+            <p><strong>סולם נוכחי:</strong> {{ song.key }} ({{ song.key_type }})</p>
+            <p><strong>מקצב:</strong> {{ song.time_signature }} | <strong>BPM:</strong> {{ song.bpm }}</p>
+        </div>
 
-    <p id="response-message" class="message"></p>
+        <form id="edit-song-form">
+            <input type="hidden" id="song_id" name="song_id" value="{{ song.id }}">
+
+            <div class="form-grid">
+                <!-- Basic Info Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">📝</span>
+                        פרטים בסיסיים
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="title">
+                            <span class="label-icon">🎵</span>
+                            שם השיר
+                        </label>
+                        <input type="text" id="title" name="title" class="form-input" required
+                               value="{{ song.title }}" placeholder="הכנס את שם השיר...">
+                        <div class="field-validation" id="title-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="artist">
+                            <span class="label-icon">🎤</span>
+                            שם האמן
+                        </label>
+                        <input type="text" id="artist" name="artist" class="form-input" required
+                               value="{{ song.artist }}" placeholder="הכנס את שם האמן...">
+                        <div class="field-validation" id="artist-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="genre">
+                            <span class="label-icon">🎭</span>
+                            ז'אנר מוזיקלי
+                        </label>
+                        <select id="genre" name="genre" class="form-select" required>
+                            <option value="">בחר ז'אנר</option>
+                            <option value="pop" {% if song.genre == 'pop' %}selected{% endif %}>פופ - Pop</option>
+                            <option value="rock" {% if song.genre == 'rock' %}selected{% endif %}>רוק - Rock</option>
+                            <option value="jazz" {% if song.genre == 'jazz' %}selected{% endif %}>ג'אז - Jazz</option>
+                            <option value="blues" {% if song.genre == 'blues' %}selected{% endif %}>בלוז - Blues</option>
+                            <option value="classical" {% if song.genre == 'classical' %}selected{% endif %}>קלאסי - Classical</option>
+                            <option value="folk" {% if song.genre == 'folk' %}selected{% endif %}>פולק - Folk</option>
+                            <option value="country" {% if song.genre == 'country' %}selected{% endif %}>קאנטרי - Country</option>
+                            <option value="reggae" {% if song.genre == 'reggae' %}selected{% endif %}>רגיי - Reggae</option>
+                            <option value="electronic" {% if song.genre == 'electronic' %}selected{% endif %}>אלקטרוני - Electronic</option>
+                            <option value="hip_hop" {% if song.genre == 'hip_hop' %}selected{% endif %}>היפ הופ - Hip Hop</option>
+                            <option value="r_and_b" {% if song.genre == 'r_and_b' %}selected{% endif %}>R&B - ריתם אנד בלוז</option>
+                            <option value="soul" {% if song.genre == 'soul' %}selected{% endif %}>סול - Soul</option>
+                            <option value="funk" {% if song.genre == 'funk' %}selected{% endif %}>פאנק - Funk</option>
+                            <option value="metal" {% if song.genre == 'metal' %}selected{% endif %}>מטאל - Metal</option>
+                            <option value="punk" {% if song.genre == 'punk' %}selected{% endif %}>פאנק - Punk</option>
+                            <option value="alternative" {% if song.genre == 'alternative' %}selected{% endif %}>אלטרנטיב - Alternative</option>
+                            <option value="indie" {% if song.genre == 'indie' %}selected{% endif %}>אינדי - Indie</option>
+                            <option value="world" {% if song.genre == 'world' %}selected{% endif %}>מוזיקת עולם - World Music</option>
+                            <option value="mizrahi" {% if song.genre == 'mizrahi' %}selected{% endif %}>מזרחי</option>
+                            <option value="israeli" {% if song.genre == 'israeli' %}selected{% endif %}>ישראלי</option>
+                            <option value="other" {% if song.genre == 'other' %}selected{% endif %}>אחר</option>
+                        </select>
+                        <div class="field-validation" id="genre-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Musical Details Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">🎼</span>
+                        פרטים מוזיקליים
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="key">
+                            <span class="label-icon">🔑</span>
+                            סולם
+                        </label>
+                        <select id="key" name="key" class="form-select" required>
+                            <option value="">בחר סולם</option>
+                            <option value="C" {% if song.key == 'C' %}selected{% endif %}>דו - C</option>
+                            <option value="C#" {% if song.key == 'C#' %}selected{% endif %}>דו דיאז - C#</option>
+                            <option value="Db" {% if song.key == 'Db' %}selected{% endif %}>רה במול - Db</option>
+                            <option value="D" {% if song.key == 'D' %}selected{% endif %}>רה - D</option>
+                            <option value="D#" {% if song.key == 'D#' %}selected{% endif %}>רה דיאז - D#</option>
+                            <option value="Eb" {% if song.key == 'Eb' %}selected{% endif %}>מי במול - Eb</option>
+                            <option value="E" {% if song.key == 'E' %}selected{% endif %}>מי - E</option>
+                            <option value="F" {% if song.key == 'F' %}selected{% endif %}>פה - F</option>
+                            <option value="F#" {% if song.key == 'F#' %}selected{% endif %}>פה דיאז - F#</option>
+                            <option value="Gb" {% if song.key == 'Gb' %}selected{% endif %}>סול במול - Gb</option>
+                            <option value="G" {% if song.key == 'G' %}selected{% endif %}>סול - G</option>
+                            <option value="G#" {% if song.key == 'G#' %}selected{% endif %}>סול דיאז - G#</option>
+                            <option value="Ab" {% if song.key == 'Ab' %}selected{% endif %}>לה במול - Ab</option>
+                            <option value="A" {% if song.key == 'A' %}selected{% endif %}>לה - A</option>
+                            <option value="A#" {% if song.key == 'A#' %}selected{% endif %}>לה דיאז - A#</option>
+                            <option value="Bb" {% if song.key == 'Bb' %}selected{% endif %}>סי במול - Bb</option>
+                            <option value="B" {% if song.key == 'B' %}selected{% endif %}>סי - B</option>
+                        </select>
+                        <div class="field-validation" id="key-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="key_type">
+                            <span class="label-icon">🎹</span>
+                            סוג סולם
+                        </label>
+                        <select id="key_type" name="key_type" class="form-select" required>
+                            <option value="">בחר סוג</option>
+                            <option value="major" {% if song.key_type == 'major' %}selected{% endif %}>מז'ור - Major</option>
+                            <option value="natural_minor" {% if song.key_type == 'natural_minor' %}selected{% endif %}>מינור טבעי - Natural Minor</option>
+                            <option value="harmonic_minor" {% if song.key_type == 'harmonic_minor' %}selected{% endif %}>מינור הרמוני - Harmonic Minor</option>
+                            <option value="melodic_minor" {% if song.key_type == 'melodic_minor' %}selected{% endif %}>מינור מלודי - Melodic Minor</option>
+                            <option value="ionian" {% if song.key_type == 'ionian' %}selected{% endif %}>יוֹני - Ionian</option>
+                            <option value="dorian" {% if song.key_type == 'dorian' %}selected{% endif %}>דוֹרי - Dorian</option>
+                            <option value="phrygian" {% if song.key_type == 'phrygian' %}selected{% endif %}>פריגי - Phrygian</option>
+                            <option value="lydian" {% if song.key_type == 'lydian' %}selected{% endif %}>לידי - Lydian</option>
+                            <option value="mixolydian" {% if song.key_type == 'mixolydian' %}selected{% endif %}>מיקסולידי - Mixolydian</option>
+                            <option value="aeolian" {% if song.key_type == 'aeolian' %}selected{% endif %}>אאולי - Aeolian</option>
+                            <option value="locrian" {% if song.key_type == 'locrian' %}selected{% endif %}>לוֹקרי - Locrian</option>
+                            <option value="major_pentatonic" {% if song.key_type == 'major_pentatonic' %}selected{% endif %}>פנטטוני מז'ורי - Major Pentatonic</option>
+                            <option value="minor_pentatonic" {% if song.key_type == 'minor_pentatonic' %}selected{% endif %}>פנטטוני מינורי - Minor Pentatonic</option>
+                            <option value="chromatic" {% if song.key_type == 'chromatic' %}selected{% endif %}>כרומטי - Chromatic</option>
+                            <option value="whole_tone" {% if song.key_type == 'whole_tone' %}selected{% endif %}>שלם טונים - Whole Tone</option>
+                            <option value="blues" {% if song.key_type == 'blues' %}selected{% endif %}>בלוז - Blues</option>
+                            <option value="octatonic" {% if song.key_type == 'octatonic' %}selected{% endif %}>אוקטטוני / דימינישד - Octatonic / Diminished</option>
+                        </select>
+                        <div class="field-validation" id="key_type-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="difficulty">
+                            <span class="label-icon">⭐</span>
+                            רמת קושי
+                        </label>
+                        <select id="difficulty" name="difficulty" class="form-select" required>
+                            <option value="">בחר רמת קושי</option>
+                            <option value="beginner" {% if song.difficulty == 'beginner' %}selected{% endif %}>מתחילים</option>
+                            <option value="intermediate" {% if song.difficulty == 'intermediate' %}selected{% endif %}>ביניים</option>
+                            <option value="advanced" {% if song.difficulty == 'advanced' %}selected{% endif %}>מתקדמים</option>
+                        </select>
+                        <div class="field-validation" id="difficulty-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Timing Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">⏱️</span>
+                        מקצב וקצב
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="time_signature">
+                            <span class="label-icon">🎵</span>
+                            מקצב
+                        </label>
+                        <select id="time_signature" name="time_signature" class="form-select" required>
+                            <option value="">בחר מקצב</option>
+                            <option value="4/4" {% if song.time_signature == '4/4' %}selected{% endif %}>4/4 (הנפוץ ביותר)</option>
+                            <option value="2/4" {% if song.time_signature == '2/4' %}selected{% endif %}>2/4</option>
+                            <option value="3/4" {% if song.time_signature == '3/4' %}selected{% endif %}>3/4 (ולס)</option>
+                            <option value="2/2" {% if song.time_signature == '2/2' %}selected{% endif %}>2/2 (Alla Breve)</option>
+                            <option value="3/2" {% if song.time_signature == '3/2' %}selected{% endif %}>3/2</option>
+                            <option value="3/8" {% if song.time_signature == '3/8' %}selected{% endif %}>3/8</option>
+                            <option value="6/8" {% if song.time_signature == '6/8' %}selected{% endif %}>6/8 (בלוז/שירים קצביים)</option>
+                            <option value="9/8" {% if song.time_signature == '9/8' %}selected{% endif %}>9/8</option>
+                            <option value="12/8" {% if song.time_signature == '12/8' %}selected{% endif %}>12/8 (בלוז/גוספל)</option>
+                            <option value="6/4" {% if song.time_signature == '6/4' %}selected{% endif %}>6/4</option>
+                            <option value="9/4" {% if song.time_signature == '9/4' %}selected{% endif %}>9/4</option>
+                            <option value="12/4" {% if song.time_signature == '12/4' %}selected{% endif %}>12/4</option>
+                            <option value="5/4" {% if song.time_signature == '5/4' %}selected{% endif %}>5/4 (לא שגרתי)</option>
+                            <option value="5/8" {% if song.time_signature == '5/8' %}selected{% endif %}>5/8</option>
+                            <option value="7/4" {% if song.time_signature == '7/4' %}selected{% endif %}>7/4</option>
+                            <option value="7/8" {% if song.time_signature == '7/8' %}selected{% endif %}>7/8 (מתקדם/אתני)</option>
+                            <option value="11/4" {% if song.time_signature == '11/4' %}selected{% endif %}>11/4</option>
+                            <option value="11/8" {% if song.time_signature == '11/8' %}selected{% endif %}>11/8</option>
+                            <option value="13/4" {% if song.time_signature == '13/4' %}selected{% endif %}>13/4</option>
+                            <option value="13/8" {% if song.time_signature == '13/8' %}selected{% endif %}>13/8</option>
+                        </select>
+                        <div class="field-validation" id="time_signature-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bpm">
+                            <span class="label-icon">🚀</span>
+                            BPM (מהירות)
+                        </label>
+                        <input type="number" id="bpm" name="bpm" class="form-input" required
+                               min="40" max="200" step="1" value="{{ song.bpm }}"
+                               placeholder="100">
+                        <div class="input-hint">מהירות הקצב בין 40-200 פעימות לדקה</div>
+                        <div class="field-validation" id="bpm-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Media Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">📺</span>
+                        מדיה
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="video_url">
+                            <span class="label-icon">🎥</span>
+                            קישור לסרטון
+                        </label>
+                        <input type="text" id="video_url" name="video_url" class="form-input" required
+                               value="{{ song.video_url }}" placeholder="https://www.youtube.com/watch?v=...">
+                        <div class="input-hint">קישור יוטיוב או קישור ישיר לסרטון</div>
+                        <div class="field-validation" id="video_url-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Chords Section -->
+                <div class="form-section full-width-section chords-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">🎸</span>
+                        אקורדים
+                    </h3>
+
+                    <div class="chords-status">
+                        <div id="chords-success" class="success-message" style="display:none;">
+                            <span>🎶</span>
+                            <span>האקורדים עודכנו בהצלחה!</span>
+                        </div>
+                    </div>
+
+                    <button type="button" class="chords-btn" id="chords-btn" onclick="editChords()">
+                        <span>🎸</span>
+                        <span>ערוך אקורדים</span>
+                    </button>
+
+                    <input type="hidden" id="chords" name="chords" required>
+                    <input type="hidden" id="loops" name="loops">
+                </div>
+            </div>
+
+            <!-- Actions Section -->
+            <div class="actions-section">
+                <button type="submit" class="submit-btn">
+                    <span>💾</span>
+                    <span>שמור שינויים</span>
+                </button>
+                <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="cancel-btn">
+                    <span>❌</span>
+                    <span>ביטול</span>
+                </a>
+            </div>
+        </form>
+
+        <div id="response-message" class="response-message" style="display: none;"></div>
+    </div>
 </div>
 
 <script>
+    // Pass data from Flask to JavaScript
     const songId = "{{ song.id }}";
+    const existingChords = {{ song.chords | tojson }};
+    const existingLoops = {{ song.loops | tojson }};
 
-    // Parse existing chords and loops from server-side data
-    let existingChords = [];
-    let existingLoops = [];
+    // Set existing data in hidden fields
+    document.getElementById("chords").value = JSON.stringify(existingChords);
+    document.getElementById("loops").value = JSON.stringify(existingLoops);
 
-    try {
-        existingChords = {{ song.chords|safe }};
-        console.log("Loaded existing chords:", existingChords);
-    } catch (e) {
-        console.error("Error parsing existing chords:", e);
-        existingChords = [];
-    }
+    // Store for editing context
+    localStorage.setItem("editingSongId", songId);
+    localStorage.setItem("chords", JSON.stringify(existingChords));
+    localStorage.setItem("loops", JSON.stringify(existingLoops));
 
-    try {
-        const loopsData = "{{ song.loops|default('[]')|safe }}";
-        if (loopsData && loopsData !== '[]') {
-            existingLoops = JSON.parse(loopsData);
-            console.log("Loaded existing loops:", existingLoops);
-        }
-    } catch (e) {
-        console.error("Error parsing existing loops:", e);
-        existingLoops = [];
-    }
-
-    // Clear any conflicting localStorage data when entering edit mode
-    function clearConflictingData() {
-        localStorage.removeItem("addingNewSong");
-        localStorage.removeItem("songData");
-        console.log("Cleared conflicting localStorage data for song editing");
-    }
-
-    // Button navigation - עריכת שיר קיים
-    function goToChordsPage() {
-        // Clear conflicting data
-        clearConflictingData();
-
-        // Save current form data before going to chords page
-        saveFormData();
-
-        // Store existing chords and loops for editing
-        try {
-            localStorage.setItem("chords", JSON.stringify(existingChords));
-            localStorage.setItem("loops", JSON.stringify(existingLoops));
-            localStorage.setItem("editingSongId", songId);
-            console.log("Stored data for editing - chords:", existingChords, "loops:", existingLoops);
-        } catch (e) {
-            console.error("Error storing data for editing:", e);
-        }
-
-        window.location.href = `/edit-chords/${songId}`;
-    }
-
-    // Edit chords for existing song
-    function editChords() {
-        clearConflictingData();
-        saveFormData();
-
-        try {
-            localStorage.setItem("chords", JSON.stringify(existingChords));
-            localStorage.setItem("loops", JSON.stringify(existingLoops));
-            localStorage.setItem("editingSongId", songId);
-            console.log("Stored updated data for editing");
-        } catch (e) {
-            console.error("Error storing updated data for editing:", e);
-        }
-
-        window.location.href = `/edit-chords/${songId}`;
-    }
-
-    function saveFormData() {
-        const formData = {
-            title: document.getElementById("title").value,
-            artist: document.getElementById("artist").value,
-            key: document.getElementById("key").value,
-            key_type: document.getElementById("key_type").value,
-            difficulty: document.getElementById("difficulty").value,
-            time_signature: document.getElementById("time_signature").value,
-            bpm: document.getElementById("bpm").value,
-            video_url: document.getElementById("video_url").value
-        };
-        localStorage.setItem("editSongData", JSON.stringify(formData));
-    }
-
-    // --- Prefill form from localStorage if exists ---
-    document.addEventListener("DOMContentLoaded", function () {
-        // Clear conflicting data on page load
-        clearConflictingData();
-
-        // Load existing chords and loops into hidden fields
-        document.getElementById("chords").value = JSON.stringify(existingChords);
-        document.getElementById("loops").value = JSON.stringify(existingLoops);
-
-        // Prefill fields from localStorage if user was editing
-        const editSongData = JSON.parse(localStorage.getItem("editSongData") || "{}");
-        for (const key in editSongData) {
-            const element = document.getElementById(key);
-            if (element && editSongData[key]) {
-                element.value = editSongData[key];
-            }
-        }
-
-        // Check if user just returned from chords page
-        const chordsSuccessDiv = document.getElementById("chords-success");
-        const chordsBtn = document.getElementById("chords-btn");
-        const savedChords = localStorage.getItem("chords");
-        const savedLoops = localStorage.getItem("loops");
-        const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
-        const editingSongId = localStorage.getItem("editingSongId");
-
-        if (savedChords && justReturnedFromChords === "true" && editingSongId === songId) {
-            // User just returned from chords page - show success message
-            try {
-                const parsedChords = JSON.parse(savedChords);
-                const parsedLoops = savedLoops ? JSON.parse(savedLoops) : [];
-
-                document.getElementById("chords").value = savedChords;
-                document.getElementById("loops").value = savedLoops || "[]";
-
-                existingChords = parsedChords; // Update the existing chords
-                existingLoops = parsedLoops; // Update the existing loops
-
-                chordsSuccessDiv.style.display = "block";
-                chordsBtn.textContent = "ערוך אקורדים";
-                chordsBtn.onclick = editChords;
-                // Clear the flag so it won't show again on refresh
-                localStorage.removeItem("justReturnedFromChords");
-
-                console.log("Successfully updated chords and loops from localStorage");
-            } catch (e) {
-                console.error("Error parsing returned chords/loops:", e);
-            }
-        } else {
-            // Show regular edit chords button
-            chordsSuccessDiv.style.display = "none";
-            chordsBtn.textContent = "ערוך אקורדים";
-            chordsBtn.onclick = editChords;
-        }
-
-        // Save form fields to localStorage on change
-        const fields = ["title", "artist", "key", "key_type", "difficulty", "time_signature", "bpm", "video_url"];
-        fields.forEach(field => {
-            const el = document.getElementById(field);
-            if (el) {
-                el.addEventListener("input", () => {
-                    const currentData = JSON.parse(localStorage.getItem("editSongData") || "{}");
-                    currentData[field] = el.value;
-                    localStorage.setItem("editSongData", JSON.stringify(currentData));
-                });
-            }
-        });
-    });
-
-    document.getElementById("edit-song-form").addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        const title = document.getElementById("title").value;
-        const artist = document.getElementById("artist").value;
-        const key = document.getElementById("key").value;
-        const keyType = document.getElementById("key_type").value;
-        const difficulty = document.getElementById("difficulty").value;
-        const timeSignature = document.getElementById("time_signature").value;
-        const bpm = document.getElementById("bpm").value;
-        const videoUrl = document.getElementById("video_url").value;
-        const chordsRaw = document.getElementById("chords").value;
-        const loopsRaw = document.getElementById("loops").value; // הוספה חדשה
-
-        let finalVideoUrl = videoUrl;
-        const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
-        if (ytMatch && ytMatch[1]) {
-            finalVideoUrl = "https://www.youtube.com/embed/" + ytMatch[1];
-        }
-
-        let chords, loops = [];
-        try {
-            chords = JSON.parse(chordsRaw);
-        } catch (e) {
-            alert("שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.");
-            return;
-        }
-
-        // הוספה חדשה - קריאת נתוני הלופים
-        if (loopsRaw) {
-            try {
-                loops = JSON.parse(loopsRaw);
-            } catch (e) {
-                console.log("Error parsing loops data:", e);
-                loops = [];
-            }
-        }
-
-        fetch(`/api/edit_song/${songId}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                title: title,
-                artist: artist,
-                key: key,
-                key_type: keyType,
-                difficulty: difficulty,
-                time_signature: timeSignature,
-                bpm: parseInt(bpm),
-                video_url: finalVideoUrl,
-                chords: chords,
-                loops: loops // הוספה חדשה - שליחת נתוני הלופים
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const messageEl = document.getElementById("response-message");
-            if (data.message) {
-                messageEl.textContent = "✅ " + data.message;
-                messageEl.style.color = "green";
-                // Clear localStorage after successful edit
-                localStorage.removeItem("editSongData");
-                localStorage.removeItem("justReturnedFromChords");
-                localStorage.removeItem("editingSongId");
-                localStorage.removeItem("chords");
-                localStorage.removeItem("loops");
-                // Redirect to song page after short delay - עדכון להפנייה לעמוד הנגן
-                setTimeout(() => {
-                    window.location.href = `/play/${songId}`;
-                }, 1500);
-            } else {
-                messageEl.textContent = "❌ שגיאה בעדכון השיר, נסה שוב";
-                messageEl.style.color = "red";
-            }
-        })
-        .catch(error => {
-            document.getElementById("response-message").textContent = "❌ שגיאה בעדכון השיר!";
-            document.getElementById("response-message").style.color = "red";
-            console.error("Error:", error);
-        });
-    });
+    // Clear any conflicting new song data
+    localStorage.removeItem("addingNewSong");
+    localStorage.removeItem("songData");
 </script>
+{% endblock %}
 
-<style>
-    .styled-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 400px;
-        margin: auto;
-    }
-
-    .styled-form label {
-        font-weight: bold;
-        text-align: right;
-    }
-
-    .styled-form input,
-    .styled-form select {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-
-    .btn {
-        background-color: #28a745;
-        color: white;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .btn:hover {
-        background-color: #218838;
-    }
-
-    .message {
-        text-align: center;
-        font-weight: bold;
-        margin-top: 10px;
-    }
-</style>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/edit_song.js') }}"></script>
 {% endblock %}

@@ -10,7 +10,11 @@
 <div class="main-container">
     {% include "add_chords/chord_sidebar.html" %}
     <div class="main-content">
-        <h1>עריכת אקורדים: {{ song.title }} - {{ song.artist }}</h1>
+        <h1>🎸 עריכת אקורדים: {{ song.title }} - {{ song.artist }}</h1>
+        <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #e8f4fd, #f0f8ff); border: 2px solid #4a90e2; border-radius: 12px;">
+            <p style="margin: 0; color: #2c3e50; font-weight: 600;">📝 אתה עורך את האקורדים של השיר הזה</p>
+            <p style="margin: 5px 0 0 0; color: #34495e; font-size: 14px;">השינויים יישמרו אוטומטית כשתסיים</p>
+        </div>
         {% include "add_chords/measure_builder.html" %}
     </div>
     {% include "add_chords/song_structure.html" %}
@@ -30,6 +34,10 @@
     localStorage.setItem("editingSongId", "{{ song.id }}");
     localStorage.setItem("chords", JSON.stringify({{ song.chords | tojson }}));
     localStorage.setItem("loops", JSON.stringify({{ song.loops | tojson }}));
+
+    // נקה כל נתוני שיר חדש שעלולים להפריע
+    localStorage.removeItem("addingNewSong");
+    localStorage.removeItem("songData");
 </script>
 {% endblock %}
 
