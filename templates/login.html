@@ -14,14 +14,131 @@
     {% endwith %}
 
     <h2>התחברות</h2>
-    <form action="{{ url_for('auth.login') }}" method="post">
-        <label for="email">אימייל:</label>
-        <input type="email" id="email" name="email" required>
 
-        <label for="password">סיסמה:</label>
-        <input type="password" id="password" name="password" required>
+    {% if user_already_logged_in %}
+        <!-- 🆕 מסך כפוי התחברות -->
+        <div class="warning-box">
+            <h3>⚠️ המשתמש כבר מחובר</h3>
+            <p>נראה שאתה מחובר ממכשיר אחר או ששכחת להתנתק.</p>
+            <p>מה תרצה לעשות?</p>
 
-        <button type="submit">התחבר</button>
-    </form>
-    <p>אין לך חשבון? <a href="{{ url_for('auth.register') }}">הרשם כאן</a></p>
+            <div class="force-login-options">
+                <!-- התחברות כפויה - עם שדה סיסמה חזותי -->
+                <form action="{{ url_for('auth.login') }}" method="post" id="force-login-form">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <div style="margin-bottom: 15px;">
+                        <label for="force-password" style="display: block; margin-bottom: 5px;">הכנס סיסמה לאישור:</label>
+                        <input type="password" id="force-password" name="password" required
+                               style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px;">
+                    </div>
+                    <input type="hidden" name="force_login" value="true">
+                    <button type="submit" class="btn force-login-btn">
+                        🔐 התחבר בכל זאת (נתק ממכשירים אחרים)
+                    </button>
+                </form>
+
+                <!-- חזרה -->
+                <a href="{{ url_for('auth.login') }}" class="btn cancel-btn">❌ ביטול</a>
+            </div>
+        </div>
+    {% else %}
+        <!-- טופס התחברות רגיל -->
+        <form action="{{ url_for('auth.login') }}" method="post" id="login-form">
+            <label for="email">אימייל:</label>
+            <input type="email" id="email" name="email" value="{{ email or '' }}" required>
+
+            <label for="password">סיסמה:</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">התחבר</button>
+        </form>
+
+        <p>אין לך חשבון? <a href="{{ url_for('auth.register') }}">הרשם כאן</a></p>
+    {% endif %}
+
+<style>
+.warning-box {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.warning-box h3 {
+    color: #856404;
+    margin-top: 0;
+}
+
+.warning-box p {
+    color: #856404;
+    margin: 10px 0;
+}
+
+.force-login-options {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.force-login-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.force-login-btn:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+}
+
+.cancel-btn {
+    background: linear-gradient(135deg, #6c757d, #545b62);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.cancel-btn:hover {
+    background: linear-gradient(135deg, #545b62, #495057);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+    .force-login-options {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .force-login-btn, .cancel-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+</style>
+
+<script>
+// אין צורך יותר בשמירת סיסמה - המשתמש יכניס אותה שוב
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Login page loaded');
+});
+</script>
 {% endblock %}

@@ -1,5 +1,5 @@
-# routes/auth.py
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+# routes/auth.py - החלף את הקובץ הקיים במלואו
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from firebase_config import db
 from datetime import datetime
@@ -53,6 +53,7 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
+        force_login = request.form.get('force_login') == 'true'
 
         user_query = db.collection("users").where("email", "==", email).get()
         if not user_query:
@@ -62,25 +63,67 @@ def login():
         user_doc = user_query[0]
         user = user_doc.to_dict()
 
-        if user.get('is_logged_in'):
-            flash("המשתמש כבר מחובר ממכשיר אחר!", "error")
-            return redirect(url_for('auth.login'))
-
         if not check_password_hash(user['password'], password):
             flash("Invalid email or password!", "error")
             return redirect(url_for('auth.login'))
 
+        # 🆕 בדיקה אם המשתמש כבר מחובר
+        if user.get('is_logged_in') and not force_login:
+            # הצג אפשרות כפוי התחברות עם שמירת האימייל
+            flash("המשתמש כבר מחובר ממכשיר אחר. הכנס את הסיסמה שוב לכפוי התחברות.", "warning")
+            return render_template('login.html',
+                show_force_login=True,
+                email=email,
+                user_already_logged_in=True)
+
+        # התחברות (רגילה או כפויה)
         session['user_id'] = user_doc.id
         session['username'] = user['username']
         session['roles'] = user['roles']
         session['profile_image'] = user.get('profile_image', '')
 
-        db.collection("users").document(user_doc.id).update({"is_logged_in": True})
+        # עדכן שהמשתמש מחובר
+        db.collection("users").document(user_doc.id).update({
+            "is_logged_in": True,
+            "last_login": datetime.utcnow()
+        })
 
-        flash("Login successful!", "success")
+        if force_login:
+            flash("התחברת בהצלחה! (נותקת ממכשירים אחרים)", "success")
+        else:
+            flash("Login successful!", "success")
+
         return redirect(url_for('home'))
 
     return render_template('login.html')
+
+# 🆕 API להתנתקות אוטומטית
+@auth_bp.route('/api/auto_logout', methods=['POST'])
+def auto_logout():
+    user_id = session.get('user_id')
+    if user_id:
+        db.collection("users").document(user_id).update({"is_logged_in": False})
+        flash("התנתקת אוטומטית בגלל חוסר פעילות", "info")
+    session.clear()
+    return jsonify({"success": True})
+
+# 🆕 API לבדיקת סשן
+@auth_bp.route('/api/check_session', methods=['GET'])
+def check_session():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"valid": False})
+
+    # בדוק אם המשתמש עדיין מחובר ב-DB
+    try:
+        user_doc = db.collection("users").document(user_id).get()
+        if user_doc.exists and user_doc.to_dict().get('is_logged_in'):
+            return jsonify({"valid": True})
+        else:
+            session.clear()
+            return jsonify({"valid": False})
+    except:
+        return jsonify({"valid": False})
 
 @auth_bp.route('/logout')
 def logout():
