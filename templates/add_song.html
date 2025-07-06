@@ -2,400 +2,283 @@
 
 {% block title %}הוספת שיר{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_song.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>🎵 הוספת שיר חדש 🎶</h1>
-    <form id="add-song-form" class="styled-form">
-        <label for="title">שם השיר:</label>
-        <input type="text" id="title" name="title" required>
-
-        <label for="artist">שם האמן:</label>
-        <input type="text" id="artist" name="artist" required>
-
-        <label for="key">סולם:</label>
-        <select id="key" name="key" required>
-            <option value="">בחר סולם</option>
-            <option value="C">דו - C</option>
-            <option value="C#">דו דיאז - C#</option>
-            <option value="Db">רה במול - Db</option>
-            <option value="D">רה - D</option>
-            <option value="D#">רה דיאז - D#</option>
-            <option value="Eb">מי במול - Eb</option>
-            <option value="E">מי - E</option>
-            <option value="F">פה - F</option>
-            <option value="F#">פה דיאז - F#</option>
-            <option value="Gb">סול במול - Gb</option>
-            <option value="G">סול - G</option>
-            <option value="G#">סול דיאז - G#</option>
-            <option value="Ab">לה במול - Ab</option>
-            <option value="A">לה - A</option>
-            <option value="A#">לה דיאז - A#</option>
-            <option value="Bb">סי במול - Bb</option>
-            <option value="B">סי - B</option>
-        </select>
-
-        <label for="key_type">סוג סולם:</label>
-        <select id="key_type" name="key_type" required>
-            <option value="">בחר סוג</option>
-            <option value="major">מז'ור - Major</option>
-            <option value="natural_minor">מינור טבעי - Natural Minor</option>
-            <option value="harmonic_minor">מינור הרמוני - Harmonic Minor</option>
-            <option value="melodic_minor">מינור מלודי - Melodic Minor</option>
-
-            <option value="ionian">יוֹני - Ionian</option>
-            <option value="dorian">דוֹרי - Dorian</option>
-            <option value="phrygian">פריגי - Phrygian</option>
-            <option value="lydian">לידי - Lydian</option>
-            <option value="mixolydian">מיקסולידי - Mixolydian</option>
-            <option value="aeolian">אאולי - Aeolian</option>
-            <option value="locrian">לוֹקרי - Locrian</option>
-
-            <option value="major_pentatonic">פנטטוני מז'ורי - Major Pentatonic</option>
-            <option value="minor_pentatonic">פנטטוני מינורי - Minor Pentatonic</option>
-
-            <option value="chromatic">כרומטי - Chromatic</option>
-            <option value="whole_tone">שלם טונים - Whole Tone</option>
-            <option value="blues">בלוז - Blues</option>
-            <option value="octatonic">אוקטטוני / דימינישד - Octatonic / Diminished</option>
-        </select>
-
-        <label for="difficulty">רמת קושי:</label>
-        <select id="difficulty" name="difficulty" required>
-            <option value="">בחר רמת קושי</option>
-            <option value="beginner">מתחילים</option>
-            <option value="intermediate">ביניים</option>
-            <option value="advanced">מתקדמים</option>
-        </select>
-
-        <label for="time_signature">מקצב:</label>
-        <select id="time_signature" name="time_signature" required>
-            <option value="">בחר מקצב</option>
-            <option value="4/4">4/4 (הנפוץ ביותר)</option>
-            <option value="2/4">2/4</option>
-            <option value="3/4">3/4 (ולס)</option>
-            <option value="2/2">2/2 (Alla Breve)</option>
-            <option value="3/2">3/2</option>
-            <option value="3/8">3/8</option>
-
-            <option value="6/8">6/8 (בלוז/שירים קצביים)</option>
-            <option value="9/8">9/8</option>
-            <option value="12/8">12/8 (בלוז/גוספל)</option>
-            <option value="6/4">6/4</option>
-            <option value="9/4">9/4</option>
-            <option value="12/4">12/4</option>
-
-            <option value="5/4">5/4 (לא שגרתי)</option>
-            <option value="5/8">5/8</option>
-            <option value="7/4">7/4</option>
-            <option value="7/8">7/8 (מתקדם/אתני)</option>
-            <option value="11/4">11/4</option>
-            <option value="11/8">11/8</option>
-            <option value="13/4">13/4</option>
-            <option value="13/8">13/8</option>
-        </select>
-
-        <label for="bpm">BPM (מהירות):</label>
-        <input type="number" id="bpm" name="bpm" required min="40" max="200" step="1" value="100">
-        <span style="font-size:0.95em;color:gray;">(40-200)</span>
-
-        <label for="video_url">🎥 קישור לסרטון:</label>
-        <input type="text" id="video_url" name="video_url" required>
-
-        <label>🎸 אקורדים:</label>
-        <!-- הודעת הצלחה תוצג כאן, ומיד אחרי זה הכפתור -->
-        <div id="chords-success" style="display:none; margin: 6px 0 10px 0;">
-            <span style="color:green; font-weight:bold;">🎶 האקורדים נוספו בהצלחה!</span>
+<div class="add-song-container">
+    <div class="add-song-card">
+        <!-- Progress Steps -->
+        <div class="progress-steps">
+            <div class="progress-step active">
+                <span class="step-number">1</span>
+                <span>פרטי השיר</span>
+            </div>
+            <div class="progress-step pending" id="chords-step">
+                <span class="step-number">2</span>
+                <span>אקורדים</span>
+            </div>
+            <div class="progress-step pending">
+                <span class="step-number">3</span>
+                <span>סיום</span>
+            </div>
         </div>
-        <button type="button" class="btn" id="chords-btn" onclick="goToChordsPage()">הוסף אקורדים</button>
-        <input type="hidden" id="chords" name="chords" required>
-        <input type="hidden" id="loops" name="loops">
 
-        <button type="submit" class="btn">➕ הוסף שיר</button>
-    </form>
+        <!-- Header -->
+        <div class="page-header">
+            <h1 class="page-title">🎵 הוספת שיר חדש 🎶</h1>
+            <p class="page-subtitle">צור שיר חדש עם אקורדים ופרטים מוזיקליים</p>
+        </div>
 
-    <p id="response-message" class="message"></p>
+        <form id="add-song-form">
+            <div class="form-grid">
+                <!-- Basic Info Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">📝</span>
+                        פרטים בסיסיים
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="title">
+                            <span class="label-icon">🎵</span>
+                            שם השיר
+                        </label>
+                        <input type="text" id="title" name="title" class="form-input" required
+                               placeholder="הכנס את שם השיר...">
+                        <div class="field-validation" id="title-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="artist">
+                            <span class="label-icon">🎤</span>
+                            שם האמן
+                        </label>
+                        <input type="text" id="artist" name="artist" class="form-input" required
+                               placeholder="הכנס את שם האמן...">
+                        <div class="field-validation" id="artist-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="genre">
+                            <span class="label-icon">🎭</span>
+                            ז'אנר מוזיקלי
+                        </label>
+                        <select id="genre" name="genre" class="form-select" required>
+                            <option value="">בחר ז'אנר</option>
+                            <option value="pop">פופ - Pop</option>
+                            <option value="rock">רוק - Rock</option>
+                            <option value="jazz">ג'אז - Jazz</option>
+                            <option value="blues">בלוז - Blues</option>
+                            <option value="classical">קלאסי - Classical</option>
+                            <option value="folk">פולק - Folk</option>
+                            <option value="country">קאנטרי - Country</option>
+                            <option value="reggae">רגיי - Reggae</option>
+                            <option value="electronic">אלקטרוני - Electronic</option>
+                            <option value="hip_hop">היפ הופ - Hip Hop</option>
+                            <option value="r_and_b">R&B - ריתם אנד בלוז</option>
+                            <option value="soul">סול - Soul</option>
+                            <option value="funk">פאנק - Funk</option>
+                            <option value="metal">מטאל - Metal</option>
+                            <option value="punk">פאנק - Punk</option>
+                            <option value="alternative">אלטרנטיב - Alternative</option>
+                            <option value="indie">אינדי - Indie</option>
+                            <option value="world">מוזיקת עולם - World Music</option>
+                            <option value="mizrahi">מזרחי</option>
+                            <option value="israeli">ישראלי</option>
+                            <option value="other">אחר</option>
+                        </select>
+                        <div class="field-validation" id="genre-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Musical Details Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">🎼</span>
+                        פרטים מוזיקליים
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="key">
+                            <span class="label-icon">🔑</span>
+                            סולם
+                        </label>
+                        <select id="key" name="key" class="form-select" required>
+                            <option value="">בחר סולם</option>
+                            <option value="C">דו - C</option>
+                            <option value="C#">דו דיאז - C#</option>
+                            <option value="Db">רה במול - Db</option>
+                            <option value="D">רה - D</option>
+                            <option value="D#">רה דיאז - D#</option>
+                            <option value="Eb">מי במול - Eb</option>
+                            <option value="E">מי - E</option>
+                            <option value="F">פה - F</option>
+                            <option value="F#">פה דיאז - F#</option>
+                            <option value="Gb">סול במול - Gb</option>
+                            <option value="G">סול - G</option>
+                            <option value="G#">סול דיאז - G#</option>
+                            <option value="Ab">לה במול - Ab</option>
+                            <option value="A">לה - A</option>
+                            <option value="A#">לה דיאז - A#</option>
+                            <option value="Bb">סי במול - Bb</option>
+                            <option value="B">סי - B</option>
+                        </select>
+                        <div class="field-validation" id="key-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="key_type">
+                            <span class="label-icon">🎹</span>
+                            סוג סולם
+                        </label>
+                        <select id="key_type" name="key_type" class="form-select" required>
+                            <option value="">בחר סוג</option>
+                            <option value="major">מז'ור - Major</option>
+                            <option value="natural_minor">מינור טבעי - Natural Minor</option>
+                            <option value="harmonic_minor">מינור הרמוני - Harmonic Minor</option>
+                            <option value="melodic_minor">מינור מלודי - Melodic Minor</option>
+                            <option value="ionian">יוֹני - Ionian</option>
+                            <option value="dorian">דוֹרי - Dorian</option>
+                            <option value="phrygian">פריגי - Phrygian</option>
+                            <option value="lydian">לידי - Lydian</option>
+                            <option value="mixolydian">מיקסולידי - Mixolydian</option>
+                            <option value="aeolian">אאולי - Aeolian</option>
+                            <option value="locrian">לוֹקרי - Locrian</option>
+                            <option value="major_pentatonic">פנטטוני מז'ורי - Major Pentatonic</option>
+                            <option value="minor_pentatonic">פנטטוני מינורי - Minor Pentatonic</option>
+                            <option value="chromatic">כרומטי - Chromatic</option>
+                            <option value="whole_tone">שלם טונים - Whole Tone</option>
+                            <option value="blues">בלוז - Blues</option>
+                            <option value="octatonic">אוקטטוני / דימינישד - Octatonic / Diminished</option>
+                        </select>
+                        <div class="field-validation" id="key_type-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="difficulty">
+                            <span class="label-icon">⭐</span>
+                            רמת קושי
+                        </label>
+                        <select id="difficulty" name="difficulty" class="form-select" required>
+                            <option value="">בחר רמת קושי</option>
+                            <option value="beginner">מתחילים</option>
+                            <option value="intermediate">ביניים</option>
+                            <option value="advanced">מתקדמים</option>
+                        </select>
+                        <div class="field-validation" id="difficulty-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Timing Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">⏱️</span>
+                        מקצב וקצב
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="time_signature">
+                            <span class="label-icon">🎵</span>
+                            מקצב
+                        </label>
+                        <select id="time_signature" name="time_signature" class="form-select" required>
+                            <option value="">בחר מקצב</option>
+                            <option value="4/4">4/4 (הנפוץ ביותר)</option>
+                            <option value="2/4">2/4</option>
+                            <option value="3/4">3/4 (ולס)</option>
+                            <option value="2/2">2/2 (Alla Breve)</option>
+                            <option value="3/2">3/2</option>
+                            <option value="3/8">3/8</option>
+                            <option value="6/8">6/8 (בלוז/שירים קצביים)</option>
+                            <option value="9/8">9/8</option>
+                            <option value="12/8">12/8 (בלוז/גוספל)</option>
+                            <option value="6/4">6/4</option>
+                            <option value="9/4">9/4</option>
+                            <option value="12/4">12/4</option>
+                            <option value="5/4">5/4 (לא שגרתי)</option>
+                            <option value="5/8">5/8</option>
+                            <option value="7/4">7/4</option>
+                            <option value="7/8">7/8 (מתקדם/אתני)</option>
+                            <option value="11/4">11/4</option>
+                            <option value="11/8">11/8</option>
+                            <option value="13/4">13/4</option>
+                            <option value="13/8">13/8</option>
+                        </select>
+                        <div class="field-validation" id="time_signature-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="bpm">
+                            <span class="label-icon">🚀</span>
+                            BPM (מהירות)
+                        </label>
+                        <input type="number" id="bpm" name="bpm" class="form-input" required
+                               min="40" max="200" step="1" value="100"
+                               placeholder="100">
+                        <div class="input-hint">מהירות הקצב בין 40-200 פעימות לדקה</div>
+                        <div class="field-validation" id="bpm-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Media Section -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">📺</span>
+                        מדיה
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="video_url">
+                            <span class="label-icon">🎥</span>
+                            קישור לסרטון
+                        </label>
+                        <input type="text" id="video_url" name="video_url" class="form-input" required
+                               placeholder="https://www.youtube.com/watch?v=...">
+                        <div class="input-hint">קישור יוטיוב או קישור ישיר לסרטון</div>
+                        <div class="field-validation" id="video_url-validation"></div>
+                    </div>
+                </div>
+
+                <!-- Chords Section -->
+                <div class="form-section full-width-section chords-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">🎸</span>
+                        אקורדים
+                    </h3>
+
+                    <div class="chords-status">
+                        <div id="chords-success" class="success-message" style="display:none;">
+                            <span>🎶</span>
+                            <span>האקורדים נוספו בהצלחה!</span>
+                        </div>
+                    </div>
+
+                    <button type="button" class="chords-btn" id="chords-btn" onclick="goToChordsPage()">
+                        <span>🎸</span>
+                        <span>הוסף אקורדים</span>
+                    </button>
+
+                    <input type="hidden" id="chords" name="chords" required>
+                    <input type="hidden" id="loops" name="loops">
+                </div>
+            </div>
+
+            <!-- Submit Section -->
+            <div class="submit-section">
+                <button type="submit" class="submit-btn">
+                    <span>➕</span>
+                    <span>הוסף שיר</span>
+                </button>
+            </div>
+        </form>
+
+        <div id="response-message" class="response-message" style="display: none;"></div>
+    </div>
 </div>
+{% endblock %}
 
-<script>
-    // בדיקה האם זה באמת שיר חדש - נקה רק נתונים מיותרים
-    function initializeNewSong() {
-        // נקה רק נתונים הקשורים לעריכת שירים קיימים
-        localStorage.removeItem("editingSongId");
-        localStorage.removeItem("editSongData");
-
-        // סמן שזה שיר חדש
-        localStorage.setItem("addingNewSong", "true");
-
-        // אל תנקה chords/loops/songData אם המשתמש חזר מעמוד האקורדים
-        const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
-        if (!justReturnedFromChords) {
-            // רק אם המשתמש לא חזר מעמוד האקורדים - נקה דברים ישנים
-            const existingChords = localStorage.getItem("chords");
-            const existingAddingNewSong = localStorage.getItem("addingNewSong");
-
-            // אם יש אקורדים אבל זה לא מסומן כשיר חדש - זה כנראה משיר אחר
-            if (existingChords && existingAddingNewSong !== "true") {
-                localStorage.removeItem("chords");
-                localStorage.removeItem("loops");
-                console.log("Cleared old chords from different context");
-            }
-        }
-
-        console.log("Initialized new song mode");
-    }
-
-    // Button navigation for new song
-    function goToChordsPage() {
-        // שמור את נתוני הטופס הנוכחיים
-        saveNewSongFormData();
-        // וודא שזה באמת שיר חדש
-        localStorage.setItem("addingNewSong", "true");
-        localStorage.removeItem("editingSongId");
-        window.location.href = "/add-chords";
-    }
-
-    // Edit chords for new song (אחרי שכבר הוספנו)
-    function editNewSongChords() {
-        saveNewSongFormData();
-        localStorage.setItem("addingNewSong", "true");
-        localStorage.removeItem("editingSongId");
-        window.location.href = "/add-chords";
-    }
-
-    function saveNewSongFormData() {
-        const formData = {
-            title: document.getElementById("title").value,
-            artist: document.getElementById("artist").value,
-            key: document.getElementById("key").value,
-            key_type: document.getElementById("key_type").value,
-            difficulty: document.getElementById("difficulty").value,
-            time_signature: document.getElementById("time_signature").value,
-            bpm: document.getElementById("bpm").value,
-            video_url: document.getElementById("video_url").value
-        };
-        localStorage.setItem("songData", JSON.stringify(formData));
-    }
-
-    // בדיקה האם יש אקורדים שמורים רק עבור השיר החדש הזה
-    function hasChordsForCurrentNewSong() {
-        const savedChords = localStorage.getItem("chords");
-        const addingNewSong = localStorage.getItem("addingNewSong");
-        const editingSongId = localStorage.getItem("editingSongId");
-
-        // יש אקורדים רק אם זה באמת שיר חדש ולא עריכה של קיים
-        return savedChords && addingNewSong === "true" && !editingSongId;
-    }
-
-    // --- Initialize page ---
-    document.addEventListener("DOMContentLoaded", function () {
-        // התחל במצב שיר חדש - אבל שמור נתונים אם המשתמש חזר מאקורדים
-        initializeNewSong();
-
-        // טען נתוני טופס קיימים (אם המשתמש חזר מעמוד האקורדים או שמר נתונים)
-        const songData = JSON.parse(localStorage.getItem("songData") || "{}");
-        for (const key in songData) {
-            const element = document.getElementById(key);
-            if (element && songData[key]) {
-                element.value = songData[key];
-            }
-        }
-
-        // בדוק מצב האקורדים
-        const chordsSuccessDiv = document.getElementById("chords-success");
-        const chordsBtn = document.getElementById("chords-btn");
-        const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
-
-        if (hasChordsForCurrentNewSong() && justReturnedFromChords === "true") {
-            // המשתמש הוסיף אקורדים ומיד חזר - הצג הודעת הצלחה
-            const savedChords = localStorage.getItem("chords");
-            const savedLoops = localStorage.getItem("loops");
-
-            document.getElementById("chords").value = savedChords;
-            if (savedLoops) {
-                document.getElementById("loops").value = savedLoops;
-            }
-
-            chordsSuccessDiv.style.display = "block";
-            chordsBtn.textContent = "ערוך אקורדים שנוספו";
-            chordsBtn.onclick = editNewSongChords;
-
-            // נקה את הדגל אחרי שטיפלנו בו
-            localStorage.removeItem("justReturnedFromChords");
-
-            console.log("Loaded chords for new song after return from chords page");
-        } else if (hasChordsForCurrentNewSong()) {
-            // יש אקורדים לשיר החדש אבל המשתמש לא הגיע ממועדון האקורדים
-            const savedChords = localStorage.getItem("chords");
-            const savedLoops = localStorage.getItem("loops");
-
-            document.getElementById("chords").value = savedChords;
-            if (savedLoops) {
-                document.getElementById("loops").value = savedLoops;
-            }
-
-            chordsSuccessDiv.style.display = "none";
-            chordsBtn.textContent = "ערוך אקורדים שנוספו";
-            chordsBtn.onclick = editNewSongChords;
-
-            console.log("Found existing chords for new song");
-        } else {
-            // אין אקורדים - הצג כפתור הוספה רגיל
-            chordsSuccessDiv.style.display = "none";
-            chordsBtn.textContent = "הוסף אקורדים";
-            chordsBtn.onclick = goToChordsPage;
-
-            // וודא שהשדות הנסתרים ריקים
-            document.getElementById("chords").value = "";
-            document.getElementById("loops").value = "";
-
-            console.log("No chords for new song - showing add button");
-        }
-
-        // שמור שדות טופס בעת שינוי
-        const fields = ["title", "artist", "key", "key_type", "difficulty", "time_signature", "bpm", "video_url"];
-        fields.forEach(field => {
-            const el = document.getElementById(field);
-            if (el) {
-                el.addEventListener("input", saveNewSongFormData);
-            }
-        });
-    });
-
-    document.getElementById("add-song-form").addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        const title = document.getElementById("title").value;
-        const artist = document.getElementById("artist").value;
-        const key = document.getElementById("key").value;
-        const keyType = document.getElementById("key_type").value;
-        const difficulty = document.getElementById("difficulty").value;
-        const timeSignature = document.getElementById("time_signature").value;
-        const bpm = document.getElementById("bpm").value;
-        const videoUrl = document.getElementById("video_url").value;
-        const chordsRaw = document.getElementById("chords").value;
-        const loopsRaw = document.getElementById("loops").value;
-
-        let finalVideoUrl = videoUrl;
-        const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
-        if (ytMatch && ytMatch[1]) {
-            finalVideoUrl = "https://www.youtube.com/embed/" + ytMatch[1];
-        }
-
-        let chords, loops = [];
-        try {
-            chords = JSON.parse(chordsRaw);
-        } catch (e) {
-            alert("שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.");
-            return;
-        }
-
-        if (loopsRaw) {
-            try {
-                loops = JSON.parse(loopsRaw);
-            } catch (e) {
-                console.log("Error parsing loops data:", e);
-                loops = [];
-            }
-        }
-
-        fetch("/api/add_song", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                title: title,
-                artist: artist,
-                key: key,
-                key_type: keyType,
-                difficulty: difficulty,
-                time_signature: timeSignature,
-                bpm: parseInt(bpm),
-                video_url: finalVideoUrl,
-                chords: chords,
-                loops: loops
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const messageEl = document.getElementById("response-message");
-            if (data.message) {
-                messageEl.textContent = "✅ " + data.message;
-                messageEl.style.color = "green";
-
-                // נקה הכל אחרי יצירה מוצלחת
-                localStorage.removeItem("chords");
-                localStorage.removeItem("loops");
-                localStorage.removeItem("songData");
-                localStorage.removeItem("justReturnedFromChords");
-                localStorage.removeItem("addingNewSong");
-
-                // איפוס הודעת הצלחה
-                document.getElementById("chords-success").style.display = "none";
-
-                // איפוס כפתור האקורדים
-                const chordsBtn = document.getElementById("chords-btn");
-                chordsBtn.textContent = "הוסף אקורדים";
-                chordsBtn.onclick = goToChordsPage;
-
-                // איפוס טופס
-                document.getElementById("add-song-form").reset();
-                document.getElementById("bpm").value = "100";
-
-                // איפוס hidden fields
-                document.getElementById("chords").value = "";
-                document.getElementById("loops").value = "";
-            } else {
-                messageEl.textContent = "❌ שגיאה בהוספת השיר, נסה שוב";
-                messageEl.style.color = "red";
-            }
-        })
-        .catch(error => {
-            document.getElementById("response-message").textContent = "❌ שגיאה בהוספת השיר!";
-            document.getElementById("response-message").style.color = "red";
-            console.error("Error:", error);
-        });
-    });
-</script>
-
-<style>
-    .styled-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 400px;
-        margin: auto;
-    }
-
-    .styled-form label {
-        font-weight: bold;
-        text-align: right;
-    }
-
-    .styled-form input,
-    .styled-form select {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-
-    .btn {
-        background-color: #28a745;
-        color: white;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .btn:hover {
-        background-color: #218838;
-    }
-
-    .message {
-        text-align: center;
-        font-weight: bold;
-        margin-top: 10px;
-    }
-</style>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/add_song.js') }}"></script>
 {% endblock %}

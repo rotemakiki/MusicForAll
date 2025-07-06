@@ -23,7 +23,7 @@ def add_song():
         return jsonify({"error": "Unauthorized"}), 403
 
     data = request.get_json()
-    required_fields = ["title", "artist", "key", "key_type", "time_signature", "bpm", "video_url", "chords"]
+    required_fields = ["title", "artist" , "genre", "key", "key_type", "time_signature", "bpm", "video_url", "chords"]
     for field in required_fields:
         if field not in data or not data[field]:
             return jsonify({"error": f"Missing or empty field: {field}"}), 400
@@ -34,6 +34,7 @@ def add_song():
     new_song = {
         "title": data["title"],
         "artist": data["artist"],
+        "genre": data["genre"],
         "key": data["key"],
         "key_type": data["key_type"],
         "difficulty": data["difficulty"],
