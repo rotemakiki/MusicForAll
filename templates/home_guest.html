@@ -2,29 +2,213 @@
 
 {% block title %}ברוכים הבאים - Music For All{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home_guest.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>🎵 ברוכים הבאים ל־Music For All</h1>
-    <p>
-        זוהי פלטפורמה שיתופית ללימוד והוראת מוזיקה.<br>
-        מורים יכולים להעלות שיעורים, תלמידים יכולים ללמוד ולהתפתח, ואמנים יכולים לשתף יצירות מקוריות.<br>
-        התחברו כדי לפתוח עולם של השראה מוזיקלית!
-    </p>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">🎵 Music For All 🎶</h1>
+        <p class="hero-subtitle">פלטפורמה שיתופית ללימוד והוראת מוזיקה • מורים מקצועיים • שיעורים אינטראקטיביים • קהילה מוזיקלית</p>
 
-    <!-- סרטון הסבר -->
-    <div class="video-container">
-        <video width="640" height="360" controls>
-            <source src="{{ url_for('static', filename='videos/intro.mp4') }}" type="video/mp4">
-            הדפדפן שלך לא תומך בניגון וידאו.
-        </video>
+        <div class="hero-buttons">
+            <a href="{{ url_for('auth.register') }}" class="hero-btn primary">
+                <span>🎸</span>
+                <span>הצטרף עכשיו</span>
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="hero-btn">
+                <span>🔑</span>
+                <span>התחברות</span>
+            </a>
+            <a href="{{ url_for('songs.songs') }}" class="hero-btn">
+                <span>🎵</span>
+                <span>עיין בשירים</span>
+            </a>
+        </div>
+
+        <div class="hero-video">
+            <video controls preload="metadata">
+                <source src="{{ url_for('static', filename='videos/intro.mp4') }}" type="video/mp4">
+                הדפדפן שלך לא תומך בניגון וידאו.
+            </video>
+        </div>
     </div>
+</section>
 
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">למה Music For All?</h2>
+            <p class="section-subtitle">הפלטפורמה המתקדמת ביותר ללימוד מוזיקה בישראל</p>
+        </div>
 
-    <div class="top-left-buttons">
-    <a href="{{ url_for('auth.login') }}" class="btn small-btn">🔑 התחברות</a>
-    <a href="{{ url_for('auth.register') }}" class="btn small-btn">📝 הרשמה</a>
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🎓</span>
+                <h3 class="feature-title">מורים מקצועיים</h3>
+                <p class="feature-description">למד מהמורים הטובים ביותר עם ניסיון עשיר בהוראה ובביצוע. כל מורה עובר בדיקה יסודית ומספק הוראה איכותית.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">🎸</span>
+                <h3 class="feature-title">שיעורים אינטראקטיביים</h3>
+                <p class="feature-description">שיעורים עם אקורדים אינטראקטיביים, מטרונום מובנה, ונגן שירים מתקדם. למד בקצב שלך עם כלים טכנולוגיים מתקדמים.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">🌟</span>
+                <h3 class="feature-title">למידה מותאמת אישית</h3>
+                <p class="feature-description">מערכת חכמה שמתאימה את התוכן לרמה שלך. החל ממתחילים ועד מתקדמים, כל אחד מוצא את המקום שלו.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">🎵</span>
+                <h3 class="feature-title">ספריית שירים ענקית</h3>
+                <p class="feature-description">מאות שירים עם אקורדים מדויקים, הדרכות וידאו, ואפשרות לנגן עם מטרונום. מכל הסגנונות והתקופות.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">👥</span>
+                <h3 class="feature-title">קהילה מוזיקלית</h3>
+                <p class="feature-description">הצטרף לקהילה של אלפי מוזיקאים, שתף יצירות, קבל המלצות ולמד יחד עם אחרים. מוזיקה היא חוויה חברתית!</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">📱</span>
+                <h3 class="feature-title">נגישות מכל מקום</h3>
+                <p class="feature-description">למד בבית, בדרך, או בכל מקום שתרצה. הפלטפורמה זמינה 24/7 ומותאמת לכל המכשירים.</p>
+            </div>
+        </div>
     </div>
+</section>
 
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number stat-songs" data-target="150">0</span>
+                <span class="stat-label">שירים באתר</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number stat-teachers" data-target="25">0</span>
+                <span class="stat-label">מורים מקצועיים</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number stat-students" data-target="500">0</span>
+                <span class="stat-label">תלמידים פעילים</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number stat-lessons" data-target="1200">0</span>
+                <span class="stat-label">שיעורים הועברו</span>
+            </div>
+        </div>
+    </div>
+</section>
 
-</div>
+<!-- How It Works Section -->
+<section class="features-section" id="how-it-works">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">איך זה עובד?</h2>
+            <p class="section-subtitle">3 שלבים פשוטים להתחיל את המסע המוזיקלי שלך</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">1️⃣</span>
+                <h3 class="feature-title">הירשם בחינם</h3>
+                <p class="feature-description">צור חשבון בקלות ובחר אם אתה מורה או תלמיד. ההרשמה אורכת פחות מדקה ומיד תוכל להתחיל.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">2️⃣</span>
+                <h3 class="feature-title">בחר שיר או מורה</h3>
+                <p class="feature-description">עיין בספריית השירים העשירה או חפש מורה שמתאים לך. כל שיר כולל אקורדים, וידאו הדרכה ואפשרות נגינה.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">3️⃣</span>
+                <h3 class="feature-title">התחל ללמוד ולנגן</h3>
+                <p class="feature-description">השתמש בכלים האינטראקטיביים שלנו כדי ללמוד בקצב שלך. נגן עם המטרונום, תרגל אקורדים ושפר את הכישורים שלך.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Access Section -->
+<section class="features-section" id="quick-access">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">גישה מהירה</h2>
+            <p class="section-subtitle">מה תרצה לעשות היום?</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🎸</span>
+                <h3 class="feature-title">תרגל שירים</h3>
+                <p class="feature-description">גש לספריית השירים ותתחיל לתרגל מיד עם אקורדים אינטראקטיביים ומטרונום מובנה.</p>
+                <div style="margin-top: 20px;">
+                    <a href="{{ url_for('songs.songs') }}" class="hero-btn">
+                        <span>🎵</span>
+                        <span>עבור לשירים</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">👨‍🏫</span>
+                <h3 class="feature-title">מצא מורה</h3>
+                <p class="feature-description">חפש מורה מקצועי שמתמחה בסגנון שאתה אוהב ותתחיל ללמוד עם המיטב שיש.</p>
+                <div style="margin-top: 20px;">
+                    <a href="{{ url_for('teachers.list_teachers') }}" class="hero-btn">
+                        <span>🔍</span>
+                        <span>רשימת מורים</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">📚</span>
+                <h3 class="feature-title">שיעורים מוקלטים</h3>
+                <p class="feature-description">צפה בשיעורים מוקלטים מהמורים הטובים ביותר ולמד בקצב שלך, מתי שנוח לך.</p>
+                <div style="margin-top: 20px;">
+                    <a href="{{ url_for('videos.videos') }}" class="hero-btn">
+                        <span>▶️</span>
+                        <span>צפה בשיעורים</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title">מוכן להתחיל את המסע המוזיקלי שלך?</h2>
+            <p class="cta-subtitle">הצטרף אלינו היום ותגלה עולם חדש של מוזיקה ולמידה. זה בחינם לגמרי!</p>
+
+            <div class="cta-buttons">
+                <a href="{{ url_for('auth.register') }}" class="hero-btn primary">
+                    <span>🚀</span>
+                    <span>התחל עכשיו - בחינם</span>
+                </a>
+                <a href="{{ url_for('tutorials.tutorials') }}" class="hero-btn">
+                    <span>📖</span>
+                    <span>מדריך למתחילים</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/home_guest.js') }}"></script>
 {% endblock %}

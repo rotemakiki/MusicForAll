@@ -1,144 +1,186 @@
 {% extends "base.html" %}
 
-{% block title %}התחברות{% endblock %}
+{% block title %}התחברות - Music For All{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
 
 {% block content %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul class="flashes">
-          {% for category, message in messages %}
-            <li class="flash {{ category }}">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+<div class="login-container">
+    <!-- Left Panel - Branding -->
+    <div class="login-brand-panel">
+        <div class="brand-content">
+            <div class="brand-logo">🎵</div>
+            <h1 class="brand-title">Music For All</h1>
+            <p class="brand-subtitle">הפלטפורמה המתקדמת ביותר ללימוד מוזיקה בישראל</p>
 
-    <h2>התחברות</h2>
-
-    {% if user_already_logged_in %}
-        <!-- 🆕 מסך כפוי התחברות -->
-        <div class="warning-box">
-            <h3>⚠️ המשתמש כבר מחובר</h3>
-            <p>נראה שאתה מחובר ממכשיר אחר או ששכחת להתנתק.</p>
-            <p>מה תרצה לעשות?</p>
-
-            <div class="force-login-options">
-                <!-- התחברות כפויה - עם שדה סיסמה חזותי -->
-                <form action="{{ url_for('auth.login') }}" method="post" id="force-login-form">
-                    <input type="hidden" name="email" value="{{ email }}">
-                    <div style="margin-bottom: 15px;">
-                        <label for="force-password" style="display: block; margin-bottom: 5px;">הכנס סיסמה לאישור:</label>
-                        <input type="password" id="force-password" name="password" required
-                               style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px;">
-                    </div>
-                    <input type="hidden" name="force_login" value="true">
-                    <button type="submit" class="btn force-login-btn">
-                        🔐 התחבר בכל זאת (נתק ממכשירים אחרים)
-                    </button>
-                </form>
-
-                <!-- חזרה -->
-                <a href="{{ url_for('auth.login') }}" class="btn cancel-btn">❌ ביטול</a>
+            <div class="brand-features">
+                <div class="brand-feature">
+                    <span class="feature-icon">🎸</span>
+                    <span>שיעורים אינטראקטיביים</span>
+                </div>
+                <div class="brand-feature">
+                    <span class="feature-icon">👨‍🏫</span>
+                    <span>מורים מקצועיים</span>
+                </div>
+                <div class="brand-feature">
+                    <span class="feature-icon">🎵</span>
+                    <span>ספריית שירים ענקית</span>
+                </div>
+                <div class="brand-feature">
+                    <span class="feature-icon">🌟</span>
+                    <span>למידה מותאמת אישית</span>
+                </div>
             </div>
         </div>
-    {% else %}
-        <!-- טופס התחברות רגיל -->
-        <form action="{{ url_for('auth.login') }}" method="post" id="login-form">
-            <label for="email">אימייל:</label>
-            <input type="email" id="email" name="email" value="{{ email or '' }}" required>
+    </div>
 
-            <label for="password">סיסמה:</label>
-            <input type="password" id="password" name="password" required>
+    <!-- Right Panel - Login Form -->
+    <div class="login-form-panel">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+                <span>
+                    {% if category == 'success' %}✅
+                    {% elif category == 'error' %}⚠️
+                    {% elif category == 'warning' %}⚠️
+                    {% elif category == 'info' %}ℹ️
+                    {% endif %}
+                </span>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
 
-            <button type="submit">התחבר</button>
-        </form>
+        {% if user_already_logged_in %}
+            <!-- Force Login Modal Content -->
+            <div class="form-header">
+                <h2 class="form-title">⚠️ משתמש כבר מחובר</h2>
+                <p class="form-subtitle">נראה שאתה מחובר ממכשיר אחר או ששכחת להתנתק</p>
+            </div>
 
-        <p>אין לך חשבון? <a href="{{ url_for('auth.register') }}">הרשם כאן</a></p>
-    {% endif %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">מה תרצה לעשות?</h3>
+                    <p class="modal-text">אתה יכול להתחבר בכל זאת ולנתק את החיבור מהמכשיר האחר, או לחזור ולנסות מאוחר יותר.</p>
+                </div>
+
+                <!-- Force Login Form -->
+                <form id="force-login-form" class="login-form" method="post">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <input type="hidden" name="force_login" value="true">
+
+                    <div class="form-group">
+                        <label for="force-password" class="form-label">
+                            <span>🔒</span>
+                            <span>הכנס סיסמה לאישור</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <input type="password" id="force-password" name="password" class="form-input" required
+                                   placeholder="הכנס את הסיסמה שלך...">
+                            <span class="input-icon">🔒</span>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="submit" class="force-login-btn">
+                            <span>🔐</span>
+                            <span>התחבר בכל זאת</span>
+                        </button>
+                        <a href="{{ url_for('auth.login') }}" class="cancel-btn">
+                            <span>❌</span>
+                            <span>ביטול</span>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        {% else %}
+            <!-- Regular Login Form -->
+            <div class="form-header">
+                <h2 class="form-title">ברוך הבא חזרה!</h2>
+                <p class="form-subtitle">התחבר לחשבון שלך והמשך ללמוד מוזיקה</p>
+            </div>
+
+            <form class="login-form" method="post">
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <span>📧</span>
+                        <span>כתובת אימייל</span>
+                    </label>
+                    <div class="input-with-icon">
+                        <input type="email" id="email" name="email" class="form-input" required
+                               value="{{ email or '' }}" placeholder="הכנס את כתובת האימייל שלך..."
+                               autocomplete="email">
+                        <span class="input-icon">📧</span>
+                    </div>
+                    <div id="email-help" class="sr-only">הכנס כתובת אימייל תקפה</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <span>🔒</span>
+                        <span>סיסמה</span>
+                    </label>
+                    <div class="input-with-icon">
+                        <input type="password" id="password" name="password" class="form-input" required
+                               placeholder="הכנס את הסיסמה שלך..." autocomplete="current-password">
+                        <span class="input-icon">🔒</span>
+                    </div>
+                    <div id="password-help" class="sr-only">הכנס את הסיסמה שלך</div>
+                </div>
+
+                <button type="submit" class="submit-btn" disabled>
+                    <span>🚀</span>
+                    <span>התחבר</span>
+                </button>
+            </form>
+
+            <div class="register-link">
+                <p>אין לך עדיין חשבון?</p>
+                <a href="{{ url_for('auth.register') }}" class="register-btn">
+                    <span>📝</span>
+                    <span>הירשם עכשיו</span>
+                </a>
+            </div>
+        {% endif %}
+
+        <!-- Keyboard Shortcuts Info -->
+        <div style="position: absolute; bottom: 20px; left: 20px; font-size: 0.8rem; color: #64748b; opacity: 0.7;">
+            <div>קיצורי מקלדת:</div>
+            <div>Alt+L: מעבר לשדה אימייל | Alt+P: מעבר לסיסמה</div>
+            <div>Enter: התחברות | Esc: ניקוי טופס</div>
+        </div>
+    </div>
+</div>
+
+<!-- Screen reader only content for accessibility -->
+<div class="sr-only">
+    <h1>עמוד התחברות למערכת Music For All</h1>
+    <p>בעמוד זה תוכל להתחבר לחשבון שלך ולגשת לתכנים האישיים שלך</p>
+</div>
 
 <style>
-.warning-box {
-    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-    border: 2px solid #ffc107;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-}
-
-.warning-box h3 {
-    color: #856404;
-    margin-top: 0;
-}
-
-.warning-box p {
-    color: #856404;
-    margin: 10px 0;
-}
-
-.force-login-options {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-}
-
-.force-login-btn {
-    background: linear-gradient(135deg, #dc3545, #c82333);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.force-login-btn:hover {
-    background: linear-gradient(135deg, #c82333, #bd2130);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
-}
-
-.cancel-btn {
-    background: linear-gradient(135deg, #6c757d, #545b62);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.cancel-btn:hover {
-    background: linear-gradient(135deg, #545b62, #495057);
-    transform: translateY(-1px);
-}
-
-@media (max-width: 600px) {
-    .force-login-options {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .force-login-btn, .cancel-btn {
-        width: 100%;
-        max-width: 300px;
-    }
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 </style>
+{% endblock %}
 
-<script>
-// אין צורך יותר בשמירת סיסמה - המשתמש יכניס אותה שוב
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Login page loaded');
-});
-</script>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}
