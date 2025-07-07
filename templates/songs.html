@@ -2,86 +2,132 @@
 
 {% block title %}רשימת שירים{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/songs.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>רשימת שירים</h1>
+<div class="songs-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">🎵 רשימת שירים</h1>
+        <p class="page-subtitle">גלה את השירים המיוחדים שלנו ותתחיל לנגן</p>
 
-    {% if session.get('role') == 'teacher' %}
-        <a href="{{ url_for('songs.add_song_page') }}" class="btn">➕ הוסף שיר חדש</a>
+        <div class="songs-count">
+            <span class="count-number">{{ songs|length }}</span>
+            <span class="count-label">שירים זמינים</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            {% set roles = session.get('roles', []) %}
+            {% if 'teacher' in roles or 'admin' in roles %}
+                <a href="{{ url_for('songs.add_song_page') }}" class="add-song-btn">
+                    <span>➕</span>
+                    <span>הוסף שיר חדש</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-controls">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="חפש שיר או אמן...">
+            </div>
+
+            <select id="sort-select" class="sort-dropdown">
+                <option value="title">מיון לפי שם השיר</option>
+                <option value="artist">מיון לפי אמן</option>
+                <option value="difficulty">מיון לפי רמת קושי</option>
+                <option value="bpm">מיון לפי BPM</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Songs Grid -->
+    {% if songs %}
+        <div class="songs-grid">
+            {% for song in songs %}
+                <div class="song-card" id="song-{{ song.id }}"
+                     data-difficulty="{{ song.difficulty }}"
+                     data-bpm="{{ song.bpm }}"
+                     data-key="{{ song.key }}"
+                     data-time-signature="{{ song.time_signature }}">
+
+                    <div class="song-header">
+                        <div class="song-info">
+                            <h3>{{ song.title }}</h3>
+                            <p>{{ song.artist }}</p>
+                        </div>
+                    </div>
+
+                    <div class="song-details">
+                        <span class="detail-badge">
+                            🎼 {{ song.key }} {{ song.key_type }}
+                        </span>
+                        <span class="detail-badge">
+                            🎵 {{ song.time_signature }}
+                        </span>
+                        <span class="detail-badge">
+                            ⚡ {{ song.bpm }} BPM
+                        </span>
+                        {% if song.difficulty %}
+                        <span class="detail-badge difficulty-{{ song.difficulty }}">
+                            ⭐ {{ song.difficulty }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="song-actions">
+                        <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="action-btn play-btn">
+                            <span>🎵</span>
+                            <span>לעמוד השיר</span>
+                        </a>
+
+                        {% if session.get('user_id') %}
+                            <button class="action-btn my-songs-btn"
+                                    data-song-id="{{ song.id }}"
+                                    onclick="toggleMySong('{{ song.id }}', this)">
+                                <span class="icon">❤️</span>
+                                <span class="text">הוסף לשירים שלי</span>
+                            </button>
+                        {% endif %}
+
+                        {% if session.get('user_id') == song.created_by %}
+                            <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
+                                <span>✏️</span>
+                                <span>ערוך</span>
+                            </a>
+
+                            <button class="action-btn delete-btn"
+                                    onclick="deleteSong('{{ song.id }}', '{{ song.title }}')">
+                                <span>🗑️</span>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🎵</div>
+            <h3>אין שירים זמינים</h3>
+            <p>עדיין לא נוספו שירים למערכת</p>
+            {% set roles = session.get('roles', []) %}
+            {% if 'teacher' in roles or 'admin' in roles %}
+                <a href="{{ url_for('songs.add_song_page') }}" class="browse-btn">
+                    <span>➕</span>
+                    <span>הוסף שיר ראשון</span>
+                </a>
+            {% endif %}
+        </div>
     {% endif %}
-
-    <ul id="song-list">
-        {% for song in songs %}
-            <li id="song-{{ song.id }}">
-                <a href="{{ url_for('songs.play_song', song_id=song.id) }}">{{ song.title }} - {{ song.artist }}</a>
-
-                {% if session.get('user_id') == song.created_by %}
-                    <button class="delete-btn" onclick="deleteSong('{{ song.id }}')">🗑 מחק</button>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
 </div>
+{% endblock %}
 
-<style>
-    .delete-btn {
-        margin-right: 10px;
-        background-color: red;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 4px 8px;
-        cursor: pointer;
-    }
-
-    .delete-btn:hover {
-        background-color: darkred;
-    }
-
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    li {
-        margin-bottom: 10px;
-    }
-
-    .btn {
-        display: inline-block;
-        margin-bottom: 20px;
-        background-color: #007bff;
-        color: white;
-        padding: 10px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: bold;
-    }
-
-    .btn:hover {
-        background-color: #0056b3;
-    }
-</style>
-
-<script>
-    function deleteSong(songId) {
-        if (!confirm("האם אתה בטוח שברצונך למחוק את השיר?")) return;
-
-        fetch(`/api/delete_song/${songId}`, {
-            method: "DELETE"
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.message) {
-                document.getElementById(`song-${songId}`).remove();
-            } else {
-                alert("⚠️ שגיאה במחיקת השיר");
-            }
-        })
-        .catch(err => {
-            console.error("Delete error:", err);
-            alert("⚠️ שגיאה במחיקת השיר");
-        });
-    }
-</script>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/songs.js') }}"></script>
 {% endblock %}
