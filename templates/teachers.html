@@ -3,20 +3,64 @@
 {% block title %}רשימת מורים{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>רשימת מורים</h1>
-    {% if teachers %}
-        <ul style="text-align: right;">
-            {% for teacher in teachers %}
-                <li>
-                    <a href="{{ url_for('teachers.teacher_profile', teacher_id=teacher.id) }}">
-                        {{ teacher.username }}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>אין מורים להצגה כרגע.</p>
-    {% endif %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/teachers.css') }}">
+
+<div class="teachers-container">
+    <div class="teachers-card">
+        <div class="page-header">
+            <h1 class="page-title">🎵 רשימת מורים</h1>
+            <p class="page-subtitle">הכר את הצוות הבוגר שלנו</p>
+        </div>
+
+        {% if teachers %}
+            <div class="teachers-grid">
+                {% for teacher in teachers %}
+                    <div class="teacher-card" onclick="window.location.href='{{ url_for('teachers.teacher_profile', teacher_id=teacher.id) }}'">
+                        <div class="teacher-avatar">
+                            {% if teacher.profile_image %}
+                                <img src="{{ teacher.profile_image }}" alt="{{ teacher.username }}" class="avatar-img">
+                            {% else %}
+                                <div class="avatar-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="teacher-info">
+                            <h3 class="teacher-name">{{ teacher.username }}</h3>
+                            <p class="teacher-role">מורה למוזיקה</p>
+                            <div class="teacher-details">
+                                <span class="detail-item">
+                                    <i class="fas fa-music"></i>
+                                    <span>מומחה בכלי נגינה</span>
+                                </span>
+                                <span class="detail-item">
+                                    <i class="fas fa-star"></i>
+                                    <span>מדריך מנוסה</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="teacher-actions">
+                            <button class="view-profile-btn">
+                                <i class="fas fa-eye"></i>
+                                <span>צפה בפרופיל</span>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>אין מורים זמינים</h3>
+                <p>לא נמצאו מורים להצגה כרגע. בדוק שוב מאוחר יותר.</p>
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<script src="{{ url_for('static', filename='js/teachers.js') }}"></script>
 {% endblock %}

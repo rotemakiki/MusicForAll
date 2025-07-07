@@ -2,79 +2,289 @@
 
 {% block title %}פרופיל מורה - {{ teacher.username }}{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/teacher_profile.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
+<div class="teacher-profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <!-- Profile Image Section -->
+        <div class="profile-image-section">
+            {% if teacher.profile_image %}
+                <img src="{{ teacher.profile_image }}" alt="תמונת פרופיל" class="profile-image">
+            {% else %}
+                <div class="default-avatar">👨‍🏫</div>
+            {% endif %}
 
-    {% if teacher.profile_image %}
-        <img src="{{ teacher.profile_image }}" alt="תמונת פרופיל" style="width: 150px; border-radius: 50%; margin-bottom: 20px;">
-    {% endif %}
-
-    <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" style="margin-bottom: 20px;">
-        <input type="file" name="profile_image" accept="image/*" required style="margin-bottom: 10px;">
-        <input type="hidden" name="user_id" value="{{ teacher.id }}">
-        <button type="submit" class="btn">⬆️ העלה תמונת פרופיל</button>
-    </form>
-
-
-    <h1>{{ teacher.username }}</h1>
-    <p><strong>כלי נגינה:</strong> {{ teacher.instruments or "לא צויין" }}</p>
-    <p><strong>סגנונות לימוד:</strong> {{ teacher.styles or "לא צויין" }}</p>
-
-    <p><strong>פנוי לקבלת תלמידים:</strong>
-        {% if teacher.is_available %}
-            <span style="color: green; font-weight: bold;">כן</span>
-        {% else %}
-            <span style="color: red; font-weight: bold;">לא</span>
-        {% endif %}
-    </p>
-    <p><strong>מלמד דרך זום:</strong>
-    {% if teacher.teaches_online %}
-        <span style="color: green; font-weight: bold;">כן</span>
-    {% else %}
-        <span style="color: red; font-weight: bold;">לא</span>
-    {% endif %}
-    </p>
-
-    <p><strong>ותק באתר:</strong> {{ days_on_site }} ימים</p>
-
-    <a href="#" class="btn">צור קשר עם המורה (בקרוב)</a>
-    <a href="{{ url_for('teachers.edit_teacher_profile', teacher_id=teacher.id) }}" class="btn">✏️ ערוך פרופיל</a>
-
-    <hr>
-    <h3>📤 העלאת סרטון חדש</h3>
-    <form action="{{ url_for('teachers.upload_video') }}" method="POST" enctype="multipart/form-data">
-        <input type="text" name="title" placeholder="כותרת הסרטון" required>
-        <input type="text" name="description" placeholder="תיאור קצר" required>
-        <input type="file" name="video_file" accept="video/*" required>
-        <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
-        <button type="submit" class="btn">⬆️ העלה סרטון</button>
-    </form>
-
-    <hr>
-    <h3>🎬 סרטונים פופולריים</h3>
-    {% if videos %}
-            {% for video in videos %}
-                <div style="margin-bottom: 30px;">
-                    <h4>{{ video.title }}</h4>
-                    <p>{{ video.description }}</p>
-                    <video width="400" controls>
-                        <source src="{{ video.url }}" type="video/mp4">
-                        הדפדפן שלך לא תומך בניגון וידאו.
-                    </video>
+            <!-- Upload Form -->
+            <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                <div class="file-input-wrapper">
+                    <input type="file" name="profile_image" id="profile-image-input" class="file-input" accept="image/*" required>
+                    <label for="profile-image-input" class="file-input-label">
+                        <span>📷</span>
+                        <span>בחר תמונה</span>
+                    </label>
                 </div>
-            {% endfor %}
+                <input type="hidden" name="user_id" value="{{ teacher.id }}">
+                <button type="submit" class="action-btn secondary">
+                    <span>⬆️</span>
+                    <span>העלה תמונת פרופיל</span>
+                </button>
+            </form>
+        </div>
 
-        <a href="{{ url_for('videos.videos') }}" class="btn">צפייה בכל הסרטונים</a>
-    {% else %}
-        <p>אין סרטונים להצגה.</p>
+        <!-- Teacher Info -->
+        <h1 class="teacher-name">{{ teacher.username }}</h1>
+
+        <!-- Teacher Details Grid -->
+        <div class="teacher-details">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>🎸</span>
+                    <span>כלי נגינה</span>
+                </div>
+                <div class="detail-value">{{ teacher.instruments or "לא צויין" }}</div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>🎭</span>
+                    <span>סגנונות לימוד</span>
+                </div>
+                <div class="detail-value">{{ teacher.styles or "לא צויין" }}</div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>📅</span>
+                    <span>ותק באתר</span>
+                </div>
+                <div class="detail-value">{{ days_on_site }} ימים</div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>🎯</span>
+                    <span>זמינות</span>
+                </div>
+                <div class="detail-value">
+                    {% if teacher.is_available %}
+                        <div class="status-indicator status-available">
+                            <span>✅</span>
+                            <span>פנוי לקבלת תלמידים</span>
+                        </div>
+                    {% else %}
+                        <div class="status-indicator status-unavailable">
+                            <span>❌</span>
+                            <span>לא פנוי כרגע</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>💻</span>
+                    <span>שיעורים אונליין</span>
+                </div>
+                <div class="detail-value">
+                    {% if teacher.teaches_online %}
+                        <div class="status-indicator status-available">
+                            <span>✅</span>
+                            <span>מלמד דרך זום</span>
+                        </div>
+                    {% else %}
+                        <div class="status-indicator status-unavailable">
+                            <span>❌</span>
+                            <span>לא מלמד אונליין</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-number">{{ videos|length }}</div>
+                <div class="stat-label">סרטונים</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1,234</div>
+                <div class="stat-label">צפיות</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">89</div>
+                <div class="stat-label">תלמידים</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4.8</div>
+                <div class="stat-label">דירוג ממוצע</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="action-btn" onclick="contactTeacher('{{ teacher.id }}', '{{ teacher.username }}')">
+                <span>📞</span>
+                <span>צור קשר עם המורה</span>
+            </button>
+            {% if session.get('user_id') == teacher.id %}
+                <a href="{{ url_for('teachers.edit_teacher_profile', teacher_id=teacher.id) }}" class="action-btn tertiary">
+                    <span>✏️</span>
+                    <span>ערוך פרופיל</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Video Upload Section -->
+    {% if session.get('user_id') == teacher.id %}
+    <div class="content-section">
+        <h2 class="section-header">
+            <span>📤</span>
+            <span>העלאת סרטון חדש</span>
+        </h2>
+
+        <form action="{{ url_for('teachers.upload_video') }}" method="POST" enctype="multipart/form-data" class="upload-video-form" id="video-upload-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="video-title" class="form-label">
+                        <span>📝</span>
+                        <span>כותרת הסרטון</span>
+                    </label>
+                    <input type="text" id="video-title" name="title" class="form-input" placeholder="הכנס כותרת מעניינת..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="video-description" class="form-label">
+                        <span>📋</span>
+                        <span>תיאור קצר</span>
+                    </label>
+                    <input type="text" id="video-description" name="description" class="form-input" placeholder="תאר את תוכן הסרטון..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="video-file" class="form-label">
+                        <span>🎬</span>
+                        <span>קובץ וידאו</span>
+                    </label>
+                    <input type="file" id="video-file-input" name="video_file" class="form-input" accept="video/*" required>
+                </div>
+            </div>
+
+            <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+
+            <button type="submit" class="submit-btn">
+                <span>⬆️</span>
+                <span>העלה סרטון</span>
+            </button>
+        </form>
+    </div>
     {% endif %}
 
-    <hr>
-    <h3>💬 המלצות תלמידים</h3>
-    <ul>
-        <li>מורה הכי תותח!</li>
-        <li>מסביר בצורה סבלנית וברורה</li>
-        <li>נהניתי מכל רגע, ממליץ בחום!</li>
-    </ul>
+    <!-- Videos Section -->
+    <div class="content-section">
+        <h2 class="section-header">
+            <span>🎬</span>
+            <span>סרטונים פופולריים</span>
+        </h2>
+
+        {% if videos %}
+            <div class="videos-grid">
+                {% for video in videos %}
+                    <div class="video-card">
+                        <video controls preload="metadata">
+                            <source src="{{ video.url }}" type="video/mp4">
+                            הדפדפן שלך לא תומך בניגון וידאו.
+                        </video>
+                        <div class="video-info">
+                            <h3 class="video-title">{{ video.title }}</h3>
+                            <p class="video-description">{{ video.description }}</p>
+                            <div class="video-meta">
+                                <span>📅 {{ video.created_at.strftime('%d/%m/%Y') if video.created_at else 'תאריך לא ידוע' }}</span>
+                                <span>👁️ {{ video.views or 0 }} צפיות</span>
+                                <span>⏱️ 12:34</span>
+                            </div>
+                            <div class="video-actions">
+                                <a href="{{ url_for('videos.videos') }}" class="video-btn">
+                                    <span>▶️</span>
+                                    <span>צפה</span>
+                                </a>
+                                <a href="#" class="video-btn">
+                                    <span>📝</span>
+                                    <span>פרטים</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{{ url_for('videos.videos') }}" class="action-btn">
+                    <span>👁️</span>
+                    <span>צפייה בכל הסרטונים</span>
+                </a>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🎬</div>
+                <h3>אין סרטונים להצגה</h3>
+                <p>המורה עדיין לא העלה סרטונים</p>
+                {% if session.get('user_id') == teacher.id %}
+                    <p>השתמש בטופס למעלה כדי להעלות את הסרטון הראשון שלך!</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Testimonials Section -->
+    <div class="content-section">
+        <h2 class="section-header">
+            <span>💬</span>
+            <span>המלצות תלמידים</span>
+        </h2>
+
+        <div class="testimonials-section">
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"מורה הכי טוב! מסביר בצורה ברורה וסבלנית. ממליץ בחום לכל מי שרוצה ללמוד נגינה ברמה גבוהה."</p>
+                    <div class="testimonial-author">- דני כהן</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"תודות למורה הזה למדתי לנגן יותר טוב ממה שחלמתי. השיעורים מעניינים והתקדמתי מהר."</p>
+                    <div class="testimonial-author">- שרה לוי</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"מורה מקצועי עם ניסיון רב. השיעורים האונליין נוחים מאוד והאיכות מעולה."</p>
+                    <div class="testimonial-author">- מיכאל דוד</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"נהניתי מכל רגע בשיעורים. המורה יודע להתאים את השיעורים לרמה של כל תלמיד."</p>
+                    <div class="testimonial-author">- רותי אברהם</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"ממליץ בחום! מורה עם סבלנות אינסופית וידע עצום. השקעתי זמן וכסף בצורה הכי טובה שיש."</p>
+                    <div class="testimonial-author">- יוסי ברק</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"תודה על הסבלנות והמקצועיות. היום אני יכול לנגן שירים שחלמתי עליהם בעבר."</p>
+                    <div class="testimonial-author">- ליאת גולד</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/teacher_profile.js') }}"></script>
 {% endblock %}

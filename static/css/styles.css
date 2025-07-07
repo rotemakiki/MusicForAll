@@ -9,58 +9,301 @@ body {
     margin: 0;
     background-color: #f4f4f4;
     text-align: center;
-    overflow-y: auto; /* מתקן את הבעיה של חוסר גלילה */
+    overflow-y: auto;
+    padding-top: 80px; /* Body spacing for fixed navbar */
 }
 
-/* תפריט המבורגר */
-.navbar {
+/* Modern Navbar - Fixed Design */
+.modern-navbar {
     position: fixed;
-    top: 10px;
-    right: 10px;
-    background: #333;
-    padding: 10px;
-    border-radius: 5px;
-    z-index: 9999; /* שיהיה הכי גבוה בדף */
+    top: 0;
+    right: 0; /* מימין */
+    z-index: 10000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    width: 100%;
 }
 
-.menu-icon {
-    font-size: 24px;
-    color: white;
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    max-width: 1200px;
+    margin: 0 auto;
+    direction: rtl; /* כיוון עברי */
+}
+
+.navbar-brand h2 {
+    margin: 0;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.navbar-toggle {
+    order: -1; /* מעביר את התפריט לצד ימין */
+}
+
+/* Profile Menu Trigger */
+.profile-menu-trigger {
+    position: relative;
     cursor: pointer;
-    padding: 10px;
+    transition: transform 0.3s ease;
 }
 
-.nav-links {
-    display: none;
+.profile-menu-trigger:hover {
+    transform: scale(1.05);
+}
+
+.navbar-profile-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 2px; /* שינוי לצד ימין */
+    width: 12px;
+    height: 12px;
+    background: #28a745;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Hamburger Menu Trigger */
+.menu-trigger {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.3s ease;
+}
+
+.menu-trigger:hover {
+    transform: scale(1.1);
+}
+
+.menu-trigger span {
+    width: 25px;
+    height: 3px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animated hamburger */
+.navbar-menu.active .menu-trigger span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.navbar-menu.active .menu-trigger span:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-menu.active .menu-trigger span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Menu Overlay & Content - Fixed for full screen */
+.navbar-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 9999;
+}
+
+.navbar-menu.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.menu-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.menu-content {
+    position: absolute;
+    top: 0;
+    right: 0; /* מצד ימין */
+    width: 380px;
+    height: 100vh; /* גובה מלא */
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    overflow-y: auto;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar-menu.active .menu-content {
+    transform: translateX(0);
+}
+
+/* Menu Header */
+.menu-header {
+    padding: 30px 25px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0; /* מונע כיווץ */
+}
+
+.user-info, .guest-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    direction: rtl;
+}
+
+.menu-profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.menu-avatar-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.user-details h3, .guest-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.user-details p, .guest-info p {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+/* Menu Links - Full height scrollable */
+.menu-links {
     list-style: none;
     padding: 0;
-    position: absolute;
-    top: 40px;
-    right: 0;
-    background: rgba(68, 68, 68, 0.97); /* קצת שקוף, מודרני */
-    border-radius: 5px;
-    z-index: 10000; /* גם כאן! */
-    min-width: 180px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    margin: 0;
+    flex: 1;
+    overflow-y: auto;
+    direction: rtl;
 }
 
-.nav-links li {
-    padding: 10px;
-    border-bottom: 1px solid #555;
+.menu-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.nav-links a {
-    color: white;
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 18px 25px;
+    color: #2c3e50;
     text-decoration: none;
-    display: block;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    position: relative;
+    direction: rtl;
 }
 
-.nav-links a:hover {
-    background: #555;
+.menu-link:hover {
+    background: linear-gradient(135deg, #f0f8ff, #e8f4fd);
+    color: #667eea;
+    transform: translateX(5px); /* הזזה לימין */
 }
 
-.show-menu {
-    display: block;
+.menu-link i {
+    width: 20px;
+    text-align: center;
+    color: #667eea;
+    transition: all 0.3s ease;
+    order: -1; /* אייקון בצד ימין */
+}
+
+.menu-link:hover i {
+    transform: scale(1.2);
+}
+
+/* Special menu items */
+.menu-item.special .menu-link {
+    background: linear-gradient(135deg, #e8f5e8, #f0fff0);
+    border-right: 4px solid #28a745; /* קו מצד ימין */
+}
+
+.menu-item.special .menu-link:hover {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+}
+
+.menu-item.logout .menu-link {
+    background: linear-gradient(135deg, #fdf2f2, #fef5f5);
+    border-right: 4px solid #dc3545; /* קו מצד ימין */
+    color: #dc3545;
+}
+
+.menu-item.logout .menu-link:hover {
+    background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+}
+
+.menu-item.logout .menu-link i {
+    color: #dc3545;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .menu-content {
+        width: 100vw;
+        transform: translateY(100%);
+    }
+
+    .navbar-menu.active .menu-content {
+        transform: translateY(0);
+    }
+
+    .navbar-container {
+        padding: 12px 20px;
+    }
+
+    .navbar-brand h2 {
+        font-size: 1.1rem;
+    }
 }
 
 /* עיצוב הקונטיינר */
@@ -74,7 +317,6 @@ body {
     margin: 40px auto 0 auto;
     box-sizing: border-box;
 }
-
 
 /* עיצוב עמוד האקורדים */
 .video-container {
@@ -141,6 +383,7 @@ body {
     gap: 10px;
     z-index: 10;
 }
+
 .small-btn {
     padding: 7px 16px;
     font-size: 15px;
@@ -152,6 +395,7 @@ body {
     font-weight: bold;
     transition: background 0.2s;
 }
+
 .small-btn:hover {
     background: #0056b3;
 }
@@ -168,6 +412,7 @@ body {
     border-radius: 3px;
     transition: background 0.2s;
 }
+
 .resize-handle:hover {
     background-color: #777;
 }

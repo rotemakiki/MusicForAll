@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}מוזיקה לכולם{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     {% block head %}{% endblock %}
     <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
@@ -11,55 +12,169 @@
 </head>
 <body>
 
-    <!-- תפריט ניווט ראשי -->
-    <nav class="navbar">
-        {% if session.get('user_id') %}
-            {% set profile_image = session.get('profile_image', '') %}
-            {% if profile_image %}
-                <img src="{{ profile_image }}" alt="תמונת פרופיל" class="profile-icon" onclick="toggleMenu()" style="width: 44px; height: 44px; object-fit: cover; border-radius: 50%; cursor: pointer;">
-            {% else %}
-                <div class="menu-icon" onclick="toggleMenu()">☰</div>
-            {% endif %}
-        {% else %}
-            <div class="menu-icon" onclick="toggleMenu()">☰</div>
-        {% endif %}
-        <ul class="nav-links" id="nav-links">
-            {% set roles = session.get('roles', []) %}
-            {% if session.get('user_id') %}
-                <li><a href="{{ url_for('home') }}">דף הבית</a></li>
-                <li><a href="{{ url_for('videos.videos') }}">שיעורים</a></li>
-                <li><a href="{{ url_for('songs.songs') }}">שירים</a></li>
-                <li><a href="{{ url_for('teachers.list_teachers') }}">רשימת מורים</a></li>
-                <li><a href="{{ url_for('my_songs.my_songs_page') }}">💝 השירים שלי</a></li>  <!-- הוסף את השורה הזו -->
-                <li><a href="{{ url_for('tutorials.tutorials') }}">📘 עמוד הדרכה</a></li>
-                <li><a href="{{ url_for('info.info_page') }}">עמוד מידע</a></li>
-                <li><a href="{{ url_for('students.user_profile') }}">👤 {{ session.get('username') }}</a></li>
-                {% if 'teacher' in roles or 'admin' in roles %}
-                    <li><a href="{{ url_for('songs.add_song_page') }}">➕ הוספת שיר</a></li>
+    <!-- תפריט ניווט משופר -->
+    <nav class="modern-navbar">
+        <div class="navbar-container">
+            <!-- לוגו/כותרת -->
+            <div class="navbar-brand">
+                <h2>🎵 מוזיקה לכולם</h2>
+            </div>
+
+            <!-- אייקון תפריט עם תמונת פרופיל -->
+            <div class="navbar-toggle">
+                {% if session.get('user_id') %}
+                    {% set profile_image = session.get('profile_image', '') %}
+                    {% if profile_image %}
+                        <div class="profile-menu-trigger" onclick="toggleMenu()">
+                            <img src="{{ profile_image }}" alt="תמונת פרופיל" class="navbar-profile-img">
+                            <div class="status-indicator"></div>
+                        </div>
+                    {% else %}
+                        <div class="menu-trigger" onclick="toggleMenu()">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="menu-trigger" onclick="toggleMenu()">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                 {% endif %}
-                <li><a href="{{ url_for('auth.logout') }}">🚪 התנתק</a></li>
-            {% else %}
-                <li><a href="{{ url_for('home') }}">דף הבית</a></li>
-                <li><a href="{{ url_for('songs.songs') }}">רשימת שירים</a></li>
-                <li><a href="{{ url_for('tutorials.tutorials') }}">📘 עמוד הדרכה</a></li>
-            {% endif %}
-        </ul>
+            </div>
+        </div>
+
+        <!-- תפריט נפתח -->
+        <div class="navbar-menu" id="navbar-menu">
+            <div class="menu-overlay" onclick="toggleMenu()"></div>
+            <div class="menu-content">
+                <!-- כותרת תפריט -->
+                <div class="menu-header">
+                    {% if session.get('user_id') %}
+                        <div class="user-info">
+                            {% set profile_image = session.get('profile_image', '') %}
+                            {% if profile_image %}
+                                <img src="{{ profile_image }}" alt="תמונת פרופיל" class="menu-profile-img">
+                            {% else %}
+                                <div class="menu-avatar-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <div class="user-details">
+                                <h3>{{ session.get('username') }}</h3>
+                                <p>משתמש רשום</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="guest-info">
+                            <h3>🎵 מוזיקה לכולם</h3>
+                            <p>ברוכים הבאים</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- קישורי תפריט -->
+                <ul class="menu-links">
+                    {% set roles = session.get('roles', []) %}
+                    {% if session.get('user_id') %}
+                        <li class="menu-item">
+                            <a href="{{ url_for('home') }}" class="menu-link">
+                                <i class="fas fa-home"></i>
+                                <span>דף הבית</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('videos.videos') }}" class="menu-link">
+                                <i class="fas fa-play-circle"></i>
+                                <span>שיעורים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('songs.songs') }}" class="menu-link">
+                                <i class="fas fa-music"></i>
+                                <span>שירים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('teachers.list_teachers') }}" class="menu-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>רשימת מורים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('my_songs.my_songs_page') }}" class="menu-link">
+                                <i class="fas fa-heart"></i>
+                                <span>השירים שלי</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('tutorials.tutorials') }}" class="menu-link">
+                                <i class="fas fa-book"></i>
+                                <span>עמוד הדרכה</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('info.info_page') }}" class="menu-link">
+                                <i class="fas fa-info-circle"></i>
+                                <span>עמוד מידע</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('students.user_profile') }}" class="menu-link">
+                                <i class="fas fa-user-circle"></i>
+                                <span>הפרופיל שלי</span>
+                            </a>
+                        </li>
+                        {% if 'teacher' in roles or 'admin' in roles %}
+                            <li class="menu-item special">
+                                <a href="{{ url_for('songs.add_song_page') }}" class="menu-link">
+                                    <i class="fas fa-plus"></i>
+                                    <span>הוספת שיר</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="menu-item logout">
+                            <a href="{{ url_for('auth.logout') }}" class="menu-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>התנתק</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="menu-item">
+                            <a href="{{ url_for('home') }}" class="menu-link">
+                                <i class="fas fa-home"></i>
+                                <span>דף הבית</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('songs.songs') }}" class="menu-link">
+                                <i class="fas fa-music"></i>
+                                <span>רשימת שירים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('tutorials.tutorials') }}" class="menu-link">
+                                <i class="fas fa-book"></i>
+                                <span>עמוד הדרכה</span>
+                            </a>
+                        </li>
+                        <li class="menu-item special">
+                            <a href="{{ url_for('auth.login') }}" class="menu-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>התחבר</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
     </nav>
 
     <div class="content">
         {% block content %}{% endblock %}
     </div>
-
-    <style>
-        .profile-icon {
-            border: 2px solid #fff;
-            box-shadow: 0 2px 8px #0002;
-            transition: border 0.2s;
-        }
-        .profile-icon:hover {
-            border: 2px solid #007bff;
-        }
-    </style>
 
     {% block scripts %}{% endblock %}
 </body>
