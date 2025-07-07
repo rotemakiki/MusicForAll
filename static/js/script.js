@@ -35,17 +35,16 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Smooth scrolling for anchor links
+// Close menu when clicking on a menu link
 document.addEventListener('DOMContentLoaded', function() {
-    // Add smooth hover effects
     const menuLinks = document.querySelectorAll('.menu-link');
     menuLinks.forEach(link => {
-        link.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateX(-5px) scale(1.02)';
-        });
-        
-        link.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateX(0) scale(1)';
+        link.addEventListener('click', function() {
+            const menu = document.getElementById("navbar-menu");
+            if (menu && menu.classList.contains("active")) {
+                menu.classList.remove("active");
+                document.body.style.overflow = "auto";
+            }
         });
     });
 });
