@@ -1,35 +1,148 @@
 {% extends "base.html" %}
 
-{% block title %}עמוד מידע{% endblock %}
+{% block title %}מרכז מידע ועדכונים{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/info.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>📝 עמוד מידע</h1>
+<div class="info-container">
+    <div class="info-card">
+        <div class="page-header">
+            <h1 class="page-title">📢 מרכז מידע ועדכונים</h1>
+            <p class="page-subtitle">הישארו מעודכנים בחדשות והודעות חשובות מהמערכת</p>
+        </div>
 
-    <!-- Check if user has admin role - using session directly -->
-    {% if session['roles'] and 'admin' in session['roles'] %}
-    <!-- טופס פרסום פוסט חדש - רק למנהל -->
-    <form method="POST" style="margin-bottom: 30px;">
-        <label for="content"><b>כתוב פוסט חדש:</b></label>
-        <textarea name="content" id="content" rows="3" style="width: 100%;" required></textarea>
-        <button type="submit" class="btn" style="margin-top: 10px;">פרסם</button>
-    </form>
-    {% endif %}
-
-    <h2>כל הפוסטים:</h2>
-    {% if posts %}
-        <ul style="text-align: right;">
-            {% for post in posts %}
-            <li style="background: #f9f9f9; border-radius: 8px; margin-bottom: 15px; padding: 12px;">
-                <div style="font-size: 1.1em;">{{ post.content }}</div>
-                <div style="font-size: 0.9em; color: gray; margin-top: 7px;">
-                    🕒 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }} | נכתב ע"י: {{ post.author_name }}
+        <!-- Admin Post Form -->
+        {% if session['roles'] and 'admin' in session['roles'] %}
+        <div class="admin-section">
+            <div class="admin-header">
+                <div class="admin-badge">
+                    <span class="admin-icon">👑</span>
+                    <span>אזור מנהל</span>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>עדיין לא פורסם מידע.</p>
-    {% endif %}
+            </div>
+
+            <form method="POST" class="post-form" id="newPostForm">
+                <div class="form-header">
+                    <h3>✍️ פרסם הודעה חדשה</h3>
+                    <p>הודעה זו תוצג לכל המשתמשים באתר</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="content" class="form-label">
+                        <span class="label-icon">📝</span>
+                        <span>תוכן ההודעה</span>
+                    </label>
+                    <div class="textarea-wrapper">
+                        <textarea name="content" id="content" class="form-textarea"
+                                placeholder="כתוב כאן את ההודעה שברצונך לפרסם..."
+                                required maxlength="500"></textarea>
+                        <div class="char-counter">
+                            <span id="charCount">0</span>/500 תווים
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="publish-btn">
+                        <span class="btn-icon">📢</span>
+                        <span>פרסם הודעה</span>
+                    </button>
+                    <button type="button" class="preview-btn" onclick="previewPost()">
+                        <span class="btn-icon">👁️</span>
+                        <span>תצוגה מקדימה</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Posts Section -->
+        <div class="posts-section">
+            <div class="section-header">
+                <h2>📋 כל ההודעות</h2>
+                <div class="posts-stats">
+                    <span class="stat-item">
+                        <span class="stat-icon">📊</span>
+                        <span>{{ posts|length }} הודעות</span>
+                    </span>
+                </div>
+            </div>
+
+            {% if posts %}
+                <div class="posts-timeline">
+                    {% for post in posts %}
+                    <article class="post-card" data-post-id="{{ loop.index }}">
+                        <div class="post-header">
+                            <div class="post-meta">
+                                <div class="author-info">
+                                    <span class="author-avatar">👤</span>
+                                    <span class="author-name">{{ post.author_name }}</span>
+                                    <span class="author-role">מנהל</span>
+                                </div>
+                                <div class="post-date">
+                                    <span class="date-icon">🕒</span>
+                                    <time datetime="{{ post.created_at.isoformat() }}">
+                                        {{ post.created_at.strftime('%d/%m/%Y בשעה %H:%M') }}
+                                    </time>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="post-content">
+                            <div class="content-text">{{ post.content }}</div>
+                        </div>
+
+                        <div class="post-actions">
+                            <button class="action-btn like-btn" onclick="likePost({{ loop.index }})">
+                                <span class="action-icon">👍</span>
+                                <span class="action-text">נוכל</span>
+                                <span class="action-count" id="likes-{{ loop.index }}">0</span>
+                            </button>
+                            <button class="action-btn share-btn" onclick="sharePost({{ loop.index }})">
+                                <span class="action-icon">📤</span>
+                                <span class="action-text">שתף</span>
+                            </button>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <h3>אין הודעות עדיין</h3>
+                    <p>כאשר יפורסמו הודעות חדשות, הן יופיעו כאן</p>
+                    {% if session['roles'] and 'admin' in session['roles'] %}
+                    <button class="empty-action-btn" onclick="document.getElementById('content').focus()">
+                        <span>✍️</span>
+                        <span>פרסם הודעה ראשונה</span>
+                    </button>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>👁️ תצוגה מקדימה</h3>
+            <button class="modal-close" onclick="closePreview()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="preview-post" id="previewContent"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn secondary" onclick="closePreview()">סגור</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/info.js') }}"></script>
 {% endblock %}

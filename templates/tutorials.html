@@ -1,41 +1,125 @@
 {% extends "base.html" %}
 
-{% block title %}הדרכות שימוש באתר{% endblock %}
+{% block title %}מרכז הדרכות - למידה קלה ויעילה{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tutorials.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1>📚 עמוד הדרכה</h1>
-    <p>בדף זה תמצאו סרטוני הדרכה לשימוש באתר.</p>
+<div class="tutorials-container">
+    <div class="tutorials-card">
+        <div class="page-header">
+            <h1 class="page-title">📚 מרכז הדרכות</h1>
+            <p class="page-subtitle">למדו להשתמש באתר בקלות עם הדרכות וידאו מפורטות</p>
+        </div>
 
-    <div class="tutorial">
-        <h3>🎵 הסבר להוספת שיר</h3>
-        <video width="400" controls>
-            <source src="" type="video/mp4">
-            הדפדפן שלך לא תומך בווידאו.
-        </video>
-    </div>
+        <div class="tutorials-grid">
+            <div class="tutorial-card" data-tutorial="add-song">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🎵</div>
+                    <h3>הוספת שיר חדש</h3>
+                </div>
+                <div class="tutorial-content">
+                    <p>למדו כיצד להוסיף שיר חדש לאתר, להכניס פרטים ולהתחיל ליצור אקורדים</p>
+                    <div class="video-placeholder">
+                        <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/add-song.jpg') }}">
+                            <source src="{{ url_for('static', filename='videos/add-song-tutorial.mp4') }}" type="video/mp4">
+                            <source src="{{ url_for('static', filename='videos/add-song-tutorial.webm') }}" type="video/webm">
+                            הדפדפן שלך לא תומך בווידאו
+                        </video>
+                    </div>
+                    <div class="tutorial-stats">
+                        <span class="duration">⏱️ 3:45</span>
+                        <span class="views">👁️ 1,234 צפיות</span>
+                    </div>
+                </div>
+            </div>
 
-    <div class="tutorial">
-        <h3>🎧 הסבר לשמיעת שיר</h3>
-        <video width="400" controls>
-            <source src="" type="video/mp4">
-            הדפדפן שלך לא תומך בווידאו.
-        </video>
-    </div>
+            <div class="tutorial-card" data-tutorial="listen-song">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🎧</div>
+                    <h3>האזנה לשיר</h3>
+                </div>
+                <div class="tutorial-content">
+                    <p>גלו כיצד להאזין לשירים, לשלוט בנגן ולהתאמן עם האקורדים</p>
+                    <div class="video-placeholder">
+                        <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/listen-song.jpg') }}">
+                            <source src="{{ url_for('static', filename='videos/listen-song-tutorial.mp4') }}" type="video/mp4">
+                            <source src="{{ url_for('static', filename='videos/listen-song-tutorial.webm') }}" type="video/webm">
+                            הדפדפן שלך לא תומך בווידאו
+                        </video>
+                    </div>
+                    <div class="tutorial-stats">
+                        <span class="duration">⏱️ 2:30</span>
+                        <span class="views">👁️ 987 צפיות</span>
+                    </div>
+                </div>
+            </div>
 
-    <div class="tutorial">
-        <h3>🔑 הסבר להתחברות</h3>
-        <video width="400" controls>
-            <source src="" type="video/mp4">
-            הדפדפן שלך לא תומך בווידאו.
-        </video>
+            <div class="tutorial-card" data-tutorial="login-register">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🔑</div>
+                    <h3>התחברות והרשמה</h3>
+                </div>
+                <div class="tutorial-content">
+                    <p>למדו כיצד להתחבר לאתר, להירשם כמשתמש חדש ולנהל את הפרופיל שלכם</p>
+                    <div class="video-placeholder">
+                        <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/login.jpg') }}">
+                            <source src="{{ url_for('static', filename='videos/login-tutorial.mp4') }}" type="video/mp4">
+                            <source src="{{ url_for('static', filename='videos/login-tutorial.webm') }}" type="video/webm">
+                            הדפדפן שלך לא תומך בווידאו
+                        </video>
+                    </div>
+                    <div class="tutorial-stats">
+                        <span class="duration">⏱️ 4:15</span>
+                        <span class="views">👁️ 1,567 צפיות</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tutorial-card" data-tutorial="chords-editing">
+                <div class="tutorial-header">
+                    <div class="tutorial-icon">🎸</div>
+                    <h3>עריכת אקורדים</h3>
+                </div>
+                <div class="tutorial-content">
+                    <p>גלו כיצד לערוך אקורדים, ליצור מבנה שיר ולהשתמש בכלי העריכה המתקדמים</p>
+                    <div class="video-placeholder">
+                        <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/chords.jpg') }}">
+                            <source src="{{ url_for('static', filename='videos/chords-tutorial.mp4') }}" type="video/mp4">
+                            <source src="{{ url_for('static', filename='videos/chords-tutorial.webm') }}" type="video/webm">
+                            הדפדפן שלך לא תומך בווידאו
+                        </video>
+                    </div>
+                    <div class="tutorial-stats">
+                        <span class="duration">⏱️ 6:20</span>
+                        <span class="views">👁️ 2,103 צפיות</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="help-card">
+                <h3>🆘 זקוק לעזרה נוספת?</h3>
+                <p>אם יש לכם שאלות או בעיות טכניות, אנחנו כאן לעזור!</p>
+                <div class="help-actions">
+                    <a href="mailto:support@example.com" class="help-btn">
+                        <i class="fas fa-envelope"></i>
+                        שלח אימייל
+                    </a>
+                    <a href="tel:+972-50-1234567" class="help-btn">
+                        <i class="fas fa-phone"></i>
+                        התקשר אלינו
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
 
-<style>
-    .tutorial {
-        margin-bottom: 30px;
-        text-align: center;
-    }
-</style>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/tutorials.js') }}"></script>
 {% endblock %}
