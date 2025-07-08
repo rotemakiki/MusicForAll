@@ -339,8 +339,23 @@ def edit_chords_for_song(song_id):
         "loops": loops_data
     })
 
+@songs_bp.route('/api/recent_songs')
+def get_recent_songs():
+    """API להחזרת שירים שנוספו בשבוע האחרון"""
+    from datetime import datetime, timedelta
 
+    try:
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_songs_query = firestore.client().collection("songs").where("created_at", ">=", week_ago).order_by("created_at", direction=firestore.Query.DESCENDING).limit(6)
 
+        recent_songs_docs = recent_songs_query.stream()
+        recent_songs = []
+        for doc in recent_songs_docs:
+            song = doc.to_dict()
+            song["id"] = doc.id
+            recent_songs.append(song)
 
-
-
+        return jsonify({"songs": recent_songs, "success": True})
+    except Exception as e:
+        print(f"Error fetching recent songs: {e}")
+        return jsonify({"songs": [], "success": False, "error": str(e)})

@@ -213,8 +213,8 @@
             </a>
         </div>
 
-        {% if not songs or songs|length == 0 %}
-        <div class="empty-state">
+        <!-- Empty State - יוצג רק אם אין שירים -->
+        <div class="empty-state" style="display: none;">
             <div class="empty-icon">🎵</div>
             <h3>אין שירים חדשים</h3>
             <p>עדיין לא נוספו שירים חדשים למערכת</p>
@@ -223,8 +223,9 @@
                 <span>עיין בשירים הקיימים</span>
             </a>
         </div>
-        {% else %}
-        <div class="video-scroll-wrapper">
+
+        <!-- Video Scroll Wrapper - יימלא דינמית -->
+        <div class="video-scroll-wrapper" style="display: none;">
             <button class="scroll-arrow scroll-right" onclick="scrollVideos('recent-songs', -400)">
                 ➡️
             </button>
@@ -234,36 +235,10 @@
 
             <div class="video-scroll-container" id="recent-songs">
                 <div class="video-grid">
-                    {% for i in range(6) %}
-                    <div class="video-card">
-                        <div style="height: 200px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; border-radius: 15px 15px 0 0;">
-                            🎵
-                        </div>
-                        <div class="video-info">
-                            <h3 class="video-title">{{ ['שיר דוגמה ' + (i|string + 1), 'מלודיה יפה', 'נגינה רגשית', 'ריתם מושך', 'הרמוניה מושלמת', 'יצירה מקורית'][i] }}</h3>
-                            <div class="video-meta">
-                                <span>🎼 {{ ['Am', 'C', 'G', 'Dm', 'Em', 'F'][i] }}</span>
-                                <span>🎵 4/4</span>
-                                <span>⚡ {{ [120, 90, 110, 100, 85, 130][i] }} BPM</span>
-                            </div>
-                            <p class="video-description">שיר מרגש עם אקורדים יפים ומלודיה קלילה, מתאים למתחילים ומתקדמים כאחד.</p>
-                            <div class="video-actions">
-                                <a href="{{ url_for('songs.songs') }}" class="video-btn">
-                                    <span>🎵</span>
-                                    <span>נגן שיר</span>
-                                </a>
-                                <a href="#" class="video-btn secondary">
-                                    <span>❤️</span>
-                                    <span>הוסף לרשימה</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+                    <!-- התוכן יימלא דינמית ב-JavaScript -->
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -17,6 +17,9 @@ function initializePage() {
 
     // Initialize intersection observers
     setupIntersectionObserver();
+
+    // טען שירים חדשים
+    loadRecentSongs();
 }
 
 function animateElements() {
@@ -274,6 +277,143 @@ function loadUserStats() {
             }
         }, stepTime);
     });
+}
+
+// טען שירים חדשים
+function loadRecentSongs() {
+    fetch('/api/recent_songs')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.songs.length > 0) {
+                displayRecentSongs(data.songs);
+            } else {
+                showEmptyState();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading recent songs:', error);
+            showEmptyState();
+        });
+}
+
+function displayRecentSongs(songs) {
+    const container = document.getElementById('recent-songs');
+    const grid = container.querySelector('.video-grid');
+
+    // נקה את התוכן הקיים
+    grid.innerHTML = '';
+
+    songs.forEach(song => {
+        const songCard = `
+            <div class="video-card">
+                <div style="height: 200px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; border-radius: 15px 15px 0 0;">
+                    🎵
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">${song.title}</h3>
+                    <div class="video-meta">
+                        <span>🎤 ${song.artist}</span>
+                        <span>🎼 ${song.key}</span>
+                        <span>⚡ ${song.bpm} BPM</span>
+                    </div>
+                    <p class="video-description">${song.genre || 'ללא ז\'אנר'} • ${song.key_type}</p>
+                    <div class="video-actions">
+                        <a href="/play/${song.id}" class="video-btn">
+                            <span>🎵</span>
+                            <span>נגן שיר</span>
+                        </a>
+                        <a href="#" class="video-btn secondary" onclick="addToMyList('${song.id}')">
+                            <span>❤️</span>
+                            <span>הוסף לרשימה</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        grid.innerHTML += songCard;
+    });
+
+    // הסתר את empty state
+    const emptyState = document.querySelector('.empty-state');
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+
+    // הוסף scroll wrapper אם יש יותר משיר אחד
+    if (songs.length > 1) {
+        const wrapper = container.closest('.video-scroll-wrapper');
+        if (wrapper) {
+            wrapper.style.display = 'block';
+        }
+    }
+}
+
+function showEmptyState() {
+    const emptyState = document.querySelector('.empty-state');
+    if (emptyState) {
+        emptyState.style.display = 'block';
+    }
+
+    // הסתר את scroll wrapper
+    const container = document.getElementById('recent-songs');
+    const wrapper = container.closest('.video-scroll-wrapper');
+    if (wrapper) {
+        wrapper.style.display = 'none';
+    }
+}
+
+// פונקציה להוספת שיר לרשימת המועדפים
+function addToMyList(songId) {
+    fetch('/api/add_to_my_list', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ song_id: songId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // הצג הודעת הצלחה
+            showNotification('✅ השיר נוסף לרשימה שלך!', 'success');
+        } else {
+            showNotification('❌ שגיאה בהוספת השיר', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding song to list:', error);
+        showNotification('❌ שגיאה בהוספת השיר', 'error');
+    });
+}
+
+// פונקציה להצגת הודעות
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = message;
+
+    // סגנון ההודעה
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        animation: slideInRight 0.3s ease;
+        font-weight: 500;
+    `;
+
+    document.body.appendChild(notification);
+
+    // הסר את ההודעה אחרי 3 שניות
+    setTimeout(() => {
+        notification.style.animation = 'slideInRight 0.3s ease reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // Video modal functionality
@@ -535,6 +675,17 @@ const additionalStyles = `
         to {
             opacity: 1;
             transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
         }
     }
 `;
