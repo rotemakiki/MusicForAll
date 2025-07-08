@@ -227,9 +227,12 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         // Handle YouTube URL conversion
-        const ytMatch = formData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
-        if (ytMatch && ytMatch[1]) {
-            formData.video_url = "https://www.youtube.com/embed/" + ytMatch[1];
+        // בדוק אם הקישור כבר embed - אל תשנה אותו
+        if (!formData.video_url.includes('/embed/')) {
+            const ytMatch = formData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
+            if (ytMatch && ytMatch[1]) {
+                formData.video_url = "https://www.youtube.com/embed/" + ytMatch[1];
+            }
         }
 
         // Parse chords and loops

@@ -293,6 +293,18 @@
     // Clear any conflicting new song data
     localStorage.removeItem("addingNewSong");
     localStorage.removeItem("songData");
+
+    // המר embed URL חזרה ל-watch URL לתצוגה
+    document.addEventListener("DOMContentLoaded", function() {
+        const videoUrlField = document.getElementById("video_url");
+        const currentUrl = videoUrlField.value;
+
+        // אם זה embed URL, המר אותו חזרה ל-watch URL
+        if (currentUrl.includes('/embed/')) {
+            const videoId = currentUrl.split('/embed/')[1];
+            videoUrlField.value = `https://www.youtube.com/watch?v=${videoId}`;
+        }
+    });
 </script>
 {% endblock %}
 
