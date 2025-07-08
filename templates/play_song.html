@@ -48,78 +48,146 @@
                 </div>
             </div>
 
+            <!-- נגן יוטיוב -->
             <div class="youtube-player-section">
-                <button class="youtube-toggle-btn" onclick="toggleYouTubePlayer()">
+                <button onclick="toggleYouTubePlayer()" class="youtube-toggle-btn">
                     <span class="youtube-icon">📺</span>
-                    <span>סרטון</span>
+                    <span>השמע/הסתר וידאו</span>
                 </button>
+                <div id="youtube-player-container" class="youtube-player-container" style="display: none;">
+                    <button onclick="toggleYouTubePlayer()" class="close-youtube-btn">×</button>
+                    <iframe id="youtube-iframe" src="{{ song.video_url }}" frameborder="0" allowfullscreen></iframe>
+                </div>
             </div>
 
+            <!-- כפתורי פעולה -->
             <div class="action-buttons">
                 {% if session.get('user_id') == song.created_by %}
-                    <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
-                        <span class="btn-icon">✏️</span>
-                        <span class="btn-text">ערוך</span>
-                    </a>
-                {% endif %}
-                {% if session.get('user_id') %}
-                    <button id="my-songs-btn" class="action-btn my-songs-btn" onclick="toggleMySong()">
-                        <span class="btn-icon" id="my-songs-icon">❤️</span>
-                        <span class="btn-text" id="my-songs-text">הוסף לשירים שלי</span>
-                    </button>
+                <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
+                    <span>✏️</span>
+                    <span>ערוך שיר</span>
+                </a>
                 {% endif %}
                 <a href="{{ url_for('songs.songs') }}" class="action-btn list-btn">
-                    <span class="btn-icon">📚</span>
-                    <span class="btn-text">רשימה</span>
+                    <span>📚</span>
+                    <span>חזרה לרשימה</span>
                 </a>
+                {% if session.get('user_id') %}
+                <button id="my-songs-btn" onclick="toggleMySong()" class="action-btn my-songs-btn">
+                    <span id="my-songs-icon">❤️</span>
+                    <span id="my-songs-text">הוסף לשירים שלי</span>
+                </button>
+                {% endif %}
             </div>
         </div>
 
-        <!-- שורה 3: BPM -->
+        <!-- שורה 3: מידע BPM -->
         <div class="header-row-3">
             <div class="bpm-info">
                 <span class="original-bpm-display">
-                    <span class="bpm-icon">🎼</span>
-                    <span class="label">מקורי:</span>
-                    <span class="original-bpm">{{ song.bpm }}</span>
+                    <span class="label">BPM מקורי:</span>
+                    <span>{{ song.bpm }}</span>
                 </span>
                 <span class="current-bpm-display">
-                    <span class="bpm-icon">⚡</span>
-                    <span class="label">נוכחי:</span>
+                    <span class="label">BPM נוכחי:</span>
                     <span id="current-bpm">{{ song.bpm }}</span>
                 </span>
             </div>
-        </div>
-
-        <!-- נגן יוטיוב (נשאר מחוץ לכותרת) -->
-        <div id="youtube-player-container" class="youtube-player-container" style="display: none;">
-            <iframe id="youtube-iframe" width="300" height="170" src="{{ song.video_url }}" frameborder="0" allowfullscreen></iframe>
-            <button class="close-youtube-btn" onclick="toggleYouTubePlayer()">✕</button>
         </div>
     </header>
 
     <div class="main-layout">
         <div class="controls-panel">
+            <!-- בקרת BPM -->
             <div class="control-group">
-                <label class="control-label">
-                    <span class="control-icon">🎛️</span>
-                    הקצב הנוכחי
+                <label for="bpm-slider" class="control-label">
+                    <span class="control-icon">🥁</span>
+                    מהירות (BPM)
                 </label>
                 <div class="bpm-controls">
                     <input type="range" id="bpm-slider" min="40" max="200" value="{{ song.bpm }}" class="bpm-slider">
                     <input type="number" id="bpm-input" min="40" max="200" value="{{ song.bpm }}" class="bpm-input">
-                    <button onclick="resetBpm()" class="reset-btn" title="אפס לקצב המקורי">
-                        <span class="reset-icon">🔄</span>
-                    </button>
+                    <button onclick="resetBpm()" class="reset-btn" title="אפס BPM למקורי">🔄</button>
                 </div>
             </div>
 
+            <!-- בקרת עוצמה -->
             <div class="control-group">
-                <label class="control-label">
+                <label for="volume-slider" class="control-label">
                     <span class="control-icon">🔊</span>
-                    ווליום המטרונום
+                    עוצמת מטרונום
                 </label>
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" class="volume-slider">
+            </div>
+
+            <!-- Size Controls Section -->
+            <div class="control-group">
+                <div class="size-controls">
+                    <div class="size-controls-title">
+                        <span class="control-icon">📏</span>
+                        בקרת גודל התיבות והפונט
+                    </div>
+
+                    <div class="size-control-row">
+                        <span class="size-control-label">גודל התיבות:</span>
+                        <div class="size-control-buttons">
+                            <button onclick="decreaseMeasureSize()" class="size-btn decrease" title="הקטן תיבות (Ctrl + -)">−</button>
+                            <button onclick="increaseMeasureSize()" class="size-btn" title="הגדל תיבות (Ctrl + +)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="size-control-row">
+                        <span class="size-control-label">גודל הפונט:</span>
+                        <div class="size-control-buttons">
+                            <button onclick="decreaseFontSize()" class="size-btn decrease" title="הקטן פונט (Shift + -)">−</button>
+                            <button onclick="increaseFontSize()" class="size-btn" title="הגדל פונט (Shift + +)">+</button>
+                        </div>
+                    </div>
+
+                    <button onclick="resetSizes()" class="reset-all-btn" title="אפס גדלים (Ctrl + 0)">
+                        <span>🔄</span>
+                        <span>אפס גדלים</span>
+                    </button>
+
+                    <div class="help-text">
+                        💡 ניתן להשתמש בקיצורי דרך: Ctrl±/Shift± להגדלה/הקטנה, Ctrl+0 לאיפוס
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Instructions -->
+            <div class="control-group">
+                <div class="user-instructions">
+                    <div class="instructions-title">
+                        <span class="control-icon">🎯</span>
+                        איך להשתמש בנגן
+                    </div>
+
+                    <div class="instruction-item">
+                        <span class="instruction-icon">👆</span>
+                        <span>לחץ על תיבה כדי להתחיל לנגן ממנה</span>
+                    </div>
+
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🎵</span>
+                        <span>לחץ על אקורד ספציפי בתוך תיבה</span>
+                    </div>
+
+                    <div class="instruction-item">
+                        <span class="instruction-icon">⏯️</span>
+                        <span>רווח = נגן/עצור, Ctrl+R = התחל מחדש</span>
+                    </div>
+
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🔢</span>
+                        <span>תמיד 4 תיבות בשורה לתצוגה נוחה</span>
+                    </div>
+
+                    <div class="instruction-item">
+                        <span class="instruction-icon">✅</span>
+                        <span>כבה/הדלק חלקי שיר בעמודה זו</span>
+                    </div>
+                </div>
             </div>
 
             <!-- תיבה ריקה לתחילת השיר -->
@@ -182,12 +250,15 @@
     </div>
 </div>
 
+<!-- Size Indicator -->
+<div id="size-indicator" class="size-indicator"></div>
+
 <audio id="metronome-sound" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
 
 <script>
     // Pass data from Flask to JavaScript
     window.songData = {
-        songId: "{{ song.id }}", // הוסף את השורה הזו
+        songId: "{{ song.id }}",
         chords: {{ song.chords | tojson }},
         loops: {{ song.loops | tojson }},
         originalBpm: {{ song.bpm }}

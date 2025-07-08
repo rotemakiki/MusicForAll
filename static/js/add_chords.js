@@ -1031,7 +1031,7 @@ function renderSongStructure() {
             <div class="loop-controls-group">
                 <div class="loop-repeat-controls">
                     <span class="repeat-label">חזרות:</span>
-                    <input type="number" class="repeat-input" value="${loop.repeatCount || 1}" min="1" max="10"
+                    <input type="number" class="repeat-input" value="${loop.repeatCount || 1}" min="1"
                            onchange="updateLoopRepeat(${loopIndex}, this.value)">
                 </div>
                 <button class="remove-loop-btn" onclick="removeSongLoop(${loopIndex})">×</button>
@@ -1088,7 +1088,7 @@ function renderSongStructure() {
 }
 
 function updateLoopRepeat(loopIndex, repeatCount) {
-    const count = Math.max(1, Math.min(10, parseInt(repeatCount) || 1));
+    const count = Math.max(1, parseInt(repeatCount) || 1);
     if (songStructure[loopIndex]) {
         songStructure[loopIndex].repeatCount = count;
     }

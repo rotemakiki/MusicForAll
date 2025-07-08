@@ -1,4 +1,4 @@
-// Enhanced Play Song JavaScript - תיקון מלא של מערכת הנגן עם הצגה ויזואלית נכונה
+// Enhanced Play Song JavaScript - ממשק ידידותי יותר עם כפתורי הגדלה/הקטנה
 
 // Get song data from Flask
 const chords = window.songData.chords;
@@ -14,6 +14,10 @@ let addPreparationMeasure = true;
 let enabledLoops = new Set();
 let loopStates = {};
 const metronome = document.getElementById("metronome-sound");
+
+// משתני גודל התיבות והפונט
+let measureScale = 1.0; // גודל בסיסי של התיבות
+let fontScale = 1.0;    // גודל בסיסי של הפונט
 
 // נתונים לניהול מיקום הנגינה
 let currentGlobalMeasureIndex = 0;
@@ -34,6 +38,84 @@ function playMetronome() {
     metronome.volume = parseFloat(volume);
     metronome.currentTime = 0;
     metronome.play().catch(() => {});
+}
+
+// פונקציות הגדלה/הקטנה של התיבות
+function increaseMeasureSize() {
+    measureScale = Math.min(measureScale + 0.1, 2.0);
+    updateMeasuresSizes();
+    showSizeIndicator();
+}
+
+function decreaseMeasureSize() {
+    measureScale = Math.max(measureScale - 0.1, 0.5);
+    updateMeasuresSizes();
+    showSizeIndicator();
+}
+
+function increaseFontSize() {
+    fontScale = Math.min(fontScale + 0.1, 2.0);
+    updateFontSizes();
+    showSizeIndicator();
+}
+
+function decreaseFontSize() {
+    fontScale = Math.max(fontScale - 0.1, 0.5);
+    updateFontSizes();
+    showSizeIndicator();
+}
+
+function resetSizes() {
+    measureScale = 1.0;
+    fontScale = 1.0;
+    updateMeasuresSizes();
+    updateFontSizes();
+    showSizeIndicator();
+}
+
+function updateMeasuresSizes() {
+    const measures = document.querySelectorAll('.measure-box');
+    measures.forEach(measure => {
+        measure.style.transform = `scale(${measureScale})`;
+        measure.style.margin = `${measureScale * 2}px`;
+    });
+}
+
+function updateFontSizes() {
+    const chordBoxes = document.querySelectorAll('.chord-box');
+    const measureTitles = document.querySelectorAll('.measure-title');
+
+    chordBoxes.forEach(chord => {
+        const baseFontSize = 11; // גודל פונט בסיסי
+        chord.style.fontSize = `${baseFontSize * fontScale}px`;
+    });
+
+    measureTitles.forEach(title => {
+        const baseFontSize = 8; // גודל פונט בסיסי
+        title.style.fontSize = `${baseFontSize * fontScale}px`;
+    });
+}
+
+function showSizeIndicator() {
+    const indicator = document.getElementById('size-indicator');
+    if (indicator) {
+        indicator.innerHTML = `
+            <div class="size-info">
+                <span>📏 גודל תיבות: ${Math.round(measureScale * 100)}%</span>
+                <span>🔤 גודל פונט: ${Math.round(fontScale * 100)}%</span>
+            </div>
+        `;
+        indicator.style.display = 'block';
+        indicator.style.opacity = '1';
+
+        clearTimeout(indicator.hideTimeout);
+        indicator.hideTimeout = setTimeout(() => {
+            indicator.style.opacity = '0';
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 300);
+        }, 2000);
+    }
 }
 
 // בניית מערך של כל התיבות כולל חזרות
@@ -75,7 +157,7 @@ function buildAllMeasures() {
                         loopIndex: loopIdx,
                         repeatNumber: repeatNum,
                         measureInLoop: measureInLoop,
-                        lineIdx: -1, // לא רלוונטי כשיש לופים
+                        lineIdx: -1,
                         startChordIdx: 0
                     });
                 }
@@ -91,12 +173,11 @@ function buildAllMeasures() {
             line.forEach((chordObj) => {
                 const chordWithWidth = {
                     ...chordObj,
-                    width: chordObj.beats || 1  // הוסף width אם אין
+                    width: chordObj.beats || 1
                 };
                 currentMeasure.push(chordWithWidth);
                 totalBeats += chordObj.beats;
 
-                // צור תיבה כשמגיעים ל-4 נקישות או בסוף השורה
                 if (Math.abs(totalBeats - 4) < 0.01 || totalBeats > 4 || chordIdx === line.length - 1) {
                     allMeasures.push({
                         globalIndex: globalIndex++,
@@ -121,7 +202,7 @@ function buildAllMeasures() {
     return allMeasures;
 }
 
-// Enhanced chord rendering עם אפשרות לקליק על תיבות ספציפיות
+// Enhanced chord rendering עם הצגה של 4 תיבות בשורה תמיד
 function renderChords() {
     const wrapper = document.getElementById("chords-wrapper");
     wrapper.innerHTML = "";
@@ -141,8 +222,15 @@ function renderChords() {
         prepContent.className = "loop-content";
 
         const prepRow = document.createElement("div");
-        prepRow.className = "chord-row";
+        prepRow.className = "chord-row fixed-four-per-row";
         prepRow.appendChild(createMeasureElement(measures[0]));
+
+        // הוסף 3 תיבות ריקות כדי להשלים ל-4
+        for (let i = 0; i < 3; i++) {
+            const emptyDiv = document.createElement("div");
+            emptyDiv.className = "measure-box empty-measure";
+            prepRow.appendChild(emptyDiv);
+        }
 
         prepContent.appendChild(prepRow);
         prepSection.appendChild(prepHeader);
@@ -150,7 +238,7 @@ function renderChords() {
         wrapper.appendChild(prepSection);
     }
 
-    // Render loop sections with proper repeat handling
+    // Render loop sections with 4 measures per row
     if (loops.length > 0) {
         renderMeasuresByLoops(wrapper, measures);
     } else {
@@ -158,9 +246,11 @@ function renderChords() {
     }
 
     updateBeatDots();
+    updateMeasuresSizes();
+    updateFontSizes();
 }
 
-// Render measures organized by loop sections
+// Render measures organized by loop sections - 4 per row
 function renderMeasuresByLoops(wrapper, measures) {
     const loopSections = new Map();
 
@@ -229,16 +319,23 @@ function renderMeasuresByLoops(wrapper, measures) {
         loopContent.className = "loop-content";
         loopContent.style.display = loopStates[section.loopIndex].visible ? 'block' : 'none';
 
-        // Group measures into rows - more measures per row for compact display
-        const measuresPerRow = 8; // הגדלנו מ-4 ל-8
+        // Group measures into rows - ALWAYS 4 per row
+        const measuresPerRow = 4;
         for (let i = 0; i < section.measures.length; i += measuresPerRow) {
             const rowMeasures = section.measures.slice(i, i + measuresPerRow);
             const rowDiv = document.createElement("div");
-            rowDiv.className = "chord-row";
+            rowDiv.className = "chord-row fixed-four-per-row";
 
             rowMeasures.forEach(measureData => {
                 rowDiv.appendChild(createMeasureElement(measureData));
             });
+
+            // מלא תיבות ריקות עד 4 תמיד
+            while (rowDiv.children.length < 4) {
+                const emptyDiv = document.createElement("div");
+                emptyDiv.className = "measure-box empty-measure";
+                rowDiv.appendChild(emptyDiv);
+            }
 
             loopContent.appendChild(rowDiv);
         }
@@ -249,23 +346,30 @@ function renderMeasuresByLoops(wrapper, measures) {
     });
 }
 
-// Render measures in flat layout (fallback)
+// Render measures in flat layout - 4 per row
 function renderMeasuresFlat(wrapper, measures) {
-    const measuresPerRow = 8; // הגדלנו גם כאן
+    const measuresPerRow = 4;
     for (let i = 0; i < measures.length; i += measuresPerRow) {
         const rowMeasures = measures.slice(i, i + measuresPerRow);
         const rowDiv = document.createElement("div");
-        rowDiv.className = "chord-row";
+        rowDiv.className = "chord-row fixed-four-per-row";
 
         rowMeasures.forEach(measureData => {
             rowDiv.appendChild(createMeasureElement(measureData));
         });
 
+        // מלא תיבות ריקות עד 4 תמיד
+        while (rowDiv.children.length < 4) {
+            const emptyDiv = document.createElement("div");
+            emptyDiv.className = "measure-box empty-measure";
+            rowDiv.appendChild(emptyDiv);
+        }
+
         wrapper.appendChild(rowDiv);
     }
 }
 
-// Create individual measure element with click functionality and proper chord sizing
+// Create individual measure element with improved user experience
 function createMeasureElement(measureData) {
     const measureDiv = document.createElement("div");
     measureDiv.className = "measure-box clickable";
@@ -279,10 +383,6 @@ function createMeasureElement(measureData) {
     if (measureData.loopIndex !== null && !enabledLoops.has(measureData.loopIndex)) {
         measureDiv.classList.add("disabled-measure");
     }
-
-    // קבע רוחב תיבה בהתאם לסך כל הנקישות
-    const measureWidth = calculateMeasureWidth(measureData.totalBeats);
-    measureDiv.setAttribute('data-total-beats', Math.round(measureData.totalBeats));
 
     // Set current/past state
     if (measureData.globalIndex === currentGlobalMeasureIndex && isPlaying) {
@@ -323,7 +423,7 @@ function createMeasureElement(measureData) {
 
         // הוסף אפשרות לקליק על אקורד ספציפי
         chordBox.addEventListener("click", (e) => {
-            e.stopPropagation(); // מנע קליק על התיבה
+            e.stopPropagation();
             selectedStartMeasure = measureData.globalIndex;
             selectedStartBeat = currentBeatPosition;
 
@@ -339,18 +439,7 @@ function createMeasureElement(measureData) {
             measureDiv.classList.add('selected');
             chordBox.classList.add('selected-chord');
 
-            const infoDiv = document.getElementById("selected-measure-info");
-            const infoText = infoDiv.querySelector('.info-text');
-            infoText.textContent = `נבחר אקורד ${chord.chord} בתיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`;
-            infoDiv.style.display = "block";
-
-            setTimeout(() => {
-                infoDiv.style.opacity = "0";
-                setTimeout(() => {
-                    infoDiv.style.display = "none";
-                    infoDiv.style.opacity = "1";
-                }, 300);
-            }, 4000);
+            showSelectionInfo(`נבחר אקורד ${chord.chord} בתיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`);
         });
 
         chordsContainer.appendChild(chordBox);
@@ -383,33 +472,30 @@ function createMeasureElement(measureData) {
         });
         measureDiv.classList.add('selected');
 
-        const infoDiv = document.getElementById("selected-measure-info");
-        const infoText = infoDiv.querySelector('.info-text');
         if (measureData.isPreparation) {
-            infoText.textContent = `נבחרה תיבת ההכנה - לחץ "החל לנגן" כדי להתחיל עם הכנה`;
+            showSelectionInfo(`נבחרה תיבת ההכנה - לחץ "החל לנגן" כדי להתחיל עם הכנה`);
         } else {
-            infoText.textContent = `נבחרה תיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`;
+            showSelectionInfo(`נבחרה תיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`);
         }
-        infoDiv.style.display = "block";
-
-        setTimeout(() => {
-            infoDiv.style.opacity = "0";
-            setTimeout(() => {
-                infoDiv.style.display = "none";
-                infoDiv.style.opacity = "1";
-            }, 300);
-        }, 4000);
     });
 
     return measureDiv;
 }
 
-// Calculate measure width based on beats - more compact calculation
-function calculateMeasureWidth(totalBeats) {
-    // רוחב בסיסי קטן יותר + רוחב פרופורציונלי לנקישות
-    const baseWidth = 60; // הקטנו מ-140
-    const beatWidth = 8;   // הקטנו מ-20
-    return Math.max(70, baseWidth + (totalBeats * beatWidth));
+// פונקציה לוידואלית המידע לבחירה
+function showSelectionInfo(message) {
+    const infoDiv = document.getElementById("selected-measure-info");
+    const infoText = infoDiv.querySelector('.info-text');
+    infoText.textContent = message;
+    infoDiv.style.display = "block";
+
+    setTimeout(() => {
+        infoDiv.style.opacity = "0";
+        setTimeout(() => {
+            infoDiv.style.display = "none";
+            infoDiv.style.opacity = "1";
+        }, 300);
+    }, 4000);
 }
 
 // Toggle loop visibility
@@ -693,7 +779,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let val = parseInt(e.target.value);
         if (isNaN(val) || val < 40) val = 40;
         if (val > 200) val = 200;
-        bpmInput.value = val;
+        bmpInput.value = val;
         bpmSlider.value = val;
         bpm = val;
         document.getElementById("current-bpm").innerText = bpm;
@@ -759,6 +845,32 @@ document.addEventListener("DOMContentLoaded", () => {
                     intervalMs = 60000 / bpm;
                 }
                 break;
+            case "Equal":
+            case "NumpadAdd":
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    increaseMeasureSize();
+                } else if (e.shiftKey) {
+                    e.preventDefault();
+                    increaseFontSize();
+                }
+                break;
+            case "Minus":
+            case "NumpadSubtract":
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    decreaseMeasureSize();
+                } else if (e.shiftKey) {
+                    e.preventDefault();
+                    decreaseFontSize();
+                }
+                break;
+            case "Digit0":
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    resetSizes();
+                }
+                break;
         }
     });
 
@@ -772,6 +884,9 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Ctrl+R: Restart");
     console.log("Ctrl+S: Stop");
     console.log("Arrow Up/Down: Adjust BPM");
+    console.log("Ctrl + / Ctrl -: Adjust measure size");
+    console.log("Shift + / Shift -: Adjust font size");
+    console.log("Ctrl+0: Reset sizes");
 });
 
 // My Songs functionality

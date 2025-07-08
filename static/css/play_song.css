@@ -1,4 +1,4 @@
-/* PC-Optimized Play Song Styles - Full Screen & Compact Design */
+/* PC-Optimized Play Song Styles - Enhanced User-Friendly Design */
 * {
     box-sizing: border-box;
 }
@@ -293,9 +293,9 @@ body {
     min-height: 0;
 }
 
-/* Controls Panel - Compact and Efficient */
+/* Controls Panel - Enhanced with size controls */
 .controls-panel {
-    width: 280px;
+    width: 300px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border-radius: 8px;
     padding: 10px;
@@ -322,6 +322,140 @@ body {
 
 .control-icon {
     font-size: 14px;
+}
+
+/* Size Controls Section */
+.size-controls {
+    background: linear-gradient(135deg, #e8f5e8, #f0f8ff);
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.size-controls-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: #155724;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.size-control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.size-control-row:last-child {
+    margin-bottom: 0;
+}
+
+.size-control-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 12px;
+    flex: 1;
+}
+
+.size-control-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.size-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+}
+
+.size-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838, #1e7e34);
+}
+
+.size-btn.decrease {
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+}
+
+.size-btn.decrease:hover {
+    background: linear-gradient(135deg, #e0a800, #d39e00);
+    box-shadow: 0 3px 10px rgba(255, 193, 7, 0.4);
+}
+
+.reset-all-btn {
+    background: linear-gradient(135deg, #6f42c1, #5a32a3);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+    margin-top: 8px;
+}
+
+.reset-all-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(111, 66, 193, 0.4);
+    background: linear-gradient(135deg, #5a32a3, #4e2a8e);
+}
+
+/* Size Indicator */
+.size-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.size-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+}
+
+.help-text {
+    font-size: 10px;
+    color: #6c757d;
+    text-align: center;
+    margin-top: 6px;
+    line-height: 1.3;
 }
 
 .bpm-controls {
@@ -394,7 +528,7 @@ body {
     box-shadow: 0 5px 18px rgba(255, 193, 7, 0.5);
 }
 
-/* Preparation controls - Compact */
+/* Preparation controls */
 .preparation-controls {
     display: flex;
     align-items: center;
@@ -452,7 +586,7 @@ input:checked + .preparation-slider:before {
     font-size: 11px;
 }
 
-/* Song parts controls - Compact */
+/* Song parts controls */
 .song-parts-controls {
     display: flex;
     flex-direction: column;
@@ -526,7 +660,44 @@ input:checked + .preparation-slider:before {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Chord Section - Full width utilization */
+/* User Instructions Section */
+.user-instructions {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.instructions-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: #856404;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.instruction-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    color: #856404;
+}
+
+.instruction-item:last-child {
+    margin-bottom: 0;
+}
+
+.instruction-icon {
+    font-size: 12px;
+    min-width: 16px;
+}
+
+/* Chord Section - Enhanced with better row layout */
 .chord-section {
     flex: 1;
     padding: 8px;
@@ -578,7 +749,7 @@ input:checked + .preparation-slider:before {
     padding: 4px;
 }
 
-/* Loop sections - Much more compact */
+/* Loop sections - Enhanced styling */
 .loop-section {
     border: 1px solid #e1e8ed;
     border-radius: 6px;
@@ -594,7 +765,6 @@ input:checked + .preparation-slider:before {
     background: linear-gradient(145deg, #fff8e1, #fffde7);
 }
 
-/* Current repeat highlighting */
 .loop-section.current-repeat {
     border-color: #28a745;
     background: linear-gradient(145deg, #d4edda, #c3e6cb);
@@ -606,7 +776,6 @@ input:checked + .preparation-slider:before {
     background: linear-gradient(135deg, #28a745, #20c997) !important;
 }
 
-/* Past repeat styling */
 .loop-section.past-repeat {
     opacity: 0.7;
     border-color: #6c757d;
@@ -620,17 +789,14 @@ input:checked + .preparation-slider:before {
 .loop-header {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    padding: 1px 4px;         /* הקטן את ה-padding האנכי */
+    padding: 2px 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-weight: 600;
-    font-size: 10px;          /* הקטן את הטקסט אם תרצה */
-    min-height: unset;        /* הסר גובה מינימלי */
-    height: auto;             /* אפשר לגובה להתאים לתוכן */
-    line-height: 1.2;         /* צמצם רווח בין שורות הטקסט */
+    font-size: 11px;
+    min-height: 24px;
 }
-
 
 .preparation-section .loop-header {
     background: linear-gradient(135deg, #ffc107, #ff8f00);
@@ -639,25 +805,18 @@ input:checked + .preparation-slider:before {
 .loop-title-controls {
     display: flex;
     align-items: center;
-    gap: 4px;            /* אפשר להקטין את המרווח */
-    padding: 0;          /* מסיר רווחים מיותרים */
-    min-height: unset;
-    height: auto;
+    gap: 6px;
 }
-
 
 .loop-toggle-btn {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 3px;
-    padding: 0 2px;          /* הקטן את ה-padding האנכי לגמרי */
+    padding: 1px 4px;
     cursor: pointer;
-    font-size: 9px;          /* הקטן את גודל הטקסט בכפתור */
-    min-height: unset;
-    height: auto;
+    font-size: 10px;
     transition: all 0.3s;
 }
-
 
 .loop-toggle-btn:hover {
     background: rgba(255, 255, 255, 0.3);
@@ -705,33 +864,47 @@ input:checked + .preparation-slider:before {
     direction: ltr;
 }
 
+/* Fixed 4 per row layout */
 .chord-row {
-    display: flex;
-    justify-content: flex-start;
-    gap: 4px;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+    width: 100%;
 }
 
-/* Measure boxes - Much more compact */
+.chord-row.fixed-four-per-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+/* Measure boxes - Enhanced with better scaling */
 .measure-box {
     display: flex;
     flex-direction: column;
     align-items: center;
     border: 1px solid #34495e;
     border-radius: 4px;
-    padding: 3px;
+    padding: 4px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
-    flex: 1 1 0;          /* כל תיבה תתפוס חלק שווה מרוחב השורה */
-    min-width: 60px;      /* רוחב מינימלי כדי לא לקרוס */
-    border: 0.5px solid #34495e;
-    min-height: 50px;
-    flex-shrink: 0;
+    min-height: 60px;
+    aspect-ratio: 1;
+    transform-origin: center;
+}
+
+.measure-box.empty-measure {
+    background: transparent;
+    border: 1px dashed #ddd;
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
 }
 
 .measure-box.preparation-measure {
@@ -761,16 +934,18 @@ input:checked + .preparation-slider:before {
 }
 
 .measure-box:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-color: #667eea;
+    z-index: 2;
 }
 
 .measure-box.current {
     background: linear-gradient(135deg, #fff7cc, #fff3cd);
     border-color: #ffc107;
-    box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
-    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(255, 193, 7, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    z-index: 3;
 }
 
 .measure-box.past {
@@ -781,8 +956,10 @@ input:checked + .preparation-slider:before {
 
 .measure-box.selected {
     border-color: #e74c3c;
-    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
     background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+    transform: translateY(-2px) scale(1.08);
+    z-index: 4;
 }
 
 .measure-box.clickable {
@@ -792,28 +969,33 @@ input:checked + .preparation-slider:before {
 
 .measure-box.clickable:hover {
     border-style: solid;
-    border-width: 1px;
+    border-width: 2px;
 }
 
 .measure-title {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 700;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
     color: #2c3e50;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .chords-in-measure {
     display: flex;
     width: 100%;
     justify-content: center;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     gap: 1px;
-    min-height: 16px;
+    min-height: 18px;
     flex-wrap: nowrap;
     overflow: hidden;
+    flex: 1;
 }
 
 .chord-box {
@@ -823,10 +1005,10 @@ input:checked + .preparation-slider:before {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 2px;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 10px;
     color: #2c3e50;
     transition: all 0.3s;
-    min-width: 10px;
+    min-width: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -834,6 +1016,9 @@ input:checked + .preparation-slider:before {
     cursor: pointer;
     position: relative;
     flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .chord-box.preparation-chord {
@@ -848,6 +1033,8 @@ input:checked + .preparation-slider:before {
     color: white;
     border-color: #28a745;
     animation: pulse-chord 0.6s infinite;
+    transform: scale(1.1);
+    z-index: 5;
 }
 
 .chord-box.played-chord {
@@ -859,15 +1046,12 @@ input:checked + .preparation-slider:before {
 
 @keyframes pulse-chord {
     0% {
-        transform: scale(1);
         box-shadow: 0 0 0 rgba(40, 167, 69, 0.7);
     }
     50% {
-        transform: scale(1.05);
-        box-shadow: 0 0 4px rgba(40, 167, 69, 0.7);
+        box-shadow: 0 0 8px rgba(40, 167, 69, 0.7);
     }
     100% {
-        transform: scale(1);
         box-shadow: 0 0 0 rgba(40, 167, 69, 0.7);
     }
 }
@@ -895,8 +1079,8 @@ input:checked + .preparation-slider:before {
 }
 
 .chord-box:hover {
-    transform: scale(1.1);
-    z-index: 2;
+    transform: scale(1.15);
+    z-index: 6;
     background: rgba(102, 126, 234, 0.2);
     border-color: #667eea;
 }
@@ -905,33 +1089,35 @@ input:checked + .preparation-slider:before {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     border-color: #667eea;
-    transform: scale(1.15);
-    z-index: 3;
-    box-shadow: 0 0 8px rgba(102, 126, 234, 0.8);
+    transform: scale(1.2);
+    z-index: 7;
+    box-shadow: 0 0 12px rgba(102, 126, 234, 0.8);
 }
 
 .beats-display {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-top: 2px;
-    padding: 0 2px;
+    margin-top: 3px;
+    padding: 0 3px;
+    min-height: 8px;
 }
 
 .beat-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background-color: #bdc3c7;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     position: relative;
+    flex-shrink: 0;
 }
 
 .beat-dot.active {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    transform: scale(1.3);
-    box-shadow: 0 0 6px rgba(102, 126, 234, 0.8);
+    transform: scale(1.4);
+    box-shadow: 0 0 8px rgba(102, 126, 234, 0.8);
     z-index: 2;
 }
 
@@ -941,8 +1127,8 @@ input:checked + .preparation-slider:before {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     background: rgba(102, 126, 234, 0.3);
     border-radius: 50%;
     animation: pulse 0.6s infinite;
@@ -951,7 +1137,7 @@ input:checked + .preparation-slider:before {
 .beat-dot.played {
     background: linear-gradient(135deg, #28a745, #20c997);
     box-shadow: 0 1px 3px rgba(40, 167, 69, 0.4);
-    transform: scale(1.1);
+    transform: scale(1.2);
 }
 
 @keyframes pulse {
@@ -960,7 +1146,7 @@ input:checked + .preparation-slider:before {
         opacity: 0.7;
     }
     50% {
-        transform: translate(-50%, -50%) scale(1.2);
+        transform: translate(-50%, -50%) scale(1.3);
         opacity: 0.3;
     }
     100% {
@@ -969,62 +1155,55 @@ input:checked + .preparation-slider:before {
     }
 }
 
-/* Responsive adjustments for different screen sizes */
-@media (min-width: 1400px) {
-    .measure-box {
-        width: 90px;
-        min-height: 55px;
-    }
-
-    .chord-row {
-        gap: 5px;
-    }
+/* My Songs Button Styling */
+.my-songs-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (min-width: 1600px) {
+.my-songs-btn:hover {
+    background: linear-gradient(135deg, #c0392b, #a93226);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+}
+
+.my-songs-btn.added {
+    background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+.my-songs-btn.added:hover {
+    background: linear-gradient(135deg, #229954, #1e8449);
+}
+
+.my-songs-btn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+    .controls-panel {
+        width: 280px;
+    }
+
     .measure-box {
-        width: 100px;
-        min-height: 60px;
-    }
-
-    .chord-box {
-        font-size: 8px;
-        min-width: 12px;
-        padding: 3px 2px;
-    }
-
-    .measure-title {
-        font-size: 12px;
+        min-height: 55px;
     }
 }
 
 @media (max-width: 1200px) {
-    .measure-box {
-        width: 70px;
-        min-height: 45px;
-    }
-
-    .chord-row {
-        gap: 3px;
-    }
-
     .controls-panel {
-        width: 250px;
+        width: 260px;
+    }
+
+    .measure-box {
+        min-height: 50px;
     }
 
     .chord-box {
-        font-size: 6px;
-        min-width: 8px;
-        padding: 1px;
-    }
-
-    .control-label {
-        font-size: 12px;
-    }
-
-    .control-btn {
-        padding: 6px 10px;
-        font-size: 11px;
+        font-size: 9px;
+        min-width: 6px;
     }
 }
 
@@ -1048,21 +1227,20 @@ input:checked + .preparation-slider:before {
     }
 
     .measure-box {
-        width: calc(20% - 3px);
-        min-height: 40px;
+        min-height: 45px;
     }
 
-    .chord-row {
-        justify-content: space-between;
-        gap: 2px;
+    .chord-row,
+    .chord-row.fixed-four-per-row {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
     }
 
     .loop-header {
-        padding: 1px 4px;      /* הקטן משמעותית את ה-padding האנכי */
-        font-size: 10px;       /* הקטן את הטקסט אם אתה רוצה */
-        min-height: unset;     /* ודא שאין גובה מינימלי שמונע הקטנה */
-        line-height: 1.2;      /* צמצם רווח בין שורות אם יש */
+        padding: 2px 4px;
+        font-size: 10px;
     }
+
     .loop-title-controls {
         justify-content: center;
     }
@@ -1124,10 +1302,20 @@ input:checked + .preparation-slider:before {
     }
 
     .chord-box {
-        min-width: 6px;
-        min-height: 12px;
-        font-size: 6px;
+        min-width: 5px;
+        min-height: 10px;
+        font-size: 8px;
         padding: 1px;
+    }
+
+    .size-controls {
+        padding: 6px;
+    }
+
+    .size-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
     }
 }
 
@@ -1164,31 +1352,22 @@ input:checked + .preparation-slider:before {
     padding: 0 1px;
 }
 
-/* Additional optimizations for better content density */
-.loop-section:not(.preparation-section) {
-    margin-bottom: 3px;
-}
-
-.chord-row:last-child {
-    margin-bottom: 0;
-}
-
 /* Optimize scrollbar appearance */
 .controls-panel::-webkit-scrollbar,
 .chord-section::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
 }
 
 .controls-panel::-webkit-scrollbar-track,
 .chord-section::-webkit-scrollbar-track {
     background: #f1f1f1;
-    border-radius: 2px;
+    border-radius: 3px;
 }
 
 .controls-panel::-webkit-scrollbar-thumb,
 .chord-section::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 2px;
+    border-radius: 3px;
 }
 
 .controls-panel::-webkit-scrollbar-thumb:hover,
@@ -1196,7 +1375,7 @@ input:checked + .preparation-slider:before {
     background: linear-gradient(135deg, #5a6fd8, #6a4190);
 }
 
-/* Better text contrast for small elements */
+/* Better text contrast for readability */
 .measure-title,
 .chord-box,
 .loop-checkbox-label,
@@ -1204,55 +1383,6 @@ input:checked + .preparation-slider:before {
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-/* Compact but clear visual hierarchy */
 .loop-title {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-/* Ensure clickable areas are large enough even with smaller visual elements */
-.measure-box {
-    min-width: 70px;
-    min-height: 70px;
-}
-
-.beat-dot {
-    min-width: 8px;
-    min-height: 8px;
-    cursor: pointer;
-}
-
-/* Hover states remain prominent for usability */
-.measure-box:hover {
-    border-width: 2px;
-}
-
-.chord-box:hover {
-    transform: scale(1.1);
-    z-index: 2;
-}
-
-/* My Songs Button Styling */
-.my-songs-btn {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.my-songs-btn:hover {
-    background: linear-gradient(135deg, #c0392b, #a93226);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-}
-
-.my-songs-btn.added {
-    background: linear-gradient(135deg, #27ae60, #229954);
-}
-
-.my-songs-btn.added:hover {
-    background: linear-gradient(135deg, #229954, #1e8449);
-}
-
-.my-songs-btn.loading {
-    opacity: 0.7;
-    pointer-events: none;
 }
