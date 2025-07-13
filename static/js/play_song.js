@@ -1,4 +1,4 @@
-// Enhanced Play Song JavaScript - ממשק ידידותי יותר עם כפתורי הגדלה/הקטנה
+// Enhanced Play Song JavaScript - ממשק ידידותי יותר עם כפתורי הגדלה/הקטנה וגלילה אוטומטית
 
 // Get song data from Flask
 const chords = window.songData.chords;
@@ -77,7 +77,7 @@ function updateMeasuresSizes() {
     const measures = document.querySelectorAll('.measure-box');
     measures.forEach(measure => {
         measure.style.transform = `scale(${measureScale})`;
-        measure.style.margin = `${measureScale * 2}px`;
+        measure.style.margin = `${measureScale * 3}px`;
     });
 }
 
@@ -86,12 +86,12 @@ function updateFontSizes() {
     const measureTitles = document.querySelectorAll('.measure-title');
 
     chordBoxes.forEach(chord => {
-        const baseFontSize = 11; // גודל פונט בסיסי
+        const baseFontSize = 16; // גודל פונט בסיסי מעודכן
         chord.style.fontSize = `${baseFontSize * fontScale}px`;
     });
 
     measureTitles.forEach(title => {
-        const baseFontSize = 8; // גודל פונט בסיסי
+        const baseFontSize = 12; // גודל פונט בסיסי מעודכן
         title.style.fontSize = `${baseFontSize * fontScale}px`;
     });
 }
@@ -123,7 +123,7 @@ function buildAllMeasures() {
     allMeasures = [];
     let globalIndex = 0;
 
-    // הוסף תיבת הכנה
+    // הוסף תיבת הכנה עם מספר 0
     if (addPreparationMeasure) {
         allMeasures.push({
             globalIndex: globalIndex++,
@@ -134,7 +134,8 @@ function buildAllMeasures() {
             repeatNumber: null,
             measureInLoop: null,
             lineIdx: -1,
-            startChordIdx: 0
+            startChordIdx: 0,
+            measureNumber: 0 // תיבת הכנה = 0
         });
     }
 
@@ -158,7 +159,8 @@ function buildAllMeasures() {
                         repeatNumber: repeatNum,
                         measureInLoop: measureInLoop,
                         lineIdx: -1,
-                        startChordIdx: 0
+                        startChordIdx: 0,
+                        measureNumber: globalIndex - (addPreparationMeasure ? 1 : 0) // מספר התיבה מתחיל מ-1 אחרי ההכנה
                     });
                 }
             }
@@ -188,7 +190,8 @@ function buildAllMeasures() {
                         repeatNumber: null,
                         measureInLoop: null,
                         lineIdx: lineIdx,
-                        startChordIdx: chordIdx - currentMeasure.length + 1
+                        startChordIdx: chordIdx - currentMeasure.length + 1,
+                        measureNumber: globalIndex - (addPreparationMeasure ? 1 : 0)
                     });
 
                     totalBeats = 0;
@@ -202,7 +205,7 @@ function buildAllMeasures() {
     return allMeasures;
 }
 
-// Enhanced chord rendering עם הצגה של 4 תיבות בשורה תמיד
+// Enhanced chord rendering עם הצגה של 4 תיבות בשורה תמיד ומספור נכון
 function renderChords() {
     const wrapper = document.getElementById("chords-wrapper");
     wrapper.innerHTML = "";
@@ -248,9 +251,44 @@ function renderChords() {
     updateBeatDots();
     updateMeasuresSizes();
     updateFontSizes();
+
+    // גלילה אוטומטית לתיבה הנוכחית
+    scrollToCurrentMeasure();
 }
 
-// Render measures organized by loop sections - 4 per row
+// פונקציה לגלילה אוטומטית
+function scrollToCurrentMeasure() {
+    if (!isPlaying) return;
+
+    const currentMeasureElement = document.querySelector(`[data-global-index="${currentGlobalMeasureIndex}"]`);
+    if (currentMeasureElement) {
+        // גלל לתיבה עם אנימציה חלקה
+        currentMeasureElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'center'
+        });
+
+        // הוסף הדגשה לתיבה הנוכחית
+        highlightCurrentSection(currentMeasureElement);
+    }
+}
+
+// פונקציה להדגשת הקטע הנוכחי
+function highlightCurrentSection(measureElement) {
+    // הסר הדגשות קודמות
+    document.querySelectorAll('.current-playing-section').forEach(section => {
+        section.classList.remove('current-playing-section');
+    });
+
+    // הוסף הדגשה לקטע הנוכחי
+    const parentSection = measureElement.closest('.loop-section');
+    if (parentSection) {
+        parentSection.classList.add('current-playing-section');
+    }
+}
+
+// Render measures organized by loop sections - 4 per row with auto-scroll
 function renderMeasuresByLoops(wrapper, measures) {
     const loopSections = new Map();
 
@@ -281,6 +319,7 @@ function renderMeasuresByLoops(wrapper, measures) {
         loopSection.className = "loop-section";
         loopSection.dataset.loopIndex = section.loopIndex;
         loopSection.dataset.repeatNumber = section.repeatNumber;
+        loopSection.id = `loop-${section.loopIndex}-repeat-${section.repeatNumber}`;
 
         // Highlight current section
         const currentMeasure = measures[currentGlobalMeasureIndex];
@@ -369,7 +408,7 @@ function renderMeasuresFlat(wrapper, measures) {
     }
 }
 
-// Create individual measure element with improved user experience
+// Create individual measure element with improved user experience and correct numbering
 function createMeasureElement(measureData) {
     const measureDiv = document.createElement("div");
     measureDiv.className = "measure-box clickable";
@@ -391,10 +430,14 @@ function createMeasureElement(measureData) {
         measureDiv.classList.add("past");
     }
 
-    // Measure title
+    // Measure title with correct numbering
     const title = document.createElement("div");
     title.className = "measure-title";
-    title.innerText = measureData.isPreparation ? "הכנה" : `תיבה ${measureData.globalIndex + 1}`;
+    if (measureData.isPreparation) {
+        title.innerText = "תיבה 0 - הכנה";
+    } else {
+        title.innerText = `תיבה ${measureData.measureNumber}`;
+    }
     measureDiv.appendChild(title);
 
     // Chords container
@@ -439,7 +482,11 @@ function createMeasureElement(measureData) {
             measureDiv.classList.add('selected');
             chordBox.classList.add('selected-chord');
 
-            showSelectionInfo(`נבחר אקורד ${chord.chord} בתיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`);
+            if (measureData.isPreparation) {
+                showSelectionInfo(`נבחר אקורד ${chord.chord} בתיבת ההכנה - לחץ "החל לנגן" כדי להתחיל מכאן`);
+            } else {
+                showSelectionInfo(`נבחר אקורד ${chord.chord} בתיבה ${measureData.measureNumber} - לחץ "החל לנגן" כדי להתחיל מכאן`);
+            }
         });
 
         chordsContainer.appendChild(chordBox);
@@ -475,7 +522,7 @@ function createMeasureElement(measureData) {
         if (measureData.isPreparation) {
             showSelectionInfo(`נבחרה תיבת ההכנה - לחץ "החל לנגן" כדי להתחיל עם הכנה`);
         } else {
-            showSelectionInfo(`נבחרה תיבה ${measureData.globalIndex + 1} - לחץ "החל לנגן" כדי להתחיל מכאן`);
+            showSelectionInfo(`נבחרה תיבה ${measureData.measureNumber} - לחץ "החל לנגן" כדי להתחיל מכאן`);
         }
     });
 
@@ -606,7 +653,7 @@ function updateBeatDots() {
     }
 }
 
-// Enhanced playback with proper measure and beat tracking
+// Enhanced playback with proper measure and beat tracking + auto-scroll
 function startPlayback() {
     stopPlayback();
 
@@ -641,6 +688,7 @@ function startPlayback() {
         currentBeatInMeasure = 0;
         updateBeatDots();
         renderChords();
+        scrollToCurrentMeasure(); // גלילה אוטומטית
     }, 100);
 
     // Main interval
@@ -671,6 +719,9 @@ function startPlayback() {
                 stopPlayback();
                 return;
             }
+
+            // גלילה אוטומטית לתיבה הבאה
+            scrollToCurrentMeasure();
         }
 
         updateBeatDots();
@@ -694,6 +745,9 @@ function findNextEnabledMeasure(measures) {
 
     if (currentGlobalMeasureIndex >= measures.length) {
         stopPlayback();
+    } else {
+        // גלילה אוטומטית לתיבה החדשה
+        scrollToCurrentMeasure();
     }
 }
 
@@ -701,6 +755,12 @@ function stopPlayback() {
     clearInterval(interval);
     interval = null;
     isPlaying = false;
+
+    // הסר הדגשות של נגינה
+    document.querySelectorAll('.current-playing-section').forEach(section => {
+        section.classList.remove('current-playing-section');
+    });
+
     renderChords();
     updatePlayingInfo();
 }
@@ -725,7 +785,11 @@ function updatePlayingInfo() {
         currentBeatPosition += chordBeats;
     }
 
-    console.log(`נוגן: תיבה ${currentGlobalMeasureIndex + 1}, נקישה ${currentBeatInMeasure + 1}, אקורד: ${currentChordName}`);
+    if (currentMeasure.isPreparation) {
+        console.log(`נוגן: תיבת הכנה (0), נקישה ${currentBeatInMeasure + 1}, אקורד: ${currentChordName}`);
+    } else {
+        console.log(`נוגן: תיבה ${currentMeasure.measureNumber}, נקישה ${currentBeatInMeasure + 1}, אקורד: ${currentChordName}`);
+    }
 }
 
 function restartPlayback() {
@@ -767,7 +831,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bpm = parseInt(e.target.value);
         bpmInput.value = bpm;
         document.getElementById("current-bpm").innerText = bpm;
-        intervalMs = 60000 / bpm;
+        intervalMs = 60000 / bmp;
 
         if (interval) {
             stopPlayback();
@@ -779,7 +843,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let val = parseInt(e.target.value);
         if (isNaN(val) || val < 40) val = 40;
         if (val > 200) val = 200;
-        bmpInput.value = val;
+        bpmInput.value = val;
         bpmSlider.value = val;
         bpm = val;
         document.getElementById("current-bpm").innerText = bpm;
@@ -829,8 +893,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 e.preventDefault();
                 if (bpm < 200) {
                     bpm += 5;
-                    bpmSlider.value = bpm;
-                    bpmInput.value = bpm;
+                    bmpSlider.value = bpm;
+                    bmpInput.value = bpm;
                     document.getElementById("current-bpm").innerText = bpm;
                     intervalMs = 60000 / bpm;
                 }
@@ -839,8 +903,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 e.preventDefault();
                 if (bpm > 40) {
                     bpm -= 5;
-                    bpmSlider.value = bpm;
-                    bpmInput.value = bpm;
+                    bmpSlider.value = bpm;
+                    bmpInput.value = bpm;
                     document.getElementById("current-bpm").innerText = bpm;
                     intervalMs = 60000 / bpm;
                 }
