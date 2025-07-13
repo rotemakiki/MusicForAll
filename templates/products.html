@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}מוצרים למוזיקאים{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/products.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="products-container">
+    <header class="products-header">
+        <h1>🎵 מוצרים למוזיקאים</h1>
+        <p>כלי נגינה ואביזרים איכותיים במחירים הוגנים</p>
+
+        {% if session.get('roles') and 'admin' in session.get('roles') %}
+        <button class="add-product-btn" onclick="openAddProductModal()">
+            <i class="fas fa-plus"></i> הוסף מוצר חדש
+        </button>
+        {% endif %}
+    </header>
+
+    <div class="filters-section">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="חפש מוצרים..." onkeyup="filterProducts()">
+            <i class="fas fa-search"></i>
+        </div>
+
+        <div class="filter-buttons">
+            <button class="filter-btn active" onclick="filterByCategory('all')">הכל</button>
+            <button class="filter-btn" onclick="filterByCategory('instruments')">כלי נגינה</button>
+            <button class="filter-btn" onclick="filterByCategory('accessories')">אביזרים</button>
+            <button class="filter-btn" onclick="filterByCategory('audio')">ציוד אודיו</button>
+        </div>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+        <!-- Products will be loaded here by JavaScript -->
+    </div>
+</div>
+
+<!-- Add Product Modal (Admin Only) -->
+{% if session.get('roles') and 'admin' in session.get('roles') %}
+<div id="addProductModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddProductModal()">&times;</span>
+        <h2>הוסף מוצר חדש</h2>
+        <form id="addProductForm" onsubmit="addProduct(event)">
+            <div class="form-group">
+                <label for="productName">שם המוצר</label>
+                <input type="text" id="productName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productDescription">תיאור</label>
+                <textarea id="productDescription" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="productImage">תמונה (URL)</label>
+                <input type="url" id="productImage" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productAliexpressLink">קישור לאלי אקספרס</label>
+                <input type="url" id="productAliexpressLink" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productCategory">קטגוריה</label>
+                <select id="productCategory" required>
+                    <option value="instruments">כלי נגינה</option>
+                    <option value="accessories">אביזרים</option>
+                    <option value="audio">ציוד אודיו</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="productRating">דירוג (1-5)</label>
+                <input type="number" id="productRating" min="1" max="5" step="0.1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productPrice">מחיר משוער ($)</label>
+                <input type="number" id="productPrice" step="0.01" min="0">
+            </div>
+
+            <button type="submit" class="submit-btn">הוסף מוצר</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    // Pass user roles to JavaScript
+    window.userRoles = {{ session.get('roles', []) | tojson }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/products.js') }}"></script>
+{% endblock %}

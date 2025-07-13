@@ -1,5 +1,6 @@
 from flask import Flask
 from routes.auth import auth_bp
+from routes.products import products_bp
 from routes.songs import songs_bp
 from routes.teachers import teachers_bp
 from routes.students import students_bp
@@ -30,6 +31,7 @@ app.register_blueprint(videos_bp)
 app.register_blueprint(tutorials_bp)
 app.register_blueprint(general_bp)
 app.register_blueprint(my_songs_bp)
+app.register_blueprint(products_bp)
 # דף הבית (אפשר להגדיר כאן או ב-blueprint ייעודי קטן)
 @app.route('/')
 def home():
