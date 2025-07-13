@@ -1,12 +1,20 @@
-# firebase_config.py
+import os
+import base64
+import json
+import tempfile
+from firebase_admin import credentials, initialize_app, firestore
 
-import firebase_admin
-from firebase_admin import credentials, firestore
+def get_firebase_credentials():
+    encoded_key = os.environ.get("FIREBASE_KEY_BASE64")
+    if not encoded_key:
+        raise ValueError("Missing FIREBASE_KEY_BASE64 environment variable")
 
+    decoded_bytes = base64.b64decode(encoded_key)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
+        temp_file.write(decoded_bytes)
+        temp_file.flush()
+        return credentials.Certificate(temp_file.name)
 
-# Load credentials from the JSON file
-cred = credentials.Certificate("secrets/firebase-key.json")
-firebase_admin.initialize_app(cred)
-
-# Create Firestore client
+cred = get_firebase_credentials()
+firebase_app = initialize_app(cred)
 db = firestore.client()

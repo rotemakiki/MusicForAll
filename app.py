@@ -20,7 +20,7 @@ import os
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'your_secret_key'  # חשוב להודעת flash ול-session
-
+#chchchchc
 # רישום כל ה-blueprints:
 app.register_blueprint(auth_bp)
 app.register_blueprint(songs_bp)
