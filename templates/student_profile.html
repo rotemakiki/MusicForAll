@@ -2,132 +2,167 @@
 
 {% block title %}הפרופיל שלי - {{ student.username }}{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/student_profile.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>👤 פרופיל תלמיד</h1>
+<div class="student-profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <!-- Profile Image Section -->
+        <div class="profile-image-section">
+            {% if student.profile_image %}
+                <img src="{{ student.profile_image }}" alt="תמונת פרופיל" class="profile-image">
+            {% else %}
+                <div class="default-avatar">🎓</div>
+            {% endif %}
 
-    {% if teacher.profile_image %}
-        <img src="{{ student.profile_image }}" alt="תמונת פרופיל" style="width: 150px; border-radius: 50%; margin-bottom: 20px;">
-    {% endif %}
+            <!-- Upload Form -->
+            <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                <div class="file-input-wrapper">
+                    <input type="file" name="profile_image" id="profile-image-input" class="file-input" accept="image/*" required>
+                    <label for="profile-image-input" class="file-input-label">
+                        <i class="fas fa-camera"></i>
+                        <span>בחר תמונה</span>
+                    </label>
+                </div>
+                <input type="hidden" name="user_id" value="{{ student.id }}">
+                <button type="submit" class="upload-btn">
+                    <i class="fas fa-upload"></i>
+                    <span>העלה תמונת פרופיל</span>
+                </button>
+            </form>
+        </div>
 
-    <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" style="margin-bottom: 20px;">
-        <input type="file" name="profile_image" accept="image/*" required style="margin-bottom: 10px;">
-        <input type="hidden" name="user_id" value="{{ student.id }}">
-        <button type="submit" class="btn">⬆️ העלה תמונת פרופיל</button>
-    </form>
+        <!-- Student Info -->
+        <h1 class="student-name">{{ student.username }}</h1>
+        <p class="student-subtitle">📚 תלמיד מתקדם</p>
+    </div>
 
+    <!-- Profile Form Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-user-edit"></i>
+                פרטים אישיים
+            </h2>
+            <p class="section-subtitle">עדכן את הפרטים האישיים שלך</p>
+        </div>
 
-    <form id="student-profile-form" class="styled-form">
-        <label for="username">שם משתמש:</label>
-        <input type="text" id="username" name="username">
+        <form id="student-profile-form" class="profile-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user"></i>
+                        שם משתמש
+                    </label>
+                    <input type="text" id="username" name="username" class="form-input" placeholder="הכנס שם משתמש">
+                </div>
 
-        <label for="email">אימייל:</label>
-        <input type="email" id="email" name="email" disabled>
+                <div class="form-group">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope"></i>
+                        אימייל
+                    </label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="הכנס אימייל" disabled>
+                    <small class="form-help">האימייל לא ניתן לעריכה</small>
+                </div>
 
-        <label for="interests">תחומי עניין:</label>
-        <input type="text" id="interests" name="interests">
+                <div class="form-group full-width">
+                    <label for="interests" class="form-label">
+                        <i class="fas fa-heart"></i>
+                        תחומי עניין
+                    </label>
+                    <input type="text" id="interests" name="interests" class="form-input" placeholder="לדוגמה: רוק, קלאסי, ג'אז">
+                    <small class="form-help">הכנס את סגנונות המוזיקה שאתה אוהב</small>
+                </div>
 
-        <label for="style">סגנון מועדף:</label>
-        <input type="text" id="style" name="style">
+                <div class="form-group full-width">
+                    <label for="style" class="form-label">
+                        <i class="fas fa-music"></i>
+                        סגנון מועדף
+                    </label>
+                    <input type="text" id="style" name="style" class="form-input" placeholder="איזה סגנון למידה מתאים לך?">
+                    <small class="form-help">לדוגמה: למידה אינטראקטיבית, תרגול עצמאי, שיעורים קבוצתיים</small>
+                </div>
 
-        <label for="future_learning">האם תרצה ללמוד כלי נגינה בעתיד?</label>
-        <input type="text" id="future_learning" name="future_learning">
+                <div class="form-group full-width">
+                    <label for="future_learning" class="form-label">
+                        <i class="fas fa-graduation-cap"></i>
+                        למידה עתידית
+                    </label>
+                    <input type="text" id="future_learning" name="future_learning" class="form-input" placeholder="איזה כלי נגינה תרצה ללמוד?">
+                    <small class="form-help">חלומות ומטרות למוזיקה בעתיד</small>
+                </div>
+            </div>
 
-        <button type="submit" class="btn">💾 שמור שינויים</button>
-    </form>
+            <div class="form-actions">
+                <button type="submit" class="save-btn">
+                    <i class="fas fa-save"></i>
+                    <span>שמור שינויים</span>
+                </button>
+            </div>
+        </form>
 
-    <p id="save-message" class="message"></p>
+        <!-- Success/Error Messages -->
+        <div id="message-container" class="message-container"></div>
+    </div>
+
+    <!-- Learning Stats Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                הסטטיסטיקות שלי
+            </h2>
+            <p class="section-subtitle">התקדמות בלמידה</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">שעות למידה</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">שיעורים הושלמו</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">5.0</div>
+                    <div class="stat-label">דירוג ממוצע</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-medal"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">הישגים</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<script>
-    const userId = "{{ student.id }}";
-
-    // טוען את הנתונים הקיימים מהשרת
-    document.addEventListener("DOMContentLoaded", () => {
-        fetch(`/api/students/${userId}`)
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("username").value = data.username || "";
-                document.getElementById("email").value = data.email || "";
-                document.getElementById("interests").value = data.interests || "";
-                document.getElementById("style").value = data.style || "";
-                document.getElementById("future_learning").value = data.future_learning || "";
-            });
-    });
-
-    // שומר את העדכונים
-    document.getElementById("student-profile-form").addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const payload = {
-            username: document.getElementById("username").value,
-            interests: document.getElementById("interests").value,
-            style: document.getElementById("style").value,
-            future_learning: document.getElementById("future_learning").value
-        };
-
-        fetch(`/api/students/${userId}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            const msg = document.getElementById("save-message");
-            if (data.message) {
-                msg.textContent = "✅ נשמר בהצלחה!";
-                msg.style.color = "green";
-            } else {
-                msg.textContent = "⚠️ שגיאה בשמירה";
-                msg.style.color = "red";
-            }
-        })
-        .catch(() => {
-            document.getElementById("save-message").textContent = "⚠️ שגיאה בשרת";
-            document.getElementById("save-message").style.color = "red";
-        });
-    });
-</script>
-
-<style>
-    .styled-form {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        max-width: 500px;
-        margin: auto;
-    }
-
-    .styled-form label {
-        font-weight: bold;
-        text-align: right;
-    }
-
-    .styled-form input {
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-
-    .btn {
-        background-color: #007bff;
-        color: white;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    .btn:hover {
-        background-color: #0056b3;
-    }
-
-    .message {
-        text-align: center;
-        font-weight: bold;
-        margin-top: 10px;
-    }
-</style>
+<script src="{{ url_for('static', filename='js/student_profile.js') }}"></script>
 {% endblock %}

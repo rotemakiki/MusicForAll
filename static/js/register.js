@@ -222,6 +222,7 @@ function initPasswordStrength() {
 }
 
 // Enhanced role selection
+// Enhanced role selection
 function initRoleSelection() {
     const roleCards = document.querySelectorAll('.role-card');
     const roleRadios = document.querySelectorAll('.role-radio');
@@ -231,11 +232,11 @@ function initRoleSelection() {
             // Uncheck all radios
             roleRadios.forEach(radio => {
                 radio.checked = false;
-                radio.parentNode.querySelector('.role-card').classList.remove('selected');
+                radio.closest('.role-option').querySelector('.role-card').classList.remove('selected');
             });
 
-            // Check the clicked radio
-            const radio = card.parentNode.querySelector('.role-radio');
+            // Check the clicked radio - השתמש ב-closest כדי לחפש את הlabel הקרוב ביותר
+            const radio = card.closest('.role-option').querySelector('.role-radio');
             radio.checked = true;
             card.classList.add('selected');
 
@@ -260,7 +261,6 @@ function initRoleSelection() {
         card.setAttribute('tabindex', '0');
     });
 }
-
 // Form progress tracking
 function initFormProgress() {
     const progressSteps = [
@@ -294,16 +294,25 @@ function initFormProgress() {
         progressSteps.forEach(step => {
             const stepElement = document.getElementById(step.id);
             const isCompleted = step.fields.every(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (!field) return false;
-
                 if (fieldId === 'role') {
-                    return document.querySelector('input[name="role"]:checked');
+                    // בדיקה פשוטה יותר לתפקיד
+                    const roleChecked = document.querySelector('input[name="role"]:checked');
+                    console.log('Role checked:', roleChecked); // דיבוג
+                    return roleChecked !== null;
                 }
 
-                return field.value.trim() !== '' && field.classList.contains('success');
+                const field = document.getElementById(fieldId);
+                if (!field) {
+                    console.log('Field not found:', fieldId); // דיבוג
+                    return false;
+                }
+
+                const isValid = field.value.trim() !== '' && field.classList.contains('success');
+                console.log(`Field ${fieldId} valid:`, isValid); // דיבוג
+                return isValid;
             });
 
+            console.log(`Step ${step.id} completed:`, isCompleted); // דיבוג
             stepElement.classList.toggle('completed', isCompleted);
             stepElement.classList.toggle('active', !isCompleted && hasStartedStep(step));
         });
@@ -313,12 +322,12 @@ function initFormProgress() {
 
     function hasStartedStep(step) {
         return step.fields.some(fieldId => {
+            if (fieldId === 'role') {
+                return document.querySelector('input[name="role"]:checked') !== null;
+            }
+
             const field = document.getElementById(fieldId);
             if (!field) return false;
-
-            if (fieldId === 'role') {
-                return document.querySelector('input[name="role"]:checked');
-            }
 
             return field.value.trim() !== '';
         });
@@ -461,23 +470,14 @@ function initKeyboardShortcuts() {
 }
 
 // Enhanced form submission
+// Enhanced form submission
 function initFormSubmission() {
     const form = document.querySelector('.register-form');
     const submitBtn = document.querySelector('.submit-btn');
 
     if (!form || !submitBtn) return;
 
-    // Create actual form element that wraps the grid
-    const formElement = document.createElement('form');
-    formElement.method = 'post';
-    formElement.action = '';
-
-    // Move form content into actual form element
-    const formParent = form.parentNode;
-    formParent.insertBefore(formElement, form);
-    formElement.appendChild(form);
-
-    formElement.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function(e) {
         e.preventDefault();
 
         // Final validation check
@@ -488,39 +488,17 @@ function initFormSubmission() {
 
         // Add loading state
         submitBtn.classList.add('loading');
-        const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<span>🚀</span><span>נרשם...</span>';
 
-        // Collect form data
-        const formData = new FormData();
-        formData.append('username', document.getElementById('username').value);
-        formData.append('email', document.getElementById('email').value);
-        formData.append('password', document.getElementById('password').value);
-
-        const selectedRole = document.querySelector('input[name="role"]:checked');
-        if (selectedRole) {
-            formData.append('role', selectedRole.value);
-        }
-
-        // Simulate network delay for better UX
+        // Submit the form normally after brief delay
         setTimeout(() => {
-            // Actually submit the form
-            const realForm = document.createElement('form');
-            realForm.method = 'post';
-            realForm.style.display = 'none';
+            // Create and submit form data
+            const formData = new FormData(form);
 
-            // Add all form data as hidden inputs
-            for (let [key, value] of formData.entries()) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = value;
-                realForm.appendChild(input);
-            }
-
-            document.body.appendChild(realForm);
-            realForm.submit();
-        }, 1000);
+            // Actually submit
+            form.removeEventListener('submit', arguments.callee);
+            form.submit();
+        }, 500);
     });
 
     function validateAllFields() {
