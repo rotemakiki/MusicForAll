@@ -27,7 +27,14 @@
                     <span>הוסף שיר חדש</span>
                 </a>
             {% endif %}
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('my_songs.my_songs_page') }}" class="my-songs-link-btn">
+                    <span>❤️</span>
+                    <span>השירים שלי</span>
+                </a>
+            {% endif %}
         </div>
+
     </div>
 
     <!-- Filter Section -->
