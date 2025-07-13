@@ -867,17 +867,17 @@ input:checked + .preparation-slider:before {
 /* Fixed 4 per row layout */
 .chord-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 6px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+    margin-bottom: 3px;
     width: 100%;
 }
 
 .chord-row.fixed-four-per-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 6px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+    margin-bottom: 3px;
 }
 
 /* Measure boxes - Enhanced with better scaling */
@@ -886,17 +886,19 @@ input:checked + .preparation-slider:before {
     flex-direction: column;
     align-items: center;
     border: 1px solid #34495e;
-    border-radius: 4px;
-    padding: 4px;
+    border-radius: 3px;
+    padding: 2px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
-    min-height: 60px;
-    aspect-ratio: 1;
+    min-height: 35px;
+    max-height: 45px;
+    aspect-ratio: 1.2;
     transform-origin: center;
+    font-size: 11px;
 }
 
 .measure-box.empty-measure {
@@ -973,42 +975,44 @@ input:checked + .preparation-slider:before {
 }
 
 .measure-title {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    margin-bottom: 3px;
+    margin-bottom: 1px;
     color: #2c3e50;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
+    height: 12px;
+    line-height: 12px;
 }
 
 .chords-in-measure {
     display: flex;
     width: 100%;
     justify-content: center;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     gap: 1px;
-    min-height: 18px;
+    min-height: 20px;
     flex-wrap: nowrap;
     overflow: hidden;
     flex: 1;
 }
 
 .chord-box {
-    padding: 2px 1px;
+    padding: 1px;
     text-align: center;
     border: 1px solid #bdc3c7;
     background: rgba(255, 255, 255, 0.9);
     border-radius: 2px;
-    font-weight: 600;
-    font-size: 10px;
+    font-weight: 700;
+    font-size: 14px;
     color: #2c3e50;
     transition: all 0.3s;
-    min-width: 8px;
+    min-width: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1019,6 +1023,7 @@ input:checked + .preparation-slider:before {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 20px;
 }
 
 .chord-box.preparation-chord {
@@ -1098,14 +1103,14 @@ input:checked + .preparation-slider:before {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-top: 3px;
-    padding: 0 3px;
-    min-height: 8px;
+    margin-top: 1px;
+    padding: 0 2px;
+    min-height: 6px;
+    max-height: 8px;
 }
-
 .beat-dot {
-    width: 7px;
-    height: 7px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     background-color: #bdc3c7;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
