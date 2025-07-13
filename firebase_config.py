@@ -5,7 +5,7 @@ from firebase_admin import credentials, firestore
 
 
 # Load credentials from the JSON file
-cred = credentials.Certificate("music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json")
+cred = credentials.Certificate("secrets/firebase-key.json")
 firebase_admin.initialize_app(cred)
 
 # Create Firestore client
