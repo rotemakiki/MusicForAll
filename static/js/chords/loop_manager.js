@@ -159,10 +159,13 @@ class LoopManager {
             return false;
         }
 
+        console.log("🟢 הוספת תיבה ללופ נוכחי:", measure);
         this.currentLoop.push({...measure});
+        console.log("🟢 לאחר הוספה - אורך לופ:", this.currentLoop.length);
+        console.log("🟢 תוכן לופ מעודכן:", this.currentLoop);
+
         this.updateLoopDisplay();
         this.updateSaveButtonState();
-        console.log("Added measure to current loop. New length:", this.currentLoop.length);
         return true;
     }
 
@@ -188,12 +191,15 @@ class LoopManager {
      * TODO: Save to backend instead of just local state
      */
     async saveCurrentLoop() {
-        console.log("Attempting to save loop. Current loop length:", this.currentLoop.length);
-        console.log("Current loop content:", this.currentLoop);
+        console.log("=== התחלת שמירת לופ ===");
+        console.log("אורך לופ נוכחי:", this.currentLoop.length);
+        console.log("תוכן לופ נוכחי:", this.currentLoop);
 
-        if (!this.hasCurrentLoopContent()) {
-            console.log("Current loop length:", this.currentLoop.length);
-            console.log("Current loop content:", this.currentLoop);
+        const hasContent = this.hasCurrentLoopContent();
+        console.log("יש תוכן בלופ:", hasContent);
+
+        if (!hasContent) {
+            console.log("❌ הלופ לא מכיל תיבות תקינות");
             alert("אין תיבות בלופ הנוכחי");
             return false;
         }
@@ -206,6 +212,8 @@ class LoopManager {
             return false;
         }
 
+        console.log("שם הלופ:", loopName);
+
         const newLoop = {
             id: Date.now(),
             customName: loopName,
@@ -213,6 +221,8 @@ class LoopManager {
             measureCount: this.currentLoop.length,
             repeatCount: 1
         };
+
+        console.log("לופ חדש שנוצר:", newLoop);
 
         this.savedLoops.push(newLoop);
 
@@ -229,7 +239,7 @@ class LoopManager {
         this.updateLoopDisplay();
         this.updateSaveButtonState();
 
-        console.log("Loop saved successfully:", newLoop);
+        console.log("✅ לופ נשמר בהצלחה:", newLoop);
         return true;
     }
 
@@ -479,7 +489,6 @@ class LoopManager {
         });
     }
 
-
     /**
      * Update save button state
      */
@@ -491,8 +500,13 @@ class LoopManager {
         const hasLoopContent = this.hasCurrentLoopContent();
         const hasLoopName = loopNameInput ? loopNameInput.value.trim().length > 0 : false;
 
+        console.log("🔄 עדכון מצב כפתורים:");
+        console.log("   יש תוכן בלופ:", hasLoopContent);
+        console.log("   יש שם ללופ:", hasLoopName);
+
         if (saveBtn) {
             saveBtn.disabled = !hasLoopContent || !hasLoopName;
+            console.log("   כפתור שמירה מופעל:", !saveBtn.disabled);
         }
 
         if (discardBtn) {
@@ -515,29 +529,54 @@ class LoopManager {
     }
 
     /**
-     * Check if current loop has content
+     * Check if current loop has content - עם לוגים מפורטים
      */
 /**
- * Check if current loop has content
+ * Check if current loop has content - עם לוגים מפורטים
  */
     hasCurrentLoopContent() {
-        console.log("Checking loop content - length:", this.currentLoop.length);
-        console.log("Loop content:", this.currentLoop);
+        console.log("=== 🔍 בדיקת תוכן לופ מפורטת ===");
+        console.log("📏 אורך הלופ הנוכחי:", this.currentLoop.length);
+        console.log("📦 תוכן הלופ הנוכחי:", this.currentLoop);
 
         if (this.currentLoop.length === 0) {
+            console.log("❌ אין תיבות בלופ - החזרת false");
             return false;
         }
 
         // Check if at least one measure has chords
-        return this.currentLoop.some(measure => {
-            return measure &&
-                   measure.chords &&
-                   Array.isArray(measure.chords) &&
-                   measure.chords.length > 0 &&
-                   measure.chords.some(chord => chord && chord.chord && chord.chord !== "—");
-        });
-    }
+        const hasValidMeasure = this.currentLoop.some((measure, index) => {
+            console.log(`🔍 בדיקת תיבה ${index + 1}:`, measure);
 
+            if (!measure) {
+                console.log(`❌ תיבה ${index + 1} ריקה (null/undefined)`);
+                return false;
+            }
+
+            if (!measure.chords || !Array.isArray(measure.chords)) {
+                console.log(`❌ תיבה ${index + 1} - אין מערך אקורדים תקין:`, measure.chords);
+                return false;
+            }
+
+            if (measure.chords.length === 0) {
+                console.log(`❌ תיבה ${index + 1} - מערך אקורדים ריק`);
+                return false;
+            }
+
+            const hasValidChords = measure.chords.some((chord, chordIndex) => {
+                const isValid = chord && chord.chord && chord.chord !== "—";
+                console.log(`   🎵 אקורד ${chordIndex + 1} בתיבה ${index + 1}:`, chord, "-> תקין:", isValid);
+                return isValid;
+            });
+
+            console.log(`✅ תיבה ${index + 1} - יש אקורדים תקינים:`, hasValidChords);
+            return hasValidChords;
+        });
+
+        console.log("🏁 תוצאה סופית - יש תיבות תקינות:", hasValidMeasure);
+        console.log("=== סיום בדיקת תוכן לופ ===");
+        return hasValidMeasure;
+    }
     /**
      * Get loops data for saving
      * TODO: This will be handled by backend API

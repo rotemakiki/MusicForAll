@@ -20,47 +20,58 @@ class DOMHelpers {
     /**
      * Setup global button event listeners
      */
+/**
+ * Setup global button event listeners
+ */
     setupGlobalButtonListeners() {
         // Add chord button
         const addChordBtn = document.querySelector('.add-chord-btn');
-        if (addChordBtn) {
+        if (addChordBtn && !addChordBtn._listenerAdded) {
             addChordBtn.addEventListener('click', this.handleAddChord.bind(this));
+            addChordBtn._listenerAdded = true;
         }
 
         // Next measure button
         const nextMeasureBtn = document.getElementById('next-measure-btn');
-        if (nextMeasureBtn) {
+        if (nextMeasureBtn && !nextMeasureBtn._listenerAdded) {
             nextMeasureBtn.addEventListener('click', this.handleNextMeasure.bind(this));
+            nextMeasureBtn._listenerAdded = true;
         }
 
         // Clear measure button
         const clearBtn = document.getElementById('clear-measure-btn');
-        if (clearBtn) {
+        if (clearBtn && !clearBtn._listenerAdded) {
             clearBtn.addEventListener('click', this.handleClearMeasure.bind(this));
+            clearBtn._listenerAdded = true;
         }
 
         // Add empty chord button
         const addEmptyBtn = document.getElementById('add-empty-chord-btn');
-        if (addEmptyBtn) {
+        if (addEmptyBtn && !addEmptyBtn._listenerAdded) {
             addEmptyBtn.addEventListener('click', this.handleAddEmptyChord.bind(this));
+            addEmptyBtn._listenerAdded = true;
         }
 
-        // Save loop button
+        // Save loop button - כאן הבעיה העיקרית!
         const saveLoopBtn = document.getElementById('save-loop-btn');
-        if (saveLoopBtn) {
+        if (saveLoopBtn && !saveLoopBtn._listenerAdded) {
             saveLoopBtn.addEventListener('click', this.handleSaveLoop.bind(this));
+            saveLoopBtn._listenerAdded = true;
+            console.log("🔧 Event listener הוסף לכפתור שמירת לופ");
         }
 
         // Discard loop button
         const discardLoopBtn = document.getElementById('discard-loop-btn');
-        if (discardLoopBtn) {
+        if (discardLoopBtn && !discardLoopBtn._listenerAdded) {
             discardLoopBtn.addEventListener('click', this.handleDiscardLoop.bind(this));
+            discardLoopBtn._listenerAdded = true;
         }
 
         // Finish button
         const finishBtn = document.querySelector('.finish-btn');
-        if (finishBtn) {
+        if (finishBtn && !finishBtn._listenerAdded) {
             finishBtn.addEventListener('click', this.handleFinish.bind(this));
+            finishBtn._listenerAdded = true;
         }
     }
 
@@ -316,15 +327,23 @@ class DOMHelpers {
 /**
  * Handle save loop button click
  */
+/**
+ * Handle save loop button click
+ */
     async handleSaveLoop() {
         if (!window.loopManager) return;
 
         try {
+            console.log("🟡 DOM Helper - התחלת שמירת לופ");
             const success = await window.loopManager.saveCurrentLoop();
+
             if (success) {
                 this.showNotification('הלופ נשמר בהצלחה!', 'success');
                 this.updateAllButtons();
-                this.triggerAutoSave();
+                // הסרתי את triggerAutoSave כדי למנוע כפילות
+                console.log("🟢 DOM Helper - לופ נשמר בהצלחה");
+            } else {
+                console.log("🔴 DOM Helper - שמירת הלופ נכשלה");
             }
         } catch (error) {
             console.error('Error saving loop:', error);

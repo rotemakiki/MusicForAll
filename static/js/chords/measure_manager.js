@@ -457,13 +457,3 @@ class MeasureManager {
 // Export the measure manager
 window.MeasureManager = MeasureManager;
 
-nextMeasure() {
-    if (!this.currentMeasure || this.currentMeasure.chords.length === 0) {
-        return null;
-    }
-
-    const completedMeasure = JSON.parse(JSON.stringify(this.currentMeasure)); // clone safely
-    this.createNewMeasure(); // reset currentMeasure
-    return completedMeasure;
-}
-window.MeasureManager = MeasureManager;
