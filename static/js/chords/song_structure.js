@@ -355,37 +355,40 @@ class SongStructureManager {
         e.currentTarget.classList.remove('drag-over');
     }
 
-    dropLoop(e) {
+    function dropLoop(e) {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
 
-        console.log("Drop event triggered. draggedSongLoop:", this.draggedSongLoop);
+        if (draggedLoop) {
+            const loopCopy = {
+                ...draggedLoop,
+                id: Date.now() + Math.random(), // חשוב: למנוע חזרת אותו id
+                repeatCount: 1
+            };
+            songStructure.push(loopCopy);
+            renderSongStructure();
 
-        // אם זה גרירה פנימית של לופ בשיר - טפל בה ויצא
-        if (this.draggedSongLoop !== null) {
+            draggedLoop = null; // 🧹 איפוס
+            return; // ✅ חשוב: לא להמשיך הלאה
+        }
+
+        if (draggedSongLoop !== null) {
             const dropTarget = e.target.closest('.song-loop');
             if (dropTarget && dropTarget.dataset.songIndex) {
                 const targetIndex = parseInt(dropTarget.dataset.songIndex);
-                if (targetIndex !== this.draggedSongLoop) {
-                    this.moveLoop(this.draggedSongLoop, targetIndex);
+                if (targetIndex !== draggedSongLoop) {
+                    const movedLoop = songStructure.splice(draggedSongLoop, 1)[0];
+                    songStructure.splice(targetIndex, 0, movedLoop);
+                    renderSongStructure();
                 }
             }
-            this.draggedSongLoop = null;
-            return; // חשוב! יצא כדי לא לטפל גם בלופ חדש
-        }
 
-        // רק אם זה לא גרירה פנימית - טפל בלופ חדש
-        try {
-            const loopData = e.dataTransfer.getData('application/json');
-            if (loopData) {
-                const loop = JSON.parse(loopData);
-                console.log("Adding loop to song:", loop);
-                this.addLoopToSong(loop);
-            }
-        } catch (error) {
-            console.error('Error parsing dropped loop data:', error);
+            draggedSongLoop = null; // 🧹 איפוס
+            return; // ✅ חשוב: לעצור כאן
         }
     }
+
+
 
     handleSongLoopDragStart(e) {
         this.draggedSongLoop = parseInt(e.target.dataset.songIndex);

@@ -464,7 +464,7 @@ class LoopManager {
             loopDiv.appendChild(loopHeader);
             loopDiv.appendChild(measuresGrid);
 
-            // Add drag event listeners
+            // Add drag event listeners to support drop into song structure
             loopDiv.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('application/json', JSON.stringify(loop));
                 e.dataTransfer.effectAllowed = 'copy';
@@ -478,6 +478,7 @@ class LoopManager {
             container.appendChild(loopDiv);
         });
     }
+
 
     /**
      * Update save button state
