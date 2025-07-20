@@ -411,7 +411,7 @@ class DOMHelpers {
  */
     async handleFinish() {
         if (!window.songStructureManager || !window.dataManager) return;
-    
+
         if (!window.songStructureManager.isSongReady()) {
             this.showNotification('יש להוסיף לפחות לופ אחד לשיר', 'error');
             return;
@@ -483,6 +483,9 @@ class DOMHelpers {
     /**
      * Save data in format compatible with old add_song.js system
      */
+/**
+ * Save data in format compatible with old add_song.js system
+ */
     saveDataForOldSystem() {
         try {
             console.log("🔄 שומר נתונים למערכת הישנה...");
@@ -495,12 +498,27 @@ class DOMHelpers {
                 return;
             }
 
-            // יצירת chordLines מהלופים
+            // **תיקון חשוב**: יצירת song structure עם repeatCount נכון
             const songStructure = songStructureManager.getSongStructure();
+
+            // אם אין מבנה שיר, צור אותו מהלופים השמורים
+            if (songStructure.length === 0) {
+                const savedLoops = loopManager.getAllSavedLoops();
+                savedLoops.forEach(loop => {
+                    songStructureManager.addLoopToSong(loop);
+                });
+            }
+
+            // עכשיו קבל את המבנה המעודכן
+            const finalSongStructure = songStructureManager.getSongStructure();
+            console.log("🎼 מבנה שיר לשמירה:", finalSongStructure);
+
+            // יצירת chordLines עם החזרות הנכונות
             const chordLines = [];
 
-            songStructure.forEach(loop => {
+            finalSongStructure.forEach(loop => {
                 const repeatCount = loop.repeatCount || 1;
+                console.log(`🔁 לופ "${loop.customName || loop.name}" עם ${repeatCount} חזרות`);
 
                 for (let repeat = 0; repeat < repeatCount; repeat++) {
                     const measuresPerLine = 4;
@@ -518,8 +536,13 @@ class DOMHelpers {
                 }
             });
 
-            // יצירת loops data
-            const loopsData = loopManager.getLoopsDataForSaving();
+            // יצירת loops data עם החזרות הנכונות
+            const loopsData = finalSongStructure.map(loop => ({
+                name: loop.customName || loop.name,
+                measures: loop.measures,
+                measureCount: loop.measureCount,
+                repeatCount: loop.repeatCount || 1
+            }));
 
             // שמירה ב-localStorage בפורמט הישן
             localStorage.setItem("chords", JSON.stringify(chordLines));
@@ -528,8 +551,12 @@ class DOMHelpers {
 
             console.log("✅ נתונים נשמרו למערכת הישנה:", {
                 chordLines: chordLines.length,
-                loops: loopsData.length
+                loops: loopsData.length,
+                totalChordsWithRepeats: chordLines.length,
+                loopsWithRepeats: loopsData
             });
+
+            console.log("🔍 פירוט החזרות:", loopsData.map(l => `${l.name}: ${l.repeatCount} חזרות`));
 
         } catch (error) {
             console.error("❌ שגיאה בשמירת נתונים למערכת הישנה:", error);

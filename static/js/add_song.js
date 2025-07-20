@@ -284,39 +284,25 @@ function resetForm() {
 // ===== INITIALIZATION AND EVENT HANDLERS =====
 
 // Initialize page - אחד כל האירועים
+// ===== INITIALIZATION AND EVENT HANDLERS =====
+
+// Initialize page - אחד כל האירועים
 document.addEventListener("DOMContentLoaded", function () {
     console.log("🌟 DOM טעון - מתחיל אתחול עמוד הוספת שיר");
 
-    // **תיקון**: התחלה נקיה כשנכנסים לעמוד הוספת שיר
-    cleanStartNewSong();
+    // **תיקון חשוב**: קודם בדוק אם חזרנו מעמוד האקורדים
+    const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
+
+    // אם לא חזרנו מעמוד האקורדים - רק אז נקה הכל
+    if (justReturnedFromChords !== "true") {
+        cleanStartNewSong();
+    }
 
     // Setup basic functionality
     setupValidation();
     initializeNewSong();
 
-    // *** חיבור כפתור האקורדים - הכי חשוב! ***
-    const chordsBtn = document.getElementById("chords-btn");
-    if (chordsBtn) {
-        console.log("🎸 נמצא כפתור האקורדים - מחבר event listener");
-
-        // הסר כל event listeners קיימים
-        chordsBtn.replaceWith(chordsBtn.cloneNode(true));
-        const newChordsBtn = document.getElementById("chords-btn");
-
-        newChordsBtn.addEventListener("click", function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log("🔥 כפתור האקורדים נלחץ!");
-            goToChordsPage();
-        });
-
-        console.log("✅ Event listener מחובר בהצלחה");
-    } else {
-        console.error("❌ כפתור האקורדים לא נמצא!");
-    }
-
     // Load existing form data (רק אם זה ממש חזרה מעמוד האקורדים)
-    const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
     if (justReturnedFromChords === "true") {
         console.log("📄 טוען נתוני טופס קיימים");
         const songData = JSON.parse(localStorage.getItem("songData") || "{}");
@@ -347,9 +333,18 @@ document.addEventListener("DOMContentLoaded", function () {
         addingNewSong: localStorage.getItem("addingNewSong")
     });
 
-    // עדכן את הכפתור בהתאם למצב
-    const finalChordsBtn = document.getElementById("chords-btn");
+    // *** חיבור כפתור האקורדים בצורה נקיה ***
+    const chordsBtn = document.getElementById("chords-btn");
+    if (!chordsBtn) {
+        console.error("❌ כפתור האקורדים לא נמצא!");
+        return;
+    }
 
+    // הסר כל event listeners קיימים
+    chordsBtn.replaceWith(chordsBtn.cloneNode(true));
+    const newChordsBtn = document.getElementById("chords-btn");
+
+    // עדכן את הכפתור בהתאם למצב
     if (hasExistingChords || justReturnedFromChords2 === "true") {
         const savedChords = localStorage.getItem("chords");
         const savedLoops = localStorage.getItem("loops");
@@ -363,12 +358,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             chordsSuccessDiv.style.display = "flex";
-            finalChordsBtn.innerHTML = '<span>✏️</span><span>ערוך אקורדים שנוספו</span>';
+            newChordsBtn.innerHTML = '<span>✏️</span><span>ערוך אקורדים שנוספו</span>';
 
-            // הסר event listeners קיימים ותחבר את החדש
-            finalChordsBtn.replaceWith(finalChordsBtn.cloneNode(true));
-            const editBtn = document.getElementById("chords-btn");
-            editBtn.addEventListener("click", function(e) {
+            // חבר event listener לעריכה
+            newChordsBtn.addEventListener("click", function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 console.log("✏️ לחיצה על עריכת אקורדים");
@@ -384,12 +377,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // אין אקורדים - מצב ברירת מחדל
         console.log("❌ אין אקורדים - מצב ברירת מחדל");
         chordsSuccessDiv.style.display = "none";
-        finalChordsBtn.innerHTML = '<span>🎸</span><span>הוסף אקורדים</span>';
+        newChordsBtn.innerHTML = '<span>🎸</span><span>הוסף אקורדים</span>';
 
-        // ודא שהכפתור מחובר נכון
-        finalChordsBtn.replaceWith(finalChordsBtn.cloneNode(true));
-        const addBtn = document.getElementById("chords-btn");
-        addBtn.addEventListener("click", function(e) {
+        // חבר event listener להוספה
+        newChordsBtn.addEventListener("click", function(e) {
             e.preventDefault();
             e.stopPropagation();
             console.log("🎸 לחיצה על הוספת אקורדים");
