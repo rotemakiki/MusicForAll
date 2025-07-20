@@ -361,23 +361,7 @@ class SongStructureManager {
 
         console.log("Drop event triggered. draggedSongLoop:", this.draggedSongLoop);
 
-        try {
-            // רק אם זה לא גרירה פנימית של לופ בשיר
-            if (this.draggedSongLoop === null) {
-                // Handle loop drag from saved loops
-                const loopData = e.dataTransfer.getData('application/json');
-                if (loopData) {
-                    const loop = JSON.parse(loopData);
-                    console.log("Adding loop to song:", loop);
-                    this.addLoopToSong(loop);
-                    return;
-                }
-            }
-        } catch (error) {
-            console.error('Error parsing dropped loop data:', error);
-        }
-
-        // Handle song loop reordering
+        // אם זה גרירה פנימית של לופ בשיר - טפל בה ויצא
         if (this.draggedSongLoop !== null) {
             const dropTarget = e.target.closest('.song-loop');
             if (dropTarget && dropTarget.dataset.songIndex) {
@@ -387,6 +371,19 @@ class SongStructureManager {
                 }
             }
             this.draggedSongLoop = null;
+            return; // חשוב! יצא כדי לא לטפל גם בלופ חדש
+        }
+
+        // רק אם זה לא גרירה פנימית - טפל בלופ חדש
+        try {
+            const loopData = e.dataTransfer.getData('application/json');
+            if (loopData) {
+                const loop = JSON.parse(loopData);
+                console.log("Adding loop to song:", loop);
+                this.addLoopToSong(loop);
+            }
+        } catch (error) {
+            console.error('Error parsing dropped loop data:', error);
         }
     }
 

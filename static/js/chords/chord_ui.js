@@ -18,6 +18,12 @@ class ChordUIManager {
      * Initialize the chord UI components
      */
     init() {
+        // נקה אקורדים שמורים רק עבור שיר חדש
+        const mode = window.ChordCore.ModeDetector.determineMode();
+        if (mode === window.ChordCore.APP_MODES.NEW_SONG) {
+            this.recentlyUsedChords = [];
+        }
+
         this.renderRootButtons();
         this.renderTypeButtons();
         this.renderAccidentalButtons();

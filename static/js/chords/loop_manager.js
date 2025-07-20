@@ -408,8 +408,13 @@ class LoopManager {
             const loopHeader = document.createElement("div");
             loopHeader.className = "loop-header";
             loopHeader.innerHTML = `
-                <div class="loop-title">${loop.customName}</div>
-                <div class="loop-info">${loop.measureCount} תיבות</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="loop-title">${loop.customName}</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="loop-info">${loop.measureCount} תיבות</div>
+                        <button class="delete-loop-btn" onclick="window.loopManager.deleteSavedLoop(${loop.id})" title="מחק לופ">×</button>
+                    </div>
+                </div>
             `;
 
             const measuresGrid = document.createElement("div");
