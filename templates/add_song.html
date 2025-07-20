@@ -255,7 +255,7 @@
                         </div>
                     </div>
 
-                    <button type="button" class="chords-btn" id="chords-btn" onclick="goToChordsPage()">
+                    <button type="button" class="chords-btn" id="chords-btn">
                         <span>🎸</span>
                         <span>הוסף אקורדים</span>
                     </button>
@@ -280,5 +280,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/add_song.js') }}"></script>
+<script type="application/javascript" src="{{ url_for('static', filename='js/add_song.js') }}"></script>
 {% endblock %}

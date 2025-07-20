@@ -1,4 +1,4 @@
-// Edit Song Page JavaScript - Enhanced User Experience
+// Edit Song Page JavaScript - Enhanced User Experience with New Chord System Integration
 
 // Form validation functions
 function validateField(fieldId, value) {
@@ -58,24 +58,92 @@ function setupValidation() {
     });
 }
 
-// Initialize edit song mode
+// ===== NEW CHORD SYSTEM INTEGRATION =====
+
+// Initialize edit song mode with NEW chord system support
 function initializeEditSong() {
     // Clear any conflicting new song data
     localStorage.removeItem("addingNewSong");
     localStorage.removeItem("songData");
-    console.log("Initialized edit song mode");
+
+    // Set editing mode for NEW chord system
+    localStorage.setItem("editingSongId", songId);
+    console.log("Initialized edit song mode for NEW chord system, songId:", songId);
 }
 
-// Navigation functions for chords editing
+// פונקציה לבדיקה אם חזרנו מעמוד האקורדים החדש
+function checkForReturnedFromNewChordSystem() {
+    const justReturned = localStorage.getItem("justReturnedFromChords");
+    const editingSongId = localStorage.getItem("editingSongId");
+
+    if (justReturned === "true" && editingSongId === songId) {
+        const chords = localStorage.getItem("chords");
+        const loops = localStorage.getItem("loops");
+
+        console.log("Returned from NEW chord system for song editing:", { songId, chords: !!chords, loops: !!loops });
+
+        if (chords) {
+            document.getElementById("chords").value = chords;
+            markChordsAsUpdated();
+        }
+
+        if (loops) {
+            document.getElementById("loops").value = loops;
+        }
+
+        // נקה את הסימון
+        localStorage.removeItem("justReturnedFromChords");
+
+        return true;
+    }
+    return false;
+}
+
+// סימון שהאקורדים עודכנו
+function markChordsAsUpdated() {
+    const chordsSuccessDiv = document.getElementById("chords-success");
+    const chordsBtn = document.getElementById("chords-btn");
+
+    if (chordsSuccessDiv && chordsBtn) {
+        chordsSuccessDiv.style.display = "flex";
+        chordsBtn.innerHTML = '<span>✏️</span><span>ערוך אקורדים</span>';
+        chordsBtn.onclick = editChords;
+    }
+}
+
+// Navigation functions for chords editing - UPDATED for NEW system
 function goToChordsPage() {
+    console.log("Going to NEW chord system for editing song:", songId);
     saveFormData();
-    window.location.href = `/edit-chords/${songId}`;
+
+    // Set editing context for NEW chord system
+    localStorage.setItem("editingSongId", songId);
+    localStorage.removeItem("addingNewSong");
+
+    // Navigate to NEW chord system
+    window.location.href = "/add-chords";
 }
 
 function editChords() {
+    console.log("Editing chords in NEW system for song:", songId);
     saveFormData();
-    window.location.href = `/edit-chords/${songId}`;
+
+    // Set editing context for NEW chord system
+    localStorage.setItem("editingSongId", songId);
+    localStorage.removeItem("addingNewSong");
+
+    // Navigate to NEW chord system
+    window.location.href = "/add-chords";
 }
+
+// Check if chords exist for this song
+function hasChordsForSong() {
+    const savedChords = localStorage.getItem("chords");
+    const editingSongId = localStorage.getItem("editingSongId");
+    return savedChords && editingSongId === songId;
+}
+
+// ===== FORM DATA MANAGEMENT =====
 
 function saveFormData() {
     const formData = {
@@ -90,7 +158,10 @@ function saveFormData() {
         video_url: document.getElementById("video_url").value
     };
     localStorage.setItem("editSongData", JSON.stringify(formData));
+    console.log("Saved edit form data for NEW chord system:", formData);
 }
+
+// ===== UI HELPERS =====
 
 // Button animations
 function addButtonLoading(button) {
@@ -118,14 +189,9 @@ function showMessage(text, type) {
     }
 }
 
-// Check if chords exist for this song
-function hasChordsForSong() {
-    const savedChords = localStorage.getItem("chords");
-    const editingSongId = localStorage.getItem("editingSongId");
-    return savedChords && editingSongId === songId;
-}
+// ===== INITIALIZATION =====
 
-// Initialize page
+// Initialize page - Enhanced for NEW chord system
 document.addEventListener("DOMContentLoaded", function () {
     setupValidation();
     initializeEditSong();
@@ -149,29 +215,17 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // *** INTEGRATION WITH NEW CHORD SYSTEM ***
+    // Check if we returned from NEW chord system
+    const returnedFromNewSystem = checkForReturnedFromNewChordSystem();
+
     // Check chords status
     const chordsSuccessDiv = document.getElementById("chords-success");
     const chordsBtn = document.getElementById("chords-btn");
-    const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
-    const editingSongId = localStorage.getItem("editingSongId");
 
-    if (justReturnedFromChords === "true" && editingSongId === songId) {
-        // User just returned from chords page - show success message
-        const savedChords = localStorage.getItem("chords");
-        const savedLoops = localStorage.getItem("loops");
-
-        if (savedChords) {
-            document.getElementById("chords").value = savedChords;
-            document.getElementById("loops").value = savedLoops || "[]";
-
-            chordsSuccessDiv.style.display = "flex";
-            chordsBtn.innerHTML = '<span>✏️</span><span>ערוך אקורדים</span>';
-            chordsBtn.onclick = editChords;
-
-            // Clear the flag so it won't show again on refresh
-            localStorage.removeItem("justReturnedFromChords");
-            console.log("Successfully updated chords from localStorage");
-        }
+    if (returnedFromNewSystem) {
+        // Already handled in checkForReturnedFromNewChordSystem()
+        console.log("Processed return from NEW chord system");
     } else if (hasChordsForSong()) {
         // Show edit chords button
         chordsSuccessDiv.style.display = "none";
@@ -192,7 +246,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Form submission handler
+    // ===== FORM SUBMISSION =====
+
+    // Form submission handler - Enhanced for NEW chord system
     document.getElementById("edit-song-form").addEventListener("submit", function (event) {
         event.preventDefault();
 
@@ -235,14 +291,21 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        // Parse chords and loops
+        // Parse chords and loops from NEW chord system
         let chords, loops = [];
         try {
             const chordsRaw = document.getElementById("chords").value;
-            chords = chordsRaw ? JSON.parse(chordsRaw) : existingChords;
+            if (chordsRaw) {
+                chords = JSON.parse(chordsRaw);
+                console.log("Using updated chords from NEW system:", chords);
+            } else {
+                chords = existingChords;
+                console.log("Using existing chords:", chords);
+            }
         } catch (e) {
             removeButtonLoading(submitBtn);
             showMessage("❌ שגיאה בקריאת האקורדים. נסה שוב לערוך אותם.", "error");
+            console.error("Error parsing chords:", e);
             return;
         }
 
@@ -250,16 +313,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (loopsRaw) {
             try {
                 loops = JSON.parse(loopsRaw);
+                console.log("Using updated loops from NEW system:", loops);
             } catch (e) {
                 console.log("Error parsing loops data:", e);
                 loops = existingLoops;
             }
         } else {
             loops = existingLoops;
+            console.log("Using existing loops:", loops);
         }
 
         formData.chords = chords;
         formData.loops = loops;
+
+        console.log("Submitting song update with NEW chord system data:", formData);
 
         // Submit to server
         fetch(`/api/edit_song/${songId}`, {
@@ -283,18 +350,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 localStorage.removeItem("chords");
                 localStorage.removeItem("loops");
 
+                console.log("Song updated successfully with NEW chord system!");
+
                 // Redirect to song page after short delay
                 setTimeout(() => {
                     window.location.href = `/play/${songId}`;
                 }, 1500);
             } else {
-                showMessage("❌ שגיאה בעדכון השיר, נסה שוב", "error");
+                showMessage("❌ שגיאה בעדכון השיר: " + (data.error || "שגיאה לא ידועה"), "error");
             }
         })
         .catch(error => {
             removeButtonLoading(submitBtn);
             showMessage("❌ שגיאה בעדכון השיר!", "error");
-            console.error("Error:", error);
+            console.error("Error updating song:", error);
         });
     });
 });

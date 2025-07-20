@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שגיאת שרת - 500</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+        }
+
+        .error-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(255, 193, 7, 0.2);
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .error-icon {
+            font-size: 120px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            animation: shake 2s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .error-title {
+            background: linear-gradient(135deg, #ffc107, #ff8f00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #64748b;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .error-details {
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: #ff8f00;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .home-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            margin: 0 10px;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .refresh-btn:hover {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .troubleshooting {
+            margin-top: 30px;
+            text-align: right;
+            background: rgba(108, 117, 125, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .troubleshooting h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .troubleshooting ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .troubleshooting li {
+            margin-bottom: 8px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .troubleshooting li::before {
+            content: "💡 ";
+            margin-left: 8px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            margin-left: 8px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 40px 20px;
+            }
+
+            .error-title {
+                font-size: 2rem;
+            }
+
+            .error-icon {
+                font-size: 80px;
+            }
+
+            .home-btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h1 class="error-title">500</h1>
+        <p class="error-message">
+            שגיאה פנימית בשרת
+            <span class="status-indicator"></span>
+        </p>
+
+        <div class="error-details">
+            <strong>מה קרה?</strong><br>
+            אירעה שגיאה בשרת שלנו. הצוות שלנו כבר עובד על פתרון הבעיה.
+            אנא נסה שוב בעוד כמה דקות.
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="/" class="home-btn">🏠 חזרה לדף הבית</a>
+            <a href="javascript:location.reload()" class="home-btn refresh-btn">🔄 נסה שוב</a>
+        </div>
+
+        <div class="troubleshooting">
+            <h3>מה ניתן לנסות?</h3>
+            <ul>
+                <li>רענן את הדף בעוד כמה דקות</li>
+                <li>בדוק את החיבור לאינטרנט שלך</li>
+                <li>נקה את ה-cache של הדפדפן</li>
+                <li>נסה לגשת מדפדפן אחר</li>
+                <li>אם הבעיה נמשכת, צור קשר עם התמיכה</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Auto refresh after 30 seconds
+        setTimeout(function() {
+            if (confirm('האם תרצה לנסות לרענן את הדף?')) {
+                location.reload();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

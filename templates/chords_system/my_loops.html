@@ -1,0 +1,598 @@
+{% extends "base.html" %}
+
+{% block title %}הלופים שלי{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .my-loops-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .page-title {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+
+    .filters-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-input {
+        flex: 1;
+        min-width: 250px;
+        padding: 12px 20px;
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-select {
+        padding: 12px 15px;
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        font-size: 14px;
+        background: white;
+        transition: all 0.3s;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        text-decoration: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        text-decoration: none;
+        color: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-success:hover {
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+
+    .loops-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .loop-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .loop-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s;
+    }
+
+    .loop-card:hover::before {
+        left: 100%;
+    }
+
+    .loop-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .loop-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .loop-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .loop-meta {
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .loop-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    .loop-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .edit-btn {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+    }
+
+    .delete-btn {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+    }
+
+    .loop-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .loop-measures {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .mini-measure {
+        background: linear-gradient(135deg, #f8f9ff, #ffffff);
+        border: 2px solid #e1e8ed;
+        border-radius: 8px;
+        padding: 8px;
+        min-width: 60px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: #667eea;
+        position: relative;
+    }
+
+    .measure-number {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loop-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid #e1e8ed;
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+
+    .empty-state {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.6;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .empty-message {
+        color: #64748b;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+
+    .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+        border-radius: 8px;
+        height: 20px;
+        margin-bottom: 10px;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    @media (max-width: 768px) {
+        .my-loops-container {
+            padding: 20px 15px;
+        }
+
+        .page-header {
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .filters-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-input {
+            min-width: auto;
+        }
+
+        .loops-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .loop-measures {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="my-loops-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">🔄 הלופים שלי</h1>
+        <p class="page-subtitle">נהל את הלופים שיצרת, ערוך ושתף אותם</p>
+
+        <div style="margin-top: 20px;">
+            <a href="/chords-builder" class="btn btn-success">🆕 צור לופ חדש</a>
+            <a href="/chords-system" class="btn">🏠 חזרה למערכת</a>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <input type="text" class="search-input" id="search-loops" placeholder="🔍 חפש לופ לפי שם...">
+
+        <select class="filter-select" id="sort-by">
+            <option value="created_at">מיון לפי תאריך</option>
+            <option value="name">מיון לפי שם</option>
+            <option value="measure_count">מיון לפי מספר תיבות</option>
+        </select>
+
+        <select class="filter-select" id="filter-by-length">
+            <option value="all">כל האורכים</option>
+            <option value="short">קצרים (1-2 תיבות)</option>
+            <option value="medium">בינוניים (3-4 תיבות)</option>
+            <option value="long">ארוכים (5+ תיבות)</option>
+        </select>
+
+        <button class="btn" onclick="refreshLoops()">🔄 רענן</button>
+    </div>
+
+    <!-- Loops Grid -->
+    <div id="loops-container">
+        <!-- יטען דינמית -->
+        <div class="loading-skeleton"></div>
+        <div class="loading-skeleton"></div>
+        <div class="loading-skeleton"></div>
+    </div>
+</div>
+
+<script>
+let allLoops = [];
+let filteredLoops = [];
+
+// טעינת לופים
+async function loadLoops() {
+    try {
+        const response = await fetch('/api/chords-system/loops/user/{{ session.user_id }}');
+        if (response.ok) {
+            const data = await response.json();
+            allLoops = data.loops || [];
+            filteredLoops = [...allLoops];
+            renderLoops();
+        } else {
+            throw new Error('Failed to load loops');
+        }
+    } catch (error) {
+        console.error('Error loading loops:', error);
+        renderEmptyState('שגיאה בטעינת הלופים');
+    }
+}
+
+// רינדור לופים
+function renderLoops() {
+    const container = document.getElementById('loops-container');
+
+    if (filteredLoops.length === 0) {
+        if (allLoops.length === 0) {
+            renderEmptyState('עדיין לא יצרת לופים');
+        } else {
+            renderEmptyState('לא נמצאו לופים התואמים לחיפוש');
+        }
+        return;
+    }
+
+    const loopsHTML = filteredLoops.map(loop => `
+        <div class="loop-card" data-loop-id="${loop.id}">
+            <div class="loop-header">
+                <div>
+                    <div class="loop-name">${loop.name}</div>
+                    <div class="loop-meta">
+                        ${loop.measure_count} תיבות •
+                        ${new Date(loop.created_at).toLocaleDateString('he-IL')}
+                    </div>
+                </div>
+                <div class="loop-actions">
+                    <button class="loop-btn edit-btn" onclick="editLoop('${loop.id}')" title="ערוך">
+                        ✏️
+                    </button>
+                    <button class="loop-btn delete-btn" onclick="deleteLoop('${loop.id}')" title="מחק">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+
+            <div class="loop-measures">
+                ${renderLoopMeasures(loop.measures)}
+            </div>
+
+            <div class="loop-stats">
+                <span>חזרות: ${loop.repeat_count || 1}</span>
+                <span>${loop.tempo_hint || 'ללא רמז טמפו'}</span>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `<div class="loops-grid">${loopsHTML}</div>`;
+}
+
+// רינדור תיבות הלופ
+function renderLoopMeasures(measures) {
+    if (!measures || measures.length === 0) {
+        return '<div class="mini-measure">ריק</div>';
+    }
+
+    return measures.slice(0, 6).map((measure, index) => `
+        <div class="mini-measure">
+            <div class="measure-number">${index + 1}</div>
+            ${measure.chords && measure.chords.length > 0 ?
+                measure.chords.slice(0, 2).map(chord => chord.chord).join(' ') :
+                '—'
+            }
+        </div>
+    `).join('') + (measures.length > 6 ? '<div class="mini-measure">...</div>' : '');
+}
+
+// רינדור מצב ריק
+function renderEmptyState(message) {
+    const container = document.getElementById('loops-container');
+    container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">🎵</div>
+            <div class="empty-title">${message}</div>
+            <div class="empty-message">
+                לופים מאפשרים לך לשמור קטעים מוזיקליים ולשלב אותם בשירים שלך.
+                התחל ליצור עכשיו!
+            </div>
+            <a href="/chords-builder" class="btn btn-success">יצירת לופ ראשון</a>
+        </div>
+    `;
+}
+
+// עריכת לופ
+function editLoop(loopId) {
+    // מעבר לעמוד עריכה
+    window.location.href = `/chords-builder?edit_loop=${loopId}`;
+}
+
+// מחיקת לופ
+async function deleteLoop(loopId) {
+    const loop = allLoops.find(l => l.id === loopId);
+    if (!loop) return;
+
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את הלופ "${loop.name}"?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/chords-system/loops/${loopId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            // הסרה מהמערך המקומי
+            allLoops = allLoops.filter(l => l.id !== loopId);
+            filterLoops();
+
+            // הודעת הצלחה
+            showNotification('הלופ נמחק בהצלחה', 'success');
+        } else {
+            throw new Error('Failed to delete loop');
+        }
+    } catch (error) {
+        console.error('Error deleting loop:', error);
+        showNotification('שגיאה במחיקת הלופ', 'error');
+    }
+}
+
+// סינון לופים
+function filterLoops() {
+    const searchTerm = document.getElementById('search-loops').value.toLowerCase();
+    const sortBy = document.getElementById('sort-by').value;
+    const filterLength = document.getElementById('filter-by-length').value;
+
+    // סינון לפי חיפוש
+    filteredLoops = allLoops.filter(loop =>
+        loop.name.toLowerCase().includes(searchTerm)
+    );
+
+    // סינון לפי אורך
+    if (filterLength !== 'all') {
+        filteredLoops = filteredLoops.filter(loop => {
+            const measureCount = loop.measure_count || 0;
+            switch(filterLength) {
+                case 'short': return measureCount <= 2;
+                case 'medium': return measureCount >= 3 && measureCount <= 4;
+                case 'long': return measureCount >= 5;
+                default: return true;
+            }
+        });
+    }
+
+    // מיון
+    filteredLoops.sort((a, b) => {
+        switch(sortBy) {
+            case 'name':
+                return a.name.localeCompare(b.name, 'he');
+            case 'measure_count':
+                return (b.measure_count || 0) - (a.measure_count || 0);
+            case 'created_at':
+            default:
+                return new Date(b.created_at) - new Date(a.created_at);
+        }
+    });
+
+    renderLoops();
+}
+
+// רענון לופים
+function refreshLoops() {
+    document.getElementById('loops-container').innerHTML = `
+        <div class="loading-skeleton"></div>
+        <div class="loading-skeleton"></div>
+        <div class="loading-skeleton"></div>
+    `;
+    loadLoops();
+}
+
+// הודעות למשתמש
+function showNotification(message, type = 'info') {
+    // יצירת הודעה פשוטה
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#667eea'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 10000;
+        font-weight: 600;
+    `;
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    loadLoops();
+
+    // חיפוש בזמן אמת
+    document.getElementById('search-loops').addEventListener('input', filterLoops);
+    document.getElementById('sort-by').addEventListener('change', filterLoops);
+    document.getElementById('filter-by-length').addEventListener('change', filterLoops);
+});
+</script>
+{% endblock %}

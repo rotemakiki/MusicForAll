@@ -359,3 +359,396 @@ def get_recent_songs():
     except Exception as e:
         print(f"Error fetching recent songs: {e}")
         return jsonify({"songs": [], "success": False, "error": str(e)})
+
+# =============================================================================
+# API ENDPOINTS לחלק האקורדים המחודש - להוסיף בסוף הקובץ songs.py
+# =============================================================================
+
+@songs_bp.route('/api/songs/<string:song_id>/complete', methods=['GET'])
+def get_song_complete_data(song_id):
+    """API endpoint לטעינת נתוני שיר מלאים עבור מערכת האקורדים החדשה"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        doc = firestore.client().collection("songs").document(song_id).get()
+        if not doc.exists:
+            return jsonify({"error": "Song not found"}), 404
+
+        song = doc.to_dict()
+        user_roles = session.get("roles", [])
+
+        # בדוק הרשאות עריכה
+        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+            return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
+
+        # Parse chords safely
+        chords_data = []
+        try:
+            chords_str = song.get("chords", "[]")
+            if isinstance(chords_str, str):
+                chords_data = json.loads(chords_str)
+            else:
+                chords_data = chords_str if chords_str else []
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"Error parsing chords for song {song_id}: {e}")
+            chords_data = []
+
+        # Parse loops safely
+        loops_data = []
+        try:
+            loops_str = song.get("loops", "[]")
+            if isinstance(loops_str, str):
+                loops_data = json.loads(loops_str)
+            else:
+                loops_data = loops_str if loops_str else []
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"Error parsing loops for song {song_id}: {e}")
+            loops_data = []
+
+        # Parse song structure if exists
+        structure_data = []
+        try:
+            structure_str = song.get("song_structure", "[]")
+            if isinstance(structure_str, str):
+                structure_data = json.loads(structure_str)
+            else:
+                structure_data = structure_str if structure_str else []
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"Error parsing song structure for song {song_id}: {e}")
+            structure_data = []
+
+        return jsonify({
+            "id": song_id,
+            "title": song["title"],
+            "artist": song["artist"],
+            "chords": chords_data,
+            "loops": loops_data,
+            "structure": structure_data,
+            "metadata": {
+                "created_at": song.get("created_at"),
+                "updated_at": song.get("updated_at"),
+                "created_by": song.get("created_by")
+            },
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error loading complete song data for {song_id}: {e}")
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+
+@songs_bp.route('/api/songs/<string:song_id>/chords-loops', methods=['PUT'])
+def update_song_chords_loops(song_id):
+    """API endpoint לעדכון אקורדים ולופים של שיר קיים"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        doc = firestore.client().collection("songs").document(song_id).get()
+        if not doc.exists:
+            return jsonify({"error": "Song not found"}), 404
+
+        song = doc.to_dict()
+        user_roles = session.get("roles", [])
+
+        # בדוק הרשאות עריכה
+        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+            return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
+
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # עדכן השדות
+        updated_fields = {
+            "updated_at": datetime.utcnow()
+        }
+
+        # עדכן אקורדים אם קיימים
+        if "chords" in data:
+            updated_fields["chords"] = json.dumps(data["chords"])
+
+        # עדכן לופים אם קיימים
+        if "loops" in data:
+            updated_fields["loops"] = json.dumps(data["loops"])
+
+        # עדכן מבנה שיר אם קיים
+        if "structure" in data:
+            updated_fields["song_structure"] = json.dumps(data["structure"])
+
+        # שמור בדטאבייס
+        firestore.client().collection("songs").document(song_id).update(updated_fields)
+
+        return jsonify({
+            "message": "Song chords and loops updated successfully!",
+            "song_id": song_id,
+            "updated_fields": list(updated_fields.keys()),
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error updating song chords/loops for {song_id}: {e}")
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+
+@songs_bp.route('/api/songs/new/chords-loops', methods=['POST'])
+def create_song_with_chords_loops():
+    """API endpoint ליצירת שיר חדש עם אקורדים ולופים (לשימוש עתידי)"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    user_roles = session.get("roles", [])
+    if not ("teacher" in user_roles or "admin" in user_roles):
+        return jsonify({"error": "Unauthorized - insufficient permissions"}), 403
+
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # וולידציה בסיסית
+        required_fields = ["title", "artist"]
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+
+        # יצירת השיר החדש
+        new_song = {
+            "title": data["title"],
+            "artist": data["artist"],
+            "genre": data.get("genre", ""),
+            "key": data.get("key", "C"),
+            "key_type": data.get("key_type", "major"),
+            "difficulty": data.get("difficulty", ""),
+            "difficulty_approved": False,
+            "time_signature": data.get("time_signature", "4/4"),
+            "bpm": int(data.get("bpm", 120)),
+            "video_url": data.get("video_url", ""),
+            "chords": json.dumps(data.get("chords", [])),
+            "loops": json.dumps(data.get("loops", [])),
+            "song_structure": json.dumps(data.get("structure", [])),
+            "created_at": datetime.utcnow(),
+            "created_by": session.get("user_id"),
+        }
+
+        song_ref = firestore.client().collection("songs").add(new_song)
+        song_id = song_ref[1].id
+
+        return jsonify({
+            "message": "Song created successfully with chords and loops!",
+            "song_id": song_id,
+            "success": True
+        }), 201
+
+    except Exception as e:
+        print(f"Error creating new song with chords/loops: {e}")
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+
+@songs_bp.route('/api/songs/<string:song_id>/loops', methods=['GET'])
+def get_song_loops(song_id):
+    """API endpoint לטעינת לופים של שיר ספציפי"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        doc = firestore.client().collection("songs").document(song_id).get()
+        if not doc.exists:
+            return jsonify({"error": "Song not found"}), 404
+
+        song = doc.to_dict()
+        user_roles = session.get("roles", [])
+
+        # בדוק הרשאות קריאה
+        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+            return jsonify({"error": "Unauthorized - you can only access your own songs"}), 403
+
+        # Parse loops safely
+        loops_data = []
+        try:
+            loops_str = song.get("loops", "[]")
+            if isinstance(loops_str, str):
+                loops_data = json.loads(loops_str)
+            else:
+                loops_data = loops_str if loops_str else []
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"Error parsing loops for song {song_id}: {e}")
+            loops_data = []
+
+        return jsonify({
+            "song_id": song_id,
+            "loops": loops_data,
+            "count": len(loops_data),
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error loading loops for song {song_id}: {e}")
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+
+@songs_bp.route('/api/songs/<string:song_id>/structure', methods=['GET'])
+def get_song_structure(song_id):
+    """API endpoint לטעינת מבנה השיר"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        doc = firestore.client().collection("songs").document(song_id).get()
+        if not doc.exists:
+            return jsonify({"error": "Song not found"}), 404
+
+        song = doc.to_dict()
+        user_roles = session.get("roles", [])
+
+        # בדוק הרשאות קריאה
+        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+            return jsonify({"error": "Unauthorized - you can only access your own songs"}), 403
+
+        # Parse song structure safely
+        structure_data = []
+        try:
+            structure_str = song.get("song_structure", "[]")
+            if isinstance(structure_str, str):
+                structure_data = json.loads(structure_str)
+            else:
+                structure_data = structure_str if structure_str else []
+        except (json.JSONDecodeError, TypeError) as e:
+            print(f"Error parsing song structure for song {song_id}: {e}")
+            structure_data = []
+
+        return jsonify({
+            "song_id": song_id,
+            "structure": structure_data,
+            "count": len(structure_data),
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error loading song structure for {song_id}: {e}")
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+
+@songs_bp.route('/api/songs/<string:song_id>/structure', methods=['PUT'])
+def update_song_structure(song_id):
+    """API endpoint לעדכון מבנה השיר"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        doc = firestore.client().collection("songs").document(song_id).get()
+        if not doc.exists:
+            return jsonify({"error": "Song not found"}), 404
+
+        song = doc.to_dict()
+        user_roles = session.get("roles", [])
+
+        # בדוק הרשאות עריכה
+        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+            return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
+
+        data = request.get_json()
+        if not data or "structure" not in data:
+            return jsonify({"error": "Missing structure data"}), 400
+
+        # עדכן מבנה השיר
+        updated_fields = {
+            "song_structure": json.dumps(data["structure"]),
+            "updated_at": datetime.utcnow()
+        }
+
+        firestore.client().collection("songs").document(song_id).update(updated_fields)
+
+        return jsonify({
+            "message": "Song structure updated successfully!",
+            "song_id": song_id,
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error updating song structure for {song_id}: {e}")
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+
+@songs_bp.route('/api/chords/validate', methods=['POST'])
+def validate_chord():
+    """API endpoint לולידציה של אקורד"""
+    try:
+        data = request.get_json()
+        if not data or "chord" not in data:
+            return jsonify({"error": "Missing chord data", "valid": False}), 400
+
+        chord_name = data["chord"]
+
+        # ולידציה בסיסית של אקורד
+        if chord_name == "—":  # Empty chord
+            return jsonify({"valid": True, "chord": chord_name}), 200
+
+        # בדיקה אם האקורד מתחיל באות תקינה
+        root_letters = ["A", "B", "C", "D", "E", "F", "G"]
+        if not chord_name or chord_name[0] not in root_letters:
+            return jsonify({"valid": False, "error": "Invalid root note"}), 200
+
+        # בדיקה בסיסית נוספת - האקורד לא ארוך מדי
+        if len(chord_name) > 10:
+            return jsonify({"valid": False, "error": "Chord name too long"}), 200
+
+        return jsonify({"valid": True, "chord": chord_name}), 200
+
+    except Exception as e:
+        print(f"Error validating chord: {e}")
+        return jsonify({"error": "Internal server error", "valid": False}), 500
+
+
+@songs_bp.route('/api/chords/recent', methods=['GET'])
+def get_recent_chords():
+    """API endpoint לטעינת אקורדים שנוספו לאחרונה (לשימוש עתידי)"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        user_id = session['user_id']
+
+        # כרגע נחזיר רשימה ריקה - בעתיד אפשר לשמור במסד נתונים
+        # או לחלץ מהשירים של המשתמש
+        recent_chords = []
+
+        return jsonify({
+            "chords": recent_chords,
+            "user_id": user_id,
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error loading recent chords: {e}")
+        return jsonify({"error": "Internal server error", "chords": []}), 500
+
+
+@songs_bp.route('/api/chords/recent', methods=['POST'])
+def save_recent_chords():
+    """API endpoint לשמירת אקורדים שנוספו לאחרונה (לשימוש עתידי)"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        data = request.get_json()
+        if not data or "chords" not in data:
+            return jsonify({"error": "Missing chords data"}), 400
+
+        user_id = session['user_id']
+        chords = data["chords"]
+
+        # כרגע רק נחזיר הצלחה - בעתיד אפשר לשמור במסד נתונים
+        # בטבלה נפרדת של recent_chords או בפרופיל המשתמש
+
+        return jsonify({
+            "message": "Recent chords saved successfully",
+            "user_id": user_id,
+            "count": len(chords),
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error saving recent chords: {e}")
+        return jsonify({"error": "Internal server error"}), 500

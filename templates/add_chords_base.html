@@ -17,5 +17,13 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/add_chords.js') }}"></script>
+<!-- טעינת הקומפוננטות החדשות במקום הקובץ הישן הענק -->
+<script src="{{ url_for('static', filename='js/chords/chord_core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/chord_ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/measure_manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/loop_manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/song_structure.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/data_manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/dom_helpers.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/chord_main.js') }}"></script>
 {% endblock %}

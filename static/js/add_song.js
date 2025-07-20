@@ -1,4 +1,4 @@
-// Add Song Page JavaScript - Enhanced User Experience
+// Add Song Page JavaScript - Enhanced User Experience with New Chord System Integration
 
 // Form validation functions
 function validateField(fieldId, value) {
@@ -66,6 +66,91 @@ function updateProgressStep(stepNumber, status) {
     }
 }
 
+// ===== NEW CHORD SYSTEM INTEGRATION =====
+
+// פונקציה לבדיקה אם חזרנו מעמוד האקורדים החדש
+function checkForReturnedChords() {
+    const justReturned = localStorage.getItem("justReturnedFromChords");
+    const addingNewSong = localStorage.getItem("addingNewSong");
+
+    if (justReturned === "true" && addingNewSong === "true") {
+        const chords = localStorage.getItem("chords");
+        const loops = localStorage.getItem("loops");
+
+        console.log("Returned from NEW chords system with data:", { chords: !!chords, loops: !!loops });
+
+        if (chords) {
+            document.getElementById("chords").value = chords;
+            markChordsAsAdded();
+        }
+
+        if (loops) {
+            document.getElementById("loops").value = loops;
+        }
+
+        // נקה את הסימון
+        localStorage.removeItem("justReturnedFromChords");
+
+        // עדכן את השלב
+        updateProgressStep(2, 'completed');
+    }
+}
+
+// סימון שהאקורדים נוספו
+function markChordsAsAdded() {
+    const chordsSuccessDiv = document.getElementById("chords-success");
+    const chordsBtn = document.getElementById("chords-btn");
+
+    if (chordsSuccessDiv && chordsBtn) {
+        chordsSuccessDiv.style.display = "flex";
+        chordsBtn.innerHTML = '<span>✏️</span><span>ערוך אקורדים שנוספו</span>';
+        chordsBtn.onclick = editNewSongChords;
+
+        // עדכן את מדד ההתקדמות
+        updateProgressStep(2, 'completed');
+    }
+}
+
+// מעבר לעמוד האקורדים החדש
+function goToChordsPage() {
+    console.log("Going to NEW chords system for new song");
+
+    // שמירת נתוני הטופס הנוכחי
+    saveNewSongFormData();
+
+    // הגדרת מצב שיר חדש למערכת האקורדים החדשה
+    localStorage.setItem("addingNewSong", "true");
+    localStorage.removeItem("editingSongId"); // ודא שלא בעריכה
+
+    // מעבר לעמוד האקורדים החדש
+    window.location.href = "/add-chords";
+}
+
+// עריכת אקורדים קיימים
+function editNewSongChords() {
+    console.log("Editing chords in NEW system for new song");
+
+    // שמירת נתוני הטופס
+    saveNewSongFormData();
+
+    // ודא שאנחנו במצב שיר חדש
+    localStorage.setItem("addingNewSong", "true");
+    localStorage.removeItem("editingSongId");
+
+    // מעבר לעריכת האקורדים החדשה
+    window.location.href = "/add-chords";
+}
+
+// בדיקה אם יש אקורדים לשיר החדש הנוכחי
+function hasChordsForCurrentNewSong() {
+    const savedChords = localStorage.getItem("chords");
+    const addingNewSong = localStorage.getItem("addingNewSong");
+    const editingSongId = localStorage.getItem("editingSongId");
+    return savedChords && addingNewSong === "true" && !editingSongId;
+}
+
+// ===== FORM DATA MANAGEMENT =====
+
 // Form data management functions
 function initializeNewSong() {
     localStorage.removeItem("editingSongId");
@@ -83,21 +168,7 @@ function initializeNewSong() {
             console.log("Cleared old chords from different context");
         }
     }
-    console.log("Initialized new song mode");
-}
-
-function goToChordsPage() {
-    saveNewSongFormData();
-    localStorage.setItem("addingNewSong", "true");
-    localStorage.removeItem("editingSongId");
-    window.location.href = "/add-chords";
-}
-
-function editNewSongChords() {
-    saveNewSongFormData();
-    localStorage.setItem("addingNewSong", "true");
-    localStorage.removeItem("editingSongId");
-    window.location.href = "/add-chords";
+    console.log("Initialized new song mode for NEW chord system");
 }
 
 function saveNewSongFormData() {
@@ -113,14 +184,10 @@ function saveNewSongFormData() {
         video_url: document.getElementById("video_url").value
     };
     localStorage.setItem("songData", JSON.stringify(formData));
+    console.log("Saved form data for NEW chord system:", formData);
 }
 
-function hasChordsForCurrentNewSong() {
-    const savedChords = localStorage.getItem("chords");
-    const addingNewSong = localStorage.getItem("addingNewSong");
-    const editingSongId = localStorage.getItem("editingSongId");
-    return savedChords && addingNewSong === "true" && !editingSongId;
-}
+// ===== UI HELPERS =====
 
 // Button animations
 function addButtonLoading(button) {
@@ -174,6 +241,8 @@ function resetForm() {
     });
 }
 
+// ===== INITIALIZATION =====
+
 // Initialize page
 document.addEventListener("DOMContentLoaded", function () {
     setupValidation();
@@ -188,6 +257,10 @@ document.addEventListener("DOMContentLoaded", function () {
             validateField(key, songData[key]);
         }
     }
+
+    // *** INTEGRATION WITH NEW CHORD SYSTEM ***
+    // בדוק אם חזרנו מעמוד האקורדים החדש
+    checkForReturnedChords();
 
     // Check chords status
     const chordsSuccessDiv = document.getElementById("chords-success");
@@ -239,7 +312,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-// Form submission handler
+// ===== FORM SUBMISSION =====
+
+// Form submission handler - Enhanced for NEW chord system
 document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("add-song-form").addEventListener("submit", function (event) {
         event.preventDefault();
@@ -282,13 +357,22 @@ document.addEventListener("DOMContentLoaded", function() {
             formData.video_url = "https://www.youtube.com/embed/" + ytMatch[1];
         }
 
-        // Parse chords and loops
+        // Parse chords and loops from NEW chord system
         let chords, loops = [];
         try {
-            chords = JSON.parse(document.getElementById("chords").value);
+            const chordsRaw = document.getElementById("chords").value;
+            if (chordsRaw) {
+                chords = JSON.parse(chordsRaw);
+                console.log("Parsed chords from NEW system:", chords);
+            } else {
+                removeButtonLoading(submitBtn);
+                showMessage("❌ יש להוסיף אקורדים לשיר תחילה", "error");
+                return;
+            }
         } catch (e) {
             removeButtonLoading(submitBtn);
             showMessage("❌ שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.", "error");
+            console.error("Error parsing chords:", e);
             return;
         }
 
@@ -296,6 +380,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (loopsRaw) {
             try {
                 loops = JSON.parse(loopsRaw);
+                console.log("Parsed loops from NEW system:", loops);
             } catch (e) {
                 console.log("Error parsing loops data:", e);
                 loops = [];
@@ -304,6 +389,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         formData.chords = chords;
         formData.loops = loops;
+
+        console.log("Submitting song with NEW chord system data:", formData);
 
         // Submit to server
         fetch("/api/add_song", {
@@ -328,18 +415,20 @@ document.addEventListener("DOMContentLoaded", function() {
                 localStorage.removeItem("justReturnedFromChords");
                 localStorage.removeItem("addingNewSong");
 
-                // Reset form after success
+                console.log("Song created successfully with NEW chord system!");
+
+                // Navigate to songs list after success
                 setTimeout(() => {
-                    resetForm();
+                    window.location.href = '/songs';
                 }, 2000);
             } else {
-                showMessage("❌ שגיאה בהוספת השיר, נסה שוב", "error");
+                showMessage("❌ שגיאה בהוספת השיר: " + (data.error || "שגיאה לא ידועה"), "error");
             }
         })
         .catch(error => {
             removeButtonLoading(submitBtn);
             showMessage("❌ שגיאה בהוספת השיר!", "error");
-            console.error("Error:", error);
+            console.error("Error submitting song:", error);
         });
     });
 });

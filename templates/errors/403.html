@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>גישה נדחתה - 403</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+        }
+
+        .error-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(255, 71, 87, 0.2);
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .error-icon {
+            font-size: 120px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .error-title {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #64748b;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .error-details {
+            background: rgba(255, 71, 87, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: #ff4757;
+            font-size: 14px;
+        }
+
+        .home-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            margin: 0 10px;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:hover {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .permissions-info {
+            margin-top: 30px;
+            text-align: right;
+            background: rgba(108, 117, 125, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .permissions-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .permissions-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .permissions-info li {
+            margin-bottom: 8px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .permissions-info li::before {
+            content: "🔒 ";
+            margin-left: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 40px 20px;
+            }
+
+            .error-title {
+                font-size: 2rem;
+            }
+
+            .error-icon {
+                font-size: 80px;
+            }
+
+            .home-btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">🚫</div>
+        <h1 class="error-title">403</h1>
+        <p class="error-message">
+            אין לך הרשאה לגשת לעמוד זה
+        </p>
+
+        <div class="error-details">
+            <strong>מה זה bedeutet?</strong><br>
+            אתה מנסה לגשת למשאב שדורש הרשאות מיוחדות שאין לך.
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="/" class="home-btn">🏠 חזרה לדף הבית</a>
+            <a href="/auth/login" class="home-btn login-btn">🔑 התחברות</a>
+        </div>
+
+        <div class="permissions-info">
+            <h3>מי יכול לגשת?</h3>
+            <ul>
+                <li>מורים רשומים - לעריכת שירים והוספת תוכן</li>
+                <li>מנהלים - לניהול המערכת והרשאות</li>
+                <li>תלמידים רשומים - לצפייה בתוכן אישי</li>
+                <li>משתמשי אורח - למידע כללי בלבד</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -6,19 +6,25 @@
         <!-- Root Note Selection -->
         <div class="section">
             <h4>בחר תו יסוד:</h4>
-            <div id="root-letters" class="button-grid"></div>
+            <div id="root-letters" class="button-grid">
+                <!-- יטען דינמית על ידי chord_ui.js -->
+            </div>
         </div>
 
-        <!-- Accidental Buttons - 3 separate buttons -->
+        <!-- Accidental Buttons -->
         <div class="section">
             <h4>בחר סימן:</h4>
-            <div id="accidental-buttons" class="accidental-buttons"></div>
+            <div id="accidental-buttons" class="accidental-buttons">
+                <!-- יטען דינמית על ידי chord_ui.js -->
+            </div>
         </div>
 
         <!-- Chord Type Selection -->
         <div class="section">
             <h4>בחר סוג אקורד:</h4>
-            <div id="chord-types" class="chord-types-grid"></div>
+            <div id="chord-types" class="chord-types-grid">
+                <!-- יטען דינמית על ידי chord_ui.js -->
+            </div>
         </div>
 
         <!-- Current Selection Display -->
@@ -28,16 +34,16 @@
         </div>
 
         <!-- Add Chord Button -->
-        <button class="add-chord-btn" onclick="addChordToCurrentMeasure()" disabled>
+        <button class="add-chord-btn" disabled>
             ➕ הוסף אקורד
         </button>
 
         <!-- Quick Actions -->
         <div class="quick-actions">
-            <button class="btn small-btn secondary-btn" onclick="clearCurrentMeasure()" id="clear-measure-btn" disabled>
+            <button class="btn small-btn secondary-btn" id="clear-measure-btn" disabled>
                 🗑️ נקה
             </button>
-            <button class="btn small-btn secondary-btn" onclick="addEmptyChord()" id="add-empty-chord-btn" disabled>
+            <button class="btn small-btn secondary-btn" id="add-empty-chord-btn" disabled>
                 🔇 ריק
             </button>
         </div>
@@ -45,7 +51,34 @@
         <!-- Recently Used Chords Section -->
         <div class="section recently-used-section">
             <h4>אקורדים שנוספו לאחרונה:</h4>
-            <div id="recently-used-chords" class="recently-used-chords"></div>
+            <div id="recently-used-chords" class="recently-used-chords">
+                <!-- יטען דינמית על ידי chord_ui.js -->
+            </div>
+        </div>
+
+        <!-- App Status Section (for debugging) -->
+        <div class="section" style="margin-top: auto; padding-top: 10px; border-top: 1px solid #e1e8ed;">
+            <div id="app-status" style="font-size: 10px; color: #666; text-align: center;">
+                טוען...
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+// עדכון סטטוס האפליקציה
+function updateAppStatus() {
+    const statusEl = document.getElementById('app-status');
+    if (statusEl && window.chordApp) {
+        const status = window.chordApp.getAppStatus();
+        const isOnline = navigator.onLine ? '🟢' : '🔴';
+        const hasChanges = status.hasUnsavedChanges ? '📝' : '✅';
+        statusEl.textContent = `${isOnline} ${hasChanges} ${status.mode || 'טוען'}`;
+        statusEl.title = `מחובר: ${navigator.onLine ? 'כן' : 'לא'}, שינויים: ${status.hasUnsavedChanges ? 'יש' : 'אין'}`;
+    }
+}
+
+// עדכון כל 5 שניות
+setInterval(updateAppStatus, 5000);
+document.addEventListener('DOMContentLoaded', updateAppStatus);
+</script>
