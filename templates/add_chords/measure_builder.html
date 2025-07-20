@@ -1,220 +1,135 @@
-<!-- Loops Sidebar -->
-<div class="loops-sidebar">
-    <h3>🔄 לופים</h3>
-    <div class="loops-content">
-        <!-- Current Loop Section -->
-        <div class="current-loop-section">
-            <div class="loop-header">
-                <h4>לופ נוכחי</h4>
-                <input type="text" class="loop-name-input" id="loop-name" placeholder="שם הלופ (בית, פזמון...)" maxlength="30">
-            </div>
-
-            <div class="current-loop-measures">
-                <div>תיבות בלופ: <span id="current-loop-count">0</span></div>
-                <div id="current-loop-preview" class="loop-measures-preview">
-                    <!-- יטען דינמית על ידי loop_manager.js -->
-                </div>
-            </div>
-
-            <div style="margin-top: 10px;">
-                <button class="btn success-btn" id="save-loop-btn" disabled title="Ctrl+S">
-                    💾 שמור לופ
-                </button>
-                <button class="btn warning-btn" id="discard-loop-btn" disabled title="Escape">
-                    🗑️ בטל לופ
-                </button>
-            </div>
+<!-- Current Measure Builder -->
+<div class="measure-builder">
+    <div class="measure-controls">
+        <div class="measure-counter">
+            תיבה נוכחית
         </div>
-
-        <!-- Saved Loops Section -->
-        <div class="saved-loops-section">
-            <h4>לופים שמורים</h4>
-
-            <!-- Loop Management Actions -->
-            <div style="margin-bottom: 10px; display: flex; gap: 5px; justify-content: space-between;">
-                <button class="btn small-btn secondary-btn" onclick="exportLoops()" title="ייצא לופים לקובץ">
-                    📤 ייצא
-                </button>
-                <button class="btn small-btn secondary-btn" onclick="importLoops()" title="ייבא לופים מקובץ">
-                    📥 ייבא
-                </button>
-                <button class="btn small-btn warning-btn" onclick="clearAllLoops()" title="נקה את כל הלופים">
-                    🗑️ נקה הכל
-                </button>
-            </div>
-
-            <div id="saved-loops-container">
-                <p style="color: #999; font-style: italic; text-align: center;">
-                    עדיין לא נשמרו לופים
-                </p>
-            </div>
-
-            <div style="margin-top: 10px; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; font-size: 12px; color: #667eea;">
-                💡 <strong>טיפים:</strong><br>
-                • גרור לופים למרכז לבניית השיר<br>
-                • לחץ על תיבה בלופ לעריכה<br>
-                • השתמש בגרירה לשינוי סדר<br>
-                • כל לופ יכול להיות עם חזרות שונות
-            </div>
+        <div class="beats-input-group">
+            <label for="measure-beats">נקישות:</label>
+            <input type="number" id="measure-beats" value="4" min="1" max="16">
         </div>
+    </div>
 
-        <!-- Loop Templates Section -->
-        <div class="section" style="margin-top: 15px; padding: 10px; background: rgba(40, 167, 69, 0.1); border-radius: 8px;">
-            <h4 style="color: #28a745; margin-bottom: 8px;">תבניות נפוצות:</h4>
-            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                <button class="btn small-btn" onclick="createTemplateLoop('בית', 4)" style="background: linear-gradient(135deg, #28a745, #20c997);">
-                    🎵 בית (4)
-                </button>
-                <button class="btn small-btn" onclick="createTemplateLoop('פזמון', 4)" style="background: linear-gradient(135deg, #17a2b8, #138496);">
-                    🎤 פזמון (4)
-                </button>
-                <button class="btn small-btn" onclick="createTemplateLoop('גשר', 2)" style="background: linear-gradient(135deg, #ffc107, #ff8f00);">
-                    🌉 גשר (2)
-                </button>
-                <button class="btn small-btn" onclick="createTemplateLoop('אינטרו', 2)" style="background: linear-gradient(135deg, #6f42c1, #5a32a3);">
-                    🎼 אינטרו (2)
-                </button>
-            </div>
+    <!-- Half Beats Toggle -->
+    <div class="half-beats-toggle">
+        <label class="half-beats-checkbox">
+            <input type="checkbox" id="half-beats-checkbox">
+            <span class="half-beats-slider"></span>
+        </label>
+        <span class="half-beats-label">כולל חצאי ספירות &</span>
+    </div>
+
+    <!-- Beat dots display -->
+    <div id="beats-display" class="beats-display" style="display: none;"></div>
+
+    <!-- Current Measure Preview -->
+    <div id="current-measure-container" class="measure-container">
+        <div class="measure-placeholder">
+            <p>🎵 הוסף אקורדים לתיבה הנוכחית</p>
+            <p style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                השתמש בסרגל השמאלי לבחירת אקורדים
+            </p>
         </div>
+    </div>
 
-        <!-- Sync Status -->
-        <div id="sync-status" style="margin-top: 10px; padding: 8px; background: rgba(108, 117, 125, 0.1); border-radius: 6px; font-size: 11px; text-align: center; color: #6c757d;">
-            <span id="sync-indicator">🔄</span>
-            <span id="sync-text">מוכן</span>
+    <!-- Instructions for usage -->
+    <div style="background: rgba(102, 126, 234, 0.1); border-radius: 8px; padding: 10px; margin-bottom: 15px; font-size: 12px; color: #667eea;">
+        <strong>🎯 הוראות שימוש:</strong><br>
+        • <strong>חלוקה:</strong> האקורדים מתחלקים באופן שווה בגבולות חצאי נקישות<br>
+        • <strong>הגדלה:</strong> השתמש בכפתורים + ו- לשינוי גודל אקורדים<br>
+        • <strong>דיוק:</strong> הפעל "חצאי ספירות &" להצגה מדויקת יותר<br>
+        • <strong>קיצורים:</strong> Ctrl+Enter למעבר תיבה, Ctrl+Del לניקוי, רווח להפסקה
+    </div>
+
+    <!-- Measure Action Buttons -->
+    <div class="measure-actions">
+        <button class="btn next-measure" id="next-measure-btn" disabled>
+            ➡️ מעבר לתיבה הבאה
+        </button>
+    </div>
+</div>
+
+<!-- Song Structure Display -->
+<div class="song-structure">
+    <h3>🎼 מבנה השיר</h3>
+
+    <!-- Song Stats Display -->
+    <div id="song-stats" style="background: rgba(102, 126, 234, 0.1); border-radius: 8px; padding: 10px; margin-bottom: 15px; font-size: 12px; color: #667eea; text-align: center;">
+        <span id="total-measures">0 תיבות</span> •
+        <span id="total-loops">0 לופים</span> •
+        <span id="estimated-duration">0:00 דקות</span>
+    </div>
+
+    <div id="song-structure-content" class="drop-zone" ondrop="dropLoop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+        <div>🎵 גרור לופים מהסרגל השמאלי כדי לבנות את השיר</div>
+        <div style="font-size: 14px; opacity: 0.7; margin-top: 5px;">או שמור את הלופ הנוכחי ואז גרור אותו לכאן</div>
+    </div>
+
+    <!-- Finish Controls -->
+    <div class="finish-controls" style="margin-top: 20px;">
+        <button class="btn finish-btn" disabled>
+            ✅ סיים והמשך
+        </button>
+
+        <!-- Additional Actions -->
+        <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
+            <button class="btn small-btn secondary-btn" onclick="window.chordApp && window.chordApp.saveNow()" title="שמור ידנית">
+                💾 שמור עכשיו
+            </button>
+            <button class="btn small-btn secondary-btn" onclick="showAppStatus()" title="הצג מצב האפליקציה">
+                📊 מצב
+            </button>
         </div>
     </div>
 </div>
 
 <script>
-// יצירת לופ מתבנית
-function createTemplateLoop(name, measureCount) {
-    if (!window.loopManager || !window.measureManager) {
-        alert('המערכת עדיין טוענת...');
-        return;
-    }
+// עדכון סטטיסטיקות השיר
+function updateSongStats() {
+    if (!window.songStructureManager) return;
 
-    // בדוק אם יש לופ נוכחי
-    if (window.loopManager.hasCurrentLoopContent()) {
-        if (!confirm(`יש לך לופ נוכחי לא שמור. האם ברצונך להמשיך?`)) {
-            return;
-        }
-    }
+    const stats = window.songStructureManager.getSongStats();
+    const statsEl = document.getElementById('song-stats');
 
-    // נקה לופ נוכחי
-    window.loopManager.discardCurrentLoop();
+    if (statsEl && stats) {
+        const estimatedMinutes = Math.ceil(stats.totalMeasures / 4); // הערכה: 4 תיבות = דקה
 
-    // הגדר שם
-    const loopNameInput = document.getElementById('loop-name');
-    if (loopNameInput) {
-        loopNameInput.value = name;
-    }
-
-    // הודעה למשתמש
-    window.domHelpers.showNotification(`התחלת לופ ${name} עם ${measureCount} תיבות`, 'info', 2000);
-}
-
-// ייצוא לופים
-function exportLoops() {
-    if (!window.loopManager) return;
-
-    const loops = window.loopManager.getAllSavedLoops();
-    if (loops.length === 0) {
-        alert('אין לופים לייצוא');
-        return;
-    }
-
-    const dataStr = JSON.stringify(loops, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(dataBlob);
-    link.download = `loops_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-
-    window.domHelpers.showNotification('הלופים יוצאו בהצלחה!', 'success');
-}
-
-// ייבוא לופים
-function importLoops() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const loops = JSON.parse(e.target.result);
-
-                if (!Array.isArray(loops)) {
-                    throw new Error('פורמט קובץ לא תקין');
-                }
-
-                // ייבא הלופים
-                if (window.loopManager) {
-                    loops.forEach(loop => {
-                        // הוסף ID חדש למניעת התנגשויות
-                        loop.id = Date.now() + Math.random();
-                        window.loopManager.savedLoops.push(loop);
-                    });
-
-                    window.loopManager.renderSavedLoops();
-                    window.domHelpers.showNotification(`יובאו ${loops.length} לופים בהצלחה!`, 'success');
-                }
-            } catch (error) {
-                alert('שגיאה בייבוא הקובץ: ' + error.message);
-            }
-        };
-        reader.readAsText(file);
-    };
-
-    input.click();
-}
-
-// ניקוי כל הלופים
-function clearAllLoops() {
-    if (!window.loopManager) return;
-
-    const count = window.loopManager.getAllSavedLoops().length;
-    if (count === 0) {
-        alert('אין לופים לנקות');
-        return;
-    }
-
-    if (confirm(`האם אתה בטוח שברצונך למחוק את כל ${count} הלופים?`)) {
-        window.loopManager.reset();
-        window.songStructureManager.reset();
-        window.domHelpers.showNotification('כל הלופים נוקו', 'warning');
+        document.getElementById('total-measures').textContent = `${stats.totalMeasures} תיבות`;
+        document.getElementById('total-loops').textContent = `${stats.totalLoops} לופים`;
+        document.getElementById('estimated-duration').textContent = `${estimatedMinutes}:00 דקות`;
     }
 }
 
-// עדכון מצב סנכרון
-function updateSyncStatus() {
-    const indicator = document.getElementById('sync-indicator');
-    const text = document.getElementById('sync-text');
+// עדכון כל 3 שניות
+setInterval(updateSongStats, 3000);
 
-    if (!indicator || !text || !window.dataManager) return;
+// הצגת מצב האפליקציה
+function showAppStatus() {
+    if (window.chordApp) {
+        const status = window.chordApp.getAppStatus();
+        const message = `
+מצב: ${status.status}
+מחובר: ${status.isOnline ? 'כן' : 'לא'}
+גיבוי: ${status.hasBackup ? 'קיים' : 'לא קיים'}
+שינויים בהמתנה: ${status.pendingSync}
+שינויים לא שמורים: ${status.hasUnsavedChanges ? 'יש' : 'אין'}
+תיבות כולל: ${status.songStats ? status.songStats.totalMeasures : 0}
+        `.trim();
 
-    const status = window.dataManager.getStatus();
-
-    if (!status.isOnline) {
-        indicator.textContent = '🔴';
-        text.textContent = 'לא מחובר';
-    } else if (status.pendingSync > 0) {
-        indicator.textContent = '🟡';
-        text.textContent = `${status.pendingSync} ממתינים`;
+        alert(message);
     } else {
-        indicator.textContent = '🟢';
-        text.textContent = 'מסונכרן';
+        alert('האפליקציה עדיין טוענת...');
     }
 }
 
-// עדכון סטטוס כל 5 שניות
-setInterval(updateSyncStatus, 5000);
+// האזנה לשינויים במבנה השיר
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(updateSyncStatus, 1000);
+    // עדכון ראשוני
+    setTimeout(updateSongStats, 1000);
+
+    // האזנה לאירועים
+    window.addEventListener('measureChanged', updateSongStats);
+    window.addEventListener('loopSaved', updateSongStats);
+    window.addEventListener('songStructureChanged', updateSongStats);
 });
 </script>
