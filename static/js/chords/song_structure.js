@@ -112,6 +112,8 @@ class SongStructureManager {
     addLoopToSong(loop) {
         if (!loop) return false;
 
+        console.log("Adding loop to song structure:", loop);
+
         const loopCopy = {
             ...loop,
             id: Date.now() + Math.random(),
@@ -124,6 +126,7 @@ class SongStructureManager {
         // TODO: Auto-save to backend
         // this.saveSongStructureToBackend();
 
+        console.log("Loop added successfully. New structure length:", this.songStructure.length);
         return true;
     }
 
@@ -169,6 +172,8 @@ class SongStructureManager {
             fromIndex === toIndex) {
             return false;
         }
+
+        console.log(`Moving loop from index ${fromIndex} to ${toIndex}`);
 
         const movedLoop = this.songStructure.splice(fromIndex, 1)[0];
         this.songStructure.splice(toIndex, 0, movedLoop);
@@ -354,13 +359,19 @@ class SongStructureManager {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
 
+        console.log("Drop event triggered. draggedSongLoop:", this.draggedSongLoop);
+
         try {
-            // Handle loop drag from saved loops
-            const loopData = e.dataTransfer.getData('application/json');
-            if (loopData) {
-                const loop = JSON.parse(loopData);
-                this.addLoopToSong(loop);
-                return;
+            // רק אם זה לא גרירה פנימית של לופ בשיר
+            if (this.draggedSongLoop === null) {
+                // Handle loop drag from saved loops
+                const loopData = e.dataTransfer.getData('application/json');
+                if (loopData) {
+                    const loop = JSON.parse(loopData);
+                    console.log("Adding loop to song:", loop);
+                    this.addLoopToSong(loop);
+                    return;
+                }
             }
         } catch (error) {
             console.error('Error parsing dropped loop data:', error);
@@ -371,8 +382,11 @@ class SongStructureManager {
             const dropTarget = e.target.closest('.song-loop');
             if (dropTarget && dropTarget.dataset.songIndex) {
                 const targetIndex = parseInt(dropTarget.dataset.songIndex);
-                this.moveLoop(this.draggedSongLoop, targetIndex);
+                if (targetIndex !== this.draggedSongLoop) {
+                    this.moveLoop(this.draggedSongLoop, targetIndex);
+                }
             }
+            this.draggedSongLoop = null;
         }
     }
 
@@ -380,11 +394,18 @@ class SongStructureManager {
         this.draggedSongLoop = parseInt(e.target.dataset.songIndex);
         e.target.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
+        console.log("Started dragging song loop:", this.draggedSongLoop);
     }
 
     handleSongLoopDragEnd(e) {
         e.target.classList.remove('dragging');
         this.draggedSongLoop = null;
+
+        // נקה את כל האירועים הקשורים לגרירה
+        if (e.dataTransfer) {
+            e.dataTransfer.clearData();
+        }
+        console.log("Ended dragging song loop");
     }
 
     /**

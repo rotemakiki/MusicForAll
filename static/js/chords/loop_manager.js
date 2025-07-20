@@ -162,6 +162,7 @@ class LoopManager {
         this.currentLoop.push({...measure});
         this.updateLoopDisplay();
         this.updateSaveButtonState();
+        console.log("Added measure to current loop. New length:", this.currentLoop.length);
         return true;
     }
 
@@ -187,7 +188,12 @@ class LoopManager {
      * TODO: Save to backend instead of just local state
      */
     async saveCurrentLoop() {
-        if (this.currentLoop.length === 0) {
+        console.log("Attempting to save loop. Current loop length:", this.currentLoop.length);
+        console.log("Current loop content:", this.currentLoop);
+
+        if (!this.hasCurrentLoopContent()) {
+            console.log("Current loop length:", this.currentLoop.length);
+            console.log("Current loop content:", this.currentLoop);
             alert("אין תיבות בלופ הנוכחי");
             return false;
         }
@@ -476,7 +482,7 @@ class LoopManager {
         const discardBtn = document.getElementById("discard-loop-btn");
         const loopNameInput = document.getElementById("loop-name");
 
-        const hasLoopContent = this.currentLoop.length > 0;
+        const hasLoopContent = this.hasCurrentLoopContent();
         const hasLoopName = loopNameInput ? loopNameInput.value.trim().length > 0 : false;
 
         if (saveBtn) {
@@ -506,7 +512,11 @@ class LoopManager {
      * Check if current loop has content
      */
     hasCurrentLoopContent() {
-        return this.currentLoop.length > 0;
+        console.log("Checking loop content - length:", this.currentLoop.length);
+        console.log("Loop content:", this.currentLoop);
+        return this.currentLoop.length > 0 && this.currentLoop.some(measure =>
+            measure && measure.chords && measure.chords.length > 0
+        );
     }
 
     /**
