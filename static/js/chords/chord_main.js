@@ -148,6 +148,15 @@ class ChordApp {
 
         // Listen for beforeunload to save changes
         window.addEventListener('beforeunload', (event) => {
+            // **תיקון חשוב**: אל תמנע unload כשמבצעים "סיים והמשך"
+            const isFinishingProcess = localStorage.getItem('finishingProcess');
+
+            if (isFinishingProcess === 'true') {
+                // אנחנו בתהליך סיום - אל תציג אזהרה
+                localStorage.removeItem('finishingProcess');
+                return;
+            }
+
             if (this.hasUnsavedChanges()) {
                 event.preventDefault();
                 event.returnValue = 'יש לך שינויים שלא נשמרו. האם אתה בטוח שברצונך לעזוב?';

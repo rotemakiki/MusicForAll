@@ -20,9 +20,6 @@ class DOMHelpers {
     /**
      * Setup global button event listeners
      */
-/**
- * Setup global button event listeners
- */
     setupGlobalButtonListeners() {
         // Add chord button
         const addChordBtn = document.querySelector('.add-chord-btn');
@@ -207,9 +204,6 @@ class DOMHelpers {
     /**
      * Update all button states based on current application state
      */
-/**
- * Update all button states based on current application state
- */
     updateAllButtons() {
         console.log("=== 🔧 עדכון כל הכפתורים ===");
 
@@ -376,12 +370,6 @@ class DOMHelpers {
     /**
      * Handle save loop button click
      */
-/**
- * Handle save loop button click
- */
-/**
- * Handle save loop button click
- */
     async handleSaveLoop() {
         if (!window.loopManager) return;
 
@@ -392,7 +380,6 @@ class DOMHelpers {
             if (success) {
                 this.showNotification('הלופ נשמר בהצלחה!', 'success');
                 this.updateAllButtons();
-                // הסרתי את triggerAutoSave כדי למנוע כפילות
                 console.log("🟢 DOM Helper - לופ נשמר בהצלחה");
             } else {
                 console.log("🔴 DOM Helper - שמירת הלופ נכשלה");
@@ -402,6 +389,7 @@ class DOMHelpers {
             this.showNotification('שגיאה בשמירת הלופ', 'error');
         }
     }
+
     /**
      * Handle discard loop button click
      */
@@ -418,9 +406,12 @@ class DOMHelpers {
     /**
      * Handle finish button click
      */
+/**
+ * Handle finish button click
+ */
     async handleFinish() {
         if (!window.songStructureManager || !window.dataManager) return;
-
+    
         if (!window.songStructureManager.isSongReady()) {
             this.showNotification('יש להוסיף לפחות לופ אחד לשיר', 'error');
             return;
@@ -429,26 +420,38 @@ class DOMHelpers {
         try {
             this.showLoadingState(true);
 
-            // Collect all data and save
-            const success = await window.dataManager.autoSave();
+            // **תיקון**: סמן שאנחנו בתהליך סיום
+            localStorage.setItem('finishingProcess', 'true');
 
-            if (success) {
-                this.showNotification('השיר נשמר בהצלחה!', 'success');
+            // שמור נתונים למערכת הישנה לפני הכל
+            this.saveDataForOldSystem();
 
-                // Navigate back to appropriate page
-                setTimeout(() => {
-                    this.navigateBack();
-                }, 1000);
-            } else {
-                this.showNotification('השיר נשמר מקומית - יסונכרן כשתתחבר לאינטרנט', 'warning');
+            this.showNotification('שומר נתונים...', 'info', 1000);
 
-                setTimeout(() => {
-                    this.navigateBack();
-                }, 2000);
+            // נסה לשמור לשרת (אבל לא תיתן לזה לעצור אותנו)
+            try {
+                await window.dataManager.autoSave();
+                this.showNotification('השיר נשמר בהצלחה!', 'success', 1000);
+            } catch (error) {
+                console.log('שמירה לשרת נכשלה, אבל ממשיכים:', error);
+                this.showNotification('השיר נשמר מקומית', 'info', 1000);
             }
+
+            // מעבר אחורה ללא תלות בהצלחת שמירת השרת
+            setTimeout(() => {
+                this.navigateBack();
+            }, 500);
+
         } catch (error) {
             console.error('Error during finish:', error);
-            this.showNotification('שגיאה בשמירה - אנא נסה שוב', 'error');
+            // גם במקרה של שגיאה - שמור מקומית וחזור
+            this.saveDataForOldSystem();
+            localStorage.setItem('finishingProcess', 'true');
+            this.showNotification('שומר מקומית וחוזר...', 'warning', 1000);
+
+            setTimeout(() => {
+                this.navigateBack();
+            }, 1000);
         } finally {
             this.showLoadingState(false);
         }
@@ -457,14 +460,79 @@ class DOMHelpers {
     /**
      * Navigate back to appropriate page based on mode
      */
+/**
+ * Navigate back to appropriate page based on mode
+ */
     navigateBack() {
         const mode = window.ChordCore.ModeDetector.determineMode();
+
+        // **תיקון חשוב**: סמן שאנחנו בתהליך סיום כדי למנוע אזהרת beforeunload
+        localStorage.setItem('finishingProcess', 'true');
+
+        // לפני חזרה, שמור את הנתונים ב-localStorage בפורמט הישן
+        this.saveDataForOldSystem();
 
         if (mode === window.ChordCore.APP_MODES.EDITING) {
             const editingSongId = localStorage.getItem("editingSongId");
             window.location.href = `/edit_song/${editingSongId}`;
         } else {
             window.location.href = "/add_song";
+        }
+    }
+
+    /**
+     * Save data in format compatible with old add_song.js system
+     */
+    saveDataForOldSystem() {
+        try {
+            console.log("🔄 שומר נתונים למערכת הישנה...");
+
+            const loopManager = window.loopManager;
+            const songStructureManager = window.songStructureManager;
+
+            if (!loopManager || !songStructureManager) {
+                console.log("❌ מנהלים לא זמינים");
+                return;
+            }
+
+            // יצירת chordLines מהלופים
+            const songStructure = songStructureManager.getSongStructure();
+            const chordLines = [];
+
+            songStructure.forEach(loop => {
+                const repeatCount = loop.repeatCount || 1;
+
+                for (let repeat = 0; repeat < repeatCount; repeat++) {
+                    const measuresPerLine = 4;
+                    for (let i = 0; i < loop.measures.length; i += measuresPerLine) {
+                        const lineMeasures = loop.measures.slice(i, i + measuresPerLine);
+                        const lineChords = lineMeasures.flatMap(measure =>
+                            measure.chords.map(chord => ({
+                                chord: chord.isEmpty ? "—" : chord.chord,
+                                beats: chord.width,
+                                label: ""
+                            }))
+                        );
+                        chordLines.push(lineChords);
+                    }
+                }
+            });
+
+            // יצירת loops data
+            const loopsData = loopManager.getLoopsDataForSaving();
+
+            // שמירה ב-localStorage בפורמט הישן
+            localStorage.setItem("chords", JSON.stringify(chordLines));
+            localStorage.setItem("loops", JSON.stringify(loopsData));
+            localStorage.setItem("justReturnedFromChords", "true");
+
+            console.log("✅ נתונים נשמרו למערכת הישנה:", {
+                chordLines: chordLines.length,
+                loops: loopsData.length
+            });
+
+        } catch (error) {
+            console.error("❌ שגיאה בשמירת נתונים למערכת הישנה:", error);
         }
     }
 
