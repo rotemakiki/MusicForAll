@@ -207,10 +207,21 @@ class DOMHelpers {
     /**
      * Update all button states based on current application state
      */
+/**
+ * Update all button states based on current application state
+ */
     updateAllButtons() {
+        console.log("=== 🔧 עדכון כל הכפתורים ===");
+
         const measureManager = window.measureManager;
         const loopManager = window.loopManager;
         const songStructureManager = window.songStructureManager;
+
+        console.log("📊 זמינות מנהלים:", {
+            measureManager: !!measureManager,
+            loopManager: !!loopManager,
+            songStructureManager: !!songStructureManager
+        });
 
         // Measure-related buttons
         const nextMeasureBtn = document.getElementById("next-measure-btn");
@@ -221,6 +232,8 @@ class DOMHelpers {
         if (measureManager) {
             const hasChords = measureManager.isCurrentMeasureReady();
             const hasMeasure = measureManager.currentMeasure !== null;
+
+            console.log("🎵 מצב תיבות:", { hasChords, hasMeasure });
 
             if (nextMeasureBtn) nextMeasureBtn.disabled = !hasChords;
             if (clearBtn) clearBtn.disabled = !hasChords;
@@ -242,15 +255,54 @@ class DOMHelpers {
             const loopNameInput = document.getElementById("loop-name");
             const hasLoopName = loopNameInput ? loopNameInput.value.trim().length > 0 : false;
 
-            if (saveLoopBtn) saveLoopBtn.disabled = !hasLoopContent || !hasLoopName;
+            console.log("🔄 מצב לופים:", {
+                hasLoopContent,
+                hasLoopName,
+                currentLoopLength: loopManager.currentLoop.length,
+                savedLoopsCount: loopManager.savedLoops.length
+            });
+
+            if (saveLoopBtn) {
+                saveLoopBtn.disabled = !hasLoopContent || !hasLoopName;
+                console.log("💾 כפתור שמירת לופ מופעל:", !saveLoopBtn.disabled);
+            }
             if (discardLoopBtn) discardLoopBtn.disabled = !hasLoopContent;
         }
 
-        // Finish button
+        // *** זה החלק הכי חשוב - כפתור הסיום ***
         const finishBtn = document.querySelector('.finish-btn');
+        console.log("🏁 כפתור סיום נמצא:", !!finishBtn);
+
         if (finishBtn && songStructureManager) {
-            finishBtn.disabled = !songStructureManager.isSongReady();
+            const isSongReady = songStructureManager.isSongReady();
+            const songStructure = songStructureManager.getSongStructure();
+            const songStats = songStructureManager.getSongStats();
+
+            console.log("🎼 מצב מבנה השיר:", {
+                isSongReady,
+                songStructureLength: songStructure.length,
+                songStats,
+                songStructureContent: songStructure
+            });
+
+            finishBtn.disabled = !isSongReady;
+
+            if (!isSongReady) {
+                console.log("❌ השיר לא מוכן! סיבה: אין לופים במבנה השיר");
+                finishBtn.title = "יש להוסיף לפחות לופ אחד למבנה השיר כדי לסיים";
+                finishBtn.style.cursor = "not-allowed";
+            } else {
+                console.log("✅ השיר מוכן!");
+                finishBtn.title = "סיים והמשך לשמירת השיר";
+                finishBtn.style.cursor = "pointer";
+            }
+
+            console.log("🏁 כפתור סיום disabled:", finishBtn.disabled);
+        } else {
+            console.log("❌ כפתור סיום או מנהל מבנה השיר לא נמצאו");
         }
+
+        console.log("=== סיום עדכון כפתורים ===");
     }
 
     /**

@@ -18,10 +18,17 @@ class ChordUIManager {
      * Initialize the chord UI components
      */
     init() {
-        // נקה אקורדים שמורים רק עבור שיר חדש
         const mode = window.ChordCore.ModeDetector.determineMode();
+
+        // **תיקון**: נקה אקורדים שמורים רק עבור שיר חדש שלא התחיל עדיין
         if (mode === window.ChordCore.APP_MODES.NEW_SONG) {
-            this.recentlyUsedChords = [];
+            const hasExistingChords = localStorage.getItem("chords");
+            const justStarted = !hasExistingChords; // אם אין אקורדים זה אומר שזה התחלה חדשה
+
+            if (justStarted) {
+                this.recentlyUsedChords = [];
+                console.log("🧹 נוקו אקורדים שנוספו לאחרונה - שיר חדש");
+            }
         }
 
         this.renderRootButtons();

@@ -132,8 +132,16 @@ class DataManager {
             const addingNewSong = localStorage.getItem("addingNewSong");
 
             if (addingNewSong === "true") {
-                console.log("Loading new song data in progress from localStorage");
-                this.loadFromLocalStorageBackup();
+                // **תיקון**: בדוק אם באמת יש נתונים לשיר הנוכחי
+                const hasExistingData = localStorage.getItem("chords") || localStorage.getItem("loops");
+
+                if (hasExistingData) {
+                    console.log("Loading new song data in progress from localStorage");
+                    this.loadFromLocalStorageBackup();
+                } else {
+                    console.log("No relevant data for current new song - starting clean");
+                    this.clearAllData();
+                }
             } else {
                 console.log("No new song in progress - starting clean");
                 this.clearAllData();

@@ -109,10 +109,16 @@ class SongStructureManager {
     /**
      * Add loop to song structure
      */
+/**
+ * Add loop to song structure
+ */
     addLoopToSong(loop) {
-        if (!loop) return false;
+        if (!loop) {
+            console.log("❌ לא ניתן להוסיף לופ ריק");
+            return false;
+        }
 
-        console.log("Adding loop to song structure:", loop);
+        console.log("🎵 מוסיף לופ למבנה השיר:", loop);
 
         const loopCopy = {
             ...loop,
@@ -121,12 +127,21 @@ class SongStructureManager {
         };
 
         this.songStructure.push(loopCopy);
+
+        console.log("🎼 מבנה שיר מעודכן:", {
+            length: this.songStructure.length,
+            structure: this.songStructure
+        });
+
         this.renderSongStructure();
 
-        // TODO: Auto-save to backend
-        // this.saveSongStructureToBackend();
+        // עדכן כפתורים מיד אחרי הוספת לופ
+        if (window.domHelpers) {
+            console.log("🔧 מעדכן כפתורים אחרי הוספת לופ");
+            window.domHelpers.updateAllButtons();
+        }
 
-        console.log("Loop added successfully. New structure length:", this.songStructure.length);
+        console.log("✅ לופ נוסף בהצלחה. אורך מבנה חדש:", this.songStructure.length);
         return true;
     }
 
@@ -417,8 +432,17 @@ class SongStructureManager {
     /**
      * Check if song structure is ready for completion
      */
+/**
+ * Check if song structure is ready for completion
+ */
     isSongReady() {
-        return this.songStructure.length > 0;
+        const isReady = this.songStructure.length > 0;
+        console.log("🎼 בדיקת מוכנות השיר:", {
+            songStructureLength: this.songStructure.length,
+            songStructure: this.songStructure,
+            isReady
+        });
+        return isReady;
     }
 
     /**
