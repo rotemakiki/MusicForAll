@@ -312,17 +312,24 @@ class DOMHelpers {
     /**
      * Handle save loop button click
      */
+/**
+ * Handle save loop button click
+ */
     async handleSaveLoop() {
         if (!window.loopManager) return;
 
-        const success = await window.loopManager.saveCurrentLoop();
-        if (success) {
-            this.showNotification('הלופ נשמר בהצלחה!', 'success');
-            this.updateAllButtons();
-            this.triggerAutoSave();
+        try {
+            const success = await window.loopManager.saveCurrentLoop();
+            if (success) {
+                this.showNotification('הלופ נשמר בהצלחה!', 'success');
+                this.updateAllButtons();
+                this.triggerAutoSave();
+            }
+        } catch (error) {
+            console.error('Error saving loop:', error);
+            this.showNotification('שגיאה בשמירת הלופ', 'error');
         }
     }
-
     /**
      * Handle discard loop button click
      */

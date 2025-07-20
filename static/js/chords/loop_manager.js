@@ -517,12 +517,25 @@ class LoopManager {
     /**
      * Check if current loop has content
      */
+/**
+ * Check if current loop has content
+ */
     hasCurrentLoopContent() {
         console.log("Checking loop content - length:", this.currentLoop.length);
         console.log("Loop content:", this.currentLoop);
-        return this.currentLoop.length > 0 && this.currentLoop.some(measure =>
-            measure && measure.chords && measure.chords.length > 0
-        );
+
+        if (this.currentLoop.length === 0) {
+            return false;
+        }
+
+        // Check if at least one measure has chords
+        return this.currentLoop.some(measure => {
+            return measure &&
+                   measure.chords &&
+                   Array.isArray(measure.chords) &&
+                   measure.chords.length > 0 &&
+                   measure.chords.some(chord => chord && chord.chord && chord.chord !== "—");
+        });
     }
 
     /**

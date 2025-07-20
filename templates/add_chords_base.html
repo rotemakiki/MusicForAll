@@ -17,7 +17,10 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- טעינת הקומפוננטות החדשות במקום הקובץ הישן הענק -->
+<!-- אל תטען את הקובץ הישן הזה: -->
+<!-- <script src="{{ url_for('static', filename='js/add_chords.js') }}"></script> -->
+
+<!-- טען רק את הקבצים החדשים: -->
 <script src="{{ url_for('static', filename='js/chords/chord_core.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chords/chord_ui.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chords/measure_manager.js') }}"></script>

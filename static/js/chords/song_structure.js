@@ -355,39 +355,45 @@ class SongStructureManager {
         e.currentTarget.classList.remove('drag-over');
     }
 
-    function dropLoop(e) {
+    dropLoop(e) {
         e.preventDefault();
+        e.stopPropagation(); // חשוב! למנוע event bubbling
         e.currentTarget.classList.remove('drag-over');
 
-        if (draggedLoop) {
-            const loopCopy = {
-                ...draggedLoop,
-                id: Date.now() + Math.random(), // חשוב: למנוע חזרת אותו id
-                repeatCount: 1
-            };
-            songStructure.push(loopCopy);
-            renderSongStructure();
+        // Handle drop from saved loops section
+        try {
+            const data = e.dataTransfer.getData('application/json');
+            if (data) {
+                const loop = JSON.parse(data);
 
-            draggedLoop = null; // 🧹 איפוס
-            return; // ✅ חשוב: לא להמשיך הלאה
+                // בדוק אם כבר נוסף לופ זהה לאחרונה (מניעת כפילות)
+                const lastAdded = this.songStructure[this.songStructure.length - 1];
+                if (lastAdded && lastAdded.customName === loop.customName &&
+                    Date.now() - lastAdded.id < 1000) {
+                    console.log("Preventing duplicate loop addition");
+                    return;
+                }
+
+                console.log("Adding loop from drag data:", loop.customName);
+                this.addLoopToSong(loop);
+                return;
+            }
+        } catch (error) {
+            console.error('Error parsing dropped data:', error);
         }
 
-        if (draggedSongLoop !== null) {
+        // Handle reordering within song structure
+        if (this.draggedSongLoop !== null) {
             const dropTarget = e.target.closest('.song-loop');
             if (dropTarget && dropTarget.dataset.songIndex) {
                 const targetIndex = parseInt(dropTarget.dataset.songIndex);
-                if (targetIndex !== draggedSongLoop) {
-                    const movedLoop = songStructure.splice(draggedSongLoop, 1)[0];
-                    songStructure.splice(targetIndex, 0, movedLoop);
-                    renderSongStructure();
+                if (targetIndex !== this.draggedSongLoop) {
+                    this.moveLoop(this.draggedSongLoop, targetIndex);
                 }
             }
-
-            draggedSongLoop = null; // 🧹 איפוס
-            return; // ✅ חשוב: לעצור כאן
+            this.draggedSongLoop = null;
         }
     }
-
 
 
     handleSongLoopDragStart(e) {

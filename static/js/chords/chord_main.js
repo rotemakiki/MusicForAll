@@ -516,4 +516,11 @@ window.dropLoop = function(e) {
     }
 };
 
+window.saveCurrentLoop = function() {
+    if (window.domHelpers) {
+        window.domHelpers.handleSaveLoop();
+    }
+};
+
+
 console.log('🎸 Chord Main loaded - waiting for DOM ready...');
