@@ -269,6 +269,7 @@ class DOMHelpers {
         if (!window.measureManager || !window.loopManager) return;
 
         const completedMeasure = window.measureManager.nextMeasure();
+        console.log("✅ תיבה שהושלמה:", completedMeasure);
 
         if (completedMeasure) {
             // Add to current loop
