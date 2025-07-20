@@ -241,12 +241,28 @@ function resetForm() {
     });
 }
 
-// ===== INITIALIZATION =====
+// ===== INITIALIZATION AND EVENT HANDLERS =====
 
-// Initialize page
+// Initialize page - אחד כל האירועים
 document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM loaded - initializing add song page");
+
+    // Setup basic functionality
     setupValidation();
     initializeNewSong();
+
+    // *** חיבור כפתור האקורדים - הכי חשוב! ***
+    const chordsBtn = document.getElementById("chords-btn");
+    if (chordsBtn) {
+        console.log("Found chords button - attaching click handler");
+        chordsBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            console.log("Chords button clicked!");
+            goToChordsPage();
+        });
+    } else {
+        console.error("Chords button not found!");
+    }
 
     // Load existing form data
     const songData = JSON.parse(localStorage.getItem("songData") || "{}");
@@ -264,7 +280,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Check chords status
     const chordsSuccessDiv = document.getElementById("chords-success");
-    const chordsBtn = document.getElementById("chords-btn");
     const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
 
     if (hasChordsForCurrentNewSong() && justReturnedFromChords === "true") {
@@ -310,125 +325,127 @@ document.addEventListener("DOMContentLoaded", function () {
             el.addEventListener("input", saveNewSongFormData);
         }
     });
-});
 
-// ===== FORM SUBMISSION =====
+    // ===== FORM SUBMISSION HANDLER =====
+    const form = document.getElementById("add-song-form");
+    if (form) {
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            console.log("Form submitted");
 
-// Form submission handler - Enhanced for NEW chord system
-document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("add-song-form").addEventListener("submit", function (event) {
-        event.preventDefault();
+            const submitBtn = document.querySelector('.submit-btn');
+            addButtonLoading(submitBtn);
 
-        const submitBtn = document.querySelector('.submit-btn');
-        addButtonLoading(submitBtn);
+            // Validate all fields
+            const fields = ['title', 'artist', 'genre', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+            let allValid = true;
 
-        // Validate all fields
-        const fields = ['title', 'artist', 'genre', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
-        let allValid = true;
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !validateField(fieldId, field.value)) {
+                    allValid = false;
+                }
+            });
 
-        fields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field && !validateField(fieldId, field.value)) {
-                allValid = false;
-            }
-        });
-
-        if (!allValid) {
-            removeButtonLoading(submitBtn);
-            showMessage("❌ יש לתקן את השדות המסומנים באדום", "error");
-            return;
-        }
-
-        const formData = {
-            title: document.getElementById("title").value,
-            artist: document.getElementById("artist").value,
-            genre: document.getElementById("genre").value,
-            key: document.getElementById("key").value,
-            key_type: document.getElementById("key_type").value,
-            difficulty: document.getElementById("difficulty").value,
-            time_signature: document.getElementById("time_signature").value,
-            bpm: parseInt(document.getElementById("bpm").value),
-            video_url: document.getElementById("video_url").value,
-        };
-
-        // Handle YouTube URL conversion
-        const ytMatch = formData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
-        if (ytMatch && ytMatch[1]) {
-            formData.video_url = "https://www.youtube.com/embed/" + ytMatch[1];
-        }
-
-        // Parse chords and loops from NEW chord system
-        let chords, loops = [];
-        try {
-            const chordsRaw = document.getElementById("chords").value;
-            if (chordsRaw) {
-                chords = JSON.parse(chordsRaw);
-                console.log("Parsed chords from NEW system:", chords);
-            } else {
+            if (!allValid) {
                 removeButtonLoading(submitBtn);
-                showMessage("❌ יש להוסיף אקורדים לשיר תחילה", "error");
+                showMessage("❌ יש לתקן את השדות המסומנים באדום", "error");
                 return;
             }
-        } catch (e) {
-            removeButtonLoading(submitBtn);
-            showMessage("❌ שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.", "error");
-            console.error("Error parsing chords:", e);
-            return;
-        }
 
-        const loopsRaw = document.getElementById("loops").value;
-        if (loopsRaw) {
+            const formData = {
+                title: document.getElementById("title").value,
+                artist: document.getElementById("artist").value,
+                genre: document.getElementById("genre").value,
+                key: document.getElementById("key").value,
+                key_type: document.getElementById("key_type").value,
+                difficulty: document.getElementById("difficulty").value,
+                time_signature: document.getElementById("time_signature").value,
+                bpm: parseInt(document.getElementById("bpm").value),
+                video_url: document.getElementById("video_url").value,
+            };
+
+            // Handle YouTube URL conversion
+            const ytMatch = formData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
+            if (ytMatch && ytMatch[1]) {
+                formData.video_url = "https://www.youtube.com/embed/" + ytMatch[1];
+            }
+
+            // Parse chords and loops from NEW chord system
+            let chords, loops = [];
             try {
-                loops = JSON.parse(loopsRaw);
-                console.log("Parsed loops from NEW system:", loops);
+                const chordsRaw = document.getElementById("chords").value;
+                if (chordsRaw) {
+                    chords = JSON.parse(chordsRaw);
+                    console.log("Parsed chords from NEW system:", chords);
+                } else {
+                    removeButtonLoading(submitBtn);
+                    showMessage("❌ יש להוסיף אקורדים לשיר תחילה", "error");
+                    return;
+                }
             } catch (e) {
-                console.log("Error parsing loops data:", e);
-                loops = [];
+                removeButtonLoading(submitBtn);
+                showMessage("❌ שגיאה בקריאת האקורדים. נסה שוב להוסיף אותם.", "error");
+                console.error("Error parsing chords:", e);
+                return;
             }
-        }
 
-        formData.chords = chords;
-        formData.loops = loops;
-
-        console.log("Submitting song with NEW chord system data:", formData);
-
-        // Submit to server
-        fetch("/api/add_song", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            removeButtonLoading(submitBtn);
-
-            if (data.message) {
-                showMessage("✅ " + data.message, "success");
-                updateProgressStep(3, 'completed');
-
-                // Clear all data after successful creation
-                localStorage.removeItem("chords");
-                localStorage.removeItem("loops");
-                localStorage.removeItem("songData");
-                localStorage.removeItem("justReturnedFromChords");
-                localStorage.removeItem("addingNewSong");
-
-                console.log("Song created successfully with NEW chord system!");
-
-                // Navigate to songs list after success
-                setTimeout(() => {
-                    window.location.href = '/songs';
-                }, 2000);
-            } else {
-                showMessage("❌ שגיאה בהוספת השיר: " + (data.error || "שגיאה לא ידועה"), "error");
+            const loopsRaw = document.getElementById("loops").value;
+            if (loopsRaw) {
+                try {
+                    loops = JSON.parse(loopsRaw);
+                    console.log("Parsed loops from NEW system:", loops);
+                } catch (e) {
+                    console.log("Error parsing loops data:", e);
+                    loops = [];
+                }
             }
-        })
-        .catch(error => {
-            removeButtonLoading(submitBtn);
-            showMessage("❌ שגיאה בהוספת השיר!", "error");
-            console.error("Error submitting song:", error);
+
+            formData.chords = chords;
+            formData.loops = loops;
+
+            console.log("Submitting song with NEW chord system data:", formData);
+
+            // Submit to server
+            fetch("/api/add_song", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                removeButtonLoading(submitBtn);
+
+                if (data.message) {
+                    showMessage("✅ " + data.message, "success");
+                    updateProgressStep(3, 'completed');
+
+                    // Clear all data after successful creation
+                    localStorage.removeItem("chords");
+                    localStorage.removeItem("loops");
+                    localStorage.removeItem("songData");
+                    localStorage.removeItem("justReturnedFromChords");
+                    localStorage.removeItem("addingNewSong");
+
+                    console.log("Song created successfully with NEW chord system!");
+
+                    // Navigate to songs list after success
+                    setTimeout(() => {
+                        window.location.href = '/songs';
+                    }, 2000);
+                } else {
+                    showMessage("❌ שגיאה בהוספת השיר: " + (data.error || "שגיאה לא ידועה"), "error");
+                }
+            })
+            .catch(error => {
+                removeButtonLoading(submitBtn);
+                showMessage("❌ שגיאה בהוספת השיר!", "error");
+                console.error("Error submitting song:", error);
+            });
         });
-    });
+    } else {
+        console.error("Form not found!");
+    }
 });
