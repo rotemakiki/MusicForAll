@@ -3,7 +3,7 @@
 {% block title %}הוספת שיר{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/add_song.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/song_form.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -280,5 +280,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="application/javascript" src="{{ url_for('static', filename='js/add_song.js') }}"></script>
+<script src="{{ url_for('static', filename='js/song_form_manager.js') }}"></script>
 {% endblock %}

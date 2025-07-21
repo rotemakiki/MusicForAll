@@ -3,7 +3,7 @@
 {% block title %}עריכת שיר - {{ song.title }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/edit_song.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/song_form.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -309,5 +309,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/edit_song.js') }}"></script>
+<script src="{{ url_for('static', filename='js/song_form_manager.js') }}"></script>
 {% endblock %}
