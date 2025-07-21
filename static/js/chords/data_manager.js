@@ -97,7 +97,12 @@ class DataManager {
     /**
      * Restore song data to all managers
      */
+/**
+ * Restore song data to all managers
+ */
     async restoreSongData(songData) {
+        console.log("🔄 Restoring complete song data:", songData);
+
         // Clear existing data
         this.clearAllManagerData();
 
@@ -112,16 +117,50 @@ class DataManager {
             this.convertChordsToLoops(songData.chords);
         }
 
-        // Restore song structure if available
+        // **תיקון חשוב**: אם יש מבנה שיר ישיר - השתמש בו
         if (songData.structure && songData.structure.length > 0) {
             console.log("Restoring song structure from backend:", songData.structure);
             if (window.songStructureManager) {
                 window.songStructureManager.restoreSongStructure(songData.structure);
             }
         }
+        // **חדש**: אם אין מבנה ישיר, נסה לבנות מהלופים עם הסדר הנכון
+        else if (songData.loops && songData.loops.length > 0) {
+            console.log("Building song structure from loops order");
+            this.buildSongStructureFromLoopsData(songData.loops);
+        }
 
         // Store in localStorage as backup
         this.saveToLocalStorageBackup(songData);
+    }
+
+    /**
+     * חדש: בניית מבנה שיר מלופים עם סדר ושכפולים
+     */
+    buildSongStructureFromLoopsData(loopsData) {
+        if (!window.songStructureManager || !loopsData || loopsData.length === 0) {
+            return;
+        }
+
+        // המתן שהלופים ייטענו
+        setTimeout(() => {
+            loopsData.forEach(loopData => {
+                // מצא את הלופ ברשימת הלופים השמורים
+                const savedLoop = window.loopManager.getAllSavedLoops()
+                    .find(loop => loop.customName === loopData.name);
+
+                if (savedLoop) {
+                    // צור עותק עם חזרות
+                    const loopForStructure = {
+                        ...savedLoop,
+                        repeatCount: loopData.repeatCount || 1
+                    };
+
+                    console.log(`Adding loop to structure: ${loopData.name} with ${loopData.repeatCount} repeats`);
+                    window.songStructureManager.addLoopToSong(loopForStructure);
+                }
+            });
+        }, 100);
     }
 
     /**
