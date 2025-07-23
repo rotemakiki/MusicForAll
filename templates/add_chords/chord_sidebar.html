@@ -1,4 +1,4 @@
-<!-- Enhanced Chord Selector Sidebar -->
+<!-- Enhanced Chord Selector Sidebar with Advanced Chords Support -->
 <div class="chord-sidebar">
     <h3>🎸 בחר אקורד</h3>
 
@@ -43,6 +43,77 @@
             <div class="chord-category">
                 <h5 class="category-title">אקורדים מחומשים (5+ תווים):</h5>
                 <div id="extended-chord-types" class="chord-types-grid">
+                    <!-- יטען דינמית על ידי chord_ui.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Chords Toggle Section -->
+        <div class="section">
+            <h4>אקורדים מתקדמים:</h4>
+
+            <!-- כפתורי הפעלת מצבים מתקדמים -->
+            <div class="advanced-toggle-row">
+                <button id="slash-mode-toggle" class="advanced-toggle-btn" type="button">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>🎸</span>
+                        <span>אקורדי סלאש</span>
+                    </div>
+                    <span class="toggle-arrow">▶</span>
+                </button>
+
+                <button id="extended-mode-toggle" class="advanced-toggle-btn" type="button">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>🎵</span>
+                        <span>אקורדים מורחבים</span>
+                    </div>
+                    <span class="toggle-arrow">▶</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Slash Chords Panel (מוסתר בהתחלה) -->
+        <div id="slash-chords-panel" class="advanced-panel" style="display: none;">
+            <div class="panel-header">
+                <h4>בחר תו בס לאקורד:</h4>
+                <button id="close-slash-panel" class="close-panel-btn">✕</button>
+            </div>
+            <div id="bass-notes-grid" class="button-grid">
+                <!-- יטען דינמית על ידי chord_ui.js -->
+            </div>
+            <div class="slash-preview">
+                <strong>תוצאה:</strong>
+                <span id="slash-chord-preview">—</span>
+            </div>
+        </div>
+
+        <!-- Extended Chords Panel (מוסתר בהתחלה) -->
+        <div id="extended-chords-panel" class="advanced-panel" style="display: none;">
+            <div class="panel-header">
+                <h4>אקורדים מתקדמים:</h4>
+                <button id="close-extended-panel" class="close-panel-btn">✕</button>
+            </div>
+
+            <!-- אקורדים עם הרחבות -->
+            <div class="chord-category">
+                <h5 class="category-title">הרחבות (9, 11, 13):</h5>
+                <div id="extended-ninth-types" class="chord-types-grid">
+                    <!-- יטען דינמית על ידי chord_ui.js -->
+                </div>
+            </div>
+
+            <!-- אקורדים עם שינויים -->
+            <div class="chord-category">
+                <h5 class="category-title">אקורדים משובשים:</h5>
+                <div id="altered-chord-types" class="chord-types-grid">
+                    <!-- יטען דינמית על ידי chord_ui.js -->
+                </div>
+            </div>
+
+            <!-- אקורדים מיוחדים -->
+            <div class="chord-category">
+                <h5 class="category-title">אקורדים מיוחדים:</h5>
+                <div id="special-chord-types" class="chord-types-grid">
                     <!-- יטען דינמית על ידי chord_ui.js -->
                 </div>
             </div>

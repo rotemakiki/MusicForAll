@@ -1,5 +1,6 @@
 // Chord UI Manager - Handles all chord selection interface components
 // This manages the sidebar chord selection, recently used chords, and current selection display
+// Updated with advanced chords support including slash chords
 
 class ChordUIManager {
     constructor() {
@@ -7,6 +8,11 @@ class ChordUIManager {
         this.selectedLetter = null;
         this.selectedType = "";
         this.recentlyUsedChords = [];
+
+        // Advanced features state
+        this.slashMode = false;
+        this.selectedBassNote = null;
+        this.extendedMode = false;
 
         // Get configuration from core
         this.config = window.ChordCore.CHORD_CONFIG;
@@ -36,6 +42,224 @@ class ChordUIManager {
         this.renderAccidentalButtons();
         this.renderRecentlyUsedChords();
         this.updateSelectedChord();
+
+        // Initialize advanced features
+        this.initAdvancedFeatures();
+    }
+
+    /**
+     * Initialize advanced chord features
+     */
+    initAdvancedFeatures() {
+        // Event listeners for toggle buttons
+        const slashToggle = document.getElementById('slash-mode-toggle');
+        const extendedToggle = document.getElementById('extended-mode-toggle');
+
+        if (slashToggle) {
+            slashToggle.addEventListener('click', () => this.toggleSlashMode());
+        }
+
+        if (extendedToggle) {
+            extendedToggle.addEventListener('click', () => this.toggleExtendedMode());
+        }
+
+        // Close panel buttons
+        const closeSlashBtn = document.getElementById('close-slash-panel');
+        const closeExtendedBtn = document.getElementById('close-extended-panel');
+
+        if (closeSlashBtn) {
+            closeSlashBtn.addEventListener('click', () => this.closeSlashMode());
+        }
+
+        if (closeExtendedBtn) {
+            closeExtendedBtn.addEventListener('click', () => this.closeExtendedMode());
+        }
+    }
+
+    /**
+     * Toggle slash chord mode
+     */
+    toggleSlashMode() {
+        this.slashMode = !this.slashMode;
+        const panel = document.getElementById('slash-chords-panel');
+        const toggle = document.getElementById('slash-mode-toggle');
+
+        if (this.slashMode) {
+            panel.style.display = 'block';
+            toggle.classList.add('active');
+            this.renderBassNotes();
+
+            // Close extended mode if open
+            if (this.extendedMode) {
+                this.closeExtendedMode();
+            }
+        } else {
+            this.closeSlashMode();
+        }
+    }
+
+    /**
+     * Close slash chord mode
+     */
+    closeSlashMode() {
+        this.slashMode = false;
+        this.selectedBassNote = null;
+
+        const panel = document.getElementById('slash-chords-panel');
+        const toggle = document.getElementById('slash-mode-toggle');
+
+        panel.style.display = 'none';
+        toggle.classList.remove('active');
+
+        this.updateSlashChordPreview();
+        this.updateSelectedChord();
+    }
+
+    /**
+     * Toggle extended chord mode
+     */
+    toggleExtendedMode() {
+        this.extendedMode = !this.extendedMode;
+        const panel = document.getElementById('extended-chords-panel');
+        const toggle = document.getElementById('extended-mode-toggle');
+
+        if (this.extendedMode) {
+            panel.style.display = 'block';
+            toggle.classList.add('active');
+            this.renderExtendedChords();
+
+            // Close slash mode if open
+            if (this.slashMode) {
+                this.closeSlashMode();
+            }
+        } else {
+            this.closeExtendedMode();
+        }
+    }
+
+    /**
+     * Close extended chord mode
+     */
+    closeExtendedMode() {
+        this.extendedMode = false;
+
+        const panel = document.getElementById('extended-chords-panel');
+        const toggle = document.getElementById('extended-mode-toggle');
+
+        panel.style.display = 'none';
+        toggle.classList.remove('active');
+    }
+
+    /**
+     * Render bass notes for slash chords
+     */
+    renderBassNotes() {
+        const container = document.getElementById('bass-notes-grid');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const bassNotes = window.ChordCore.EXTENDED_CHORD_CONFIG.slash.bassNotes;
+
+        bassNotes.forEach(note => {
+            const btn = document.createElement('div');
+            btn.className = 'chord-btn';
+            btn.textContent = note;
+
+            if (this.selectedBassNote === note) {
+                btn.classList.add('selected');
+            }
+
+            btn.onclick = () => {
+                this.selectedBassNote = note;
+                this.renderBassNotes();
+                this.updateSlashChordPreview();
+            };
+
+            container.appendChild(btn);
+        });
+    }
+
+    /**
+     * Update slash chord preview
+     */
+    updateSlashChordPreview() {
+        const preview = document.getElementById('slash-chord-preview');
+        if (!preview) return;
+
+        if (!this.selectedLetter || !this.selectedBassNote) {
+            preview.textContent = '—';
+            return;
+        }
+
+        const rootChord = this.validator.buildChord(this.selectedLetter, this.selectedAccidental, this.selectedType);
+        const slashChord = window.ChordCore.buildSlashChord(rootChord, this.selectedBassNote);
+
+        preview.textContent = slashChord || '—';
+    }
+
+    /**
+     * Render extended chord types
+     */
+    renderExtendedChords() {
+        const extendedConfig = window.ChordCore.EXTENDED_CHORD_CONFIG;
+
+        // Render ninth chords
+        this.renderChordCategory('extended-ninth-types', [
+            ...extendedConfig.extended.ninth,
+            ...extendedConfig.extended.eleventh,
+            ...extendedConfig.extended.thirteenth
+        ]);
+
+        // Render altered chords
+        this.renderChordCategory('altered-chord-types', [
+            ...extendedConfig.altered.ninth,
+            ...extendedConfig.altered.eleventh,
+            ...extendedConfig.altered.special
+        ]);
+
+        // Render special chords
+        this.renderChordCategory('special-chord-types', [
+            ...extendedConfig.special.omitted,
+            ...extendedConfig.special.power,
+            ...extendedConfig.special.quartal
+        ]);
+    }
+
+    /**
+     * Render a category of chord types
+     */
+    renderChordCategory(containerId, chordTypes) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        chordTypes.forEach(type => {
+            const btn = document.createElement('div');
+            btn.className = 'chord-btn';
+
+            // Use display name if available
+            const displayName = window.ChordCore.getExtendedChordDisplayName(type);
+            btn.textContent = displayName;
+
+            if (this.selectedType === type) {
+                btn.classList.add('selected');
+            }
+
+            btn.onclick = () => {
+                this.selectedType = type;
+                this.renderExtendedChords();
+                this.updateSelectedChord();
+
+                // Close extended mode after selection
+                setTimeout(() => {
+                    this.closeExtendedMode();
+                }, 200);
+            };
+
+            container.appendChild(btn);
+        });
     }
 
     /**
@@ -125,21 +349,64 @@ class ChordUIManager {
     }
 
     /**
-     * Parse chord string and select its components
+     * Parse chord string and select its components (updated for slash chords)
      */
     selectChordFromString(chordStr) {
         // Reset selections
         this.selectedLetter = null;
         this.selectedAccidental = "";
         this.selectedType = "";
+        this.selectedBassNote = null;
+
+        // Close any open panels
+        this.closeSlashMode();
+        this.closeExtendedMode();
 
         if (!chordStr || chordStr === "—") return;
 
-        const parsed = this.validator.parseChord(chordStr);
-        if (!parsed.isEmpty) {
-            this.selectedLetter = parsed.root;
-            this.selectedAccidental = parsed.accidental;
-            this.selectedType = parsed.type;
+        // Check if it's a slash chord
+        if (window.ChordCore.isSlashChord(chordStr)) {
+            const slashParts = window.ChordCore.parseSlashChord(chordStr);
+
+            // Parse the root chord part
+            const parsed = this.validator.parseChord(slashParts.rootChord);
+            if (!parsed.isEmpty) {
+                this.selectedLetter = parsed.root;
+                this.selectedAccidental = parsed.accidental;
+                this.selectedType = parsed.type;
+                this.selectedBassNote = slashParts.bassNote;
+
+                // Activate slash mode
+                this.slashMode = true;
+                const panel = document.getElementById('slash-chords-panel');
+                const toggle = document.getElementById('slash-mode-toggle');
+                if (panel && toggle) {
+                    panel.style.display = 'block';
+                    toggle.classList.add('active');
+                    this.renderBassNotes();
+                    this.updateSlashChordPreview();
+                }
+            }
+        } else {
+            // Regular chord parsing
+            const parsed = this.validator.parseChord(chordStr);
+            if (!parsed.isEmpty) {
+                this.selectedLetter = parsed.root;
+                this.selectedAccidental = parsed.accidental;
+                this.selectedType = parsed.type;
+
+                // If it's an extended chord type, show extended panel
+                if (window.ChordCore.isExtendedChordType(parsed.type)) {
+                    this.extendedMode = true;
+                    const panel = document.getElementById('extended-chords-panel');
+                    const toggle = document.getElementById('extended-mode-toggle');
+                    if (panel && toggle) {
+                        panel.style.display = 'block';
+                        toggle.classList.add('active');
+                        this.renderExtendedChords();
+                    }
+                }
+            }
         }
 
         // Update UI
@@ -149,7 +416,7 @@ class ChordUIManager {
     }
 
     /**
-     * Update the current chord display
+     * Update the current chord display (updated for slash chords)
      */
     updateSelectedChord() {
         const display = document.getElementById("current-chord-display");
@@ -163,7 +430,16 @@ class ChordUIManager {
             return;
         }
 
-        const chord = this.validator.buildChord(this.selectedLetter, this.selectedAccidental, this.selectedType);
+        let chord;
+
+        // If slash mode is active and bass note is selected
+        if (this.slashMode && this.selectedBassNote) {
+            const rootChord = this.validator.buildChord(this.selectedLetter, this.selectedAccidental, this.selectedType);
+            chord = window.ChordCore.buildSlashChord(rootChord, this.selectedBassNote);
+        } else {
+            chord = this.validator.buildChord(this.selectedLetter, this.selectedAccidental, this.selectedType);
+        }
+
         display.textContent = chord;
         if (addButton) addButton.disabled = false;
     }
@@ -190,6 +466,11 @@ class ChordUIManager {
                 this.selectedLetter = letter;
                 this.renderRootButtons();
                 this.updateSelectedChord();
+
+                // Update slash chord preview if in slash mode
+                if (this.slashMode) {
+                    this.updateSlashChordPreview();
+                }
             };
 
             container.appendChild(btn);
@@ -255,6 +536,11 @@ class ChordUIManager {
                     this.selectedType = type;
                     this.renderTypeButtons();
                     this.updateSelectedChord();
+
+                    // Update slash chord preview if in slash mode
+                    if (this.slashMode) {
+                        this.updateSlashChordPreview();
+                    }
                 };
 
                 container.appendChild(btn);
@@ -285,6 +571,11 @@ class ChordUIManager {
                 this.renderAccidentalButtons();
                 this.renderRootButtons();
                 this.updateSelectedChord();
+
+                // Update slash chord preview if in slash mode
+                if (this.slashMode) {
+                    this.updateSlashChordPreview();
+                }
             };
 
             container.appendChild(btn);
@@ -292,10 +583,17 @@ class ChordUIManager {
     }
 
     /**
-     * Get currently selected chord
+     * Get currently selected chord (updated for slash chords)
      */
     getCurrentChord() {
         if (!this.selectedLetter) return null;
+
+        // If slash mode is active and bass note is selected
+        if (this.slashMode && this.selectedBassNote) {
+            const rootChord = this.validator.buildChord(this.selectedLetter, this.selectedAccidental, this.selectedType);
+            return window.ChordCore.buildSlashChord(rootChord, this.selectedBassNote);
+        }
+
         return this.validator.buildChord(this.selectedLetter, this.selectedAccidental, this.selectedType);
     }
 
@@ -306,6 +604,12 @@ class ChordUIManager {
         this.selectedLetter = null;
         this.selectedAccidental = "";
         this.selectedType = "";
+        this.selectedBassNote = null;
+
+        // Close any open panels
+        this.closeSlashMode();
+        this.closeExtendedMode();
+
         this.renderRootButtons();
         this.renderTypeButtons();
         this.renderAccidentalButtons();

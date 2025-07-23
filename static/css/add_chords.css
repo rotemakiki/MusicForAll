@@ -1582,3 +1582,165 @@ input:checked + .half-beats-slider:before {
 .chord-category:nth-child(3) {
     border-left: 4px solid #fd7e14;
 }
+
+/* Advanced Chords Styling */
+.advanced-toggle-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.advanced-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(52, 73, 94, 0.3);
+}
+
+.advanced-toggle-btn:hover {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.advanced-toggle-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
+}
+
+.advanced-toggle-btn .toggle-arrow {
+    font-size: 10px;
+    transition: transform 0.3s;
+}
+
+.advanced-toggle-btn.active .toggle-arrow {
+    transform: rotate(90deg);
+}
+
+/* Advanced Panels */
+.advanced-panel {
+    background: linear-gradient(145deg, #f0f8ff, #e6f3ff);
+    border: 2px solid #4a90e2;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    animation: slideDown 0.3s ease-out;
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+.panel-header h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.close-panel-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    font-weight: bold;
+}
+
+.close-panel-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+
+/* Slash Chord Preview */
+.slash-preview {
+    text-align: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    margin-top: 12px;
+    border: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+.slash-preview strong {
+    color: #2c3e50;
+    font-size: 11px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 5px;
+}
+
+#slash-chord-preview {
+    font-size: 18px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Animation for panel appearance */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+}
+
+/* Bass notes grid for slash chords */
+#bass-notes-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+#bass-notes-grid .chord-btn {
+    min-height: 30px;
+    font-size: 11px;
+    padding: 6px 4px;
+}
+
+/* Extended chord types grids */
+#extended-ninth-types,
+#altered-chord-types,
+#special-chord-types {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.advanced-panel .chord-btn {
+    font-size: 10px;
+    padding: 6px 3px;
+    min-height: 32px;
+}
