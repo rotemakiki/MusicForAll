@@ -197,30 +197,68 @@ class ChordUIManager {
     }
 
     /**
-     * Render chord type buttons
+     * Render chord type buttons organized by categories
      */
     renderTypeButtons() {
-        const container = document.getElementById("chord-types");
-        if (!container) return;
-
-        container.innerHTML = "";
-
-        this.config.chordTypes.forEach(type => {
-            const btn = document.createElement("div");
-            btn.className = "chord-btn";
-            btn.textContent = type || "רגיל";
-
-            if (this.selectedType === type) {
-                btn.classList.add("selected");
+        // Define chord categories with all available chord types
+        const chordCategories = {
+            triads: {
+                container: 'triads-chord-types',
+                chords: ['', 'm', 'dim', 'aug']
+            },
+            seventh: {
+                container: 'seventh-chord-types',
+                chords: ['7', 'maj7', 'm7', '6', 'm6']
+            },
+            extended: {
+                container: 'extended-chord-types',
+                chords: ['sus2', 'sus4', 'add9']
             }
+        };
 
-            btn.onclick = () => {
-                this.selectedType = type;
-                this.renderTypeButtons();
-                this.updateSelectedChord();
-            };
+        // Render each category
+        Object.keys(chordCategories).forEach(categoryKey => {
+            const category = chordCategories[categoryKey];
+            const container = document.getElementById(category.container);
 
-            container.appendChild(btn);
+            if (!container) return;
+
+            container.innerHTML = "";
+
+            category.chords.forEach(type => {
+                const btn = document.createElement("div");
+                btn.className = "chord-btn";
+
+                // Display names for chord types
+                const displayNames = {
+                    '': 'Major',
+                    'm': 'Minor',
+                    'dim': 'Dim',
+                    'aug': 'Aug',
+                    '7': '7',
+                    'maj7': 'Maj7',
+                    'm7': 'm7',
+                    '6': '6',
+                    'm6': 'm6',
+                    'sus2': 'Sus2',
+                    'sus4': 'Sus4',
+                    'add9': 'Add9'
+                };
+
+                btn.textContent = displayNames[type] || type;
+
+                if (this.selectedType === type) {
+                    btn.classList.add("selected");
+                }
+
+                btn.onclick = () => {
+                    this.selectedType = type;
+                    this.renderTypeButtons();
+                    this.updateSelectedChord();
+                };
+
+                container.appendChild(btn);
+            });
         });
     }
 
