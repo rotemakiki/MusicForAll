@@ -65,10 +65,15 @@ function createProductCard(product) {
             <i class="fas fa-trash"></i>
         </button>` : '';
 
+    // Create safe image URL with proper fallback
+    const imageUrl = product.image || '/static/images/placeholder-product.jpg';
+
     return `
         <div class="product-card" data-category="${product.category}">
-            <img src="${product.image}" alt="${product.name}" class="product-image"
-                 onerror="this.src='/static/images/placeholder-product.jpg'">
+            <img src="${imageUrl}" alt="${product.name}" class="product-image"
+                 onload="this.style.opacity='1'"
+                 onerror="this.src='/static/images/placeholder-product.jpg'; this.style.opacity='1'"
+                 style="opacity:0; transition: opacity 0.3s ease;">
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
                 <p class="product-description">${product.description}</p>
@@ -182,14 +187,20 @@ async function addProduct(event) {
             body: JSON.stringify(formData)
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to add product');
-        }
-
         const result = await response.json();
 
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to add product');
+        }
+
         // Add to local array
-        allProducts.unshift({...formData, id: result.id});
+        const newProduct = {
+            ...formData,
+            id: result.id,
+            created_at: new Date().toISOString()
+        };
+
+        allProducts.unshift(newProduct);
         filteredProducts = [...allProducts];
 
         displayProducts(filteredProducts);
@@ -198,7 +209,7 @@ async function addProduct(event) {
 
     } catch (error) {
         console.error('Error adding product:', error);
-        showError('שגיאה בהוספת המוצר');
+        showError(`שגיאה בהוספת המוצר: ${error.message}`);
     }
 }
 
@@ -213,7 +224,8 @@ async function deleteProduct(productId) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to delete product');
+            const result = await response.json();
+            throw new Error(result.error || 'Failed to delete product');
         }
 
         // Remove from local arrays
@@ -225,7 +237,7 @@ async function deleteProduct(productId) {
 
     } catch (error) {
         console.error('Error deleting product:', error);
-        showError('שגיאה במחיקת המוצר');
+        showError(`שגיאה במחיקת המוצר: ${error.message}`);
     }
 }
 
@@ -239,11 +251,55 @@ function showLoading() {
 }
 
 function showSuccess(message) {
-    // Simple success notification - you can enhance this
-    alert(message);
+    // Create a better notification system
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+        notification.style.transform = 'translateX(400px)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
 }
 
 function showError(message) {
-    // Simple error notification - you can enhance this
-    alert(message);
+    // Create a better error notification system
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+        notification.style.transform = 'translateX(400px)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
 }

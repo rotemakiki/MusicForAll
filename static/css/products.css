@@ -115,6 +115,8 @@
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 25px;
     margin-bottom: 40px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .product-card {
@@ -124,6 +126,9 @@
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     border: 1px solid #f0f0f0;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .product-card:hover {
@@ -136,10 +141,15 @@
     height: 250px;
     object-fit: cover;
     transition: transform 0.3s ease;
+    transform: scale(1);
+    transform-origin: center;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform;
 }
 
 .product-card:hover .product-image {
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 .product-info {
@@ -358,6 +368,14 @@
     font-size: 4rem;
     color: #ddd;
     margin-bottom: 20px;
+}
+
+/* תיקון לבעיות עם תמונות שלא נטענו */
+.product-image[src=""], .product-image:not([src]) {
+    background-image: url('/static/images/placeholder-product.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* Responsive Design */
