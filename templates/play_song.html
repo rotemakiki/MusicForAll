@@ -26,8 +26,18 @@
                     </span>
                     <span class="detail-item">
                         <span class="detail-icon">🎭</span>
-                        <span class="detail-label">ז'אנר:</span>
-                        <span class="detail-value">{{ song.genre }}</span>
+                        <span class="detail-label">ז'אנרים:</span>
+                        <span class="detail-value genres-display">
+                            {% if song.genres and song.genres|length > 0 %}
+                                {% for genre in song.genres %}
+                                    <span class="genre-badge">{{ genre }}</span>{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% elif song.genre %}
+                                <span class="genre-badge">{{ song.genre }}</span>
+                            {% else %}
+                                <span class="genre-badge">לא צוין</span>
+                            {% endif %}
+                        </span>
                     </span>
                     <span class="detail-item">
                         <span class="detail-icon">⏱️</span>
@@ -285,6 +295,46 @@
     localStorage.removeItem("editingSongId");
     localStorage.removeItem("editSongData");
 </script>
+
+<style>
+/* Additional styles for genre display */
+.genres-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.genre-badge {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.genre-badge:only-child {
+    /* If there's only one genre, make it slightly larger */
+    padding: 3px 10px;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .genres-display {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .genre-badge {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block scripts %}

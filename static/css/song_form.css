@@ -220,6 +220,97 @@ body {
     grid-column: 1 / -1;
 }
 
+/* Multi-genre selector styles */
+.multi-genre-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.multi-genre-container .form-select {
+    flex: 1;
+}
+
+.add-genre-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    height: 48px;
+}
+
+.add-genre-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #20c997, #28a745);
+}
+
+.add-genre-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.selected-genres {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 20px;
+}
+
+.genre-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.genre-tag .remove-genre {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.genre-tag .remove-genre:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.selected-genres:empty::after {
+    content: "לא נבחרו ז'אנרים עדיין";
+    color: #64748b;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
 /* Chords section */
 .chords-section {
     background: linear-gradient(145deg, #fff7e6, #fffde7);
@@ -538,5 +629,19 @@ body {
     .submit-btn, .cancel-btn {
         width: 100%;
         max-width: 300px;
+    }
+
+    .multi-genre-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .multi-genre-container .form-select {
+        width: 100%;
+    }
+
+    .add-genre-btn {
+        width: 100%;
+        max-width: 200px;
     }
 }

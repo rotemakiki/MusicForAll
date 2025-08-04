@@ -80,6 +80,102 @@ function initializeNewSong() {
     }
 }
 
+// ===== MULTI-GENRE MANAGEMENT =====
+
+let selectedGenres = [];
+
+// אינציאליזציה של מערכת ריבוי ז'אנרים
+function initializeMultiGenre() {
+    const genreSelect = document.getElementById("genre");
+    const addGenreBtn = document.getElementById("add-genre-btn");
+    const selectedGenresContainer = document.getElementById("selected-genres");
+    const genresListInput = document.getElementById("genres-list");
+
+    if (!genreSelect || !addGenreBtn) return;
+
+    // אירוע הוספת ז'אנר
+    addGenreBtn.addEventListener("click", function() {
+        const selectedValue = genreSelect.value;
+        const selectedText = genreSelect.options[genreSelect.selectedIndex].text;
+
+        if (selectedValue && !selectedGenres.includes(selectedValue)) {
+            selectedGenres.push(selectedValue);
+            updateGenresDisplay();
+            genreSelect.value = ""; // איפוס הבחירה
+            validateGenres();
+        }
+    });
+
+    // עדכון תצוגת הז'אנרים הנבחרים
+    function updateGenresDisplay() {
+        selectedGenresContainer.innerHTML = "";
+
+        selectedGenres.forEach(genreValue => {
+            const genreOption = genreSelect.querySelector(`option[value="${genreValue}"]`);
+            const genreText = genreOption ? genreOption.text : genreValue;
+
+            const genreTag = document.createElement("div");
+            genreTag.className = "genre-tag";
+            genreTag.innerHTML = `
+                <span>${genreText}</span>
+                <button type="button" class="remove-genre" data-genre="${genreValue}">×</button>
+            `;
+
+            selectedGenresContainer.appendChild(genreTag);
+        });
+
+        // עדכון השדה הנסתר
+        genresListInput.value = JSON.stringify(selectedGenres);
+
+        // הוספת אירועי הסרה
+        selectedGenresContainer.querySelectorAll(".remove-genre").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const genreToRemove = this.getAttribute("data-genre");
+                selectedGenres = selectedGenres.filter(g => g !== genreToRemove);
+                updateGenresDisplay();
+                validateGenres();
+            });
+        });
+    }
+
+    // וולידציה של הז'אנרים
+    function validateGenres() {
+        const validation = document.getElementById("genre-validation");
+        const isValid = selectedGenres.length > 0;
+
+        if (validation) {
+            validation.innerHTML = isValid ? '✅ ז\'אנרים נבחרו!' : '❌ יש לבחור לפחות ז\'אנר אחד';
+            validation.className = isValid ? 'field-success' : 'field-error';
+        }
+
+        return isValid;
+    }
+
+    // טעינת ז'אנרים מנתונים שמורים
+    function loadSavedGenres(genres) {
+        if (Array.isArray(genres)) {
+            selectedGenres = [...genres];
+            updateGenresDisplay();
+            validateGenres();
+        } else if (typeof genres === 'string' && genres) {
+            // תמיכה לאחור - אם יש רק ז'אנר יחיד
+            selectedGenres = [genres];
+            updateGenresDisplay();
+            validateGenres();
+        }
+    }
+
+    // חשיפת הפונקציות לשימוש חיצוני
+    window.loadGenres = loadSavedGenres;
+    window.validateGenres = validateGenres;
+    window.getSelectedGenres = () => selectedGenres;
+    window.clearGenres = () => {
+        selectedGenres = [];
+        updateGenresDisplay();
+        validateGenres();
+    };
+}
+
 // ===== CHORDS BUTTON STATE MANAGEMENT =====
 
 // זיהוי מצב כפתור האקורדים
@@ -257,7 +353,7 @@ function saveFormData() {
     const formData = {
         title: document.getElementById("title").value,
         artist: document.getElementById("artist").value,
-        genre: document.getElementById("genre").value,
+        genres: JSON.stringify(selectedGenres),
         key: document.getElementById("key").value,
         key_type: document.getElementById("key_type").value,
         difficulty: document.getElementById("difficulty").value,
@@ -283,8 +379,20 @@ function loadFormData() {
     for (const key in savedData) {
         const element = document.getElementById(key);
         if (element && savedData[key]) {
-            element.value = savedData[key];
-            validateField(key, savedData[key]);
+            if (key === 'genres') {
+                // טען ז'אנרים
+                try {
+                    const genres = JSON.parse(savedData[key]);
+                    if (window.loadGenres) {
+                        window.loadGenres(genres);
+                    }
+                } catch (e) {
+                    console.log("שגיאה בטעינת ז'אנרים:", e);
+                }
+            } else {
+                element.value = savedData[key];
+                validateField(key, savedData[key]);
+            }
         }
     }
 }
@@ -310,8 +418,12 @@ function validateField(fieldId, value) {
             message = isValid ? '✅ נראה טוב!' : '❌ שם האמן חייב להכיל לפחות 2 תווים';
             break;
         case 'genre':
-            isValid = value !== '';
-            message = isValid ? '✅ ז\'אנר נבחר!' : '❌ יש לבחור ז\'אנר';
+            // עבור ז'אנרים - השתמש בפונקציית validateGenres
+            if (window.validateGenres) {
+                return window.validateGenres();
+            }
+            isValid = selectedGenres.length > 0;
+            message = isValid ? '✅ ז\'אנרים נבחרו!' : '❌ יש לבחור לפחות ז\'אנר אחד';
             break;
         case 'bpm':
             const bpmValue = parseInt(value);
@@ -337,7 +449,7 @@ function validateField(fieldId, value) {
 
 // הגדרת validation בזמן אמת
 function setupValidation() {
-    const fields = ['title', 'artist', 'genre', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
 
     fields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
@@ -392,6 +504,11 @@ function resetForm() {
     document.getElementById("chords").value = "";
     document.getElementById("loops").value = "";
 
+    // איפוס ז'אנרים
+    if (window.clearGenres) {
+        window.clearGenres();
+    }
+
     // איפוס UI elements
     document.getElementById("chords-success").style.display = "none";
     updateChordsButton();
@@ -421,7 +538,7 @@ function handleFormSubmission(event) {
     addButtonLoading(submitBtn);
 
     // אימות כל השדות
-    const fields = ['title', 'artist', 'genre', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
     let allValid = true;
 
     fields.forEach(fieldId => {
@@ -430,6 +547,11 @@ function handleFormSubmission(event) {
             allValid = false;
         }
     });
+
+    // וולידציה מיוחדת לז'אנרים
+    if (window.validateGenres && !window.validateGenres()) {
+        allValid = false;
+    }
 
     if (!allValid) {
         removeButtonLoading(submitBtn);
@@ -440,7 +562,7 @@ function handleFormSubmission(event) {
     const formData = {
         title: document.getElementById("title").value,
         artist: document.getElementById("artist").value,
-        genre: document.getElementById("genre").value,
+        genres: selectedGenres, // שלח כמערך
         key: document.getElementById("key").value,
         key_type: document.getElementById("key_type").value,
         difficulty: document.getElementById("difficulty").value,
@@ -575,13 +697,16 @@ document.addEventListener("DOMContentLoaded", function () {
     // אתחול בסיסי
     setupValidation();
 
+    // אתחול מערכת ריבוי ז'אנרים
+    initializeMultiGenre();
+
     // אתחול לפי מצב
     if (mode.isEditMode) {
         // מצב עריכת שיר קיים
         initializeEditSong(mode.songId);
 
         // אימות שדות קיימים
-        const fields = ['title', 'artist', 'genre', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+        const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
         fields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field && field.value) {
@@ -610,7 +735,7 @@ document.addEventListener("DOMContentLoaded", function () {
     updateChordsButton();
 
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'genre', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {

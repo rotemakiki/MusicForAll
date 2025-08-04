@@ -4,6 +4,43 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/songs.css') }}">
+<style>
+/* Additional styles for multiple genres display */
+.genres-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 5px;
+}
+
+.genre-tag {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.genre-tag:only-child {
+    /* If there's only one genre, make it slightly larger */
+    padding: 3px 10px;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .genres-container {
+        gap: 2px;
+    }
+
+    .genre-tag {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -50,6 +87,7 @@
                 <option value="artist">מיון לפי אמן</option>
                 <option value="difficulty">מיון לפי רמת קושי</option>
                 <option value="bpm">מיון לפי BPM</option>
+                <option value="genres">מיון לפי ז'אנרים</option>
             </select>
         </div>
     </div>
@@ -62,7 +100,8 @@
                      data-difficulty="{{ song.difficulty }}"
                      data-bpm="{{ song.bpm }}"
                      data-key="{{ song.key }}"
-                     data-time-signature="{{ song.time_signature }}">
+                     data-time-signature="{{ song.time_signature }}"
+                     data-genres="{{ song.display_genres | join(',') }}">
 
                     <div class="song-header">
                         <div class="song-info">
@@ -85,6 +124,17 @@
                         <span class="detail-badge difficulty-{{ song.difficulty }}">
                             ⭐ {{ song.difficulty }}
                         </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Genres Display -->
+                    <div class="genres-container">
+                        {% if song.display_genres and song.display_genres|length > 0 %}
+                            {% for genre in song.display_genres %}
+                                <span class="genre-tag">{{ genre }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="genre-tag">לא צוין</span>
                         {% endif %}
                     </div>
 
@@ -133,6 +183,112 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+// Enhanced search and filter functionality for multiple genres
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
+    const songCards = document.querySelectorAll('.song-card');
+
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+
+            songCards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const artist = card.querySelector('p').textContent.toLowerCase();
+                const genres = card.getAttribute('data-genres').toLowerCase();
+
+                const isVisible = title.includes(searchTerm) ||
+                                artist.includes(searchTerm) ||
+                                genres.includes(searchTerm);
+
+                card.style.display = isVisible ? 'block' : 'none';
+            });
+        });
+    }
+
+    // Sort functionality
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            const sortBy = this.value;
+            const songsGrid = document.querySelector('.songs-grid');
+            const cards = Array.from(songCards);
+
+            cards.sort((a, b) => {
+                let aValue, bValue;
+
+                switch(sortBy) {
+                    case 'title':
+                        aValue = a.querySelector('h3').textContent;
+                        bValue = b.querySelector('h3').textContent;
+                        break;
+                    case 'artist':
+                        aValue = a.querySelector('p').textContent;
+                        bValue = b.querySelector('p').textContent;
+                        break;
+                    case 'difficulty':
+                        const difficultyOrder = { 'beginner': 1, 'intermediate': 2, 'advanced': 3 };
+                        aValue = difficultyOrder[a.getAttribute('data-difficulty')] || 0;
+                        bValue = difficultyOrder[b.getAttribute('data-difficulty')] || 0;
+                        return aValue - bValue;
+                    case 'bpm':
+                        aValue = parseInt(a.getAttribute('data-bpm'));
+                        bValue = parseInt(b.getAttribute('data-bpm'));
+                        return aValue - bValue;
+                    case 'genres':
+                        aValue = a.getAttribute('data-genres').split(',')[0] || '';
+                        bValue = b.getAttribute('data-genres').split(',')[0] || '';
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (sortBy !== 'difficulty' && sortBy !== 'bpm') {
+                    return aValue.localeCompare(bValue, 'he');
+                }
+            });
+
+            // Re-append sorted cards
+            cards.forEach(card => songsGrid.appendChild(card));
+        });
+    }
+});
+
+// Function to toggle song in user's collection
+function toggleMySong(songId, button) {
+    // This function should be implemented based on your my_songs functionality
+    console.log('Toggle my song:', songId);
+    // Add your implementation here
+}
+
+// Function to delete song
+function deleteSong(songId, title) {
+    if (confirm(`האם אתה בטוח שברצונך למחוק את השיר "${title}"?`)) {
+        fetch(`/api/delete_song/${songId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                document.getElementById(`song-${songId}`).remove();
+                alert('השיר נמחק בהצלחה!');
+            } else {
+                alert('שגיאה במחיקת השיר: ' + (data.error || 'שגיאה לא ידועה'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('שגיאה במחיקת השיר!');
+        });
+    }
+}
+</script>
 {% endblock %}
 
 {% block scripts %}

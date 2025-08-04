@@ -56,32 +56,44 @@
                     <div class="form-group">
                         <label class="form-label" for="genre">
                             <span class="label-icon">🎭</span>
-                            ז'אנר מוזיקלי
+                            ז'אנרים מוזיקליים
                         </label>
-                        <select id="genre" name="genre" class="form-select" required>
-                            <option value="">בחר ז'אנר</option>
-                            <option value="pop" {% if song.genre == 'pop' %}selected{% endif %}>פופ - Pop</option>
-                            <option value="rock" {% if song.genre == 'rock' %}selected{% endif %}>רוק - Rock</option>
-                            <option value="jazz" {% if song.genre == 'jazz' %}selected{% endif %}>ג'אז - Jazz</option>
-                            <option value="blues" {% if song.genre == 'blues' %}selected{% endif %}>בלוז - Blues</option>
-                            <option value="classical" {% if song.genre == 'classical' %}selected{% endif %}>קלאסי - Classical</option>
-                            <option value="folk" {% if song.genre == 'folk' %}selected{% endif %}>פולק - Folk</option>
-                            <option value="country" {% if song.genre == 'country' %}selected{% endif %}>קאנטרי - Country</option>
-                            <option value="reggae" {% if song.genre == 'reggae' %}selected{% endif %}>רגיי - Reggae</option>
-                            <option value="electronic" {% if song.genre == 'electronic' %}selected{% endif %}>אלקטרוני - Electronic</option>
-                            <option value="hip_hop" {% if song.genre == 'hip_hop' %}selected{% endif %}>היפ הופ - Hip Hop</option>
-                            <option value="r_and_b" {% if song.genre == 'r_and_b' %}selected{% endif %}>R&B - ריתם אנד בלוז</option>
-                            <option value="soul" {% if song.genre == 'soul' %}selected{% endif %}>סול - Soul</option>
-                            <option value="funk" {% if song.genre == 'funk' %}selected{% endif %}>פאנק - Funk</option>
-                            <option value="metal" {% if song.genre == 'metal' %}selected{% endif %}>מטאל - Metal</option>
-                            <option value="punk" {% if song.genre == 'punk' %}selected{% endif %}>פאנק - Punk</option>
-                            <option value="alternative" {% if song.genre == 'alternative' %}selected{% endif %}>אלטרנטיב - Alternative</option>
-                            <option value="indie" {% if song.genre == 'indie' %}selected{% endif %}>אינדי - Indie</option>
-                            <option value="world" {% if song.genre == 'world' %}selected{% endif %}>מוזיקת עולם - World Music</option>
-                            <option value="mizrahi" {% if song.genre == 'mizrahi' %}selected{% endif %}>מזרחי</option>
-                            <option value="israeli" {% if song.genre == 'israeli' %}selected{% endif %}>ישראלי</option>
-                            <option value="other" {% if song.genre == 'other' %}selected{% endif %}>אחר</option>
-                        </select>
+                        <div class="multi-genre-container">
+                            <select id="genre" name="genre" class="form-select">
+                                <option value="">בחר ז'אנר</option>
+                                <option value="pop">פופ - Pop</option>
+                                <option value="rock">רוק - Rock</option>
+                                <option value="jazz">ג'אז - Jazz</option>
+                                <option value="blues">בלוז - Blues</option>
+                                <option value="classical">קלאסי - Classical</option>
+                                <option value="folk">פולק - Folk</option>
+                                <option value="country">קאנטרי - Country</option>
+                                <option value="reggae">רגיי - Reggae</option>
+                                <option value="electronic">אלקטרוני - Electronic</option>
+                                <option value="hip_hop">היפ הופ - Hip Hop</option>
+                                <option value="r_and_b">R&B - ריתם אנד בלוז</option>
+                                <option value="soul">סול - Soul</option>
+                                <option value="funk">פאנק - Funk</option>
+                                <option value="metal">מטאל - Metal</option>
+                                <option value="punk">פאנק - Punk</option>
+                                <option value="alternative">אלטרנטיב - Alternative</option>
+                                <option value="indie">אינדי - Indie</option>
+                                <option value="world">מוزיקת עולם - World Music</option>
+                                <option value="mizrahi">מזרחי</option>
+                                <option value="israeli">ישראלי</option>
+                                <option value="other">אחר</option>
+                            </select>
+                            <button type="button" class="add-genre-btn" id="add-genre-btn">
+                                <span>➕</span>
+                            </button>
+                        </div>
+
+                        <div class="selected-genres" id="selected-genres">
+                            <!-- כאן יופיעו הז'אנרים שנבחרו -->
+                        </div>
+
+                        <input type="hidden" id="genres-list" name="genres" required>
+
                         <div class="field-validation" id="genre-validation"></div>
                     </div>
                 </div>
@@ -281,6 +293,21 @@
     const existingChords = {{ song.chords | tojson }};
     const existingLoops = {{ song.loops | tojson }};
 
+    // Load existing genres (support both old single genre and new multiple genres)
+    let existingGenres = [];
+    {% if song.genres %}
+        // New multiple genres format
+        {% if song.genres is iterable and song.genres is not string %}
+            existingGenres = {{ song.genres | tojson }};
+        {% else %}
+            // Handle case where genres is a string (shouldn't happen with new format)
+            existingGenres = [{{ song.genres | tojson }}];
+        {% endif %}
+    {% elif song.genre %}
+        // Old single genre format - convert to array
+        existingGenres = [{{ song.genre | tojson }}];
+    {% endif %}
+
     // Set existing data in hidden fields
     document.getElementById("chords").value = JSON.stringify(existingChords);
     document.getElementById("loops").value = JSON.stringify(existingLoops);
@@ -304,10 +331,15 @@
             const videoId = currentUrl.split('/embed/')[1];
             videoUrlField.value = `https://www.youtube.com/watch?v=${videoId}`;
         }
+
+        // Load existing genres after DOM is ready
+        if (window.loadGenres && existingGenres.length > 0) {
+            window.loadGenres(existingGenres);
+        }
     });
 </script>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/song_form_manager.js') }}"></script>
-{% endblock %}
+{% endblock %>

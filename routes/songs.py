@@ -5,6 +5,10 @@ import json
 
 songs_bp = Blueprint('songs', __name__)
 
+# =============================================================================
+# MAIN SONGS ROUTES
+# =============================================================================
+
 @songs_bp.route('/songs')
 def songs():
     song_docs = firestore.client().collection("songs").order_by("created_at", direction=firestore.Query.DESCENDING).stream()
@@ -13,54 +17,33 @@ def songs():
         song = doc.to_dict()
         song["id"] = doc.id
         song["created_by"] = song.get("created_by", None)
+
+        # Handle genres - support both old single genre and new multiple genres
+        if "genres" in song and song["genres"]:
+            if isinstance(song["genres"], list):
+                song["display_genres"] = song["genres"]
+            else:
+                # Handle case where genres might be stored as JSON string
+                try:
+                    song["display_genres"] = json.loads(song["genres"]) if isinstance(song["genres"], str) else [song["genres"]]
+                except (json.JSONDecodeError, TypeError):
+                    song["display_genres"] = [song["genres"]]
+        elif "genre" in song and song["genre"]:
+            # Backward compatibility - convert old single genre to list
+            song["display_genres"] = [song["genre"]]
+        else:
+            song["display_genres"] = ["לא צוין"]
+
         all_songs.append(song)
     return render_template('songs.html', songs=all_songs)
-
-@songs_bp.route('/api/add_song', methods=['POST'])
-def add_song():
-    user_roles = session.get("roles", [])
-    if not ("teacher" in user_roles or "admin" in user_roles):
-        return jsonify({"error": "Unauthorized"}), 403
-
-    data = request.get_json()
-    required_fields = ["title", "artist" , "genre", "key", "key_type", "time_signature", "bpm", "video_url", "chords"]
-    for field in required_fields:
-        if field not in data or not data[field]:
-            return jsonify({"error": f"Missing or empty field: {field}"}), 400
-
-    # Handle loops data if provided
-    loops_data = data.get("loops", [])
-
-    new_song = {
-        "title": data["title"],
-        "artist": data["artist"],
-        "genre": data["genre"],
-        "key": data["key"],
-        "key_type": data["key_type"],
-        "difficulty": data["difficulty"],
-        "difficulty_approved": False,
-        "time_signature": data["time_signature"],
-        "bpm": int(data["bpm"]),
-        "video_url": data["video_url"],
-        "chords": json.dumps(data["chords"]),
-        "loops": json.dumps(loops_data),
-        "created_at": datetime.utcnow(),
-        "created_by": session.get("user_id"),
-    }
-
-    song_ref = firestore.client().collection("songs").add(new_song)
-    song_id = song_ref[1].id
-
-    return jsonify({"message": "Song added successfully!", "song_id": song_id}), 201
 
 @songs_bp.route('/add_song')
 def add_song_page():
     return render_template('add_song.html')
 
-# מיזוג - route האקורדים הישן מפנה לנגן
-@songs_bp.route('/chords/<string:song_id>')
-def chords(song_id):
-    return redirect(url_for('songs.play_song', song_id=song_id))
+# =============================================================================
+# SONG MANAGEMENT ROUTES
+# =============================================================================
 
 @songs_bp.route('/edit_song/<string:song_id>', methods=['GET', 'POST'])
 def edit_song(song_id):
@@ -95,6 +78,21 @@ def edit_song(song_id):
 
     song["id"] = song_id
 
+    # Handle genres for edit form - support both old and new format
+    if "genres" in song and song["genres"]:
+        if isinstance(song["genres"], list):
+            song["genres"] = song["genres"]
+        else:
+            try:
+                song["genres"] = json.loads(song["genres"]) if isinstance(song["genres"], str) else [song["genres"]]
+            except (json.JSONDecodeError, TypeError):
+                song["genres"] = [song["genres"]]
+    elif "genre" in song and song["genre"]:
+        # Convert old single genre to new format
+        song["genres"] = [song["genre"]]
+    else:
+        song["genres"] = []
+
     # Parse chords safely
     try:
         chords_str = song.get("chords", "[]")
@@ -119,65 +117,6 @@ def edit_song(song_id):
 
     return render_template("edit_song.html", song=song)
 
-@songs_bp.route('/api/edit_song/<string:song_id>', methods=['PUT'])
-def edit_song_api(song_id):
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized - please login"}), 401
-
-    doc = firestore.client().collection("songs").document(song_id).get()
-    if not doc.exists:
-        return jsonify({"error": "Song not found"}), 404
-
-    song = doc.to_dict()
-    user_roles = session.get("roles", [])
-    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
-        return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
-
-    data = request.get_json()
-    required_fields = ["title", "artist", "key", "key_type", "time_signature", "bpm", "video_url", "chords"]
-    for field in required_fields:
-        if field not in data or not data[field]:
-            return jsonify({"error": f"Missing or empty field: {field}"}), 400
-
-    # Handle loops data if provided
-    loops_data = data.get("loops", [])
-
-    updated_fields = {
-        "title": data["title"],
-        "artist": data["artist"],
-        "genre": data["genre"],
-        "key": data["key"],
-        "key_type": data["key_type"],
-        "difficulty": data["difficulty"],
-        "time_signature": data["time_signature"],
-        "bpm": int(data["bpm"]),
-        "video_url": data["video_url"],
-        "chords": json.dumps(data["chords"]),
-        "loops": json.dumps(loops_data),
-        "updated_at": datetime.utcnow()
-    }
-    firestore.client().collection("songs").document(song_id).update(updated_fields)
-    return jsonify({"message": "השיר עודכן בהצלחה!"}), 200
-
-@songs_bp.route('/api/delete_song/<string:song_id>', methods=['DELETE'])
-def delete_song(song_id):
-    doc_ref = firestore.client().collection("songs").document(song_id)
-    song_doc = doc_ref.get()
-    if not song_doc.exists:
-        return jsonify({"error": "Song not found"}), 404
-
-    song = song_doc.to_dict()
-    user_roles = session.get("roles", [])
-    if song.get("created_by") != session.get("user_id") and "admin" not in user_roles:
-        return jsonify({"error": "Unauthorized"}), 403
-
-    doc_ref.delete()
-    return jsonify({"message": "Song deleted successfully!"}), 200
-
-@songs_bp.route('/add-chords')
-def add_chords_page():
-    return render_template('add_chords_base.html')
-
 @songs_bp.route('/play/<string:song_id>')
 def play_song(song_id):
     doc = firestore.client().collection("songs").document(song_id).get()
@@ -185,6 +124,23 @@ def play_song(song_id):
         return "שיר לא נמצא", 404
     song = doc.to_dict()
     song["id"] = doc.id
+
+    # Handle genres for display - support both old and new format
+    if "genres" in song and song["genres"]:
+        if isinstance(song["genres"], list):
+            song["display_genres"] = song["genres"]
+        else:
+            try:
+                song["display_genres"] = json.loads(song["genres"]) if isinstance(song["genres"], str) else [song["genres"]]
+            except (json.JSONDecodeError, TypeError):
+                song["display_genres"] = [song["genres"]]
+    elif "genre" in song and song["genre"]:
+        # Backward compatibility
+        song["display_genres"] = [song["genre"]]
+        song["genre"] = song["genre"]  # Keep for template compatibility
+    else:
+        song["display_genres"] = ["לא צוין"]
+        song["genre"] = "לא צוין"  # Keep for template compatibility
 
     # Parse chord data
     chords_list = []
@@ -220,7 +176,8 @@ def play_song(song_id):
         "id": song_id,
         "title": song["title"],
         "artist": song["artist"],
-        "genre": song.get("genre", "לא צוין"),
+        "genre": song.get("genre", ", ".join(song["display_genres"])),  # For template compatibility
+        "genres": song["display_genres"],  # New field for multiple genres
         "key": song["key"],
         "key_type": song["key_type"],
         "difficulty": song.get("difficulty", ""),
@@ -234,61 +191,18 @@ def play_song(song_id):
         "created_by": song.get("created_by", None)
     })
 
-# הוסף את הפונקציה הזו ל- routes/songs.py
+# Legacy chord route - redirect to player
+@songs_bp.route('/chords/<string:song_id>')
+def chords(song_id):
+    return redirect(url_for('songs.play_song', song_id=song_id))
 
-@songs_bp.route('/api/get_song/<string:song_id>', methods=['GET'])
-def get_song_data(song_id):
-    """API endpoint לטעינת נתוני שיר עבור עריכת אקורדים"""
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized - please login"}), 401
+# =============================================================================
+# CHORD EDITING ROUTES
+# =============================================================================
 
-    doc = firestore.client().collection("songs").document(song_id).get()
-    if not doc.exists:
-        return jsonify({"error": "Song not found"}), 404
-
-    song = doc.to_dict()
-    user_roles = session.get("roles", [])
-
-    # בדוק הרשאות עריכה
-    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
-        return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
-
-    # Parse chords safely
-    chords_data = []
-    try:
-        chords_str = song.get("chords", "[]")
-        if isinstance(chords_str, str):
-            chords_data = json.loads(chords_str)
-        else:
-            chords_data = chords_str if chords_str else []
-    except (json.JSONDecodeError, TypeError) as e:
-        print(f"Error parsing chords for song {song_id}: {e}")
-        chords_data = []
-
-    # Parse loops safely
-    loops_data = []
-    try:
-        loops_str = song.get("loops", "[]")
-        if isinstance(loops_str, str):
-            loops_data = json.loads(loops_str)
-        else:
-            loops_data = loops_str if loops_str else []
-    except (json.JSONDecodeError, TypeError) as e:
-        print(f"Error parsing loops for song {song_id}: {e}")
-        loops_data = []
-
-    return jsonify({
-        "id": song_id,
-        "title": song["title"],
-        "artist": song["artist"],
-        "chords": chords_data,
-        "loops": loops_data,
-        "success": True
-    }), 200
-
-
-
-# הוסף את הנתיב הזה ל- routes/songs.py
+@songs_bp.route('/add-chords')
+def add_chords_page():
+    return render_template('add_chords_base.html')
 
 @songs_bp.route('/edit-chords/<string:song_id>')
 def edit_chords_for_song(song_id):
@@ -339,6 +253,112 @@ def edit_chords_for_song(song_id):
         "loops": loops_data
     })
 
+# =============================================================================
+# API ENDPOINTS - SONG MANAGEMENT
+# =============================================================================
+
+@songs_bp.route('/api/add_song', methods=['POST'])
+def add_song():
+    user_roles = session.get("roles", [])
+    if not ("teacher" in user_roles or "admin" in user_roles):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+    required_fields = ["title", "artist", "genres", "key", "key_type", "time_signature", "bpm", "video_url", "chords"]
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({"error": f"Missing or empty field: {field}"}), 400
+
+    # Validate genres - must be array
+    genres_data = data.get("genres", [])
+    if not isinstance(genres_data, list) or len(genres_data) == 0:
+        return jsonify({"error": "יש לבחור לפחות ז'אנר אחד"}), 400
+
+    # Handle loops data if provided
+    loops_data = data.get("loops", [])
+
+    new_song = {
+        "title": data["title"],
+        "artist": data["artist"],
+        "genres": genres_data,  # Store as array
+        "key": data["key"],
+        "key_type": data["key_type"],
+        "difficulty": data["difficulty"],
+        "difficulty_approved": False,
+        "time_signature": data["time_signature"],
+        "bpm": int(data["bpm"]),
+        "video_url": data["video_url"],
+        "chords": json.dumps(data["chords"]),
+        "loops": json.dumps(loops_data),
+        "created_at": datetime.utcnow(),
+        "created_by": session.get("user_id"),
+    }
+
+    song_ref = firestore.client().collection("songs").add(new_song)
+    song_id = song_ref[1].id
+
+    return jsonify({"message": "Song added successfully!", "song_id": song_id}), 201
+
+@songs_bp.route('/api/edit_song/<string:song_id>', methods=['PUT'])
+def edit_song_api(song_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    doc = firestore.client().collection("songs").document(song_id).get()
+    if not doc.exists:
+        return jsonify({"error": "Song not found"}), 404
+
+    song = doc.to_dict()
+    user_roles = session.get("roles", [])
+    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
+
+    data = request.get_json()
+    required_fields = ["title", "artist", "genres", "key", "key_type", "time_signature", "bpm", "video_url", "chords"]
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({"error": f"Missing or empty field: {field}"}), 400
+
+    # Validate genres - must be array
+    genres_data = data.get("genres", [])
+    if not isinstance(genres_data, list) or len(genres_data) == 0:
+        return jsonify({"error": "יש לבחור לפחות ז'אנר אחד"}), 400
+
+    # Handle loops data if provided
+    loops_data = data.get("loops", [])
+
+    updated_fields = {
+        "title": data["title"],
+        "artist": data["artist"],
+        "genres": genres_data,  # Store as array
+        "key": data["key"],
+        "key_type": data["key_type"],
+        "difficulty": data["difficulty"],
+        "time_signature": data["time_signature"],
+        "bpm": int(data["bpm"]),
+        "video_url": data["video_url"],
+        "chords": json.dumps(data["chords"]),
+        "loops": json.dumps(loops_data),
+        "updated_at": datetime.utcnow()
+    }
+    firestore.client().collection("songs").document(song_id).update(updated_fields)
+    return jsonify({"message": "השיר עודכן בהצלחה!"}), 200
+
+@songs_bp.route('/api/delete_song/<string:song_id>', methods=['DELETE'])
+def delete_song(song_id):
+    doc_ref = firestore.client().collection("songs").document(song_id)
+    song_doc = doc_ref.get()
+    if not song_doc.exists:
+        return jsonify({"error": "Song not found"}), 404
+
+    song = song_doc.to_dict()
+    user_roles = session.get("roles", [])
+    if song.get("created_by") != session.get("user_id") and "admin" not in user_roles:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    doc_ref.delete()
+    return jsonify({"message": "Song deleted successfully!"}), 200
+
 @songs_bp.route('/api/recent_songs')
 def get_recent_songs():
     """API להחזרת שירים שנוספו בשבוע האחרון"""
@@ -361,8 +381,58 @@ def get_recent_songs():
         return jsonify({"songs": [], "success": False, "error": str(e)})
 
 # =============================================================================
-# API ENDPOINTS לחלק האקורדים המחודש - להוסיף בסוף הקובץ songs.py
+# API ENDPOINTS - SONG DATA ACCESS
 # =============================================================================
+
+@songs_bp.route('/api/get_song/<string:song_id>', methods=['GET'])
+def get_song_data(song_id):
+    """API endpoint לטעינת נתוני שיר עבור עריכת אקורדים"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    doc = firestore.client().collection("songs").document(song_id).get()
+    if not doc.exists:
+        return jsonify({"error": "Song not found"}), 404
+
+    song = doc.to_dict()
+    user_roles = session.get("roles", [])
+
+    # בדוק הרשאות עריכה
+    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
+
+    # Parse chords safely
+    chords_data = []
+    try:
+        chords_str = song.get("chords", "[]")
+        if isinstance(chords_str, str):
+            chords_data = json.loads(chords_str)
+        else:
+            chords_data = chords_str if chords_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing chords for song {song_id}: {e}")
+        chords_data = []
+
+    # Parse loops safely
+    loops_data = []
+    try:
+        loops_str = song.get("loops", "[]")
+        if isinstance(loops_str, str):
+            loops_data = json.loads(loops_str)
+        else:
+            loops_data = loops_str if loops_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing loops for song {song_id}: {e}")
+        loops_data = []
+
+    return jsonify({
+        "id": song_id,
+        "title": song["title"],
+        "artist": song["artist"],
+        "chords": chords_data,
+        "loops": loops_data,
+        "success": True
+    }), 200
 
 @songs_bp.route('/api/songs/<string:song_id>/complete', methods=['GET'])
 def get_song_complete_data(song_id):
@@ -437,6 +507,9 @@ def get_song_complete_data(song_id):
         print(f"Error loading complete song data for {song_id}: {e}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
+# =============================================================================
+# API ENDPOINTS - ADVANCED CHORD & LOOP MANAGEMENT
+# =============================================================================
 
 @songs_bp.route('/api/songs/<string:song_id>/chords-loops', methods=['PUT'])
 def update_song_chords_loops(song_id):
@@ -491,10 +564,9 @@ def update_song_chords_loops(song_id):
         print(f"Error updating song chords/loops for {song_id}: {e}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
-
 @songs_bp.route('/api/songs/new/chords-loops', methods=['POST'])
 def create_song_with_chords_loops():
-    """API endpoint ליצירת שיר חדש עם אקורדים ולופים (לשימוש עתידי)"""
+    """API endpoint ליצירת שיר חדש עם אקורדים ולופים"""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized - please login"}), 401
 
@@ -517,7 +589,7 @@ def create_song_with_chords_loops():
         new_song = {
             "title": data["title"],
             "artist": data["artist"],
-            "genre": data.get("genre", ""),
+            "genres": data.get("genres", []),  # Support multiple genres
             "key": data.get("key", "C"),
             "key_type": data.get("key_type", "major"),
             "difficulty": data.get("difficulty", ""),
@@ -544,7 +616,6 @@ def create_song_with_chords_loops():
     except Exception as e:
         print(f"Error creating new song with chords/loops: {e}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
-
 
 @songs_bp.route('/api/songs/<string:song_id>/loops', methods=['GET'])
 def get_song_loops(song_id):
@@ -587,7 +658,6 @@ def get_song_loops(song_id):
         print(f"Error loading loops for song {song_id}: {e}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
-
 @songs_bp.route('/api/songs/<string:song_id>/structure', methods=['GET'])
 def get_song_structure(song_id):
     """API endpoint לטעינת מבנה השיר"""
@@ -629,7 +699,6 @@ def get_song_structure(song_id):
         print(f"Error loading song structure for {song_id}: {e}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
-
 @songs_bp.route('/api/songs/<string:song_id>/structure', methods=['PUT'])
 def update_song_structure(song_id):
     """API endpoint לעדכון מבנה השיר"""
@@ -670,6 +739,9 @@ def update_song_structure(song_id):
         print(f"Error updating song structure for {song_id}: {e}")
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
+# =============================================================================
+# API ENDPOINTS - CHORD VALIDATION & UTILITIES
+# =============================================================================
 
 @songs_bp.route('/api/chords/validate', methods=['POST'])
 def validate_chord():
@@ -700,10 +772,9 @@ def validate_chord():
         print(f"Error validating chord: {e}")
         return jsonify({"error": "Internal server error", "valid": False}), 500
 
-
 @songs_bp.route('/api/chords/recent', methods=['GET'])
 def get_recent_chords():
-    """API endpoint לטעינת אקורדים שנוספו לאחרונה (לשימוש עתידי)"""
+    """API endpoint לטעינת אקורדים שנוספו לאחרונה"""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized - please login"}), 401
 
@@ -724,10 +795,9 @@ def get_recent_chords():
         print(f"Error loading recent chords: {e}")
         return jsonify({"error": "Internal server error", "chords": []}), 500
 
-
 @songs_bp.route('/api/chords/recent', methods=['POST'])
 def save_recent_chords():
-    """API endpoint לשמירת אקורדים שנוספו לאחרונה (לשימוש עתידי)"""
+    """API endpoint לשמירת אקורדים שנוספו לאחרונה"""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized - please login"}), 401
 
