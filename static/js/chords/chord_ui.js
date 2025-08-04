@@ -478,22 +478,22 @@ class ChordUIManager {
     }
 
     /**
-     * Render chord type buttons organized by categories
+     * Render chord type buttons organized by categories - UPDATED WITH CORRECT DISTRIBUTION
      */
     renderTypeButtons() {
-        // Define chord categories with all available chord types
+        // Define chord categories with corrected chord distribution
         const chordCategories = {
             triads: {
                 container: 'triads-chord-types',
-                chords: ['', 'm', 'dim', 'aug']
+                chords: ['', 'm', 'dim', 'aug', 'sus2', 'sus4'] // הוספנו sus2 ו sus4
             },
             seventh: {
                 container: 'seventh-chord-types',
-                chords: ['7', 'maj7', 'm7', '6', 'm6']
+                chords: ['7', 'maj7', 'm7', '6', 'm6'] // הסרנו sus2 ו sus4
             },
             extended: {
                 container: 'extended-chord-types',
-                chords: ['sus2', 'sus4', 'add9']
+                chords: ['add9'] // רק add9 נשאר
             }
         };
 
@@ -516,13 +516,13 @@ class ChordUIManager {
                     'm': 'Minor',
                     'dim': 'Dim',
                     'aug': 'Aug',
+                    'sus2': 'Sus2',
+                    'sus4': 'Sus4',
                     '7': '7',
                     'maj7': 'Maj7',
                     'm7': 'm7',
                     '6': '6',
                     'm6': 'm6',
-                    'sus2': 'Sus2',
-                    'sus4': 'Sus4',
                     'add9': 'Add9'
                 };
 

@@ -2,11 +2,12 @@
 // This file contains all the fundamental chord data and configuration
 // Updated with extended chords support including slash chords
 
-// Basic chord system configuration
+// Basic chord system configuration - UPDATED WITH CORRECTED CHORD TYPES
 const CHORD_CONFIG = {
     rootLetters: ["A", "B", "C", "D", "E", "F", "G"],
     accidentalOptions: ["", "#", "b"],
-    chordTypes: ["", "m", "7", "maj7", "dim", "sus4", "aug", "m7"],
+    // עדכון: Sus2 ו Sus4 עברו למשולשים, הסרנו אותם מהמחומשים
+    chordTypes: ["", "m", "7", "maj7", "dim", "sus4", "sus2", "aug", "m7"],
     maxRecentChords: 12
 };
 
@@ -412,5 +413,5 @@ console.log("🎸 Chord Core Extended - טעון בהצלחה", {
     basicChords: CHORD_CONFIG.chordTypes.length,
     extendedChords: Object.keys(EXTENDED_DISPLAY_NAMES).length,
     slashSupport: true,
-    version: "2.0.0"
+    version: "2.1.0"
 });

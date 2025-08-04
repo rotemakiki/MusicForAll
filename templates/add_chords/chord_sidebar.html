@@ -2,6 +2,31 @@
 <div class="chord-sidebar">
     <h3>🎸 בחר אקורד</h3>
 
+    <!-- Fixed Top Section - תמיד יישאר בחלק העליון -->
+    <div class="fixed-top-section">
+        <!-- Current Selection Display -->
+        <div class="current-selection">
+            <strong>אקורד נבחר:</strong>
+            <div id="current-chord-display">—</div>
+        </div>
+
+        <!-- Add Chord Button -->
+        <button class="add-chord-btn" disabled>
+            ➕ הוסף אקורד
+        </button>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="btn small-btn secondary-btn" id="clear-measure-btn" disabled>
+                🗑️ נקה
+            </button>
+            <button class="btn small-btn secondary-btn" id="add-empty-chord-btn" disabled>
+                🔇 ריק
+            </button>
+        </div>
+    </div>
+
+    <!-- Scrollable Content Section -->
     <div class="sidebar-content">
         <!-- Root Note Selection -->
         <div class="section">
@@ -23,11 +48,11 @@
         <div class="section">
             <h4>בחר סוג אקורד:</h4>
 
-            <!-- אקורדים משולשים (3 תווים) -->
+            <!-- אקורדים משולשים (3 תווים) - כולל Sus2 ו Sus4 -->
             <div class="chord-category">
                 <h5 class="category-title">אקורדים משולשים (3 תווים):</h5>
                 <div id="triads-chord-types" class="chord-types-grid">
-                    <!-- יטען דינמית על ידי chord_ui.js -->
+                    <!-- יטען דינמית: '', 'm', 'dim', 'aug', 'sus2', 'sus4' -->
                 </div>
             </div>
 
@@ -35,7 +60,7 @@
             <div class="chord-category">
                 <h5 class="category-title">אקורדים מרובעים (4 תווים):</h5>
                 <div id="seventh-chord-types" class="chord-types-grid">
-                    <!-- יטען דינמית על ידי chord_ui.js -->
+                    <!-- יטען דינמית: '7', 'maj7', 'm7', '6', 'm6' -->
                 </div>
             </div>
 
@@ -43,7 +68,7 @@
             <div class="chord-category">
                 <h5 class="category-title">אקורדים מחומשים (5+ תווים):</h5>
                 <div id="extended-chord-types" class="chord-types-grid">
-                    <!-- יטען דינמית על ידי chord_ui.js -->
+                    <!-- יטען דינמית: 'add9' בלבד -->
                 </div>
             </div>
         </div>
@@ -117,27 +142,6 @@
                     <!-- יטען דינמית על ידי chord_ui.js -->
                 </div>
             </div>
-        </div>
-
-        <!-- Current Selection Display -->
-        <div class="current-selection">
-            <strong>אקורד נבחר:</strong>
-            <div id="current-chord-display">—</div>
-        </div>
-
-        <!-- Add Chord Button -->
-        <button class="add-chord-btn" disabled>
-            ➕ הוסף אקורד
-        </button>
-
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-            <button class="btn small-btn secondary-btn" id="clear-measure-btn" disabled>
-                🗑️ נקה
-            </button>
-            <button class="btn small-btn secondary-btn" id="add-empty-chord-btn" disabled>
-                🔇 ריק
-            </button>
         </div>
 
         <!-- Recently Used Chords Section -->
