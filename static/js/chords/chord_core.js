@@ -2,12 +2,12 @@
 // This file contains all the fundamental chord data and configuration
 // Updated with extended chords support including slash chords
 
-// Basic chord system configuration - UPDATED WITH CORRECTED CHORD TYPES
+// Basic chord system configuration - UPDATED WITH NEW CHORD TYPES
 const CHORD_CONFIG = {
     rootLetters: ["A", "B", "C", "D", "E", "F", "G"],
     accidentalOptions: ["", "#", "b"],
-    // עדכון: Sus2 ו Sus4 עברו למשולשים, הסרנו אותם מהמחומשים
-    chordTypes: ["", "m", "7", "maj7", "dim", "sus4", "sus2", "aug", "m7"],
+    // עדכון: הוספנו 7b5 למרובעים, add11 ו-add13 למחומשים
+    chordTypes: ["", "m", "7", "maj7", "dim", "sus4", "sus2", "aug", "m7", "6", "m6", "7b5", "add9", "add11", "add13"],
     maxRecentChords: 12
 };
 
@@ -64,7 +64,7 @@ const EXTENDED_CHORD_CONFIG = {
     }
 };
 
-// שמות תצוגה לאקורדים המתקדמים
+// שמות תצוגה לאקורדים המתקדמים - עדכון עם האקורדים החדשים
 const EXTENDED_DISPLAY_NAMES = {
     // Extended chords
     '9': 'Dom9',
@@ -74,11 +74,11 @@ const EXTENDED_DISPLAY_NAMES = {
     '11': 'Dom11',
     'm11': 'Min11',
     'maj11': 'Maj11',
-    'add11': 'Add11',
+    'add11': 'Add11',  // חדש
     '13': 'Dom13',
     'm13': 'Min13',
     'maj13': 'Maj13',
-    'add13': 'Add13',
+    'add13': 'Add13',  // חדש
 
     // Altered chords
     '7b9': '7♭9',
@@ -88,7 +88,7 @@ const EXTENDED_DISPLAY_NAMES = {
     '7#11': '7#11',
     'maj7#11': 'Maj7#11',
     'mMaj7': 'mMaj7',
-    '7b5': '7♭5',
+    '7b5': '7♭5',     // חדש - דומיננט 7 עם קווינטה מוקטנת
     '7#5': '7#5',
 
     // Special chords
@@ -278,74 +278,77 @@ const ExtendedChordUtils = {
             return { isValid: true, isExtended: false };
         }
 
-        // אם זה אקורד סלאש, בדוק את הבס
-        if (bassNote) {
-            const validBassNotes = EXTENDED_CHORD_CONFIG.slash.bassNotes;
-            if (!validBassNotes.includes(bassNote)) {
-                return { isValid: false, error: "תו בס לא תקין" };
-            }
+        // ולידציה של אקורד מתקדם
+        const allValidTypes = [
+            ...CHORD_CONFIG.chordTypes,
+            ...EXTENDED_CHORD_CONFIG.extended.ninth,
+            ...EXTENDED_CHORD_CONFIG.extended.eleventh,
+            ...EXTENDED_CHORD_CONFIG.extended.thirteenth,
+            ...EXTENDED_CHORD_CONFIG.altered.ninth,
+            ...EXTENDED_CHORD_CONFIG.altered.eleventh,
+            ...EXTENDED_CHORD_CONFIG.altered.special,
+            ...EXTENDED_CHORD_CONFIG.special.omitted,
+            ...EXTENDED_CHORD_CONFIG.special.power,
+            ...EXTENDED_CHORD_CONFIG.special.quartal
+        ];
+
+        if (!allValidTypes.includes(chordType)) {
+            return { isValid: false, error: `סוג אקורד לא מוכר: ${chordType}` };
         }
 
-        return { isValid: true, isExtended: true };
+        // אם יש תו בס - ולידציה נוספת
+        if (bassNote && !EXTENDED_CHORD_CONFIG.slash.bassNotes.includes(bassNote)) {
+            return { isValid: false, error: `תו בס לא חוקי: ${bassNote}` };
+        }
+
+        return {
+            isValid: true,
+            isExtended: true,
+            chord: rootLetter + accidental + chordType + (bassNote ? `/${bassNote}` : ''),
+            displayName: this.getExtendedChordDisplayName(chordType)
+        };
     }
 };
 
-// Measure utilities
+// Measure handling utilities
 const MeasureUtils = {
     /**
      * Create a new empty measure
      */
     createEmptyMeasure(beats = MEASURE_DEFAULTS.beats) {
         return {
+            id: Date.now() + Math.random(),
             beats: beats,
-            chords: [],
-            isEmpty: false
+            chords: []
         };
     },
 
     /**
-     * Calculate total used width in a measure
+     * Calculate total width of chords in a measure
      */
-    calculateUsedWidth(measure) {
-        return measure.chords.reduce((sum, chord) => sum + chord.width, 0);
+    getTotalWidth(measure) {
+        if (!measure || !measure.chords) return 0;
+        return measure.chords.reduce((total, chord) => total + (chord.width || 1), 0);
     },
 
     /**
-     * Check if a measure is valid (total width equals beats)
+     * Check if a chord can fit in a measure
      */
-    isValidMeasure(measure) {
-        const usedWidth = this.calculateUsedWidth(measure);
-        return Math.abs(usedWidth - measure.beats) < 0.001; // Allow small floating point errors
+    canFitChord(measure, chordWidth = MEASURE_DEFAULTS.defaultChordWidth) {
+        const currentWidth = this.getTotalWidth(measure);
+        return currentWidth + chordWidth <= measure.beats;
     },
 
     /**
-     * Create a chord object for a measure
+     * Distribute chord widths evenly in a measure
      */
-    createChordObject(chordName, width = MEASURE_DEFAULTS.defaultChordWidth, position = 0) {
-        return {
-            chord: chordName,
-            width: width,
-            isEmpty: chordName === "—",
-            position: position
-        };
-    },
+    distributeEvenly(measure) {
+        if (!measure || !measure.chords || measure.chords.length === 0) return;
 
-    /**
-     * Redistribute chords evenly with half-beat precision
-     */
-    redistributeChordsWithHalvesOnly(measure) {
-        if (!measure || measure.chords.length === 0) return;
+        const evenWidth = measure.beats / measure.chords.length;
 
-        const totalBeats = measure.beats;
-        const numChords = measure.chords.length;
-
-        // Calculate equal distribution in halves
-        const baseWidth = Math.floor((totalBeats * 2) / numChords) / 2;
-        const remainder = (totalBeats * 2) % numChords;
-
-        measure.chords.forEach((chord, index) => {
-            // Give base width plus extra 0.5 to first 'remainder' chords
-            chord.width = baseWidth + (index < remainder ? 0.5 : 0);
+        measure.chords.forEach(chord => {
+            chord.width = Math.max(evenWidth > MEASURE_DEFAULTS.minChordWidth ? evenWidth : MEASURE_DEFAULTS.minChordWidth, 0.5);
         });
 
         this.recalculatePositions(measure);
@@ -413,5 +416,5 @@ console.log("🎸 Chord Core Extended - טעון בהצלחה", {
     basicChords: CHORD_CONFIG.chordTypes.length,
     extendedChords: Object.keys(EXTENDED_DISPLAY_NAMES).length,
     slashSupport: true,
-    version: "2.1.0"
+    version: "2.2.0"
 });

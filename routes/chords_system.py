@@ -1,157 +1,132 @@
+# Chord System API Routes - Full Backend Support for Advanced Chord System
+# This file handles all API endpoints for the chord system including validation,
+# loop management, templates, and user preferences
+
 from flask import Blueprint, request, jsonify, session
 from firebase_admin import firestore
 from datetime import datetime
 import json
 
-chords_system_bp = Blueprint('chords_system', __name__, url_prefix='/api/chords-system')
+# Create blueprint for chord system routes
+chords_system_bp = Blueprint('chords_system', __name__)
 
 # =============================================================================
-# LOOPS MANAGEMENT API
+# LOOP MANAGEMENT API - Core functionality for chord loops
 # =============================================================================
 
-@chords_system_bp.route('/loops', methods=['POST'])
-def create_loop():
-    """יצירת לופ חדש"""
+@chords_system_bp.route('/api/loops', methods=['GET'])
+def get_loops():
+    """קבלת כל הלופים של המשתמש"""
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized - please login"}), 401
+
+    try:
+        user_id = session['user_id']
+        loops_ref = firestore.client().collection("loops")
+        
+        # חיפוש לופים של המשתמש הנוכחי
+        query = loops_ref.where("created_by", "==", user_id).order_by("updated_at", direction=firestore.Query.DESCENDING)
+        loops_docs = query.stream()
+
+        loops = []
+        for doc in loops_docs:
+            loop_data = doc.to_dict()
+            loop_data['id'] = doc.id
+            
+            # פרסור נתוני JSON אם נדרש
+            if isinstance(loop_data.get('chords'), str):
+                try:
+                    loop_data['chords'] = json.loads(loop_data['chords'])
+                except json.JSONDecodeError:
+                    loop_data['chords'] = []
+            
+            loops.append(loop_data)
+
+        return jsonify({
+            "loops": loops,
+            "count": len(loops),
+            "success": True
+        }), 200
+
+    except Exception as e:
+        print(f"Error getting loops: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@chords_system_bp.route('/api/loops', methods=['POST'])
+def save_loop():
+    """שמירת לופ חדש או עדכון קיים"""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized - please login"}), 401
 
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
+        if not data or "chords" not in data:
+            return jsonify({"error": "Missing chord data"}), 400
 
-        # ולידציה
-        required_fields = ["name", "measures"]
-        for field in required_fields:
-            if field not in data:
-                return jsonify({"error": f"Missing field: {field}"}), 400
-
+        user_id = session['user_id']
+        loop_name = data.get("name", f"Loop {datetime.now().strftime('%d/%m %H:%M')}")
+        
+        # נתוני הלופ
         loop_data = {
-            "name": data["name"],
-            "measures": data["measures"],
-            "measure_count": len(data["measures"]),
-            "repeat_count": data.get("repeat_count", 1),
-            "created_by": session["user_id"],
-            "created_at": datetime.utcnow(),
-            "tags": data.get("tags", []),
-            "tempo_hint": data.get("tempo_hint", ""),
-            "description": data.get("description", "")
+            "name": loop_name,
+            "chords": json.dumps(data["chords"]) if isinstance(data["chords"], list) else data["chords"],
+            "key": data.get("key", "C"),
+            "time_signature": data.get("time_signature", "4/4"),
+            "tempo": data.get("tempo", 120),
+            "created_by": user_id,
+            "updated_at": datetime.utcnow(),
+            "description": data.get("description", ""),
+            "tags": data.get("tags", [])
         }
 
-        # שמירה במסד נתונים
-        loop_ref = firestore.client().collection("loops").add(loop_data)
-        loop_id = loop_ref[1].id
+        # בדיקה אם זה עדכון לופ קיים
+        loop_id = data.get("id")
+        if loop_id:
+            # עדכון לופ קיים
+            firestore.client().collection("loops").document(loop_id).update(loop_data)
+            message = "Loop updated successfully!"
+        else:
+            # לופ חדש
+            loop_data["created_at"] = datetime.utcnow()
+            doc_ref = firestore.client().collection("loops").add(loop_data)
+            loop_id = doc_ref[1].id
+            message = "Loop saved successfully!"
 
         return jsonify({
-            "message": "Loop created successfully",
+            "message": message,
             "loop_id": loop_id,
-            "loop_data": loop_data,
-            "success": True
-        }), 201
-
-    except Exception as e:
-        print(f"Error creating loop: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-@chords_system_bp.route('/loops/<string:loop_id>', methods=['GET'])
-def get_loop(loop_id):
-    """קבלת לופ ספציפי"""
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized - please login"}), 401
-
-    try:
-        doc = firestore.client().collection("loops").document(loop_id).get()
-        if not doc.exists:
-            return jsonify({"error": "Loop not found"}), 404
-
-        loop_data = doc.to_dict()
-
-        # בדיקת הרשאות
-        if loop_data.get("created_by") != session["user_id"]:
-            return jsonify({"error": "Unauthorized - not your loop"}), 403
-
-        loop_data["id"] = loop_id
-        return jsonify({
-            "loop": loop_data,
             "success": True
         }), 200
 
     except Exception as e:
-        print(f"Error getting loop {loop_id}: {e}")
+        print(f"Error saving loop: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 
-@chords_system_bp.route('/loops/<string:loop_id>', methods=['PUT'])
-def update_loop(loop_id):
-    """עדכון לופ קיים"""
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized - please login"}), 401
-
-    try:
-        # בדיקה שהלופ קיים ושייך למשתמש
-        doc = firestore.client().collection("loops").document(loop_id).get()
-        if not doc.exists:
-            return jsonify({"error": "Loop not found"}), 404
-
-        loop_data = doc.to_dict()
-        if loop_data.get("created_by") != session["user_id"]:
-            return jsonify({"error": "Unauthorized - not your loop"}), 403
-
-        # עדכון הנתונים
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
-
-        updated_fields = {
-            "updated_at": datetime.utcnow()
-        }
-
-        # עדכון שדות מותרים
-        allowed_fields = ["name", "measures", "repeat_count", "tags", "tempo_hint", "description"]
-        for field in allowed_fields:
-            if field in data:
-                updated_fields[field] = data[field]
-
-        # עדכון measure_count אם measures השתנו
-        if "measures" in data:
-            updated_fields["measure_count"] = len(data["measures"])
-
-        firestore.client().collection("loops").document(loop_id).update(updated_fields)
-
-        return jsonify({
-            "message": "Loop updated successfully",
-            "loop_id": loop_id,
-            "updated_fields": list(updated_fields.keys()),
-            "success": True
-        }), 200
-
-    except Exception as e:
-        print(f"Error updating loop {loop_id}: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-@chords_system_bp.route('/loops/<string:loop_id>', methods=['DELETE'])
+@chords_system_bp.route('/api/loops/<string:loop_id>', methods=['DELETE'])
 def delete_loop(loop_id):
     """מחיקת לופ"""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized - please login"}), 401
 
     try:
-        # בדיקה שהלופ קיים ושייך למשתמש
-        doc = firestore.client().collection("loops").document(loop_id).get()
-        if not doc.exists:
+        user_id = session['user_id']
+        
+        # בדיקה שהלופ שייך למשתמש
+        loop_doc = firestore.client().collection("loops").document(loop_id).get()
+        if not loop_doc.exists:
             return jsonify({"error": "Loop not found"}), 404
 
-        loop_data = doc.to_dict()
-        if loop_data.get("created_by") != session["user_id"]:
-            return jsonify({"error": "Unauthorized - not your loop"}), 403
+        loop_data = loop_doc.to_dict()
+        if loop_data.get("created_by") != user_id:
+            return jsonify({"error": "Unauthorized - you can only delete your own loops"}), 403
 
-        # מחיקה
+        # מחיקת הלופ
         firestore.client().collection("loops").document(loop_id).delete()
 
         return jsonify({
-            "message": "Loop deleted successfully",
+            "message": "Loop deleted successfully!",
             "loop_id": loop_id,
             "success": True
         }), 200
@@ -161,47 +136,15 @@ def delete_loop(loop_id):
         return jsonify({"error": "Internal server error"}), 500
 
 
-@chords_system_bp.route('/loops/user/<string:user_id>', methods=['GET'])
-def get_user_loops(user_id):
-    """קבלת כל הלופים של משתמש"""
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized - please login"}), 401
-
-    # משתמש יכול לראות רק את הלופים שלו (או אדמין רואה הכל)
-    user_roles = session.get("roles", [])
-    if session["user_id"] != user_id and "admin" not in user_roles:
-        return jsonify({"error": "Unauthorized - can only access your own loops"}), 403
-
-    try:
-        loops_query = firestore.client().collection("loops").where("created_by", "==", user_id).order_by("created_at", direction=firestore.Query.DESCENDING)
-
-        loops = []
-        for doc in loops_query.stream():
-            loop_data = doc.to_dict()
-            loop_data["id"] = doc.id
-            loops.append(loop_data)
-
-        return jsonify({
-            "loops": loops,
-            "count": len(loops),
-            "user_id": user_id,
-            "success": True
-        }), 200
-
-    except Exception as e:
-        print(f"Error getting loops for user {user_id}: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-
-
 # =============================================================================
-# CHORD TEMPLATES AND SUGGESTIONS API
+# CHORD TEMPLATES AND PROGRESSIONS API
 # =============================================================================
 
-@chords_system_bp.route('/chord-templates', methods=['GET'])
+@chords_system_bp.route('/api/chord-templates', methods=['GET'])
 def get_chord_templates():
-    """קבלת תבניות אקורדים נפוצות"""
+    """קבלת תבניות אקורדים מוכנות"""
     try:
-        # תבניות אקורדים בסיסיות לפי סגנון ומפתח
+        # תבניות אקורדים פופולריות לפי סגנונות מוזיקליים
         templates = {
             "pop_major": {
                 "name": "פופ - מג'ור",
@@ -456,7 +399,7 @@ def get_user_stats():
 
 
 # =============================================================================
-# CHORD VALIDATION AND HELPERS
+# CHORD VALIDATION AND HELPERS - UPDATED WITH NEW CHORDS
 # =============================================================================
 
 @chords_system_bp.route('/validate-chord', methods=['POST'])
@@ -481,7 +424,7 @@ def validate_chord_extended():
 
 
 def validate_chord_advanced(chord_name, key_context="C"):
-    """פונקציה עזר לולידציה מתקדמת של אקורדים"""
+    """פונקציה עזר לולידציה מתקדמת של אקורדים - UPDATED WITH NEW CHORDS"""
     if chord_name == "—":
         return {"valid": True, "type": "rest", "chord": chord_name}
 
@@ -504,8 +447,8 @@ def validate_chord_advanced(chord_name, key_context="C"):
 
     chord_type = remaining
 
-    # סוגי אקורדים תקפים
-    valid_types = ["", "m", "7", "maj7", "m7", "dim", "aug", "sus4", "sus2", "add9", "6", "m6"]
+    # סוגי אקורדים תקפים - UPDATED WITH NEW CHORD TYPES
+    valid_types = ["", "m", "7", "maj7", "m7", "dim", "aug", "sus4", "sus2", "add9", "6", "m6", "7b5", "add11", "add13"]
 
     if chord_type not in valid_types:
         return {"valid": False, "error": f"Unknown chord type: {chord_type}"}
@@ -538,7 +481,7 @@ def check_chord_in_key(chord_root, key):
 
 
 def get_chord_type_description(chord_type):
-    """תיאור של סוג האקורד"""
+    """תיאור של סוג האקורד - UPDATED WITH NEW CHORD DESCRIPTIONS"""
     descriptions = {
         "": "מג'ור",
         "m": "מינור",
@@ -551,7 +494,10 @@ def get_chord_type_description(chord_type):
         "sus2": "מושעה 2",
         "add9": "הוספת 9",
         "6": "סקסט",
-        "m6": "מינור סקסט"
+        "m6": "מינור סקסט",
+        "7b5": "דומיננט 7 קווינטה מוקטנת",  # חדש
+        "add11": "הוספת 11",  # חדש
+        "add13": "הוספת 13"   # חדש
     }
 
     return descriptions.get(chord_type, "לא מוכר")

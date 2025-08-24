@@ -478,22 +478,22 @@ class ChordUIManager {
     }
 
     /**
-     * Render chord type buttons organized by categories - UPDATED WITH CORRECT DISTRIBUTION
+     * Render chord type buttons organized by categories - UPDATED WITH NEW CHORD DISTRIBUTION
      */
     renderTypeButtons() {
-        // Define chord categories with corrected chord distribution
+        // Define chord categories with NEW chord distribution
         const chordCategories = {
             triads: {
                 container: 'triads-chord-types',
-                chords: ['', 'm', 'dim', 'aug', 'sus2', 'sus4'] // הוספנו sus2 ו sus4
+                chords: ['', 'm', 'dim', 'aug', 'sus2', 'sus4'] // אקורדים משולשים
             },
             seventh: {
                 container: 'seventh-chord-types',
-                chords: ['7', 'maj7', 'm7', '6', 'm6'] // הסרנו sus2 ו sus4
+                chords: ['7', 'maj7', 'm7', '6', 'm6', '7b5'] // הוספנו 7b5 לאקורדים מרובעים
             },
             extended: {
                 container: 'extended-chord-types',
-                chords: ['add9'] // רק add9 נשאר
+                chords: ['add9', 'add11', 'add13'] // הוספנו add11 ו-add13 לאקורדים מחומשים
             }
         };
 
@@ -510,7 +510,7 @@ class ChordUIManager {
                 const btn = document.createElement("div");
                 btn.className = "chord-btn";
 
-                // Display names for chord types
+                // Display names for chord types - עדכון עם האקורדים החדשים
                 const displayNames = {
                     '': 'Major',
                     'm': 'Minor',
@@ -523,7 +523,10 @@ class ChordUIManager {
                     'm7': 'm7',
                     '6': '6',
                     'm6': 'm6',
-                    'add9': 'Add9'
+                    '7b5': '7♭5',    // חדש - אקורד דומיננט 7 עם קווינטה מוקטנת
+                    'add9': 'Add9',
+                    'add11': 'Add11', // חדש - אקורד עם הוספת 11
+                    'add13': 'Add13'  // חדש - אקורד עם הוספת 13
                 };
 
                 btn.textContent = displayNames[type] || type;
