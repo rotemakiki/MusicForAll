@@ -1,0 +1,156 @@
+MusicForAll - Project Structure and Developer Guide
+
+Overview
+- Purpose: Web application for music learning and content sharing with chord editing, songs management, teachers/students profiles, and products. Backend is Flask with Firebase (Firestore + Storage). Frontend uses Jinja2 templates, JS, and CSS.
+- Stack:
+  - Backend: Python 3, Flask, Firebase Admin SDK, Google Cloud Firestore/Storage
+  - Templates: Jinja2 under templates/
+  - Static: Vanilla JS and CSS under static/
+  - Optional/legacy: SQLAlchemy models (models/models.py) used only by routes/videos.py
+  - Deployment: Render (render.yaml), start via app.py
+
+Root Files
+- app.py (Python): Flask app bootstrap and registration of all blueprints; middleware, error handlers, health/status endpoints, root routes, and dev helpers. Runs server on PORT env.
+- main.py (Python): Placeholder (prints "hi"). Not used by render.yaml/startCommand.
+- firebase_config.py (Python): Initializes Firebase Admin. Loads credentials from FIREBASE_KEY_BASE64 (Base64) or local secrets/firebase-key.json; exposes firestore client as db.
+- export_firestore_data.py (Python script): Exports selected Firestore collections (users, songs, videos) to firestore_export.json using FIREBASE_KEY_BASE64.
+- firestore_export.json (JSON): Example output of export script.
+- render.yaml (YAML): Render deployment config; env python, startCommand "python app.py"; sets GOOGLE_APPLICATION_CREDENTIALS to a JSON key filename.
+- requirements.txt (text): Python dependencies (Flask, firebase-admin, google-cloud-firestore/storage, SQLAlchemy, etc.).
+- project structure (this file): Human-friendly documentation of repository.
+
+Directories
+- routes/ (Python): Feature blueprints for Flask.
+  - __init__.py: Empty initializer.
+  - auth.py: Blueprint auth_bp. Handles register/login/logout, session, and login-state enforcement in Firestore users collection. Uses werkzeug password hashing; sets session keys; endpoints:
+    - GET|POST /register: user registration; writes Firestore document; teachers redirected to profile edit.
+    - GET|POST /login: login with optional force_login; updates is_logged_in and last_login; sets session.
+    - POST /api/auto_logout: clears login state and session.
+    - GET /api/check_session: validates current session against Firestore.
+    - GET /logout: clears login state and session; redirects home.
+  - products.py: Blueprint products_bp. CRUD APIs for products (admin-only for mutations). Endpoints:
+    - GET /products: render products page.
+    - GET /api/products: list products ordered by created_at.
+    - POST /api/products: add product (admin); validates fields and rating.
+    - DELETE /api/products/<id>: delete product (admin).
+    - PUT /api/products/<id>: update product (admin).
+    - GET /api/products/<category>: list by category (instruments|accessories|audio).
+  - songs.py: Blueprint songs_bp. Pages and APIs for songs and advanced chord/loop management.
+    - GET /songs: list and render songs with display_genres derived.
+    - GET /add_song: render add song page.
+    - GET|POST /edit_song/<id>: edit song (owner or admin); parses chords/loops safely.
+    - GET /play/<id>: song player page; parses chords/loops and genres; computes beats.
+    - GET /chords/<id>: legacy redirect to player.
+    - GET /add-chords: render base chord editor UI.
+    - GET /edit-chords/<id>: edit chords for song (owner/admin).
+    - POST /api/add_song: create song with chords/loops/genres; requires teacher/admin.
+    - PUT /api/edit_song/<id>: update song; requires ownership/admin.
+    - DELETE /api/delete_song/<id>: delete song; requires ownership/admin.
+    - GET /api/recent_songs: last-week songs (limit 6).
+    - GET /api/get_song/<id>: minimal data for chord editing; auth and ownership checks.
+    - GET /api/songs/<id>/complete: full data for new chord system; auth and ownership checks.
+    - PUT /api/songs/<id>/chords-loops: update chords/loops/structure fields; auth and ownership checks.
+    - POST /api/songs/new/chords-loops: create new song with chords/loops/structure; teacher/admin.
+    - GET /api/songs/<id>/loops: fetch loops; ownership/admin.
+    - GET /api/songs/<id>/structure: fetch structure; ownership/admin.
+    - PUT /api/songs/<id>/structure: update structure; ownership/admin.
+    - POST /api/chords/validate: simple chord validation.
+    - GET /api/chords/recent: placeholder, returns empty list.
+    - POST /api/chords/recent: placeholder save ack.
+  - chords_system.py: Blueprint chords_system_bp. Dedicated API for the chord system v2.
+    - GET /api/loops: list current user loops.
+    - POST /api/loops: create/update loop (JSON chords). Returns loop_id.
+    - DELETE /api/loops/<id>: delete loop (ownership enforced).
+    - GET /api/chord-templates: curated chord progressions per style/key.
+    - POST /chord-suggestions: simple next-chord suggestions based on key/context.
+    - GET /user-preferences: fetch defaults for chord system (or defaults if missing).
+    - PUT /user-preferences: update preferences for current user.
+    - GET /stats/user: per-user stats (counts, popular chords placeholder).
+    - Helpers: validate_chord_advanced, check_chord_in_key, get_chord_type_description.
+  - general.py: Blueprint general_bp. Upload profile images to Firebase Storage. Flow: save to temp_uploads/, upload to bucket, make public, set users.profile_image, then redirect based on role.
+  - info.py: Blueprint info_bp. News/posts page backed by info_posts collection; supports admin posting via POST.
+  - my_songs.py: Blueprint my_songs_bp. Manage personal list of songs.
+    - POST /api/my-songs/add/<song_id>: add mapping.
+    - POST /api/my-songs/remove/<song_id>: remove mapping.
+    - GET /api/my-songs/check/<song_id>: check membership.
+    - GET /my-songs: render page with user’s saved songs ordered by added_at.
+  - students.py: Blueprint students_bp. Student profile page and APIs to fetch/update student profile (self-only update).
+  - teachers.py: Blueprint teachers_bp. List teachers, teacher profile (videos, tenure), edit profile (self), and upload_video to Storage (public URL saved to videos collection).
+  - tutorials.py: Blueprint tutorials_bp. Render tutorials page.
+  - videos.py: Blueprint videos_bp. Renders videos page and provides /api/videos that queries SQLAlchemy Video model (legacy/optional).
+
+- models/ (Python): SQLAlchemy models (legacy or optional alongside Firestore usage).
+  - models.py: Defines db = SQLAlchemy(); models User, Teacher(inherits User), Video, Song. Not fully wired into app.py; only videos route uses Video.query.
+
+- templates/ (HTML, Jinja2): Views for pages and partials.
+  - add_chords/: chord UI partials: chord_sidebar.html, measure_builder.html, song_structure.html.
+  - chords_system/: home.html, my_loops.html for the new chord system.
+  - errors/: 403.html, 404.html, 500.html error pages.
+  - Main pages: add_chords_base.html, add_song.html, base.html, chords.html, edit_chords_song.html, edit_song.html, edit_teacher_profile.html, home_guest.html, home_user.html, info.html, login.html, my_songs.html, play_song.html, products.html, register.html, songs.html, student_profile.html, teacher_profile.html, teachers.html, tutorials.html, videos.html.
+
+- static/ (Assets)
+  - css/ (CSS): Page-specific styles: add_chords.css, home_guest.css, home_user.css, info.css, login.css, my_songs.css, play_song.css, products.css, register.css, song_form.css, songs.css, student_profile.css, styles.css, teacher_profile.css, teachers.css, tutorials.css.
+  - js/ (JavaScript): Client functionality.
+    - auto_logout.js: session auto-logout handling.
+    - chord.js, measure.js: general chord/measure helpers.
+    - chords/ (modular chord system v2 client):
+      - chord_core.js: core structures/logic for chords.
+      - chord_main.js: main orchestration for chord UI.
+      - chord_ui.js: UI bindings for chord editor.
+      - data_manager.js: client-side state management and persistence calls.
+      - dom_helpers.js: DOM utilities for chord components.
+      - loop_manager.js: loop creation, update, delete interactions with API.
+      - measure_manager.js: measure building and editing.
+      - song_structure.js: manage sections/structure.
+    - Feature scripts mapping to templates: home_guest.js, home_user.js, info.js, login.js, my_songs.js, play_song.js, products.js, register.js, script.js, song_form_manager.js, songs.js, student_profile.js, teacher_profile.js, teachers.js, tutorials.js.
+  - sounds/: metronome.mp3 asset.
+
+- secrets/ (Sensitive files; do not commit publicly)
+  - encoded_key.txt: likely Base64 encoded service account (for local use).
+  - firebase-key.json: local service account key (used when no env var present).
+  - temp_key.json: temporary key file (used in scripts or during runtime env decoding).
+
+- temp_uploads/ (Directory): Temporary storage for uploads before sending to Firebase Storage.
+
+Key Integrations and Data Model (Firestore-centric)
+- Collections used: users, songs, my_songs, videos, loops, user_chord_preferences, info_posts, _health_check.
+- Common fields:
+  - users: username, email, roles [student|teacher|admin], password (hashed), is_logged_in, profile_image, instruments, styles, is_available, teaches_online, created_at, last_login.
+  - songs: title, artist, genres[], key, key_type, time_signature, bpm, video_url, chords (JSON string), loops (JSON string), song_structure (JSON string), created_at, updated_at, difficulty, difficulty_approved, created_by.
+  - loops: name, chords (JSON), key, time_signature, tempo, created_by, created_at, updated_at, description, tags.
+  - my_songs: user_id, song_id, added_at.
+  - videos: title, description, url, uploaded_by, uploaded_at.
+  - info_posts: content, created_at, created_by.
+
+Security and Sessions
+- Session-based auth using Flask sessions; routes guard by checking 'user_id' and roles in session.
+- Login state mirrored in Firestore users.is_logged_in; check_session endpoint validates.
+- Admin role required for product mutations.
+- Ownership enforced for song edits and access to private song data.
+
+Running Locally
+- Requirements: Python 3, install from requirements.txt.
+- Credentials: Set FIREBASE_KEY_BASE64 env var (preferred) or place secrets/firebase-key.json. For Google Cloud Storage uploads in general.py/teachers.py, a JSON key file path is used directly.
+- Start: python app.py (PORT optional, DEBUG=true for dev).
+
+Notes and Caveats
+- Mixed persistence: Firestore is primary; SQLAlchemy models exist but only videos.py uses them presently.
+- Storage bucket names and credential paths are hardcoded in general.py and teachers.py; consider moving to env vars.
+- Health/status endpoints in app.py write to Firestore _health_check.
+
+File Index (name, language, purpose)
+- app.py: Python – Flask app setup, routes registration, middleware, errors, status.
+- main.py: Python – placeholder.
+- firebase_config.py: Python – Firebase Admin init and Firestore client.
+- export_firestore_data.py: Python – export Firestore collections to JSON.
+- firestore_export.json: JSON – exported data snapshot.
+- render.yaml: YAML – deployment config for Render.
+- requirements.txt: Text – Python dependencies.
+- routes/*.py: Python – feature blueprints and APIs (see sections above).
+- models/models.py: Python – SQLAlchemy models (legacy/optional).
+- templates/*.html: HTML/Jinja – server-side templates.
+- static/css/*.css: CSS – styles.
+- static/js/*.js: JavaScript – client logic, chord system modules.
+- static/sounds/metronome.mp3: Audio asset.
+- secrets/*.json, *.txt: Credentials (local/dev).
+- temp_uploads/: Temp files for upload processing.
