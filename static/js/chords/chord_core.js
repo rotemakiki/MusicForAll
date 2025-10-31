@@ -365,6 +365,48 @@ const MeasureUtils = {
             chord.position = currentPosition;
             currentPosition += chord.width;
         });
+    },
+
+    /**
+     * Redistribute chord widths so that:
+     * - All widths are in 0.5-beat increments
+     * - Total equals measure.beats
+     * - Every chord has at least 0.5 beats
+     */
+    redistributeChordsWithHalvesOnly(measure) {
+        if (!measure || !measure.chords || measure.chords.length === 0) return;
+
+        const beats = measure.beats || MEASURE_DEFAULTS.beats;
+        const chordCount = measure.chords.length;
+
+        // Minimum allocation so that each chord gets at least 0.5
+        const minTotal = 0.5 * chordCount;
+        const clampedBeats = Math.max(minTotal, beats);
+
+        // Start by assigning 0.5 to each chord
+        measure.chords.forEach(chord => {
+            chord.width = 0.5;
+        });
+
+        // Distribute the remaining beats in 0.5 steps, round-robin
+        let remaining = clampedBeats - minTotal;
+        let idx = 0;
+        while (remaining >= 0.5) {
+            measure.chords[idx % chordCount].width += 0.5;
+            remaining -= 0.5;
+            idx += 1;
+        }
+
+        // Sanity: snap to 0.5 grid and ensure total equals beats
+        let total = measure.chords.reduce((sum, c) => sum + c.width, 0);
+        const diff = Math.round((clampedBeats - total) * 2) / 2; // snap to 0.5
+        if (Math.abs(diff) >= 0.5) {
+            // Adjust the last chord to fix rounding drift
+            const last = measure.chords[measure.chords.length - 1];
+            last.width = Math.max(0.5, Math.round((last.width + diff) * 2) / 2);
+        }
+
+        this.recalculatePositions(measure);
     }
 };
 
