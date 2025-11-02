@@ -129,6 +129,8 @@
     will-change: transform;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    cursor: pointer;
+    position: relative;
 }
 
 .product-card:hover {
@@ -136,20 +138,73 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
 
+.product-image-container {
+    position: relative;
+    overflow: hidden;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    max-height: 400px;
+}
+
+.images-count {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.product-admin-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.edit-btn {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.9;
+}
+
+.edit-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
 .product-image {
     width: 100%;
-    height: 250px;
-    object-fit: cover;
+    max-width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
     transition: transform 0.3s ease;
     transform: scale(1);
     transform-origin: center;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     will-change: transform;
+    display: block;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .product-card:hover .product-image {
-    transform: scale(1.02);
+    transform: scale(1.03);
 }
 
 .product-info {
@@ -203,10 +258,16 @@
 .product-price {
     background: linear-gradient(135deg, #28a745, #20c997);
     color: white;
-    padding: 5px 12px;
+    padding: 8px 15px;
     border-radius: 15px;
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
+}
+
+.product-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .product-category {
@@ -216,11 +277,73 @@
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 600;
+    display: inline-block;
+}
+
+.sub-category {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.product-shipping {
+    margin-top: 10px;
+}
+
+.shipping-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.shipping-badge.free {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.shipping-badge.conditional {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: white;
+}
+
+.shipping-badge.paid {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
 }
 
 .product-actions {
     display: flex;
     gap: 10px;
+}
+
+.view-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.view-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
 }
 
 .aliexpress-btn {
@@ -407,5 +530,15 @@
         margin: 10% auto;
         width: 95%;
         padding: 20px;
+    }
+
+    .product-image-container {
+        min-height: 250px;
+        max-height: 350px;
+    }
+
+    .product-image {
+        max-height: 350px;
+        padding: 8px;
     }
 }

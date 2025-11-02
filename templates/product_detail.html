@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product_name }} - מוצר למוזיקאים{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/product_detail.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-container">
+    <div id="loadingState" class="loading-state">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>טוען פרטי מוצר...</p>
+    </div>
+
+    <div id="errorState" class="error-state" style="display: none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>שגיאה בטעינת המוצר</p>
+        <a href="/products" class="back-btn">חזור לעמוד המוצרים</a>
+    </div>
+
+    <div id="productContent" style="display: none;">
+        <!-- Product Header -->
+        <div class="product-header">
+            <a href="/products" class="back-link">
+                <i class="fas fa-arrow-right"></i> חזור לעמוד המוצרים
+            </a>
+            <h1 id="productName"></h1>
+            <div class="product-header-meta">
+                <span id="productCategory" class="category-badge"></span>
+                <span id="productRating" class="rating-display"></span>
+            </div>
+        </div>
+
+        <!-- Main Product Section -->
+        <div class="product-main-section">
+            <!-- Left: Images Gallery -->
+            <div class="product-images-section">
+                <div class="main-image-container">
+                    <img id="mainProductImage" src="" alt="" class="main-product-image">
+                </div>
+                <div id="imageGallery" class="image-gallery">
+                    <!-- Thumbnail images will be loaded here -->
+                </div>
+                <div id="videoSection" class="video-section" style="display: none;">
+                    <h3>סרטונים</h3>
+                    <div id="productVideos" class="videos-grid">
+                        <!-- Videos will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Product Info & Actions -->
+            <div class="product-info-section">
+                <div class="price-section">
+                    <div class="price-main">
+                        <span id="productPriceILS" class="price-ils"></span>
+                        <span id="productPriceUSD" class="price-usd"></span>
+                    </div>
+                    <div id="shippingInfo" class="shipping-info"></div>
+                </div>
+
+                <div class="product-description-section">
+                    <h3>תיאור המוצר</h3>
+                    <p id="productDescription" class="product-description-text"></p>
+                </div>
+
+                <div class="website-info">
+                    <p><strong>נמכר ב:</strong> <span id="productWebsite"></span></p>
+                </div>
+
+                <div class="product-actions-section">
+                    <a id="buyButton" href="#" target="_blank" class="buy-button">
+                        <i class="fas fa-shopping-cart"></i>
+                        קנה עכשיו
+                    </a>
+                    <button onclick="shareProduct()" class="share-button">
+                        <i class="fas fa-share-alt"></i>
+                        שתף
+                    </button>
+                </div>
+
+                {% if session.get('roles') and 'admin' in session.get('roles') %}
+                <div class="admin-actions">
+                    <button onclick="editProductFromDetail()" class="admin-btn edit-btn">
+                        <i class="fas fa-edit"></i> ערוך מוצר
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="reviews-section">
+            <div class="reviews-header">
+                <h2>תגובות משתמשים</h2>
+                <div class="average-rating">
+                    <span id="averageRating"></span>
+                    <span id="reviewsCount"></span>
+                </div>
+            </div>
+
+            {% if session.get('user_id') %}
+            <div class="add-review-form">
+                <h3>הוסף תגובה</h3>
+                <div class="review-form-content">
+                    <div class="review-rating-input">
+                        <label>דירוג:</label>
+                        <div class="star-rating" id="reviewStarRating">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <span id="selectedRatingText">0</span>
+                    </div>
+                    <textarea id="reviewComment" placeholder="כתוב את התגובה שלך כאן..." rows="4"></textarea>
+                    <input type="url" id="reviewVideoUrl" placeholder="קישור לסרטון ביקורת (אופציונלי)">
+                    <button onclick="submitReview()" class="submit-review-btn">שלח תגובה</button>
+                </div>
+            </div>
+            {% else %}
+            <div class="login-prompt">
+                <p>כדי להוסיף תגובה, אנא <a href="/login">התחבר</a></p>
+            </div>
+            {% endif %}
+
+            <div id="reviewsList" class="reviews-list">
+                <!-- Reviews will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Pass data to JavaScript
+    window.productId = '{{ product_id }}';
+    window.userId = {{ session.get('user_id') | tojson or 'null' }};
+    window.userRoles = {{ session.get('roles', []) | tojson }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/product_detail.js') }}"></script>
+{% endblock %}
+

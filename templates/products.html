@@ -27,9 +27,12 @@
 
         <div class="filter-buttons">
             <button class="filter-btn active" onclick="filterByCategory('all')">הכל</button>
-            <button class="filter-btn" onclick="filterByCategory('instruments')">כלי נגינה</button>
-            <button class="filter-btn" onclick="filterByCategory('accessories')">אביזרים</button>
-            <button class="filter-btn" onclick="filterByCategory('audio')">ציוד אודיו</button>
+            <button class="filter-btn" onclick="filterByCategory('תופים')">תופים</button>
+            <button class="filter-btn" onclick="filterByCategory('קלידים')">קלידים</button>
+            <button class="filter-btn" onclick="filterByCategory('גיטרות')">גיטרות</button>
+            <button class="filter-btn" onclick="filterByCategory('כלי נשיפה')">כלי נשיפה</button>
+            <button class="filter-btn" onclick="filterByCategory('ציוד אודיו')">ציוד אודיו</button>
+            <button class="filter-btn" onclick="filterByCategory('אביזרים')">אביזרים</button>
         </div>
     </div>
 
@@ -66,22 +69,71 @@
             </div>
 
             <div class="form-group">
-                <label for="productCategory">קטגוריה</label>
-                <select id="productCategory" required>
-                    <option value="instruments">כלי נגינה</option>
-                    <option value="accessories">אביזרים</option>
-                    <option value="audio">ציוד אודיו</option>
+                <label for="productMainCategory">קטגוריה ראשית</label>
+                <select id="productMainCategory" required>
+                    <option value="תופים">תופים</option>
+                    <option value="קלידים">קלידים</option>
+                    <option value="גיטרות">גיטרות</option>
+                    <option value="כלי נשיפה">כלי נשיפה</option>
+                    <option value="ציוד אודיו">ציוד אודיו</option>
+                    <option value="אביזרים">אביזרים</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="productRating">דירוג (1-5)</label>
-                <input type="number" id="productRating" min="1" max="5" step="0.1" required>
+                <label for="productSubCategory">תת-קטגוריה (אופציונלי)</label>
+                <input type="text" id="productSubCategory" placeholder="למשל: מקלות תופים, מיתרים לגיטרה">
             </div>
 
             <div class="form-group">
-                <label for="productPrice">מחיר משוער ($)</label>
-                <input type="number" id="productPrice" step="0.01" min="0">
+                <label for="productWebsiteName">שם האתר</label>
+                <input type="text" id="productWebsiteName" value="AliExpress" placeholder="AliExpress, eBay וכו'">
+            </div>
+
+            <div class="form-group">
+                <label for="productRating">דירוג משוער (1-5) - אופציונלי</label>
+                <input type="number" id="productRating" min="1" max="5" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>מחיר</label>
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <input type="number" id="productPriceILS" step="0.01" min="0" placeholder="מחיר בשקלים">
+                    </div>
+                    <div style="flex: 1;">
+                        <input type="number" id="productPriceUSD" step="0.01" min="0" placeholder="או מחיר בדולרים">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="productShippingType">שילוח</label>
+                <select id="productShippingType" onchange="updateShippingFields()">
+                    <option value="free">חינם</option>
+                    <option value="paid">בתשלום</option>
+                    <option value="free_above_amount">חינם מעל סכום מסוים</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="shippingCostGroup" style="display: none;">
+                <label for="productShippingCost">עלות שילוח (שקלים)</label>
+                <input type="number" id="productShippingCost" step="0.01" min="0">
+            </div>
+
+            <div class="form-group" id="freeShippingAboveGroup" style="display: none;">
+                <label for="productFreeShippingAbove">חינם מעל (שקלים)</label>
+                <input type="number" id="productFreeShippingAbove" step="0.01" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="productImages">תמונות נוספות (URLs, מופרדות בפסיק)</label>
+                <textarea id="productImages" rows="3" placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="productVideos">סרטונים (URLs, מופרדות בפסיק)</label>
+                <textarea id="productVideos" rows="3" placeholder="https://youtube.com/watch?v=..., https://youtube.com/watch?v=..."></textarea>
             </div>
 
             <button type="submit" class="submit-btn">הוסף מוצר</button>
