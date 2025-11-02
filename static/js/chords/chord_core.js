@@ -324,6 +324,18 @@ const MeasureUtils = {
     },
 
     /**
+     * Create a chord object
+     */
+    createChordObject(chordName, width = MEASURE_DEFAULTS.defaultChordWidth) {
+        return {
+            chord: chordName,
+            width: width,
+            position: 0,
+            isEmpty: chordName === "—" || !chordName
+        };
+    },
+
+    /**
      * Calculate total width of chords in a measure
      */
     getTotalWidth(measure) {
