@@ -15,6 +15,9 @@ let enabledLoops = new Set();
 let loopStates = {};
 const metronome = document.getElementById("metronome-sound");
 
+// Transposition state
+let transposeSemitones = 0; // Current transposition in semitones
+
 // משתני גודל התיבות והפונט
 let measureScale = 1.0; // גודל בסיסי של התיבות
 let fontScale = 1.0;    // גודל בסיסי של הפונט
@@ -38,6 +41,142 @@ function playMetronome() {
     metronome.volume = parseFloat(volume);
     metronome.currentTime = 0;
     metronome.play().catch(() => {});
+}
+
+// Transposition functions
+// Map notes to semitone positions from C (0 semitones)
+const noteToSemitones = {
+    'C': 0, 'C#': 1, 'Db': 1,
+    'D': 2, 'D#': 3, 'Eb': 3,
+    'E': 4,
+    'F': 5, 'F#': 6, 'Gb': 6,
+    'G': 7, 'G#': 8, 'Ab': 8,
+    'A': 9, 'A#': 10, 'Bb': 10,
+    'B': 11
+};
+
+// Map semitone positions to note names (preferring sharps for up, flats for down)
+const semitonesToNote = {
+    0: 'C', 1: 'C#', 2: 'D', 3: 'D#', 4: 'E', 5: 'F',
+    6: 'F#', 7: 'G', 8: 'G#', 9: 'A', 10: 'A#', 11: 'B'
+};
+
+const semitonesToNoteFlat = {
+    0: 'C', 1: 'Db', 2: 'D', 3: 'Eb', 4: 'E', 5: 'F',
+    6: 'Gb', 7: 'G', 8: 'Ab', 9: 'A', 10: 'Bb', 11: 'B'
+};
+
+// Transpose a single chord name
+function transposeChord(chordName, semitones) {
+    if (!chordName || typeof chordName !== 'string') {
+        return chordName;
+    }
+    
+    // Skip preparation chords
+    if (chordName.includes('הכנה') || chordName.trim() === '') {
+        return chordName;
+    }
+    
+    // Extract root note (can be 1-2 characters: C, C#, Db, etc.)
+    // Match case-insensitive but convert to uppercase for lookup
+    const chordMatch = chordName.match(/^([A-Ga-g][#b]?)(.*)/i);
+    if (!chordMatch) {
+        return chordName; // Return as-is if doesn't match pattern
+    }
+    
+    // Convert root note to uppercase for lookup (C, C#, Db, etc.)
+    let rootNote = chordMatch[1];
+    if (rootNote.length === 1) {
+        rootNote = rootNote.toUpperCase();
+    } else {
+        rootNote = rootNote.charAt(0).toUpperCase() + rootNote.slice(1);
+    }
+    const suffix = chordMatch[2]; // Everything after the root note (m, maj, dim, etc.)
+    
+    // Get semitone position of root note
+    const rootSemitones = noteToSemitones[rootNote];
+    if (rootSemitones === undefined) {
+        return chordName; // Unknown note, return as-is
+    }
+    
+    // Calculate new semitone position
+    let newSemitones = (rootSemitones + semitones) % 12;
+    if (newSemitones < 0) {
+        newSemitones += 12;
+    }
+    
+    // Choose note name based on whether transposing up or down
+    // Prefer sharps when going up, flats when going down (or keep original preference)
+    let newRootNote;
+    if (rootNote.includes('#')) {
+        // Original was sharp, prefer sharp
+        newRootNote = semitonesToNote[newSemitones];
+    } else if (rootNote.includes('b')) {
+        // Original was flat, prefer flat
+        newRootNote = semitonesToNoteFlat[newSemitones];
+    } else {
+        // Natural note - prefer sharp when going up, flat when going down
+        if (semitones >= 0) {
+            newRootNote = semitonesToNote[newSemitones];
+        } else {
+            newRootNote = semitonesToNoteFlat[newSemitones];
+        }
+    }
+    
+    return newRootNote + suffix;
+}
+
+function transposeUp() {
+    const input = document.getElementById('transpose-input');
+    const slider = document.getElementById('transpose-slider');
+    let currentValue = parseFloat(input.value) || 0;
+    
+    if (currentValue < 6) {
+        currentValue = Math.min(currentValue + 0.5, 6);
+        input.value = currentValue;
+        slider.value = currentValue;
+        transposeSemitones = currentValue * 2; // Convert tones to semitones
+        updateTransposeInfo();
+        renderChords();
+    }
+}
+
+function transposeDown() {
+    const input = document.getElementById('transpose-input');
+    const slider = document.getElementById('transpose-slider');
+    let currentValue = parseFloat(input.value) || 0;
+    
+    if (currentValue > -6) {
+        currentValue = Math.max(currentValue - 0.5, -6);
+        input.value = currentValue;
+        slider.value = currentValue;
+        transposeSemitones = currentValue * 2; // Convert tones to semitones
+        updateTransposeInfo();
+        renderChords();
+    }
+}
+
+function resetTranspose() {
+    const input = document.getElementById('transpose-input');
+    const slider = document.getElementById('transpose-slider');
+    input.value = 0;
+    slider.value = 0;
+    transposeSemitones = 0;
+    updateTransposeInfo();
+    renderChords();
+}
+
+function updateTransposeInfo() {
+    const info = document.getElementById('transpose-info');
+    const tones = transposeSemitones / 2;
+    const semitones = transposeSemitones;
+    let text = `שינוי: ${tones >= 0 ? '+' : ''}${tones} טונים (${semitones >= 0 ? '+' : ''}${semitones} סמיטונים)`;
+    
+    if (transposeSemitones === 0) {
+        text = 'שינוי: 0 טונים (0 סמיטונים)';
+    }
+    
+    info.innerHTML = `<span>${text}</span>`;
 }
 
 // פונקציות הגדלה/הקטנה של התיבות
@@ -462,7 +601,9 @@ function createMeasureElement(measureData) {
         chordBox.style.flexGrow = "0";
         chordBox.style.flexShrink = "0";
 
-        chordBox.innerText = chord.chord;
+        // Apply transposition to chord name
+        const transposedChordName = transposeChord(chord.chord, transposeSemitones);
+        chordBox.innerText = transposedChordName;
 
         // הוסף אפשרות לקליק על אקורד ספציפי
         chordBox.addEventListener("click", (e) => {
@@ -825,13 +966,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const bpmInput = document.getElementById("bpm-input");
     const volumeSlider = document.getElementById("volume-slider");
     const preparationCheckbox = document.getElementById("add-preparation");
+    const transposeSlider = document.getElementById("transpose-slider");
+    const transposeInput = document.getElementById("transpose-input");
+
+    // Transpose controls
+    transposeSlider.addEventListener("input", (e) => {
+        const value = parseFloat(e.target.value);
+        transposeInput.value = value;
+        transposeSemitones = value * 2; // Convert tones to semitones
+        updateTransposeInfo();
+        renderChords();
+    });
+    
+    transposeInput.addEventListener("change", (e) => {
+        let value = parseFloat(e.target.value);
+        if (isNaN(value)) value = 0;
+        if (value < -6) value = -6;
+        if (value > 6) value = 6;
+        transposeInput.value = value;
+        transposeSlider.value = value;
+        transposeSemitones = value * 2; // Convert tones to semitones
+        updateTransposeInfo();
+        renderChords();
+    });
 
     // BPM controls
     bpmSlider.addEventListener("input", (e) => {
         bpm = parseInt(e.target.value);
         bpmInput.value = bpm;
         document.getElementById("current-bpm").innerText = bpm;
-        intervalMs = 60000 / bmp;
+        intervalMs = 60000 / bpm;
 
         if (interval) {
             stopPlayback();
@@ -893,8 +1057,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 e.preventDefault();
                 if (bpm < 200) {
                     bpm += 5;
-                    bmpSlider.value = bpm;
-                    bmpInput.value = bpm;
+                    bpmSlider.value = bpm;
+                    bpmInput.value = bpm;
                     document.getElementById("current-bpm").innerText = bpm;
                     intervalMs = 60000 / bpm;
                 }
@@ -903,8 +1067,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 e.preventDefault();
                 if (bpm > 40) {
                     bpm -= 5;
-                    bmpSlider.value = bpm;
-                    bmpInput.value = bpm;
+                    bpmSlider.value = bpm;
+                    bpmInput.value = bpm;
                     document.getElementById("current-bpm").innerText = bpm;
                     intervalMs = 60000 / bpm;
                 }
@@ -940,6 +1104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize everything
     initializeSongPartsControls();
+    updateTransposeInfo();
     renderChords();
 
     // Show keyboard shortcuts hint

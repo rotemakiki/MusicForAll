@@ -130,6 +130,26 @@
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" class="volume-slider">
             </div>
 
+            <!-- בקרת טרנספוזיציה -->
+            <div class="control-group">
+                <label for="transpose-slider" class="control-label">
+                    <span class="control-icon">🎹</span>
+                    טרנספוזיציה
+                </label>
+                <div class="transpose-controls">
+                    <div class="transpose-buttons">
+                        <button onclick="transposeDown()" class="transpose-btn decrease" title="הורד בטון">⬇️</button>
+                        <input type="number" id="transpose-input" min="-6" max="6" step="0.5" value="0" class="transpose-input">
+                        <button onclick="transposeUp()" class="transpose-btn" title="העלה בטון">⬆️</button>
+                    </div>
+                    <input type="range" id="transpose-slider" min="-6" max="6" step="0.5" value="0" class="transpose-slider">
+                    <button onclick="resetTranspose()" class="reset-btn" title="אפס טרנספוזיציה">🔄</button>
+                </div>
+                <div class="transpose-info" id="transpose-info">
+                    <span>שינוי: 0 טונים (0 סמיטונים)</span>
+                </div>
+            </div>
+
             <!-- Size Controls Section -->
             <div class="control-group">
                 <div class="size-controls">
