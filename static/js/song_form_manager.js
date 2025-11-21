@@ -103,11 +103,19 @@ function initializeMultiGenre() {
             updateGenresDisplay();
             genreSelect.value = ""; // איפוס הבחירה
             validateGenres();
+            // שמירה אוטומטית של הטופס
+            saveFormData();
         }
     });
 
     // עדכון תצוגת הז'אנרים הנבחרים
     function updateGenresDisplay() {
+        if (!selectedGenresContainer) {
+            console.error("❌ selectedGenresContainer לא נמצא!");
+            return;
+        }
+        
+        console.log("🔄 מעדכן תצוגת ז'אנרים עם:", selectedGenres);
         selectedGenresContainer.innerHTML = "";
 
         selectedGenres.forEach(genreValue => {
@@ -122,10 +130,14 @@ function initializeMultiGenre() {
             `;
 
             selectedGenresContainer.appendChild(genreTag);
+            console.log("✅ הוסף ז'אנר לתצוגה:", genreText);
         });
 
         // עדכון השדה הנסתר
-        genresListInput.value = JSON.stringify(selectedGenres);
+        if (genresListInput) {
+            genresListInput.value = JSON.stringify(selectedGenres);
+            console.log("💾 עודכן שדה נסתר עם:", genresListInput.value);
+        }
 
         // הוספת אירועי הסרה
         selectedGenresContainer.querySelectorAll(".remove-genre").forEach(btn => {
@@ -134,6 +146,8 @@ function initializeMultiGenre() {
                 selectedGenres = selectedGenres.filter(g => g !== genreToRemove);
                 updateGenresDisplay();
                 validateGenres();
+                // שמירה אוטומטית של הטופס
+                saveFormData();
             });
         });
     }
@@ -153,15 +167,23 @@ function initializeMultiGenre() {
 
     // טעינת ז'אנרים מנתונים שמורים
     function loadSavedGenres(genres) {
-        if (Array.isArray(genres)) {
+        console.log("🎭 loadSavedGenres נקרא עם:", genres, "סוג:", typeof genres);
+        if (Array.isArray(genres) && genres.length > 0) {
             selectedGenres = [...genres];
+            console.log("✅ מעדכן selectedGenres ל:", selectedGenres);
             updateGenresDisplay();
             validateGenres();
+            // ודא שהנתונים נשמרו גם ב-localStorage
+            saveFormData();
         } else if (typeof genres === 'string' && genres) {
             // תמיכה לאחור - אם יש רק ז'אנר יחיד
             selectedGenres = [genres];
+            console.log("✅ מעדכן selectedGenres (מחרוזת) ל:", selectedGenres);
             updateGenresDisplay();
             validateGenres();
+            saveFormData();
+        } else {
+            console.log("⚠️ loadSavedGenres קיבל ערך לא תקין:", genres);
         }
     }
 
@@ -350,22 +372,27 @@ function checkForReturnedChords() {
 function saveFormData() {
     const mode = detectFormMode();
 
+    // ודא שהז'אנרים נשמרים נכון - השתמש בפונקציה שמחזירה את המערך
+    const genresToSave = window.getSelectedGenres ? window.getSelectedGenres() : selectedGenres;
+
     const formData = {
         title: document.getElementById("title").value,
         artist: document.getElementById("artist").value,
-        genres: JSON.stringify(selectedGenres),
+        genres: JSON.stringify(genresToSave),
         key: document.getElementById("key").value,
         key_type: document.getElementById("key_type").value,
         difficulty: document.getElementById("difficulty").value,
         time_signature: document.getElementById("time_signature").value,
         bpm: document.getElementById("bpm").value,
-        video_url: document.getElementById("video_url").value
+        video_url: document.getElementById("video_url").value,
+        song_version: document.getElementById("song_version") ? document.getElementById("song_version").value : "",
+        notes: document.getElementById("notes") ? document.getElementById("notes").value : ""
     };
 
     const storageKey = mode.isEditMode ? "editSongData" : "songData";
     localStorage.setItem(storageKey, JSON.stringify(formData));
 
-    console.log("💾 נתוני טופס נשמרו:", { mode: mode.isEditMode ? "edit" : "add", formData });
+    console.log("💾 נתוני טופס נשמרו:", { mode: mode.isEditMode ? "edit" : "add", formData, genres: genresToSave });
 }
 
 // טעינת נתוני טופס
@@ -378,20 +405,66 @@ function loadFormData() {
 
     for (const key in savedData) {
         const element = document.getElementById(key);
-        if (element && savedData[key]) {
+        if (element) {
             if (key === 'genres') {
-                // טען ז'אנרים
+                // טען ז'אנרים - חשוב מאוד לתקן את הבאג כאן
                 try {
-                    const genres = JSON.parse(savedData[key]);
-                    if (window.loadGenres) {
-                        window.loadGenres(genres);
+                    let genres;
+                    // נסה לפרסר כ-JSON string
+                    if (typeof savedData[key] === 'string') {
+                        genres = JSON.parse(savedData[key]);
+                    } else if (Array.isArray(savedData[key])) {
+                        genres = savedData[key];
+                    } else {
+                        genres = [];
+                    }
+                    
+                    console.log("🎭 טוען ז'אנרים שמורים:", genres, "סוג:", typeof genres, "אורך:", Array.isArray(genres) ? genres.length : 'לא מערך');
+                    
+                    if (Array.isArray(genres) && genres.length > 0) {
+                        // נחכה קצת אם loadGenres עדיין לא מוכן
+                        const loadGenresWithRetry = (retries = 5) => {
+                            if (window.loadGenres) {
+                                window.loadGenres(genres);
+                                console.log("✅ ז'אנרים נטענו בהצלחה:", genres);
+                            } else if (retries > 0) {
+                                console.log("⏳ ממתין ל-loadGenres... נותרו", retries, "ניסיונות");
+                                setTimeout(() => loadGenresWithRetry(retries - 1), 100);
+                            } else {
+                                console.error("❌ loadGenres לא זמין אחרי כל הניסיונות");
+                            }
+                        };
+                        loadGenresWithRetry();
+                    } else {
+                        console.log("⚠️ אין ז'אנרים שמורים או מערך ריק");
                     }
                 } catch (e) {
-                    console.log("שגיאה בטעינת ז'אנרים:", e);
+                    console.error("❌ שגיאה בטעינת ז'אנרים:", e, savedData[key]);
+                    // נסה לטעון כמערך ישיר אם זה לא JSON
+                    if (Array.isArray(savedData[key]) && savedData[key].length > 0) {
+                        if (window.loadGenres) {
+                            window.loadGenres(savedData[key]);
+                        } else {
+                            // נחכה קצת
+                            setTimeout(() => {
+                                if (window.loadGenres) {
+                                    window.loadGenres(savedData[key]);
+                                }
+                            }, 200);
+                        }
+                    }
+                }
+            } else if (key === 'notes') {
+                // textarea - צריך לטפל בו בנפרד
+                if (savedData[key]) {
+                    element.value = savedData[key];
                 }
             } else {
-                element.value = savedData[key];
-                validateField(key, savedData[key]);
+                // שדות רגילים
+                if (savedData[key] !== undefined && savedData[key] !== null && savedData[key] !== "") {
+                    element.value = savedData[key];
+                    validateField(key, savedData[key]);
+                }
             }
         }
     }
@@ -569,6 +642,8 @@ function handleFormSubmission(event) {
         time_signature: document.getElementById("time_signature").value,
         bpm: parseInt(document.getElementById("bpm").value),
         video_url: document.getElementById("video_url").value,
+        song_version: document.getElementById("song_version") ? document.getElementById("song_version").value : "",
+        notes: document.getElementById("notes") ? document.getElementById("notes").value : ""
     };
 
     // טיפול בקישורי YouTube
@@ -722,10 +797,17 @@ document.addEventListener("DOMContentLoaded", function () {
         initializeNewSong();
     }
 
-    // טעינת נתונים קיימים (רק אם חזרנו מאקורדים)
+    // טעינת נתונים קיימים (אם חזרנו מאקורדים או אם יש נתונים שמורים)
+    // נשתמש ב-setTimeout כדי לוודא ש-initializeMultiGenre סיים להגדיר את window.loadGenres
     const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
-    if (justReturnedFromChords === "true") {
-        loadFormData();
+    const storageKey = mode.isEditMode ? "editSongData" : "songData";
+    const hasSavedData = localStorage.getItem(storageKey);
+    
+    if (justReturnedFromChords === "true" || (hasSavedData && !mode.isEditMode)) {
+        // נחכה קצת כדי לוודא ש-initializeMultiGenre סיים
+        setTimeout(() => {
+            loadFormData();
+        }, 150);
     }
 
     // בדיקה וטיפול בחזרה מאקורדים
@@ -734,14 +816,60 @@ document.addEventListener("DOMContentLoaded", function () {
     // עדכון כפתור האקורדים
     updateChordsButton();
 
+    // בדיקה נוספת - אם יש ז'אנרים שמורים אבל לא נטענו, ננסה לטעון אותם שוב
+    setTimeout(() => {
+        const storageKey = mode.isEditMode ? "editSongData" : "songData";
+        const savedData = JSON.parse(localStorage.getItem(storageKey) || "{}");
+        if (savedData.genres) {
+            const currentGenres = window.getSelectedGenres ? window.getSelectedGenres() : [];
+            try {
+                const savedGenres = typeof savedData.genres === 'string' 
+                    ? JSON.parse(savedData.genres) 
+                    : savedData.genres;
+                
+                if (Array.isArray(savedGenres) && savedGenres.length > 0) {
+                    const genresMatch = currentGenres.length === savedGenres.length && 
+                                     currentGenres.every(g => savedGenres.includes(g));
+                    
+                    if (!genresMatch && window.loadGenres) {
+                        console.log("🔄 ז'אנרים לא תואמים - טוען מחדש:", savedGenres);
+                        window.loadGenres(savedGenres);
+                    }
+                }
+            } catch (e) {
+                console.error("❌ שגיאה בבדיקת ז'אנרים:", e);
+            }
+        }
+    }, 500);
+
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url', 'song_version', 'notes'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {
             el.addEventListener("input", saveFormData);
+            el.addEventListener("change", saveFormData);
         }
     });
+
+    // שמירה אוטומטית גם כשמוסיפים/מוחקים ז'אנרים
+    const addGenreBtn = document.getElementById("add-genre-btn");
+    if (addGenreBtn) {
+        // נשמור אחרי כל שינוי בז'אנרים
+        const originalAddGenre = addGenreBtn.onclick;
+        const genreSelect = document.getElementById("genre");
+        if (genreSelect) {
+            // נשמור כשמוסיפים ז'אנר
+            const selectedGenresContainer = document.getElementById("selected-genres");
+            if (selectedGenresContainer) {
+                // נשתמש ב-MutationObserver כדי לזהות שינויים בז'אנרים
+                const observer = new MutationObserver(() => {
+                    saveFormData();
+                });
+                observer.observe(selectedGenresContainer, { childList: true, subtree: true });
+            }
+        }
+    }
 
     // חיבור אירוע שליחת טופס
     if (mode.formElement) {

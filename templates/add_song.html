@@ -103,6 +103,20 @@
 
                         <div class="field-validation" id="genre-validation"></div>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="song_version">
+                            <span class="label-icon">🎬</span>
+                            גרסת השיר
+                        </label>
+                        <select id="song_version" name="song_version" class="form-select">
+                            <option value="">בחר גרסה</option>
+                            <option value="original">גרסת אלבום (מקורית)</option>
+                            <option value="cover">קאבר של אמן אחר</option>
+                            <option value="live">גרסת הופעה חיה</option>
+                        </select>
+                        <div class="field-validation" id="song_version-validation"></div>
+                    </div>
                 </div>
 
                 <!-- Musical Details Section -->
@@ -274,6 +288,25 @@
 
                     <input type="hidden" id="chords" name="chords" required>
                     <input type="hidden" id="loops" name="loops">
+                </div>
+
+                <!-- Notes Section -->
+                <div class="form-section full-width-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">📝</span>
+                        הערות
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="notes">
+                            <span class="label-icon">💬</span>
+                            הערות למורה
+                        </label>
+                        <textarea id="notes" name="notes" class="form-input" rows="4"
+                                  placeholder="הכנס הערות חשובות על השיר, דגשים מיוחדים, או מידע נוסף שיכול לעזור..."></textarea>
+                        <div class="input-hint">הערות שיכולות לעזור למורים אחרים להבין את השיר טוב יותר</div>
+                        <div class="field-validation" id="notes-validation"></div>
+                    </div>
                 </div>
             </div>
 

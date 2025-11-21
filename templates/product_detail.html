@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/product_detail.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/products.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -132,6 +133,107 @@
         </div>
     </div>
 </div>
+
+<!-- Add Product Modal (Admin Only) -->
+{% if session.get('roles') and 'admin' in session.get('roles') %}
+<div id="addProductModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddProductModal()">&times;</span>
+        <h2>ערוך מוצר</h2>
+        <form id="addProductForm" onsubmit="addProduct(event)">
+            <div class="form-group">
+                <label for="productName">שם המוצר</label>
+                <input type="text" id="productName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productDescription">תיאור</label>
+                <textarea id="productDescription" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="productImage">תמונה (URL)</label>
+                <input type="url" id="productImage" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productAliexpressLink">קישור לאלי אקספרס</label>
+                <input type="url" id="productAliexpressLink" required>
+            </div>
+
+            <div class="form-group">
+                <label for="productMainCategory">קטגוריה ראשית</label>
+                <select id="productMainCategory" required>
+                    <option value="תופים">תופים</option>
+                    <option value="קלידים">קלידים</option>
+                    <option value="גיטרות">גיטרות</option>
+                    <option value="כלי נשיפה">כלי נשיפה</option>
+                    <option value="ציוד אודיו">ציוד אודיו</option>
+                    <option value="אביזרים">אביזרים</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="productSubCategory">תת-קטגוריה (אופציונלי)</label>
+                <input type="text" id="productSubCategory" placeholder="למשל: מקלות תופים, מיתרים לגיטרה">
+            </div>
+
+            <div class="form-group">
+                <label for="productWebsiteName">שם האתר</label>
+                <input type="text" id="productWebsiteName" value="AliExpress" placeholder="AliExpress, eBay וכו'">
+            </div>
+
+            <div class="form-group">
+                <label for="productRating">דירוג משוער (1-5) - אופציונלי</label>
+                <input type="number" id="productRating" min="1" max="5" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>מחיר</label>
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <input type="number" id="productPriceILS" step="0.01" min="0" placeholder="מחיר בשקלים">
+                    </div>
+                    <div style="flex: 1;">
+                        <input type="number" id="productPriceUSD" step="0.01" min="0" placeholder="או מחיר בדולרים">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="productShippingType">שילוח</label>
+                <select id="productShippingType" onchange="updateShippingFields()">
+                    <option value="free">חינם</option>
+                    <option value="paid">בתשלום</option>
+                    <option value="free_above_amount">חינם מעל סכום מסוים</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="shippingCostGroup" style="display: none;">
+                <label for="productShippingCost">עלות שילוח (שקלים)</label>
+                <input type="number" id="productShippingCost" step="0.01" min="0">
+            </div>
+
+            <div class="form-group" id="freeShippingAboveGroup" style="display: none;">
+                <label for="productFreeShippingAbove">חינם מעל (שקלים)</label>
+                <input type="number" id="productFreeShippingAbove" step="0.01" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="productImages">תמונות נוספות (URLs, מופרדות בפסיק)</label>
+                <textarea id="productImages" rows="3" placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="productVideos">סרטונים (URLs, מופרדות בפסיק)</label>
+                <textarea id="productVideos" rows="3" placeholder="https://youtube.com/watch?v=..., https://youtube.com/watch?v=..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">עדכן מוצר</button>
+        </form>
+    </div>
+</div>
+{% endif %}
 
 <script>
     // Pass data to JavaScript

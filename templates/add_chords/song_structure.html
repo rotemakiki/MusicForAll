@@ -6,7 +6,19 @@
         <div class="current-loop-section">
             <div class="loop-header">
                 <h4>לופ נוכחי</h4>
-                <input type="text" class="loop-name-input" id="loop-name" placeholder="(בית, פזמון...)">
+                <div class="loop-name-selector">
+                    <select class="loop-name-select" id="loop-name-select">
+                        <option value="">בחר סוג לופ</option>
+                        <option value="פתיח (Intro)">פתיח (Intro)</option>
+                        <option value="בית (Verse)">בית (Verse)</option>
+                        <option value="פזמון (Chorus)">פזמון (Chorus)</option>
+                        <option value="מעבר (Bridge)">מעבר (Bridge)</option>
+                        <option value="C part">C part</option>
+                        <option value="סיום (Outro)">סיום (Outro)</option>
+                        <option value="other">אחר</option>
+                    </select>
+                    <input type="text" class="loop-name-input" id="loop-name" placeholder="הכנס שם מותאם אישית..." style="display: none;">
+                </div>
             </div>
 
             <div class="current-loop-measures">

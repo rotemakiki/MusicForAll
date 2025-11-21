@@ -5,7 +5,18 @@ let selectedRating = 0;
 document.addEventListener('DOMContentLoaded', function() {
     loadProduct();
     setupStarRating();
+    setupEventListeners();
 });
+
+function setupEventListeners() {
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('addProductModal');
+        if (modal && event.target === modal) {
+            closeAddProductModal();
+        }
+    }
+}
 
 async function loadProduct() {
     try {
@@ -392,8 +403,72 @@ function shareProduct() {
     }
 }
 
-function editProductFromDetail() {
-    window.location.href = `/products?edit=${window.productId}`;
+async function editProductFromDetail() {
+    // Load product data and open edit modal
+    try {
+        const response = await fetch(`/api/products/${window.productId}`);
+        if (!response.ok) throw new Error('Failed to load product');
+        
+        const product = await response.json();
+        
+        // Populate form with product data
+        document.getElementById('productName').value = product.name || '';
+        document.getElementById('productDescription').value = product.description || '';
+        document.getElementById('productImage').value = product.image || '';
+        document.getElementById('productAliexpressLink').value = product.aliexpress_link || '';
+        if (document.getElementById('productWebsiteName')) {
+            document.getElementById('productWebsiteName').value = product.website_name || 'AliExpress';
+        }
+        document.getElementById('productMainCategory').value = product.main_category || '';
+        if (document.getElementById('productSubCategory')) {
+            document.getElementById('productSubCategory').value = product.sub_category || '';
+        }
+        if (document.getElementById('productRating')) {
+            document.getElementById('productRating').value = product.rating || '';
+        }
+        
+        if (product.price_ils && document.getElementById('productPriceILS')) {
+            document.getElementById('productPriceILS').value = product.price_ils;
+        } else if (product.price_usd && document.getElementById('productPriceUSD')) {
+            document.getElementById('productPriceUSD').value = product.price_usd;
+        }
+        
+        if (document.getElementById('productShippingType')) {
+            document.getElementById('productShippingType').value = product.shipping_type || 'free';
+            updateShippingFields();
+        }
+        
+        if (product.shipping_cost && document.getElementById('productShippingCost')) {
+            document.getElementById('productShippingCost').value = product.shipping_cost;
+        }
+        if (product.free_shipping_above && document.getElementById('productFreeShippingAbove')) {
+            document.getElementById('productFreeShippingAbove').value = product.free_shipping_above;
+        }
+        
+        if (document.getElementById('productImages')) {
+            document.getElementById('productImages').value = product.images ? product.images.join(', ') : '';
+        }
+        if (document.getElementById('productVideos')) {
+            document.getElementById('productVideos').value = product.videos ? product.videos.join(', ') : '';
+        }
+        
+        // Store product ID for update
+        const form = document.getElementById('addProductForm');
+        form.dataset.productId = window.productId;
+        form.dataset.isEdit = 'true';
+        
+        // Change submit button text and modal title
+        const submitBtn = form.querySelector('.submit-btn');
+        if (submitBtn) submitBtn.textContent = 'עדכן מוצר';
+        
+        const modalTitle = document.querySelector('#addProductModal h2');
+        if (modalTitle) modalTitle.textContent = 'ערוך מוצר';
+        
+        openAddProductModal();
+    } catch (error) {
+        console.error('Error loading product for edit:', error);
+        showNotification('שגיאה בטעינת המוצר לעריכה', 'error');
+    }
 }
 
 function generateStars(rating) {
@@ -459,5 +534,129 @@ function showNotification(message, type) {
         notification.style.transform = 'translateX(400px)';
         setTimeout(() => document.body.removeChild(notification), 300);
     }, 3000);
+}
+
+function openAddProductModal() {
+    const modal = document.getElementById('addProductModal');
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeAddProductModal() {
+    const modal = document.getElementById('addProductModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        const form = document.getElementById('addProductForm');
+        if (form) {
+            form.reset();
+            delete form.dataset.productId;
+            delete form.dataset.isEdit;
+            const submitBtn = form.querySelector('.submit-btn');
+            if (submitBtn) submitBtn.textContent = 'עדכן מוצר';
+            const modalTitle = document.querySelector('#addProductModal h2');
+            if (modalTitle) modalTitle.textContent = 'ערוך מוצר';
+        }
+    }
+}
+
+function updateShippingFields() {
+    const shippingType = document.getElementById('productShippingType');
+    if (!shippingType) return;
+    
+    const shippingCostGroup = document.getElementById('shippingCostGroup');
+    const freeShippingAboveGroup = document.getElementById('freeShippingAboveGroup');
+
+    if (shippingCostGroup) shippingCostGroup.style.display = shippingType.value === 'paid' ? 'block' : 'none';
+    if (freeShippingAboveGroup) freeShippingAboveGroup.style.display = shippingType.value === 'free_above_amount' ? 'block' : 'none';
+}
+
+async function addProduct(event) {
+    event.preventDefault();
+
+    // Parse images and videos
+    const imagesText = document.getElementById('productImages')?.value || '';
+    const images = imagesText ? imagesText.split(',').map(img => img.trim()).filter(img => img) : [];
+    
+    const videosText = document.getElementById('productVideos')?.value || '';
+    const videos = videosText ? videosText.split(',').map(v => v.trim()).filter(v => v) : [];
+
+    // Handle price
+    const priceILS = document.getElementById('productPriceILS')?.value;
+    const priceUSD = document.getElementById('productPriceUSD')?.value;
+    
+    // Get shipping info
+    const shippingType = document.getElementById('productShippingType')?.value || 'free';
+    const shippingCost = document.getElementById('productShippingCost')?.value;
+    const freeShippingAbove = document.getElementById('productFreeShippingAbove')?.value;
+
+    const formData = {
+        name: document.getElementById('productName').value,
+        description: document.getElementById('productDescription').value,
+        image: document.getElementById('productImage').value,
+        images: images,
+        videos: videos,
+        aliexpress_link: document.getElementById('productAliexpressLink').value,
+        website_name: document.getElementById('productWebsiteName')?.value || 'AliExpress',
+        main_category: document.getElementById('productMainCategory').value,
+        sub_category: document.getElementById('productSubCategory')?.value || '',
+        rating: document.getElementById('productRating')?.value ? parseFloat(document.getElementById('productRating').value) : null,
+        shipping_type: shippingType
+    };
+
+    // Add price
+    if (priceILS) {
+        formData.price_ils = parseFloat(priceILS);
+    } else if (priceUSD) {
+        formData.price_usd = parseFloat(priceUSD);
+    }
+
+    // Add shipping details
+    if (shippingType === 'paid' && shippingCost) {
+        formData.shipping_cost = parseFloat(shippingCost);
+    } else if (shippingType === 'free_above_amount' && freeShippingAbove) {
+        formData.free_shipping_above = parseFloat(freeShippingAbove);
+    }
+
+    // Check if this is an update
+    const form = document.getElementById('addProductForm');
+    const isEdit = form.dataset.isEdit === 'true';
+    const productId = form.dataset.productId || window.productId;
+
+    try {
+        const url = isEdit ? `/api/products/${productId}` : '/api/products';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || `Failed to ${isEdit ? 'update' : 'add'} product`);
+        }
+
+        // Close modal
+        closeAddProductModal();
+        showNotification(`המוצר ${isEdit ? 'עודכן' : 'נוסף'} בהצלחה!`, 'success');
+
+        // Reload the product page to show updated data
+        if (isEdit) {
+            setTimeout(() => {
+                loadProduct();
+            }, 500);
+        }
+
+    } catch (error) {
+        console.error(`Error ${isEdit ? 'updating' : 'adding'} product:`, error);
+        showNotification(`שגיאה ב${isEdit ? 'עדכון' : 'הוספת'} המוצר: ${error.message}`, 'error');
+    }
 }
 

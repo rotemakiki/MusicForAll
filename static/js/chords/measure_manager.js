@@ -367,7 +367,7 @@ class MeasureManager {
      */
     saveEditedMeasure() {
         if (this.editingLoop && this.editingMeasureIndex >= 0) {
-            this.editingLoop.measures[this.editingMeasureIndex] = {...this.currentMeasure};
+            this.editingLoop.measures[this.editingMeasureIndex] = JSON.parse(JSON.stringify(this.currentMeasure));
             this.editingLoop = null;
             this.editingMeasureIndex = -1;
             this.updateMeasureCounter();
@@ -375,6 +375,11 @@ class MeasureManager {
             const nextBtn = document.getElementById("next-measure-btn");
             if (nextBtn) {
                 nextBtn.textContent = "➡️ מעבר לתיבה הבאה";
+            }
+
+            // Re-render saved loops to show the updated measure
+            if (window.loopManager) {
+                window.loopManager.renderSavedLoops();
             }
 
             return true;

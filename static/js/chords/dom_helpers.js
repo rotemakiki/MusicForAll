@@ -246,8 +246,17 @@ class DOMHelpers {
 
         if (loopManager) {
             const hasLoopContent = loopManager.hasCurrentLoopContent();
+            const loopNameSelect = document.getElementById("loop-name-select");
             const loopNameInput = document.getElementById("loop-name");
-            const hasLoopName = loopNameInput ? loopNameInput.value.trim().length > 0 : false;
+            
+            let hasLoopName = false;
+            if (loopNameSelect) {
+                if (loopNameSelect.value === 'other') {
+                    hasLoopName = loopNameInput ? loopNameInput.value.trim().length > 0 : false;
+                } else {
+                    hasLoopName = loopNameSelect.value.length > 0;
+                }
+            }
 
             console.log("🔄 מצב לופים:", {
                 hasLoopContent,

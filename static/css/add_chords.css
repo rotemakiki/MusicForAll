@@ -1183,6 +1183,30 @@ input:checked + .half-beats-slider:before {
     margin-bottom: 10px;
 }
 
+.loop-name-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.loop-name-select {
+    padding: 6px 10px;
+    border: 2px solid #e17055;
+    border-radius: 6px;
+    background: white;
+    font-weight: 600;
+    font-size: 13px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.loop-name-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .loop-name-input {
     padding: 6px 10px;
     border: 2px solid #e17055;
@@ -1190,7 +1214,7 @@ input:checked + .half-beats-slider:before {
     background: white;
     font-weight: 600;
     font-size: 13px;
-    width: 120px;
+    width: 100%;
 }
 
 .loop-name-input:focus {
@@ -1377,6 +1401,12 @@ input:checked + .half-beats-slider:before {
     color: #2c3e50;
     margin-bottom: 5px;
     font-size: 14px;
+    transition: all 0.2s;
+}
+
+.loop-title:hover {
+    color: #667eea;
+    text-decoration: underline;
 }
 
 .loop-info {
@@ -1388,6 +1418,35 @@ input:checked + .half-beats-slider:before {
 .finish-controls {
     text-align: center;
     margin-top: 20px;
+}
+
+/* Clone Loop Button */
+.clone-loop-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    padding: 0;
+}
+
+.clone-loop-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #764ba2, #5a3d7a);
+}
+
+.clone-loop-btn:active {
+    transform: scale(0.95);
 }
 
 /* Delete Loop Button */

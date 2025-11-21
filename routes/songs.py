@@ -290,6 +290,8 @@ def add_song():
         "video_url": data["video_url"],
         "chords": json.dumps(data["chords"]),
         "loops": json.dumps(loops_data),
+        "song_version": data.get("song_version", ""),  # Optional field
+        "notes": data.get("notes", ""),  # Optional field
         "created_at": datetime.utcnow(),
         "created_by": session.get("user_id"),
     }
@@ -339,6 +341,8 @@ def edit_song_api(song_id):
         "video_url": data["video_url"],
         "chords": json.dumps(data["chords"]),
         "loops": json.dumps(loops_data),
+        "song_version": data.get("song_version", ""),  # Optional field
+        "notes": data.get("notes", ""),  # Optional field
         "updated_at": datetime.utcnow()
     }
     firestore.client().collection("songs").document(song_id).update(updated_fields)

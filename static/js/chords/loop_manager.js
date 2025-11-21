@@ -27,7 +27,30 @@ class LoopManager {
      * Setup loop name input and buttons
      */
     setupLoopInputs() {
+        const loopNameSelect = document.getElementById("loop-name-select");
         const loopNameInput = document.getElementById("loop-name");
+        
+        if (loopNameSelect) {
+            loopNameSelect.addEventListener('change', () => {
+                const selectedValue = loopNameSelect.value;
+                if (selectedValue === 'other') {
+                    // Show custom input
+                    if (loopNameInput) {
+                        loopNameInput.style.display = 'block';
+                        loopNameInput.value = '';
+                        loopNameInput.focus();
+                    }
+                } else {
+                    // Hide custom input
+                    if (loopNameInput) {
+                        loopNameInput.style.display = 'none';
+                        loopNameInput.value = '';
+                    }
+                }
+                this.updateSaveButtonState();
+            });
+        }
+        
         if (loopNameInput) {
             loopNameInput.addEventListener('input', () => {
                 this.updateSaveButtonState();
@@ -204,11 +227,20 @@ class LoopManager {
             return false;
         }
 
+        const loopNameSelect = document.getElementById("loop-name-select");
         const loopNameInput = document.getElementById("loop-name");
-        const loopName = loopNameInput ? loopNameInput.value.trim() : '';
+        
+        let loopName = '';
+        if (loopNameSelect && loopNameSelect.value === 'other') {
+            // Custom name from input
+            loopName = loopNameInput ? loopNameInput.value.trim() : '';
+        } else if (loopNameSelect && loopNameSelect.value) {
+            // Predefined name from select
+            loopName = loopNameSelect.value;
+        }
 
         if (!loopName) {
-            alert("יש להזין שם ללופ");
+            alert("יש לבחור או להזין שם ללופ");
             return false;
         }
 
@@ -231,8 +263,12 @@ class LoopManager {
 
         // Clear current loop
         this.currentLoop = [];
+        if (loopNameSelect) {
+            loopNameSelect.value = "";
+        }
         if (loopNameInput) {
             loopNameInput.value = "";
+            loopNameInput.style.display = 'none';
         }
 
         this.renderSavedLoops();
@@ -280,15 +316,42 @@ class LoopManager {
 
         if (confirm("האם אתה בטוח שברצונך לבטל את הלופ הנוכחי?")) {
             this.currentLoop = [];
+            const loopNameSelect = document.getElementById("loop-name-select");
             const loopNameInput = document.getElementById("loop-name");
+            if (loopNameSelect) {
+                loopNameSelect.value = "";
+            }
             if (loopNameInput) {
                 loopNameInput.value = "";
+                loopNameInput.style.display = 'none';
             }
             this.updateLoopDisplay();
             this.updateSaveButtonState();
             return true;
         }
         return false;
+    }
+
+    /**
+     * Clone a saved loop
+     */
+    cloneSavedLoop(loopId) {
+        const loop = this.getLoopById(loopId);
+        if (!loop) {
+            return false;
+        }
+
+        const newLoop = {
+            id: Date.now(),
+            customName: `${loop.customName} (עותק)`,
+            measures: loop.measures.map(m => JSON.parse(JSON.stringify(m))), // Deep copy
+            measureCount: loop.measureCount,
+            repeatCount: loop.repeatCount || 1
+        };
+
+        this.savedLoops.push(newLoop);
+        this.renderSavedLoops();
+        return true;
     }
 
     /**
@@ -308,6 +371,42 @@ class LoopManager {
             // TODO: Delete from backend
             // await this.deleteLoopFromBackend(loopId);
 
+            this.renderSavedLoops();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Delete measure from saved loop
+     */
+    deleteMeasureFromSavedLoop(loopId, measureIndex) {
+        const loop = this.getLoopById(loopId);
+        if (!loop || measureIndex < 0 || measureIndex >= loop.measures.length) {
+            return false;
+        }
+
+        if (confirm("האם אתה בטוח שברצונך למחוק תיבה זו מהלופ?")) {
+            loop.measures.splice(measureIndex, 1);
+            loop.measureCount = loop.measures.length;
+            this.renderSavedLoops();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Edit loop name
+     */
+    editLoopName(loopId) {
+        const loop = this.getLoopById(loopId);
+        if (!loop) {
+            return false;
+        }
+
+        const newName = prompt("הכנס שם חדש ללופ:", loop.customName);
+        if (newName && newName.trim()) {
+            loop.customName = newName.trim();
             this.renderSavedLoops();
             return true;
         }
@@ -419,9 +518,10 @@ class LoopManager {
             loopHeader.className = "loop-header";
             loopHeader.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="loop-title">${loop.customName}</div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="loop-title" onclick="window.loopManager.editLoopName(${loop.id})" style="cursor: pointer; flex: 1;" title="לחץ לעריכת שם">${loop.customName}</div>
+                    <div style="display: flex; align-items: center; gap: 4px;">
                         <div class="loop-info">${loop.measureCount} תיבות</div>
+                        <button class="clone-loop-btn" onclick="window.loopManager.cloneSavedLoop(${loop.id})" title="שכפל לופ">📋</button>
                         <button class="delete-loop-btn" onclick="window.loopManager.deleteSavedLoop(${loop.id})" title="מחק לופ">×</button>
                     </div>
                 </div>
@@ -439,6 +539,18 @@ class LoopManager {
                         window.measureManager.startEditingMeasure(loop, measureIndex);
                     }
                 };
+                
+                // Add delete button for each measure
+                const removeBtn = document.createElement("button");
+                removeBtn.className = "mini-measure-remove";
+                removeBtn.innerHTML = "×";
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`האם אתה בטוח שברצונך למחוק תיבה ${measureIndex + 1} מהלופ "${loop.customName}"?`)) {
+                        this.deleteMeasureFromSavedLoop(loop.id, measureIndex);
+                    }
+                };
+                measureDiv.appendChild(removeBtn);
 
                 const measureNumber = document.createElement("div");
                 measureNumber.className = "measure-number";
@@ -447,7 +559,10 @@ class LoopManager {
 
                 if (measure.chords.length === 0 || measure.chords.every(c => c.isEmpty)) {
                     measureDiv.classList.add("empty");
-                    measureDiv.innerHTML += '<div class="empty-indicator">ריק</div>';
+                    const emptyIndicator = document.createElement("div");
+                    emptyIndicator.className = "empty-indicator";
+                    emptyIndicator.textContent = "ריק";
+                    measureDiv.appendChild(emptyIndicator);
                 } else {
                     const chordsDiv = document.createElement("div");
                     chordsDiv.className = "mini-measure-chords";
@@ -495,10 +610,19 @@ class LoopManager {
     updateSaveButtonState() {
         const saveBtn = document.getElementById("save-loop-btn");
         const discardBtn = document.getElementById("discard-loop-btn");
+        const loopNameSelect = document.getElementById("loop-name-select");
         const loopNameInput = document.getElementById("loop-name");
 
         const hasLoopContent = this.hasCurrentLoopContent();
-        const hasLoopName = loopNameInput ? loopNameInput.value.trim().length > 0 : false;
+        let hasLoopName = false;
+        
+        if (loopNameSelect) {
+            if (loopNameSelect.value === 'other') {
+                hasLoopName = loopNameInput ? loopNameInput.value.trim().length > 0 : false;
+            } else {
+                hasLoopName = loopNameSelect.value.length > 0;
+            }
+        }
 
         console.log("🔄 עדכון מצב כפתורים:");
         console.log("   יש תוכן בלופ:", hasLoopContent);
@@ -529,53 +653,12 @@ class LoopManager {
     }
 
     /**
-     * Check if current loop has content - עם לוגים מפורטים
+     * Check if current loop has content - מספיק שיש לפחות תיבה אחת
      */
-/**
- * Check if current loop has content - עם לוגים מפורטים
- */
     hasCurrentLoopContent() {
-        console.log("=== 🔍 בדיקת תוכן לופ מפורטת ===");
-        console.log("📏 אורך הלופ הנוכחי:", this.currentLoop.length);
-        console.log("📦 תוכן הלופ הנוכחי:", this.currentLoop);
-
-        if (this.currentLoop.length === 0) {
-            console.log("❌ אין תיבות בלופ - החזרת false");
-            return false;
-        }
-
-        // Check if at least one measure has chords
-        const hasValidMeasure = this.currentLoop.some((measure, index) => {
-            console.log(`🔍 בדיקת תיבה ${index + 1}:`, measure);
-
-            if (!measure) {
-                console.log(`❌ תיבה ${index + 1} ריקה (null/undefined)`);
-                return false;
-            }
-
-            if (!measure.chords || !Array.isArray(measure.chords)) {
-                console.log(`❌ תיבה ${index + 1} - אין מערך אקורדים תקין:`, measure.chords);
-                return false;
-            }
-
-            if (measure.chords.length === 0) {
-                console.log(`❌ תיבה ${index + 1} - מערך אקורדים ריק`);
-                return false;
-            }
-
-            const hasValidChords = measure.chords.some((chord, chordIndex) => {
-                const isValid = chord && chord.chord && chord.chord !== "—";
-                console.log(`   🎵 אקורד ${chordIndex + 1} בתיבה ${index + 1}:`, chord, "-> תקין:", isValid);
-                return isValid;
-            });
-
-            console.log(`✅ תיבה ${index + 1} - יש אקורדים תקינים:`, hasValidChords);
-            return hasValidChords;
-        });
-
-        console.log("🏁 תוצאה סופית - יש תיבות תקינות:", hasValidMeasure);
-        console.log("=== סיום בדיקת תוכן לופ ===");
-        return hasValidMeasure;
+        // מספיק שיש לפחות תיבה אחת בלופ - לא צריך לבדוק אם יש בה אקורדים תקינים
+        // המשתמש יכול לשמור לופ גם עם תיבה ריקה או חלקית
+        return this.currentLoop.length > 0;
     }
     /**
      * Get loops data for saving
@@ -598,9 +681,14 @@ class LoopManager {
         this.savedLoops = [];
         this.selectedSavedLoop = null;
 
+        const loopNameSelect = document.getElementById("loop-name-select");
         const loopNameInput = document.getElementById("loop-name");
+        if (loopNameSelect) {
+            loopNameSelect.value = "";
+        }
         if (loopNameInput) {
             loopNameInput.value = "";
+            loopNameInput.style.display = 'none';
         }
 
         this.renderSavedLoops();
