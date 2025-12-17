@@ -110,6 +110,17 @@
                         </select>
                         <div class="field-validation" id="song_version-validation"></div>
                     </div>
+
+                    <div class="form-group" id="original_artist_group" style="display: {% if song.get('song_version') == 'cover' %}block{% else %}none{% endif %};">
+                        <label class="form-label" for="original_artist">
+                            <span class="label-icon">🎤</span>
+                            שם האמן המקורי
+                        </label>
+                        <input type="text" id="original_artist" name="original_artist" class="form-input"
+                               value="{{ song.get('original_artist', '') }}" placeholder="הכנס את שם האמן המקורי...">
+                        <div class="input-hint">שם האמן המקורי של השיר (למניעת בעיות זכויות יוצרים)</div>
+                        <div class="field-validation" id="original_artist-validation"></div>
+                    </div>
                 </div>
 
                 <!-- Musical Details Section -->
@@ -258,6 +269,17 @@
                         <div class="input-hint">קישור יוטיוב או קישור ישיר לסרטון</div>
                         <div class="field-validation" id="video_url-validation"></div>
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="tutorial_video_url">
+                            <span class="label-icon">📚</span>
+                            קישור לסרטון הדרכה
+                        </label>
+                        <input type="text" id="tutorial_video_url" name="tutorial_video_url" class="form-input"
+                               value="{{ song.get('tutorial_video_url', '') }}" placeholder="https://www.youtube.com/watch?v=...">
+                        <div class="input-hint">קישור יוטיוב לסרטון הדרכה (אופציונלי)</div>
+                        <div class="field-validation" id="tutorial_video_url-validation"></div>
+                    </div>
                 </div>
 
                 <!-- Chords Section -->
@@ -368,6 +390,33 @@
         // Load existing genres after DOM is ready
         if (window.loadGenres && existingGenres.length > 0) {
             window.loadGenres(existingGenres);
+        }
+
+        // Handle song version change to show/hide original artist field
+        const songVersionSelect = document.getElementById('song_version');
+        const originalArtistGroup = document.getElementById('original_artist_group');
+        const originalArtistInput = document.getElementById('original_artist');
+
+        if (songVersionSelect && originalArtistGroup) {
+            // Check initial value
+            if (songVersionSelect.value === 'cover') {
+                originalArtistGroup.style.display = 'block';
+                if (originalArtistInput) originalArtistInput.required = true;
+            }
+
+            // Listen for changes
+            songVersionSelect.addEventListener('change', function() {
+                if (this.value === 'cover') {
+                    originalArtistGroup.style.display = 'block';
+                    if (originalArtistInput) originalArtistInput.required = true;
+                } else {
+                    originalArtistGroup.style.display = 'none';
+                    if (originalArtistInput) {
+                        originalArtistInput.required = false;
+                        // Don't clear value when hidden - keep it for potential future use
+                    }
+                }
+            });
         }
     });
 </script>

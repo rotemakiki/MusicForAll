@@ -185,6 +185,9 @@ def play_song(song_id):
         "time_signature": song["time_signature"],
         "bpm": song["bpm"],
         "video_url": song["video_url"],
+        "tutorial_video_url": song.get("tutorial_video_url", ""),
+        "song_version": song.get("song_version", ""),
+        "original_artist": song.get("original_artist", ""),
         "chords": chords_list,
         "loops": loops_data,
         "beats": beats_per_measure,
@@ -288,9 +291,11 @@ def add_song():
         "time_signature": data["time_signature"],
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
+        "tutorial_video_url": data.get("tutorial_video_url", ""),  # Optional field
         "chords": json.dumps(data["chords"]),
         "loops": json.dumps(loops_data),
         "song_version": data.get("song_version", ""),  # Optional field
+        "original_artist": data.get("original_artist", ""),  # Optional field - for cover songs
         "notes": data.get("notes", ""),  # Optional field
         "created_at": datetime.utcnow(),
         "created_by": session.get("user_id"),
@@ -339,9 +344,11 @@ def edit_song_api(song_id):
         "time_signature": data["time_signature"],
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
+        "tutorial_video_url": data.get("tutorial_video_url", ""),  # Optional field
         "chords": json.dumps(data["chords"]),
         "loops": json.dumps(loops_data),
         "song_version": data.get("song_version", ""),  # Optional field
+        "original_artist": data.get("original_artist", ""),  # Optional field - for cover songs
         "notes": data.get("notes", ""),  # Optional field
         "updated_at": datetime.utcnow()
     }

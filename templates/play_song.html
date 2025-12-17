@@ -12,7 +12,11 @@
         <!-- שורה 1: שם השיר והאמן -->
         <div class="header-row-1">
             <h1>🎵 {{ song.title }}</h1>
-            <h2 class="artist-name">{{ song.artist }}</h2>
+            <h2 class="artist-name">{{ song.artist }}
+                {% if song.song_version == 'cover' and song.original_artist %}
+                    <span style="font-size: 0.7em; color: #888; font-weight: normal;">(קאבר של {{ song.original_artist }})</span>
+                {% endif %}
+            </h2>
         </div>
 
         <!-- שורה 2: פרטי השיר, יוטיוב וכפתורים -->
@@ -68,6 +72,16 @@
                     <button onclick="toggleYouTubePlayer()" class="close-youtube-btn">×</button>
                     <iframe id="youtube-iframe" src="{{ song.video_url }}" frameborder="0" allowfullscreen></iframe>
                 </div>
+                {% if song.tutorial_video_url %}
+                <button onclick="toggleTutorialPlayer()" class="youtube-toggle-btn" style="margin-top: 10px;">
+                    <span class="youtube-icon">📚</span>
+                    <span>פתח/סגור סרטון הדרכה</span>
+                </button>
+                <div id="tutorial-player-container" class="youtube-player-container" style="display: none;">
+                    <button onclick="toggleTutorialPlayer()" class="close-youtube-btn">×</button>
+                    <iframe id="tutorial-iframe" src="{{ song.tutorial_video_url }}" frameborder="0" allowfullscreen></iframe>
+                </div>
+                {% endif %}
             </div>
 
             <!-- כפתורי פעולה -->
@@ -303,6 +317,23 @@
             container.style.display = 'none';
             // עצור וידאו אם נסגר
             const iframe = document.getElementById('youtube-iframe');
+            const src = iframe.src;
+            iframe.src = '';
+            iframe.src = src;
+        } else {
+            container.style.display = 'block';
+        }
+    }
+
+    // נגן סרטון הדרכה
+    function toggleTutorialPlayer() {
+        const container = document.getElementById('tutorial-player-container');
+        const isVisible = container.style.display !== 'none';
+
+        if (isVisible) {
+            container.style.display = 'none';
+            // עצור וידאו אם נסגר
+            const iframe = document.getElementById('tutorial-iframe');
             const src = iframe.src;
             iframe.src = '';
             iframe.src = src;

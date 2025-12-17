@@ -385,7 +385,9 @@ function saveFormData() {
         time_signature: document.getElementById("time_signature").value,
         bpm: document.getElementById("bpm").value,
         video_url: document.getElementById("video_url").value,
+        tutorial_video_url: document.getElementById("tutorial_video_url") ? document.getElementById("tutorial_video_url").value : "",
         song_version: document.getElementById("song_version") ? document.getElementById("song_version").value : "",
+        original_artist: document.getElementById("original_artist") ? document.getElementById("original_artist").value : "",
         notes: document.getElementById("notes") ? document.getElementById("notes").value : ""
     };
 
@@ -642,7 +644,9 @@ function handleFormSubmission(event) {
         time_signature: document.getElementById("time_signature").value,
         bpm: parseInt(document.getElementById("bpm").value),
         video_url: document.getElementById("video_url").value,
+        tutorial_video_url: document.getElementById("tutorial_video_url") ? document.getElementById("tutorial_video_url").value : "",
         song_version: document.getElementById("song_version") ? document.getElementById("song_version").value : "",
+        original_artist: document.getElementById("original_artist") ? document.getElementById("original_artist").value : "",
         notes: document.getElementById("notes") ? document.getElementById("notes").value : ""
     };
 
@@ -653,6 +657,18 @@ function handleFormSubmission(event) {
         const ytMatch = formData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
         if (ytMatch && ytMatch[1]) {
             formData.video_url = "https://www.youtube.com/embed/" + ytMatch[1];
+        }
+    }
+
+    // טיפול בקישורי YouTube לסרטון הדרכה
+    if (formData.tutorial_video_url) {
+        if (mode.isEditMode && formData.tutorial_video_url.includes('/embed/')) {
+            // אל תשנה קישורי embed קיימים
+        } else {
+            const tutorialYtMatch = formData.tutorial_video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
+            if (tutorialYtMatch && tutorialYtMatch[1]) {
+                formData.tutorial_video_url = "https://www.youtube.com/embed/" + tutorialYtMatch[1];
+            }
         }
     }
 
@@ -843,7 +859,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 500);
 
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url', 'song_version', 'notes'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {
