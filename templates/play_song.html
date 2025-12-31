@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/play_song.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tuner.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -390,4 +391,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/play_song.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tuner.js') }}"></script>
 {% endblock %}
