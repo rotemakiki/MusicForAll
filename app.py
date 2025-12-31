@@ -16,7 +16,7 @@ from datetime import datetime
 import os
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = 'your_secret_key'  # חשוב להודעת flash ול-session
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')  # חשוב להודעת flash ול-session
 
 mimetypes.add_type('application/javascript', '.js')
 
@@ -234,8 +234,8 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug_mode = os.environ.get("DEBUG", "True").lower() == "true"
 
-    print(f"🎵 Music App starting on port {port}")
-    print(f"🔧 Debug mode: {debug_mode}")
-    print(f"🎸 Chord System v2.0 enabled")
+    print(f"[*] Music App starting on port {port}")
+    print(f"[*] Debug mode: {debug_mode}")
+    print(f"[*] Chord System v2.0 enabled")
 
     app.run(debug=debug_mode, host='0.0.0.0', port=port)
