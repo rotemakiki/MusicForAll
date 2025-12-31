@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }} - קורס{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/courses.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="course-detail-container">
+    <div class="course-detail-header">
+        <a href="{{ url_for('courses.courses_list') }}" class="back-link">
+            <i class="fas fa-arrow-right"></i> חזור לרשימת הקורסים
+        </a>
+        <h1 class="course-title-main">{{ course.title }}</h1>
+        <div class="course-header-meta">
+            <span class="course-field-badge">{{ course.musical_field }}</span>
+            {% if course.avg_rating > 0 %}
+            <div class="course-rating-display">
+                <i class="fas fa-star"></i>
+                <span>{{ course.avg_rating }}</span>
+                <span class="reviews-count">({{ course.reviews_count }} ביקורות)</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="course-detail-main">
+        <!-- Left: Course Info -->
+        <div class="course-info-section">
+            <div class="course-description-box">
+                <h2>אודות הקורס</h2>
+                <p class="course-description-text">{{ course.description }}</p>
+            </div>
+
+            <div class="course-details-box">
+                <h3>פרטי הקורס</h3>
+                <div class="detail-item">
+                    <i class="fas fa-user"></i>
+                    <span><strong>מורה:</strong> {{ course.teacher_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-calendar"></i>
+                    <span><strong>תאריך פרסום:</strong> {{ course.publication_date[:10] if course.publication_date else 'לא צוין' }}</span>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-play-circle"></i>
+                    <span><strong>מספר שיעורים:</strong> {{ course.lessons_count }}</span>
+                </div>
+                {% if course.total_duration > 0 %}
+                <div class="detail-item">
+                    <i class="fas fa-clock"></i>
+                    <span><strong>זמן כולל:</strong> {{ course.total_duration }} דקות</span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if course.requirements %}
+            <div class="course-requirements-box">
+                <h3>דרישות הקורס</h3>
+                <p>{{ course.requirements }}</p>
+            </div>
+            {% endif %}
+
+            {% if course.prerequisites and course.prerequisites|length > 0 %}
+            <div class="course-prerequisites-box">
+                <h3>ידע מקדים</h3>
+                <p>{{ course.prerequisites|join(', ') }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Reviews Section -->
+            <div class="course-reviews-section">
+                <h3>ביקורות ודירוגים</h3>
+                {% if course.reviews_count > 0 %}
+                <div class="reviews-list">
+                    {% for rating in course.ratings[:5] %}
+                    <div class="review-item">
+                        <div class="review-header">
+                            <strong>{{ rating.username }}</strong>
+                            <div class="review-stars">
+                                {% for i in range(5) %}
+                                    {% if i < rating.rating %}
+                                    <i class="fas fa-star"></i>
+                                    {% else %}
+                                    <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if rating.review %}
+                        <p class="review-text">{{ rating.review }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="no-reviews">עדיין אין ביקורות. היה הראשון לדרג!</p>
+                {% endif %}
+
+                {% if user_id %}
+                <div class="add-review-form">
+                    <h4>הוסף ביקורת</h4>
+                    <div class="rating-input">
+                        <label>דירוג:</label>
+                        <div class="star-rating" id="starRating">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <span id="selectedRating">0</span>
+                    </div>
+                    <textarea id="reviewText" placeholder="כתוב ביקורת (אופציונלי)" rows="3"></textarea>
+                    <button onclick="submitReview()" class="submit-review-btn">שלח ביקורת</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right: Course Actions & Price -->
+        <div class="course-actions-section">
+            <div class="course-price-box">
+                {% if course.price == 0 %}
+                <div class="price-display free">
+                    <span class="price-label">חינם</span>
+                </div>
+                {% else %}
+                <div class="price-display paid">
+                    <span class="price-amount">₪{{ course.price }}</span>
+                    <span class="price-label">לכל החיים</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="course-actions-buttons">
+                {% if has_access %}
+                <a href="{{ url_for('courses.lesson_page', course_id=course.id, lesson_number=1) }}" class="start-course-btn">
+                    <i class="fas fa-play"></i>
+                    התחל את הקורס
+                </a>
+                {% elif is_premium %}
+                <a href="{{ url_for('courses.lesson_page', course_id=course.id, lesson_number=1) }}" class="start-course-btn">
+                    <i class="fas fa-play"></i>
+                    התחל את הקורס (פרימיום)
+                </a>
+                {% else %}
+                {% if course.price == 0 %}
+                <a href="{{ url_for('courses.lesson_page', course_id=course.id, lesson_number=1) }}" class="start-course-btn">
+                    <i class="fas fa-play"></i>
+                    התחל את הקורס
+                </a>
+                {% else %}
+                <a href="{{ url_for('courses.lesson_page', course_id=course.id, lesson_number=1) }}" class="preview-course-btn">
+                    <i class="fas fa-eye"></i>
+                    צפה בשיעור ראשון
+                </a>
+                <button onclick="purchaseCourse()" class="purchase-course-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    רכוש קורס (₪{{ course.price }})
+                </button>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="course-share-box">
+                <button onclick="shareCourse()" class="share-course-btn">
+                    <i class="fas fa-share-alt"></i>
+                    שתף עם חברים
+                </button>
+            </div>
+
+            <div class="course-stats-box">
+                <div class="stat-item">
+                    <i class="fas fa-users"></i>
+                    <span>{{ course.reviews_count }} ביקורות</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-play-circle"></i>
+                    <span>{{ course.lessons_count }} שיעורים</span>
+                </div>
+                {% if course.total_duration > 0 %}
+                <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ course.total_duration }} דקות</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.courseId = '{{ course.id }}';
+window.userId = {{ user_id | tojson or 'null' }};
+window.coursePrice = {{ course.price }};
+
+// Star rating
+let selectedRating = 0;
+document.querySelectorAll('#starRating i').forEach(star => {
+    star.addEventListener('click', function() {
+        selectedRating = parseInt(this.dataset.rating);
+        updateStarDisplay();
+    });
+    star.addEventListener('mouseenter', function() {
+        const rating = parseInt(this.dataset.rating);
+        highlightStars(rating);
+    });
+});
+
+document.getElementById('starRating').addEventListener('mouseleave', function() {
+    updateStarDisplay();
+});
+
+function highlightStars(rating) {
+    document.querySelectorAll('#starRating i').forEach((star, index) => {
+        if (index < rating) {
+            star.classList.remove('far');
+            star.classList.add('fas');
+        } else {
+            star.classList.remove('fas');
+            star.classList.add('far');
+        }
+    });
+}
+
+function updateStarDisplay() {
+    highlightStars(selectedRating);
+    document.getElementById('selectedRating').textContent = selectedRating;
+}
+
+function submitReview() {
+    if (selectedRating === 0) {
+        alert('אנא בחר דירוג');
+        return;
+    }
+
+    const reviewText = document.getElementById('reviewText').value;
+    
+    fetch(`/api/courses/${window.courseId}/rating`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            rating: selectedRating,
+            review: reviewText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('ביקורת נוספה בהצלחה!');
+            location.reload();
+        } else {
+            alert(data.error || 'שגיאה בהוספת ביקורת');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('שגיאה בהוספת ביקורת');
+    });
+}
+
+function purchaseCourse() {
+    if (!window.userId) {
+        alert('נדרש להתחבר לרכישת קורס');
+        window.location.href = '/login';
+        return;
+    }
+
+    if (confirm(`האם אתה בטוח שברצונך לרכוש את הקורס תמורת ₪${window.coursePrice}?`)) {
+        fetch(`/api/courses/${window.courseId}/purchase`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('הקורס נרכש בהצלחה!');
+                location.reload();
+            } else {
+                alert(data.error || 'שגיאה ברכישת הקורס');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('שגיאה ברכישת הקורס');
+        });
+    }
+}
+
+function shareCourse() {
+    const url = window.location.href;
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ course.title }}',
+            text: 'בואו ללמוד יחד!',
+            url: url
+        });
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('הקישור הועתק ללוח');
+        });
+    }
+}
+</script>
+{% endblock %}
+

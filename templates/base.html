@@ -81,9 +81,9 @@
                             </a>
                         </li>
                         <li class="menu-item">
-                            <a href="{{ url_for('videos.videos') }}" class="menu-link">
-                                <i class="fas fa-play-circle"></i>
-                                <span>שיעורים</span>
+                            <a href="{{ url_for('courses.courses_list') }}" class="menu-link">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>קורסים</span>
                             </a>
                         </li>
                         <li class="menu-item">
@@ -129,6 +129,12 @@
                             </a>
                         </li>
                         {% if 'teacher' in roles or 'admin' in roles %}
+                            <li class="menu-item special">
+                                <a href="{{ url_for('courses.manage_courses') }}" class="menu-link">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span>ניהול קורסים</span>
+                                </a>
+                            </li>
                             <li class="menu-item special">
                                 <a href="{{ url_for('songs.add_song_page') }}" class="menu-link">
                                     <i class="fas fa-plus"></i>

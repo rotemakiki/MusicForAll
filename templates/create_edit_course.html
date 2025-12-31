@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'עריכת קורס' if course else 'יצירת קורס חדש' }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/courses.css') }}">
+<style>
+.form-container {
+    max-width: 95vw;
+    width: 95vw;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.form-card {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-header {
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid #e1e8ed;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #e1e8ed;
+    color: #2c3e50;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e1;
+}
+
+.prerequisites-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.prerequisite-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.prerequisite-item input {
+    flex: 1;
+}
+
+.remove-prerequisite {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.add-prerequisite {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <a href="{{ url_for('courses.manage_courses') }}" class="back-link">
+                <i class="fas fa-arrow-right"></i> חזרה לניהול קורסים
+            </a>
+            <h1 class="page-title">{{ 'עריכת קורס' if course else 'יצירת קורס חדש' }}</h1>
+        </div>
+
+        <form id="courseForm" onsubmit="saveCourse(event)">
+            <div class="form-group">
+                <label for="title">שם הקורס *</label>
+                <input type="text" id="title" name="title" required 
+                       value="{{ course.title if course else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="musical_field">תחום מוסיקלי *</label>
+                <input type="text" id="musical_field" name="musical_field" required
+                       placeholder="למשל: גיטרה, פסנתר, תופים"
+                       value="{{ course.musical_field if course else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="description">הסבר על הקורס *</label>
+                <textarea id="description" name="description" required
+                          placeholder="תאר את הקורס, מה נלמד בו, למי הוא מתאים...">{{ course.description if course else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="requirements">דרישות הקורס</label>
+                <textarea id="requirements" name="requirements"
+                          placeholder="למשל: גיטרה קלאסית פשוטה שאיתה ניתן לתרגל">{{ course.requirements if course else '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>ידע מקדים (קישורים לקורסים קודמים)</label>
+                <div id="prerequisitesList" class="prerequisites-list">
+                    {% if course and course.prerequisites %}
+                        {% for prereq in course.prerequisites %}
+                        <div class="prerequisite-item">
+                            <input type="text" name="prerequisites[]" value="{{ prereq }}" placeholder="קישור או שם קורס">
+                            <button type="button" class="remove-prerequisite" onclick="removePrerequisite(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" class="add-prerequisite" onclick="addPrerequisite()">
+                    <i class="fas fa-plus"></i> הוסף דרישה מקדימה
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label for="publication_date">תאריך פרסום הקורס</label>
+                <input type="date" id="publication_date" name="publication_date"
+                       value="{{ course.publication_date[:10] if course and course.publication_date else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="price">עלות הקורס (₪) *</label>
+                <input type="number" id="price" name="price" min="0" step="0.01" required
+                       value="{{ course.price if course else '0' }}">
+                <small style="color: #64748b; font-size: 0.9rem;">0 = חינם. האתר ירוויח 10% ממכירת הקורס</small>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="is_published" name="is_published"
+                           {{ 'checked' if course and course.is_published else '' }}>
+                    <label for="is_published" style="margin: 0;">פרסם את הקורס (יהיה גלוי למשתמשים)</label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    {{ 'עדכן קורס' if course else 'צור קורס' }}
+                </button>
+                <a href="{{ url_for('courses.manage_courses') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    ביטול
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+window.courseId = {{ course.id | tojson if course else 'null' }};
+
+function addPrerequisite() {
+    const list = document.getElementById('prerequisitesList');
+    const item = document.createElement('div');
+    item.className = 'prerequisite-item';
+    item.innerHTML = `
+        <input type="text" name="prerequisites[]" placeholder="קישור או שם קורס">
+        <button type="button" class="remove-prerequisite" onclick="removePrerequisite(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    list.appendChild(item);
+}
+
+function removePrerequisite(btn) {
+    btn.parentElement.remove();
+}
+
+function saveCourse(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const prerequisites = [];
+    formData.getAll('prerequisites[]').forEach(prereq => {
+        if (prereq.trim()) {
+            prerequisites.push(prereq.trim());
+        }
+    });
+    
+    const courseData = {
+        title: formData.get('title'),
+        musical_field: formData.get('musical_field'),
+        description: formData.get('description'),
+        requirements: formData.get('requirements') || '',
+        prerequisites: prerequisites,
+        publication_date: formData.get('publication_date') || new Date().toISOString().split('T')[0],
+        price: parseFloat(formData.get('price')) || 0,
+        is_published: formData.get('is_published') === 'on'
+    };
+    
+    const url = window.courseId ? 
+        `/api/courses/${window.courseId}` : 
+        '/api/courses/create';
+    const method = window.courseId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(courseData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(window.courseId ? 'קורס עודכן בהצלחה!' : 'קורס נוצר בהצלחה!');
+            window.location.href = '/manage/courses';
+        } else {
+            alert(data.error || 'שגיאה בשמירת הקורס');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('שגיאה בשמירת הקורס');
+    });
+}
+</script>
+{% endblock %}
+

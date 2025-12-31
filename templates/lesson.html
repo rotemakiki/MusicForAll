@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}שיעור {{ lesson.lesson_number }} - {{ lesson.title }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/courses.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="lesson-container">
+    <div class="lesson-header">
+        <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="back-link">
+            <i class="fas fa-arrow-right"></i> חזור לקורס
+        </a>
+        <h1 class="lesson-title">שיעור {{ lesson.lesson_number }} - {{ lesson.title }}</h1>
+        <p class="lesson-course-name">מתוך: {{ course.title }}</p>
+    </div>
+
+    <div class="lesson-main">
+        <!-- Left: Video and Content -->
+        <div class="lesson-content-section">
+            <div class="lesson-video-container">
+                {% if lesson.video_url %}
+                <div class="video-wrapper">
+                    <iframe 
+                        src="{{ lesson.video_url }}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen
+                        class="lesson-video">
+                    </iframe>
+                </div>
+                {% else %}
+                <div class="no-video">
+                    <i class="fas fa-video-slash"></i>
+                    <p>סרטון לא זמין</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if lesson.notes %}
+            <div class="lesson-notes-box">
+                <h3>הערות המורה</h3>
+                <div class="notes-content">
+                    {{ lesson.notes | replace('\n', '<br>') | safe }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if lesson.attachments and lesson.attachments|length > 0 %}
+            <div class="lesson-attachments-box">
+                <h3>קבצים מצורפים</h3>
+                <div class="attachments-list">
+                    {% for attachment in lesson.attachments %}
+                    <a href="{{ attachment.url }}" target="_blank" class="attachment-item">
+                        <i class="fas fa-file-{{ 'image' if attachment.type == 'image' else 'word' if attachment.type == 'word' else 'file-powerpoint' if attachment.type == 'powerpoint' else 'file' }}"></i>
+                        <span>{{ attachment.name }}</span>
+                        <i class="fas fa-download"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if lesson.questions and lesson.questions|length > 0 %}
+            <div class="lesson-questions-box">
+                <h3>שאלות לבדיקת הבנה</h3>
+                <form id="questionsForm" onsubmit="submitAnswers(event)">
+                    {% for question in lesson.questions %}
+                    <div class="question-item">
+                        <p class="question-text">{{ question.question }}</p>
+                        <div class="answers-list">
+                            {% for answer in question.answers %}
+                            <label class="answer-option">
+                                <input type="radio" name="question_{{ loop.index0 }}" value="{{ loop.index0 }}" required>
+                                <span>{{ answer }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="submit-answers-btn">
+                        <i class="fas fa-check"></i>
+                        שלח תשובות
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Lessons Navigation -->
+        <div class="lesson-sidebar">
+            <div class="lessons-list-box">
+                <h3>שיעורי הקורס</h3>
+                <div class="lessons-list">
+                    {% for l in all_lessons %}
+                    <a href="{{ url_for('courses.lesson_page', course_id=course.id, lesson_number=l.lesson_number) }}" 
+                       class="lesson-item {% if l.lesson_number == lesson.lesson_number %}active{% endif %} {% if l.lesson_number in watched_lessons %}watched{% endif %}">
+                        <div class="lesson-item-number">{{ l.lesson_number }}</div>
+                        <div class="lesson-item-content">
+                            <div class="lesson-item-title">{{ l.title }}</div>
+                            {% if l.duration_minutes %}
+                            <div class="lesson-item-duration">{{ l.duration_minutes }} דקות</div>
+                            {% endif %}
+                        </div>
+                        {% if l.lesson_number in watched_lessons %}
+                        <div class="lesson-item-check">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="lesson-navigation">
+                {% set prev_lesson = all_lessons|selectattr('lesson_number', 'equalto', lesson.lesson_number - 1)|first %}
+                {% set next_lesson = all_lessons|selectattr('lesson_number', 'equalto', lesson.lesson_number + 1)|first %}
+                
+                {% if prev_lesson %}
+                <a href="{{ url_for('courses.lesson_page', course_id=course.id, lesson_number=prev_lesson.lesson_number) }}" class="nav-btn prev-btn">
+                    <i class="fas fa-arrow-right"></i>
+                    שיעור קודם
+                </a>
+                {% endif %}
+                
+                {% if next_lesson %}
+                <a href="{{ url_for('courses.lesson_page', course_id=course.id, lesson_number=next_lesson.lesson_number) }}" class="nav-btn next-btn">
+                    שיעור הבא
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                {% else %}
+                <a href="{{ url_for('courses.course_detail', course_id=course.id) }}" class="nav-btn complete-btn">
+                    <i class="fas fa-trophy"></i>
+                    סיימת את הקורס!
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mark lesson as watched when video is played
+document.addEventListener("DOMContentLoaded", function() {
+    const video = document.querySelector('.lesson-video');
+    if (video && window.userId) {
+        // Mark as watched after 30 seconds of watching
+        let watched = false;
+        const checkInterval = setInterval(() => {
+            // Simple check - in real implementation, check if video is actually playing
+            if (!watched) {
+                markAsWatched();
+                watched = true;
+                clearInterval(checkInterval);
+            }
+        }, 30000);
+    }
+});
+
+function markAsWatched() {
+    if (!window.userId) return;
+    
+    fetch(`/api/courses/{{ course.id }}/lesson/{{ lesson.lesson_number }}/watch`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI
+            const lessonItem = document.querySelector(`.lesson-item.active`);
+            if (lessonItem && !lessonItem.classList.contains('watched')) {
+                lessonItem.classList.add('watched');
+                const checkIcon = document.createElement('div');
+                checkIcon.className = 'lesson-item-check';
+                checkIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                lessonItem.appendChild(checkIcon);
+            }
+        }
+    })
+    .catch(error => console.error('Error marking as watched:', error));
+}
+
+function submitAnswers(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const answers = {};
+    
+    for (let [key, value] of formData.entries()) {
+        answers[key] = value;
+    }
+    
+    // Here you would send answers to server for validation
+    alert('תשובות נשלחו! (פונקציונליות זו תתווסף בהמשך)');
+}
+
+window.userId = {{ user_id | tojson or 'null' }};
+</script>
+{% endblock %}
+

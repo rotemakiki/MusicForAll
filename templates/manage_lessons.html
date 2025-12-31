@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block title %}ניהול שיעורים - {{ course.title }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/courses.css') }}">
+<style>
+.lessons-manage-container {
+    max-width: 95vw;
+    width: 95vw;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.lessons-manage-card {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.lessons-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.lessons-list-manage {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.lesson-item-manage {
+    background: #f8f9ff;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.lesson-item-manage:hover {
+    border-color: #667eea;
+    transform: translateX(-5px);
+}
+
+.lesson-info-manage {
+    flex: 1;
+}
+
+.lesson-number-manage {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-left: 15px;
+}
+
+.lesson-title-manage {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    margin: 5px 0;
+}
+
+.lesson-meta-manage {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.lesson-actions-manage {
+    display: flex;
+    gap: 10px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e1e8ed;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.close-modal:hover {
+    color: #2c3e50;
+}
+
+.question-item-form {
+    background: #f8f9ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #e1e8ed;
+}
+
+.attachment-item-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.attachment-item-form input {
+    flex: 1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lessons-manage-container">
+    <div class="lessons-manage-card">
+        <div class="lessons-header">
+            <div>
+                <a href="{{ url_for('courses.manage_courses') }}" class="back-link">
+                    <i class="fas fa-arrow-right"></i> חזרה לניהול קורסים
+                </a>
+                <h1 class="page-title">📝 ניהול שיעורים</h1>
+                <p class="page-subtitle">{{ course.title }}</p>
+            </div>
+            <button onclick="openAddLessonModal()" class="create-course-btn">
+                <i class="fas fa-plus"></i>
+                הוסף שיעור
+            </button>
+        </div>
+
+        <div id="lessonsList" class="lessons-list-manage">
+            {% if course.lessons and course.lessons|length > 0 %}
+                {% for lesson in course.lessons %}
+                <div class="lesson-item-manage">
+                    <div class="lesson-info-manage" style="display: flex; align-items: center;">
+                        <span class="lesson-number-manage">{{ lesson.lesson_number }}</span>
+                        <div>
+                            <div class="lesson-title-manage">{{ lesson.title }}</div>
+                            <div class="lesson-meta-manage">
+                                {% if lesson.duration_minutes %}
+                                <span><i class="fas fa-clock"></i> {{ lesson.duration_minutes }} דקות</span>
+                                {% endif %}
+                                {% if lesson.video_url %}
+                                <span style="margin-right: 15px;"><i class="fas fa-video"></i> יש סרטון</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lesson-actions-manage">
+                        <button onclick="editLesson({{ lesson.lesson_number }})" class="action-btn edit-btn">
+                            <i class="fas fa-edit"></i>
+                            ערוך
+                        </button>
+                        <button onclick="deleteLesson({{ lesson.lesson_number }})" class="action-btn delete-btn">
+                            <i class="fas fa-trash"></i>
+                            מחק
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <h3>אין שיעורים</h3>
+                    <p>הוסף שיעור ראשון כדי להתחיל!</p>
+                    <button onclick="openAddLessonModal()" class="create-course-btn" style="margin-top: 20px;">
+                        <i class="fas fa-plus"></i>
+                        הוסף שיעור
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal להוספת/עריכת שיעור -->
+<div id="lessonModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">הוסף שיעור חדש</h2>
+            <button class="close-modal" onclick="closeLessonModal()">&times;</button>
+        </div>
+        <form id="lessonForm" onsubmit="saveLesson(event)">
+            <input type="hidden" id="lessonNumber" name="lesson_number">
+            
+            <div class="form-group">
+                <label for="lessonTitle">כותרת השיעור *</label>
+                <input type="text" id="lessonTitle" name="title" required>
+            </div>
+
+            <div class="form-group">
+                <label for="lessonVideoUrl">קישור לסרטון (URL) *</label>
+                <input type="url" id="lessonVideoUrl" name="video_url" required
+                       placeholder="https://www.youtube.com/embed/... או קישור אחר">
+            </div>
+
+            <div class="form-group">
+                <label for="lessonDuration">אורך השיעור (דקות)</label>
+                <input type="number" id="lessonDuration" name="duration_minutes" min="0" value="0">
+            </div>
+
+            <div class="form-group">
+                <label for="lessonNotes">הערות המורה</label>
+                <textarea id="lessonNotes" name="notes" rows="6"
+                          placeholder="כתוב הערות, טיפים, או הסברים נוספים..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>קבצים מצורפים</label>
+                <div id="attachmentsList">
+                    <!-- קבצים מצורפים יוכנסו כאן -->
+                </div>
+                <button type="button" class="add-prerequisite" onclick="addAttachment()">
+                    <i class="fas fa-plus"></i> הוסף קובץ
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label>שאלות לבדיקת הבנה (אופציונלי)</label>
+                <div id="questionsList">
+                    <!-- שאלות יוכנסו כאן -->
+                </div>
+                <button type="button" class="add-prerequisite" onclick="addQuestion()">
+                    <i class="fas fa-plus"></i> הוסף שאלה
+                </button>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    שמור שיעור
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="closeLessonModal()">
+                    <i class="fas fa-times"></i>
+                    ביטול
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+window.courseId = '{{ course.id }}';
+window.editingLessonNumber = null;
+window.lessons = {{ course.lessons | tojson if course.lessons else '[]' }};
+
+function openAddLessonModal() {
+    window.editingLessonNumber = null;
+    document.getElementById('modalTitle').textContent = 'הוסף שיעור חדש';
+    document.getElementById('lessonForm').reset();
+    document.getElementById('lessonNumber').value = (window.lessons.length + 1);
+    document.getElementById('attachmentsList').innerHTML = '';
+    document.getElementById('questionsList').innerHTML = '';
+    document.getElementById('lessonModal').style.display = 'block';
+}
+
+function editLesson(lessonNumber) {
+    const lesson = window.lessons.find(l => l.lesson_number === lessonNumber);
+    if (!lesson) return;
+    
+    window.editingLessonNumber = lessonNumber;
+    document.getElementById('modalTitle').textContent = `ערוך שיעור ${lessonNumber}`;
+    document.getElementById('lessonNumber').value = lessonNumber;
+    document.getElementById('lessonTitle').value = lesson.title || '';
+    document.getElementById('lessonVideoUrl').value = lesson.video_url || '';
+    document.getElementById('lessonDuration').value = lesson.duration_minutes || 0;
+    document.getElementById('lessonNotes').value = lesson.notes || '';
+    
+    // טעינת קבצים מצורפים
+    const attachmentsList = document.getElementById('attachmentsList');
+    attachmentsList.innerHTML = '';
+    if (lesson.attachments && lesson.attachments.length > 0) {
+        lesson.attachments.forEach((att, index) => {
+            addAttachment(att.name, att.url, att.type);
+        });
+    }
+    
+    // טעינת שאלות
+    const questionsList = document.getElementById('questionsList');
+    questionsList.innerHTML = '';
+    if (lesson.questions && lesson.questions.length > 0) {
+        lesson.questions.forEach((q, index) => {
+            addQuestion(q.question, q.answers, q.correct_answer);
+        });
+    }
+    
+    document.getElementById('lessonModal').style.display = 'block';
+}
+
+function closeLessonModal() {
+    document.getElementById('lessonModal').style.display = 'none';
+}
+
+function addAttachment(name = '', url = '', type = '') {
+    const list = document.getElementById('attachmentsList');
+    const item = document.createElement('div');
+    item.className = 'attachment-item-form';
+    item.innerHTML = `
+        <select name="attachment_type[]" style="width: 120px;">
+            <option value="image" ${type === 'image' ? 'selected' : ''}>תמונה</option>
+            <option value="word" ${type === 'word' ? 'selected' : ''}>Word</option>
+            <option value="powerpoint" ${type === 'powerpoint' ? 'selected' : ''}>PowerPoint</option>
+            <option value="pdf" ${type === 'pdf' ? 'selected' : ''}>PDF</option>
+        </select>
+        <input type="text" name="attachment_name[]" placeholder="שם הקובץ" value="${name}">
+        <input type="url" name="attachment_url[]" placeholder="קישור לקובץ" value="${url}">
+        <button type="button" class="remove-prerequisite" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    list.appendChild(item);
+}
+
+function addQuestion(question = '', answers = ['', '', '', ''], correctAnswer = 0) {
+    const list = document.getElementById('questionsList');
+    const questionIndex = list.children.length;
+    const item = document.createElement('div');
+    item.className = 'question-item-form';
+    item.innerHTML = `
+        <div class="form-group">
+            <label>שאלה</label>
+            <input type="text" name="question_text[]" value="${question}" placeholder="כתוב את השאלה">
+        </div>
+        <div class="form-group">
+            <label>תשובות (סמן את התשובה הנכונה)</label>
+            ${answers.map((ans, index) => `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <input type="radio" name="correct_answer_${questionIndex}" value="${index}" ${index === correctAnswer ? 'checked' : ''}>
+                    <input type="text" name="answer_${questionIndex}[]" value="${ans}" placeholder="תשובה ${index + 1}" style="flex: 1;">
+                </div>
+            `).join('')}
+        </div>
+        <button type="button" class="remove-prerequisite" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i> מחק שאלה
+        </button>
+    `;
+    list.appendChild(item);
+}
+
+function saveLesson(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const lessonNumber = parseInt(formData.get('lesson_number'));
+    
+    // איסוף קבצים מצורפים
+    const attachments = [];
+    const attachmentNames = formData.getAll('attachment_name[]');
+    const attachmentUrls = formData.getAll('attachment_url[]');
+    const attachmentTypes = formData.getAll('attachment_type[]');
+    
+    for (let i = 0; i < attachmentNames.length; i++) {
+        if (attachmentNames[i] && attachmentUrls[i]) {
+            attachments.push({
+                name: attachmentNames[i],
+                url: attachmentUrls[i],
+                type: attachmentTypes[i] || 'file'
+            });
+        }
+    }
+    
+    // איסוף שאלות
+    const questions = [];
+    const questionTexts = formData.getAll('question_text[]');
+    const questionIndices = [];
+    questionTexts.forEach((_, index) => {
+        questionIndices.push(index);
+    });
+    
+    questionIndices.forEach((qIndex) => {
+        const questionText = questionTexts[qIndex];
+        if (!questionText) return;
+        
+        const answers = [];
+        for (let i = 0; i < 4; i++) {
+            const answer = formData.get(`answer_${qIndex}[]`);
+            if (answer) answers.push(answer);
+        }
+        
+        const correctAnswer = parseInt(formData.get(`correct_answer_${qIndex}`) || '0');
+        
+        if (answers.length > 0) {
+            questions.push({
+                question: questionText,
+                answers: answers,
+                correct_answer: correctAnswer
+            });
+        }
+    });
+    
+    const lessonData = {
+        lesson_number: lessonNumber,
+        title: formData.get('title'),
+        video_url: formData.get('video_url'),
+        notes: formData.get('notes') || '',
+        attachments: attachments,
+        questions: questions,
+        duration_minutes: parseInt(formData.get('duration_minutes') || '0')
+    };
+    
+    const url = window.editingLessonNumber ? 
+        `/api/courses/${window.courseId}/lessons/${window.editingLessonNumber}` : 
+        `/api/courses/${window.courseId}/lessons`;
+    const method = window.editingLessonNumber ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(lessonData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(window.editingLessonNumber ? 'שיעור עודכן בהצלחה!' : 'שיעור נוסף בהצלחה!');
+            location.reload();
+        } else {
+            alert(data.error || 'שגיאה בשמירת השיעור');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('שגיאה בשמירת השיעור');
+    });
+}
+
+function deleteLesson(lessonNumber) {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את שיעור ${lessonNumber}? פעולה זו אינה הפיכה!`)) {
+        return;
+    }
+    
+    fetch(`/api/courses/${window.courseId}/lessons/${lessonNumber}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('שיעור נמחק בהצלחה');
+            location.reload();
+        } else {
+            alert(data.error || 'שגיאה במחיקת השיעור');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('שגיאה במחיקת השיעור');
+    });
+}
+
+// סגירת מודל בלחיצה מחוץ לו
+window.onclick = function(event) {
+    const modal = document.getElementById('lessonModal');
+    if (event.target === modal) {
+        closeLessonModal();
+    }
+}
+</script>
+{% endblock %}
+

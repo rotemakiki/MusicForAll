@@ -8,6 +8,7 @@ from routes.teachers import teachers_bp
 from routes.students import students_bp
 from routes.info import info_bp
 from routes.videos import videos_bp
+from routes.courses import courses_bp
 from routes.my_songs import my_songs_bp
 from routes.tutorials import tutorials_bp
 from routes.general import general_bp
@@ -27,6 +28,7 @@ app.register_blueprint(teachers_bp)
 app.register_blueprint(students_bp)
 app.register_blueprint(info_bp)
 app.register_blueprint(videos_bp)
+app.register_blueprint(courses_bp)
 app.register_blueprint(tutorials_bp)
 app.register_blueprint(general_bp)
 app.register_blueprint(my_songs_bp)

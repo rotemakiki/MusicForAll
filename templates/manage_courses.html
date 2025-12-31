@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}ניהול קורסים{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/courses.css') }}">
+<style>
+.manage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.create-course-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.create-course-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.course-actions-manage {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.edit-btn {
+    background: #667eea;
+    color: white;
+}
+
+.edit-btn:hover {
+    background: #5568d3;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+
+.manage-lessons-btn {
+    background: #10b981;
+    color: white;
+}
+
+.manage-lessons-btn:hover {
+    background: #059669;
+}
+
+.publish-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.published {
+    background: #10b981;
+    color: white;
+}
+
+.unpublished {
+    background: #f59e0b;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="courses-container">
+    <div class="courses-card">
+        <div class="manage-header">
+            <div>
+                <h1 class="page-title">📚 ניהול קורסים</h1>
+                <p class="page-subtitle">נהל את הקורסים שלך</p>
+            </div>
+            <a href="{{ url_for('courses.create_edit_course') }}" class="create-course-btn">
+                <i class="fas fa-plus"></i>
+                צור קורס חדש
+            </a>
+        </div>
+
+        <div id="loadingState" class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>טוען קורסים...</p>
+        </div>
+
+        <div id="errorState" class="error-state" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>שגיאה בטעינת הקורסים</p>
+        </div>
+
+        <div id="coursesList" class="courses-grid" style="display: none;">
+            <!-- הקורסים יוכנסו כאן -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h3>אין קורסים</h3>
+            <p>עדיין לא יצרת קורסים. צור קורס חדש כדי להתחיל!</p>
+            <a href="{{ url_for('courses.create_edit_course') }}" class="create-course-btn" style="margin-top: 20px;">
+                <i class="fas fa-plus"></i>
+                צור קורס חדש
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    loadCourses();
+});
+
+function loadCourses() {
+    const loadingState = document.getElementById("loadingState");
+    const errorState = document.getElementById("errorState");
+    const coursesList = document.getElementById("coursesList");
+    const emptyState = document.getElementById("emptyState");
+
+    fetch("/api/manage/courses")
+        .then(response => response.json())
+        .then(data => {
+            loadingState.style.display = "none";
+            
+            if (data.success && data.courses && data.courses.length > 0) {
+                coursesList.style.display = "grid";
+                displayCourses(data.courses);
+            } else {
+                emptyState.style.display = "block";
+            }
+        })
+        .catch(error => {
+            console.error("שגיאה בטעינת הקורסים:", error);
+            loadingState.style.display = "none";
+            errorState.style.display = "block";
+        });
+}
+
+function displayCourses(courses) {
+    const coursesList = document.getElementById("coursesList");
+    coursesList.innerHTML = "";
+    
+    courses.forEach(course => {
+        const courseCard = document.createElement("div");
+        courseCard.className = "course-card";
+        
+        const publishStatus = course.is_published ? 
+            '<span class="publish-badge published">פורסם</span>' : 
+            '<span class="publish-badge unpublished">לא פורסם</span>';
+        
+        const priceDisplay = course.price === 0 ? 
+            '<span class="price-badge free">חינם</span>' : 
+            `<span class="price-badge paid">₪${course.price}</span>`;
+        
+        courseCard.innerHTML = `
+            <div class="course-image">
+                <i class="fas fa-music"></i>
+            </div>
+            <div class="course-content">
+                <div class="course-header">
+                    <h3 class="course-title">${course.title || 'ללא כותרת'}</h3>
+                    ${priceDisplay}
+                </div>
+                <p class="course-field">${course.musical_field || 'מוזיקה'}</p>
+                <p class="course-description">${(course.description || '').substring(0, 100)}${course.description && course.description.length > 100 ? '...' : ''}</p>
+                <div class="course-meta">
+                    ${publishStatus}
+                    <div class="course-stats">
+                        <span><i class="fas fa-play-circle"></i> ${course.lessons ? course.lessons.length : 0} שיעורים</span>
+                    </div>
+                </div>
+            </div>
+            <div class="course-actions-manage">
+                <a href="/manage/courses/${course.id}/lessons" class="action-btn manage-lessons-btn">
+                    <i class="fas fa-list"></i>
+                    ניהול שיעורים
+                </a>
+                <a href="/manage/courses/edit/${course.id}" class="action-btn edit-btn">
+                    <i class="fas fa-edit"></i>
+                    ערוך
+                </a>
+                <button onclick="deleteCourse('${course.id}', '${course.title}')" class="action-btn delete-btn">
+                    <i class="fas fa-trash"></i>
+                    מחק
+                </button>
+            </div>
+        `;
+        
+        coursesList.appendChild(courseCard);
+    });
+}
+
+function deleteCourse(courseId, courseTitle) {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את הקורס "${courseTitle}"? פעולה זו אינה הפיכה!`)) {
+        return;
+    }
+    
+    fetch(`/api/courses/${courseId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('קורס נמחק בהצלחה');
+            loadCourses();
+        } else {
+            alert(data.error || 'שגיאה במחיקת הקורס');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('שגיאה במחיקת הקורס');
+    });
+}
+</script>
+{% endblock %}
+
