@@ -4,6 +4,14 @@ services:
     env: python
     buildCommand: ""
     startCommand: "python app.py"
-    envVars:
-      - key: GOOGLE_APPLICATION_CREDENTIALS
-        value: music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json
+    # משתני סביבה - הגדר אותם ב-Render Dashboard תחת Service Settings > Environment
+    # אל תגדיר אותם כאן בקובץ זה (לא בטוח), אלא ב-Render Dashboard
+    # envVars:
+    #   - key: SECRET_KEY
+    #     value: [הגדר ב-Render Dashboard - מפתח חזק וייחודי]
+    #   - key: FIREBASE_KEY_BASE64
+    #     value: [הגדר ב-Render Dashboard - Firebase key מקודד ב-Base64]
+    #   - key: DEBUG
+    #     value: "False"
+    #   - key: PORT
+    #     value: "10000"

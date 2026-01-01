@@ -256,3 +256,4 @@ python -c "import secrets; print(secrets.token_hex(32))"
 
 **מוכן להתחיל? שלח לי את הפרטים ואני אתחיל לעבוד! 🚀**
 
+

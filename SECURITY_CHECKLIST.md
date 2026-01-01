@@ -47,3 +47,4 @@ git filter-branch --force --index-filter "git rm --cached --ignore-unmatch secre
 
 כל הקבצים הרגישים מוגנים ב-.gitignore. אתה יכול להעלות את הפרויקט בבטחה.
 
+

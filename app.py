@@ -1,6 +1,6 @@
 import mimetypes
 
-from flask import Flask, session, render_template, request, jsonify
+from flask import Flask, session, render_template, request, jsonify, redirect, url_for
 from routes.auth import auth_bp
 from routes.products import products_bp
 from routes.songs import songs_bp
@@ -17,7 +17,15 @@ from datetime import datetime
 import os
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')  # חשוב להודעת flash ול-session
+
+# הגדרת SECRET_KEY - חובה בפרודקשן!
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    # בפרודקשן חייב להיות SECRET_KEY!
+    if os.environ.get('RENDER') or os.environ.get('PORT'):  # אנו ב-Render
+        raise ValueError("SECRET_KEY environment variable is required in production!")
+    secret_key = 'dev-secret-key-change-in-production'  # רק לפיתוח מקומי
+app.secret_key = secret_key
 
 mimetypes.add_type('application/javascript', '.js')
 
@@ -42,6 +50,21 @@ app.register_blueprint(chords_system_bp)  # הוספת המערכת החדשה
 @app.before_request
 def before_request():
     """הרצה לפני כל בקשה"""
+    # Redirect מ-HTTP ל-HTTPS (בפרודקשן)
+    # Render שולח header X-Forwarded-Proto שמציין את הפרוטוקול המקורי
+    if not app.debug:
+        forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
+        # אם הגיע דרך HTTP, redirect ל-HTTPS
+        if forwarded_proto == 'http' or (not forwarded_proto and request.scheme == 'http'):
+            url = request.url.replace('http://', 'https://', 1)
+            return redirect(url, code=301)
+    
+    # Redirect מ-www.musicaforall.com ל-musicaforall.com
+    if request.host.startswith('www.'):
+        # החלף את ה-URL כדי להסיר www
+        url = request.url.replace('www.', '', 1)
+        return redirect(url, code=301)
+    
     # הוספת timestamp לבקשה
     request.start_time = datetime.utcnow()
 
@@ -53,17 +76,37 @@ def before_request():
 @app.after_request
 def after_request(response):
     """הרצה אחרי כל בקשה"""
-    # הוספת headers לביטחון
+    # הוספת headers לביטחון - חשוב מאוד!
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Strict Transport Security (HSTS) - רק ב-HTTPS
+    if request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https':
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    # Content Security Policy (CSP) - בסיסי
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' https://cdnjs.cloudflare.com; "
+        "connect-src 'self' https://*.googleapis.com; "
+    )
+    response.headers['Content-Security-Policy'] = csp
 
     # CORS headers לAPI
     if request.path.startswith('/api/'):
-        response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        origin = request.headers.get('Origin')
+        # בפרודקשן, הגבל ל-domains מותרים
+        allowed_origins = ['https://musicaforall.com', 'https://www.musicaforall.com']
+        if app.debug or origin in allowed_origins or origin == 'http://localhost:5000':
+            response.headers['Access-Control-Allow-Origin'] = origin or '*'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
 
     # מדידת זמן תגובה (רק בדיבוג)
     if hasattr(request, 'start_time') and app.debug:
@@ -234,10 +277,20 @@ if app.debug:
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    debug_mode = os.environ.get("DEBUG", "True").lower() == "true"
+    # ב-Render, DEBUG חייב להיות False בפרודקשן!
+    debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
+    
+    # אם זה Render, כפה DEBUG=False (אבטחה)
+    if os.environ.get('RENDER'):
+        debug_mode = False
 
     print(f"[*] Music App starting on port {port}")
     print(f"[*] Debug mode: {debug_mode}")
+    print(f"[*] Environment: {'Production' if not debug_mode else 'Development'}")
     print(f"[*] Chord System v2.0 enabled")
+    
+    if not debug_mode:
+        print(f"[*] Security: HTTPS redirects enabled")
+        print(f"[*] Security: Security headers enabled")
 
     app.run(debug=debug_mode, host='0.0.0.0', port=port)
