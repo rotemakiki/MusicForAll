@@ -21,10 +21,36 @@ app = Flask(__name__, static_folder='static')
 # הגדרת SECRET_KEY - חובה בפרודקשן!
 secret_key = os.environ.get('SECRET_KEY')
 if not secret_key:
-    # בפרודקשן חייב להיות SECRET_KEY!
-    if os.environ.get('RENDER') or os.environ.get('PORT'):  # אנו ב-Render
-        raise ValueError("SECRET_KEY environment variable is required in production!")
-    secret_key = 'dev-secret-key-change-in-production'  # רק לפיתוח מקומי
+    # בודק אם זה Render (Render מגדיר PORT אוטומטית)
+    is_render = os.environ.get('RENDER') or (os.environ.get('PORT') and not os.environ.get('VIRTUAL_ENV'))
+    
+    if is_render:
+        # ב-Render חייב להיות SECRET_KEY!
+        error_msg = """
+╔═══════════════════════════════════════════════════════════╗
+║  שגיאה: SECRET_KEY חסר!                                    ║
+╠═══════════════════════════════════════════════════════════╣
+║  אתה צריך להגדיר SECRET_KEY ב-Render Dashboard:          ║
+║                                                           ║
+║  1. לך ל-Render Dashboard                                ║
+║  2. בחר את ה-Service שלך (music-for-all)                 ║
+║  3. לך ל-Settings > Environment                          ║
+║  4. לחץ "Add Environment Variable"                        ║
+║  5. שם: SECRET_KEY                                        ║
+║  6. ערך: [ראה הוראות למטה]                               ║
+║                                                           ║
+║  יצירת SECRET_KEY:                                        ║
+║  python -c "import secrets; print(secrets.token_hex(32))"║
+║                                                           ║
+║  אחרי שתגדיר, לחץ "Save Changes" והשירות יתעדכן         ║
+╚═══════════════════════════════════════════════════════════╝
+        """
+        raise ValueError(error_msg)
+    
+    # רק לפיתוח מקומי - לא בפרודקשן!
+    print("⚠️  WARNING: Using default SECRET_KEY (NOT SECURE FOR PRODUCTION!)")
+    secret_key = 'dev-secret-key-change-in-production'
+
 app.secret_key = secret_key
 
 mimetypes.add_type('application/javascript', '.js')
