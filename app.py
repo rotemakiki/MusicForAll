@@ -76,17 +76,20 @@ app.register_blueprint(chords_system_bp)  # הוספת המערכת החדשה
 @app.before_request
 def before_request():
     """הרצה לפני כל בקשה"""
-    # Redirect מ-HTTP ל-HTTPS (בפרודקשן)
+    # בדיקה אם זה localhost - לא לעשות redirect ב-localhost
+    is_localhost = request.host.startswith('127.0.0.1') or request.host.startswith('localhost') or '127.0.0.1' in request.host
+    
+    # Redirect מ-HTTP ל-HTTPS (בפרודקשן בלבד, לא ב-localhost)
     # Render שולח header X-Forwarded-Proto שמציין את הפרוטוקול המקורי
-    if not app.debug:
+    if not app.debug and not is_localhost:
         forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
         # אם הגיע דרך HTTP, redirect ל-HTTPS
         if forwarded_proto == 'http' or (not forwarded_proto and request.scheme == 'http'):
             url = request.url.replace('http://', 'https://', 1)
             return redirect(url, code=301)
     
-    # Redirect מ-www.musicaforall.com ל-musicaforall.com
-    if request.host.startswith('www.'):
+    # Redirect מ-www.musicaforall.com ל-musicaforall.com (לא ב-localhost)
+    if request.host.startswith('www.') and not is_localhost:
         # החלף את ה-URL כדי להסיר www
         url = request.url.replace('www.', '', 1)
         return redirect(url, code=301)
@@ -108,8 +111,9 @@ def after_request(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     
-    # Strict Transport Security (HSTS) - רק ב-HTTPS
-    if request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https':
+    # Strict Transport Security (HSTS) - רק ב-HTTPS ולא ב-localhost
+    is_localhost = request.host.startswith('127.0.0.1') or request.host.startswith('localhost') or '127.0.0.1' in request.host
+    if (request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https') and not is_localhost:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     
     # Content Security Policy (CSP) - בסיסי

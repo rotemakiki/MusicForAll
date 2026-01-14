@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}יצירת קשר{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/contact.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="contact-container">
+    <div class="contact-card">
+        <div class="page-header">
+            <h1 class="page-title">📧 יצירת קשר</h1>
+            <p class="page-subtitle">דווח על תקלות או שלח הצעות לשיפור - אנחנו כאן כדי לעזור!</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('general.submit_contact') }}" enctype="multipart/form-data" class="contact-form" id="contactForm">
+            <!-- סוג הפנייה -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span class="label-icon">📋</span>
+                    <span>סוג הפנייה</span>
+                </label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="submission_type" value="bug" checked>
+                        <div class="radio-custom">
+                            <span class="radio-icon">🐛</span>
+                            <span class="radio-text">דיווח על תקלה</span>
+                        </div>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="submission_type" value="suggestion">
+                        <div class="radio-custom">
+                            <span class="radio-icon">💡</span>
+                            <span class="radio-text">הצעה לשיפור</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- כותרת -->
+            <div class="form-group">
+                <label for="title" class="form-label">
+                    <span class="label-icon">✏️</span>
+                    <span>כותרת</span>
+                    <span class="required">*</span>
+                </label>
+                <input type="text" 
+                       id="title" 
+                       name="title" 
+                       class="form-input" 
+                       placeholder="לדוגמה: בעיה בהתחברות / הצעה להוספת תכונה חדשה"
+                       required 
+                       maxlength="200">
+                <div class="char-counter">
+                    <span id="titleCharCount">0</span>/200 תווים
+                </div>
+            </div>
+
+            <!-- תיאור -->
+            <div class="form-group">
+                <label for="description" class="form-label">
+                    <span class="label-icon">📝</span>
+                    <span>תיאור מפורט</span>
+                    <span class="required">*</span>
+                </label>
+                <div class="textarea-wrapper">
+                    <textarea id="description" 
+                              name="description" 
+                              class="form-textarea"
+                              placeholder="תאר את התקלה או ההצעה שלך בפירוט. ככל שהתיאור יהיה מפורט יותר, כך נוכל לעזור לך טוב יותר..."
+                              required 
+                              maxlength="2000"
+                              rows="6"></textarea>
+                    <div class="char-counter">
+                        <span id="descriptionCharCount">0</span>/2000 תווים
+                    </div>
+                </div>
+            </div>
+
+            <!-- העלאת צילום מסך -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span class="label-icon">📸</span>
+                    <span>צילום מסך (אופציונלי)</span>
+                </label>
+                <div class="file-upload-wrapper">
+                    <input type="file" 
+                           id="screenshot" 
+                           name="screenshot" 
+                           accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                           class="file-input">
+                    <label for="screenshot" class="file-upload-label">
+                        <div class="file-upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span class="file-upload-text">לחץ לבחירת קובץ או גרור לכאן</span>
+                            <span class="file-upload-hint">PNG, JPG, JPEG, GIF, WEBP (מקסימום 5MB)</span>
+                        </div>
+                    </label>
+                    <div class="file-preview" id="filePreview" style="display: none;">
+                        <div class="preview-image-wrapper">
+                            <img id="previewImage" src="" alt="תצוגה מקדימה">
+                            <button type="button" class="remove-file-btn" id="removeFileBtn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="file-info">
+                            <span id="fileName"></span>
+                            <span id="fileSize"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- כפתור שליחה -->
+            <div class="form-actions">
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-icon">📤</span>
+                    <span>שלח פנייה</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- הודעות עזרה -->
+        <div class="help-section">
+            <div class="help-card">
+                <h3 class="help-title">
+                    <i class="fas fa-lightbulb"></i>
+                    טיפים לכתיבת דיווח טוב
+                </h3>
+                <ul class="help-list">
+                    <li>תאר את הבעיה בצורה ברורה ומפורטת</li>
+                    <li>צרף צילום מסך אם אפשר - זה עוזר מאוד להבנה</li>
+                    <li>ציין באיזה דפדפן ומכשיר אתה משתמש</li>
+                    <li>תאר מה ניסית לעשות לפני שהבעיה הופיעה</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/contact.js') }}" defer></script>
+{% endblock %}
+
