@@ -347,7 +347,7 @@ document.addEventListener('keydown', function(e) {
 
 // Add console welcome message
 console.log(`
-🎵 ברוכים הבאים ל-Music For All! 🎵
+🎵 ברוכים הבאים ל-Musica For All! 🎵
 Keyboard shortcuts:
 - L: Login
 - R: Register
