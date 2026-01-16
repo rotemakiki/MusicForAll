@@ -13,7 +13,7 @@ from routes.my_songs import my_songs_bp
 from routes.tutorials import tutorials_bp
 from routes.general import general_bp
 from routes.chords_system import chords_system_bp  # קובץ חדש
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 app = Flask(__name__, static_folder='static')
@@ -77,11 +77,19 @@ app.register_blueprint(chords_system_bp)  # הוספת המערכת החדשה
 def before_request():
     """הרצה לפני כל בקשה"""
     # בדיקה אם זה localhost - לא לעשות redirect ב-localhost
-    is_localhost = request.host.startswith('127.0.0.1') or request.host.startswith('localhost') or '127.0.0.1' in request.host
+    is_localhost = (
+        request.host.startswith('127.0.0.1') or 
+        request.host.startswith('localhost') or 
+        '127.0.0.1' in request.host or
+        request.host.startswith('10.') or  # גם כתובות IP פנימיות
+        request.remote_addr in ['127.0.0.1', '::1'] or
+        'localhost' in request.host.lower()
+    )
     
     # Redirect מ-HTTP ל-HTTPS (בפרודקשן בלבד, לא ב-localhost)
     # Render שולח header X-Forwarded-Proto שמציין את הפרוטוקול המקורי
-    if not app.debug and not is_localhost:
+    # חשוב: לעולם לא לעשות redirect ב-localhost!
+    if not is_localhost and not app.debug:
         forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
         # אם הגיע דרך HTTP, redirect ל-HTTPS
         if forwarded_proto == 'http' or (not forwarded_proto and request.scheme == 'http'):
@@ -95,7 +103,7 @@ def before_request():
         return redirect(url, code=301)
     
     # הוספת timestamp לבקשה
-    request.start_time = datetime.utcnow()
+    request.start_time = datetime.now(timezone.utc)
 
     # לוגים לבקשות API (רק בדיבוג)
     if request.path.startswith('/api/') and app.debug:
@@ -140,7 +148,7 @@ def after_request(response):
 
     # מדידת זמן תגובה (רק בדיבוג)
     if hasattr(request, 'start_time') and app.debug:
-        duration = (datetime.utcnow() - request.start_time).total_seconds()
+        duration = (datetime.now(timezone.utc) - request.start_time).total_seconds()
         if duration > 1.0:  # אזהרה על בקשות איטיות
             print(f"Slow request: {request.path} took {duration:.2f}s")
 
@@ -180,7 +188,7 @@ def api_health():
     """בדיקת תקינות API"""
     return jsonify({
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "2.0",
         "services": {
             "chords_system": "active",
@@ -199,7 +207,7 @@ def api_status():
         db = firestore.client()
         # בדיקה פשוטה
         test_doc = db.collection("_health_check").document("test")
-        test_doc.set({"timestamp": datetime.utcnow(), "status": "ok"})
+        test_doc.set({"timestamp": datetime.now(timezone.utc), "status": "ok"})
         database_status = "connected"
     except Exception as e:
         database_status = f"error: {str(e)}"
@@ -207,7 +215,7 @@ def api_status():
     status_info = {
         "system_status": "operational",
         "database_status": database_status,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "2.0",
         "environment": "production" if not app.debug else "development",
         "features": {
@@ -296,7 +304,7 @@ if app.debug:
         """בדיקת API פשוטה (לפיתוח בלבד)"""
         return jsonify({
             "message": "API is working",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_authenticated": 'user_id' in session
         }), 200
 
@@ -307,20 +315,46 @@ if app.debug:
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    # ב-Render, DEBUG חייב להיות False בפרודקשן!
-    debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
     
-    # אם זה Render, כפה DEBUG=False (אבטחה)
-    if os.environ.get('RENDER'):
+    # בדיקה אם זה Render (פרודקשן)
+    is_render = os.environ.get('RENDER') is not None
+    
+    # ב-Render, DEBUG חייב להיות False בפרודקשן!
+    # בפיתוח מקומי, ברירת מחדל היא True
+    if is_render:
         debug_mode = False
+    else:
+        # בפיתוח מקומי - ברירת מחדל True, אלא אם כן הוגדר אחרת
+        debug_mode = os.environ.get("DEBUG", "True").lower() == "true"
+    
+    # הגדרת debug mode באפליקציה
+    app.debug = debug_mode
 
     print(f"[*] Music App starting on port {port}")
     print(f"[*] Debug mode: {debug_mode}")
     print(f"[*] Environment: {'Production' if not debug_mode else 'Development'}")
     print(f"[*] Chord System v2.0 enabled")
     
-    if not debug_mode:
+    # בפיתוח מקומי - תמיכה ב-HTTPS עם self-signed certificate
+    # זה פותר את הבעיה כשהדפדפן מנסה להתחבר ב-HTTPS
+    ssl_context = None
+    if debug_mode and not is_render:
+        try:
+            # ניסיון ליצור self-signed certificate אוטומטית
+            ssl_context = 'adhoc'
+            print(f"[*] Local development mode - HTTPS enabled with self-signed certificate")
+            print(f"[*] Note: Browser will show security warning - click 'Advanced' and 'Proceed'")
+        except Exception as e:
+            print(f"[*] Could not enable HTTPS: {e}")
+            print(f"[*] Running in HTTP mode only")
+            ssl_context = None
+    elif not debug_mode and not is_render:
         print(f"[*] Security: HTTPS redirects enabled")
         print(f"[*] Security: Security headers enabled")
 
-    app.run(debug=debug_mode, host='0.0.0.0', port=port)
+    app.run(
+        debug=debug_mode, 
+        host='0.0.0.0', 
+        port=port,
+        ssl_context=ssl_context
+    )
