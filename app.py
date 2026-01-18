@@ -91,8 +91,14 @@ def before_request():
     # חשוב: לעולם לא לעשות redirect ב-localhost!
     if not is_localhost and not app.debug:
         forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
-        # אם הגיע דרך HTTP, redirect ל-HTTPS
-        if forwarded_proto == 'http' or (not forwarded_proto and request.scheme == 'http'):
+        # ב-Render, אם X-Forwarded-Proto הוא 'https', המשתמש כבר ב-HTTPS
+        # אם הוא 'http' או חסר, צריך לעשות redirect ל-HTTPS
+        if forwarded_proto == 'http':
+            # ב-Render, צריך לבנות את ה-URL עם הדומיין הנכון
+            url = request.url.replace('http://', 'https://', 1)
+            return redirect(url, code=301)
+        elif not forwarded_proto and request.scheme == 'http':
+            # אם אין X-Forwarded-Proto (לא Render) והבקשה היא HTTP
             url = request.url.replace('http://', 'https://', 1)
             return redirect(url, code=301)
     
