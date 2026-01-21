@@ -88,7 +88,7 @@ class SongStructureManager {
             this.songStructure = savedLoops.map(loop => ({
                 ...loop,
                 id: Date.now() + Math.random(),
-                repeatCount: 1
+                repeatCount: loop.repeatCount || 1
             }));
             this.renderSongStructure();
         }
@@ -123,7 +123,7 @@ class SongStructureManager {
         const loopCopy = {
             ...loop,
             id: Date.now() + Math.random(),
-            repeatCount: 1
+            repeatCount: loop.repeatCount || 1
         };
 
         this.songStructure.push(loopCopy);
