@@ -4,6 +4,34 @@
 const chords = window.songData.chords;
 const loops = window.songData.loops || [];
 const originalBpm = window.songData.originalBpm;
+const timeSignature = window.songData.timeSignature || "4/4";
+
+// Parse time signature to get beats per measure
+function getBeatsPerMeasure(timeSig) {
+    if (!timeSig || typeof timeSig !== 'string') {
+        return 4; // Default to 4/4
+    }
+    
+    const parts = timeSig.split('/');
+    if (parts.length !== 2) {
+        return 4; // Default to 4/4 if invalid format
+    }
+    
+    const numerator = parseInt(parts[0]);
+    const denominator = parseInt(parts[1]);
+    
+    if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
+        return 4; // Default to 4/4 if invalid
+    }
+    
+    // For compound time signatures (6/8, 9/8, 12/8), the number of beats is the numerator
+    // For simple time signatures (4/4, 3/4, 2/4), the number of beats is also the numerator
+    // This is correct: 4/4 = 4 beats, 6/8 = 6 beats, 3/4 = 3 beats, etc.
+    return numerator;
+}
+
+// Get beats per measure for current song
+const beatsPerMeasure = getBeatsPerMeasure(timeSignature);
 
 // State variables
 let bpm = originalBpm;
@@ -267,8 +295,8 @@ function buildAllMeasures() {
         allMeasures.push({
             globalIndex: globalIndex++,
             isPreparation: true,
-            chords: [{ chord: "הכנה", beats: 4, width: 4 }],
-            totalBeats: 4,
+            chords: [{ chord: "הכנה", beats: beatsPerMeasure, width: beatsPerMeasure }],
+            totalBeats: beatsPerMeasure,
             loopIndex: null,
             repeatNumber: null,
             measureInLoop: null,
@@ -288,12 +316,24 @@ function buildAllMeasures() {
                 // עבור כל תיבה בלופ
                 for (let measureInLoop = 0; measureInLoop < loop.measureCount; measureInLoop++) {
                     const measure = loop.measures[measureInLoop];
+                    
+                    // Use time signature beats instead of stored measure.beats
+                    // Calculate ratio to preserve chord proportions
+                    const storedBeats = measure.beats && measure.beats > 0 ? measure.beats : 4; // Default to 4 if not specified or invalid
+                    const ratio = storedBeats > 0 ? beatsPerMeasure / storedBeats : 1; // Prevent division by zero
+                    
+                    // Scale chord widths to match new time signature
+                    const scaledChords = measure.chords.map(chord => ({
+                        ...chord,
+                        width: Math.round((chord.width || storedBeats) * ratio),
+                        beats: Math.round((chord.beats || chord.width || storedBeats) * ratio)
+                    }));
 
                     allMeasures.push({
                         globalIndex: globalIndex++,
                         isPreparation: false,
-                        chords: measure.chords,
-                        totalBeats: measure.beats,
+                        chords: scaledChords,
+                        totalBeats: beatsPerMeasure, // Use time signature beats
                         loopIndex: loopIdx,
                         repeatNumber: repeatNum,
                         measureInLoop: measureInLoop,
@@ -319,12 +359,15 @@ function buildAllMeasures() {
                 currentMeasure.push(chordWithWidth);
                 totalBeats += chordObj.beats;
 
-                if (Math.abs(totalBeats - 4) < 0.01 || totalBeats > 4 || chordIdx === line.length - 1) {
+                // Use beatsPerMeasure from time signature instead of hardcoded 4
+                if (Math.abs(totalBeats - beatsPerMeasure) < 0.01 || totalBeats > beatsPerMeasure || chordIdx === line.length - 1) {
+                    // If we've exceeded the measure, cap it at beatsPerMeasure
+                    const measureBeats = Math.min(totalBeats, beatsPerMeasure);
                     allMeasures.push({
                         globalIndex: globalIndex++,
                         isPreparation: false,
                         chords: [...currentMeasure],
-                        totalBeats: totalBeats,
+                        totalBeats: measureBeats,
                         loopIndex: null,
                         repeatNumber: null,
                         measureInLoop: null,

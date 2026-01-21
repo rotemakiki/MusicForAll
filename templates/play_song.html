@@ -306,7 +306,8 @@
         songId: "{{ song.id }}",
         chords: {{ song.chords | tojson }},
         loops: {{ song.loops | tojson }},
-        originalBpm: {{ song.bpm }}
+        originalBpm: {{ song.bpm }},
+        timeSignature: "{{ song.time_signature }}"
     };
 
     // נגן יוטיוב
