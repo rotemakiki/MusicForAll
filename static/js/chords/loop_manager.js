@@ -333,7 +333,7 @@ class LoopManager {
     }
 
     /**
-     * Clone a saved loop
+     * Clone a saved loop with name selection dropdown
      */
     cloneSavedLoop(loopId) {
         const loop = this.getLoopById(loopId);
@@ -341,17 +341,206 @@ class LoopManager {
             return false;
         }
 
-        const newLoop = {
-            id: Date.now(),
-            customName: `${loop.customName} (עותק)`,
-            measures: loop.measures.map(m => JSON.parse(JSON.stringify(m))), // Deep copy
-            measureCount: loop.measureCount,
-            repeatCount: loop.repeatCount || 1
+        // Create modal for selecting new loop name
+        this.showCloneLoopModal(loop);
+        return true;
+    }
+
+    /**
+     * Show modal for selecting new loop name when cloning
+     */
+    showCloneLoopModal(loop) {
+        // Remove existing modal if any
+        const existingModal = document.getElementById('clone-loop-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.id = 'clone-loop-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+
+        // Create modal content
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            min-width: 300px;
+            max-width: 90%;
+        `;
+
+        // Title
+        const title = document.createElement('h3');
+        title.textContent = 'שכפול לופ - בחר שם חדש';
+        title.style.cssText = 'margin: 0 0 15px 0; color: #2c3e50; font-size: 18px;';
+
+        // Create dropdown selector (same as loop-name-select)
+        const selectorDiv = document.createElement('div');
+        selectorDiv.className = 'loop-name-selector';
+        selectorDiv.style.cssText = 'margin-bottom: 10px;';
+
+        const select = document.createElement('select');
+        select.className = 'loop-name-select';
+        select.id = 'clone-loop-name-select';
+        select.style.cssText = `
+            padding: 8px 12px;
+            border: 2px solid #e17055;
+            border-radius: 6px;
+            background: white;
+            font-weight: 600;
+            font-size: 13px;
+            width: 100%;
+            cursor: pointer;
+        `;
+
+        // Add options (same as loop-name-select)
+        const options = [
+            { value: '', text: 'בחר סוג לופ' },
+            { value: 'פתיח (Intro)', text: 'פתיח (Intro)' },
+            { value: 'בית (Verse)', text: 'בית (Verse)' },
+            { value: 'פזמון (Chorus)', text: 'פזמון (Chorus)' },
+            { value: 'מעבר (Bridge)', text: 'מעבר (Bridge)' },
+            { value: 'C part', text: 'C part' },
+            { value: 'סיום (Outro)', text: 'סיום (Outro)' },
+            { value: 'other', text: 'אחר' }
+        ];
+
+        options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.text;
+            select.appendChild(option);
+        });
+
+        // Custom input for "other" option
+        const customInput = document.createElement('input');
+        customInput.type = 'text';
+        customInput.className = 'loop-name-input';
+        customInput.id = 'clone-loop-name-input';
+        customInput.placeholder = 'הכנס שם מותאם אישית...';
+        customInput.style.cssText = `
+            padding: 6px 10px;
+            border: 2px solid #e17055;
+            border-radius: 6px;
+            background: white;
+            font-weight: 600;
+            font-size: 13px;
+            width: 100%;
+            display: none;
+            margin-top: 6px;
+        `;
+
+        // Handle select change
+        select.addEventListener('change', () => {
+            if (select.value === 'other') {
+                customInput.style.display = 'block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customInput.value = '';
+            }
+        });
+
+        selectorDiv.appendChild(select);
+        selectorDiv.appendChild(customInput);
+
+        // Buttons container
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.style.cssText = 'display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;';
+
+        // Cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'ביטול';
+        cancelBtn.style.cssText = `
+            padding: 8px 16px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-weight: 600;
+        `;
+        cancelBtn.onclick = () => modal.remove();
+
+        // Confirm button
+        const confirmBtn = document.createElement('button');
+        confirmBtn.textContent = 'שכפל';
+        confirmBtn.style.cssText = `
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        `;
+        confirmBtn.onclick = () => {
+            let newName = '';
+            if (select.value === 'other') {
+                newName = customInput.value.trim();
+            } else if (select.value) {
+                newName = select.value;
+            }
+
+            if (!newName) {
+                alert('יש לבחור או להזין שם ללופ');
+                return;
+            }
+
+            // Create cloned loop with new name
+            const newLoop = {
+                id: Date.now(),
+                customName: newName,
+                measures: loop.measures.map(m => JSON.parse(JSON.stringify(m))), // Deep copy
+                measureCount: loop.measureCount,
+                repeatCount: loop.repeatCount || 1
+            };
+
+            this.savedLoops.push(newLoop);
+            this.renderSavedLoops();
+            modal.remove();
+
+            // Show success notification
+            if (window.domHelpers) {
+                window.domHelpers.showNotification('הלופ שוכפל בהצלחה!', 'success');
+            }
         };
 
-        this.savedLoops.push(newLoop);
-        this.renderSavedLoops();
-        return true;
+        buttonsDiv.appendChild(cancelBtn);
+        buttonsDiv.appendChild(confirmBtn);
+
+        // Assemble modal
+        modalContent.appendChild(title);
+        modalContent.appendChild(selectorDiv);
+        modalContent.appendChild(buttonsDiv);
+        modal.appendChild(modalContent);
+
+        // Add to body
+        document.body.appendChild(modal);
+
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+
+        // Focus on select
+        setTimeout(() => select.focus(), 100);
     }
 
     /**
