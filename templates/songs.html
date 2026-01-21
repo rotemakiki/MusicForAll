@@ -9,8 +9,7 @@
 .genres-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 5px;
+    gap: 6px;
 }
 
 .genre-tag {
@@ -92,78 +91,81 @@
         </div>
     </div>
 
-    <!-- Songs Grid -->
+    <!-- Songs List -->
     {% if songs %}
-        <div class="songs-grid">
+        <div class="songs-list">
             {% for song in songs %}
-                <div class="song-card" id="song-{{ song.id }}"
+                <div class="song-row" id="song-{{ song.id }}"
                      data-difficulty="{{ song.difficulty }}"
                      data-bpm="{{ song.bpm }}"
                      data-key="{{ song.key }}"
                      data-time-signature="{{ song.time_signature }}"
                      data-genres="{{ song.display_genres | join(',') }}">
 
-                    <div class="song-header">
-                        <div class="song-info">
-                            <h3>{{ song.title }}</h3>
-                            <p>{{ song.artist }}</p>
+                    <div class="song-row-content">
+                        <div class="song-main-info">
+                            <div class="song-title-artist">
+                                <h3 class="song-title">{{ song.title }}</h3>
+                                <p class="song-artist">{{ song.artist }}</p>
+                            </div>
+                            
+                            <div class="song-meta-info">
+                                <div class="song-details-row">
+                                    <span class="detail-badge">
+                                        🎼 {{ song.key }} {{ song.key_type }}
+                                    </span>
+                                    <span class="detail-badge">
+                                        🎵 {{ song.time_signature }}
+                                    </span>
+                                    <span class="detail-badge">
+                                        ⚡ {{ song.bpm }} BPM
+                                    </span>
+                                    {% if song.difficulty %}
+                                    <span class="detail-badge difficulty-{{ song.difficulty }}">
+                                        ⭐ {{ song.difficulty }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="genres-container">
+                                    {% if song.display_genres and song.display_genres|length > 0 %}
+                                        {% for genre in song.display_genres %}
+                                            <span class="genre-tag">{{ genre }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="genre-tag">לא צוין</span>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="song-details">
-                        <span class="detail-badge">
-                            🎼 {{ song.key }} {{ song.key_type }}
-                        </span>
-                        <span class="detail-badge">
-                            🎵 {{ song.time_signature }}
-                        </span>
-                        <span class="detail-badge">
-                            ⚡ {{ song.bpm }} BPM
-                        </span>
-                        {% if song.difficulty %}
-                        <span class="detail-badge difficulty-{{ song.difficulty }}">
-                            ⭐ {{ song.difficulty }}
-                        </span>
-                        {% endif %}
-                    </div>
-
-                    <!-- Genres Display -->
-                    <div class="genres-container">
-                        {% if song.display_genres and song.display_genres|length > 0 %}
-                            {% for genre in song.display_genres %}
-                                <span class="genre-tag">{{ genre }}</span>
-                            {% endfor %}
-                        {% else %}
-                            <span class="genre-tag">לא צוין</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="song-actions">
-                        <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="action-btn play-btn">
-                            <span>🎵</span>
-                            <span>לעמוד השיר</span>
-                        </a>
-
-                        {% if session.get('user_id') %}
-                            <button class="action-btn my-songs-btn"
-                                    data-song-id="{{ song.id }}"
-                                    onclick="toggleMySong('{{ song.id }}', this)">
-                                <span class="icon">❤️</span>
-                                <span class="text">הוסף לשירים שלי</span>
-                            </button>
-                        {% endif %}
-
-                        {% if session.get('user_id') == song.created_by %}
-                            <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
-                                <span>✏️</span>
-                                <span>ערוך</span>
+                        <div class="song-actions-row">
+                            <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="action-btn play-btn">
+                                <span>🎵</span>
+                                <span>לעמוד השיר</span>
                             </a>
 
-                            <button class="action-btn delete-btn"
-                                    onclick="deleteSong('{{ song.id }}', '{{ song.title }}')">
-                                <span>🗑️</span>
-                            </button>
-                        {% endif %}
+                            {% if session.get('user_id') %}
+                                <button class="action-btn my-songs-btn"
+                                        data-song-id="{{ song.id }}"
+                                        onclick="toggleMySong('{{ song.id }}', this)">
+                                    <span class="icon">❤️</span>
+                                    <span class="text">הוסף לשירים שלי</span>
+                                </button>
+                            {% endif %}
+
+                            {% if session.get('user_id') == song.created_by %}
+                                <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
+                                    <span>✏️</span>
+                                    <span>ערוך</span>
+                                </a>
+
+                                <button class="action-btn delete-btn"
+                                        onclick="deleteSong('{{ song.id }}', '{{ song.title }}')">
+                                    <span>🗑️</span>
+                                </button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             {% endfor %}
@@ -189,7 +191,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
-    const songCards = document.querySelectorAll('.song-card');
+    const songCards = document.querySelectorAll('.song-row');
 
     // Search functionality
     if (searchInput) {
@@ -197,15 +199,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const searchTerm = this.value.toLowerCase();
 
             songCards.forEach(card => {
-                const title = card.querySelector('h3').textContent.toLowerCase();
-                const artist = card.querySelector('p').textContent.toLowerCase();
+                const title = card.querySelector('.song-title').textContent.toLowerCase();
+                const artist = card.querySelector('.song-artist').textContent.toLowerCase();
                 const genres = card.getAttribute('data-genres').toLowerCase();
 
                 const isVisible = title.includes(searchTerm) ||
                                 artist.includes(searchTerm) ||
                                 genres.includes(searchTerm);
 
-                card.style.display = isVisible ? 'block' : 'none';
+                card.style.display = isVisible ? 'flex' : 'none';
             });
         });
     }
@@ -214,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sortSelect) {
         sortSelect.addEventListener('change', function() {
             const sortBy = this.value;
-            const songsGrid = document.querySelector('.songs-grid');
+            const songsList = document.querySelector('.songs-list');
             const cards = Array.from(songCards);
 
             cards.sort((a, b) => {
@@ -222,12 +224,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 switch(sortBy) {
                     case 'title':
-                        aValue = a.querySelector('h3').textContent;
-                        bValue = b.querySelector('h3').textContent;
+                        aValue = a.querySelector('.song-title').textContent;
+                        bValue = b.querySelector('.song-title').textContent;
                         break;
                     case 'artist':
-                        aValue = a.querySelector('p').textContent;
-                        bValue = b.querySelector('p').textContent;
+                        aValue = a.querySelector('.song-artist').textContent;
+                        bValue = b.querySelector('.song-artist').textContent;
                         break;
                     case 'difficulty':
                         const difficultyOrder = { 'beginner': 1, 'intermediate': 2, 'advanced': 3 };
@@ -252,7 +254,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Re-append sorted cards
-            cards.forEach(card => songsGrid.appendChild(card));
+            const songsList = document.querySelector('.songs-list');
+            cards.forEach(card => songsList.appendChild(card));
         });
     }
 });
