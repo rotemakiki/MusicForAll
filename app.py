@@ -86,27 +86,44 @@ def before_request():
         'localhost' in request.host.lower()
     )
     
+    # Redirect מ-www.musicaforall.com ל-musicaforall.com (לא ב-localhost)
+    # צריך לעשות את זה לפני ה-redirect ל-HTTPS כדי למנוע redirect כפול
+    if request.host.startswith('www.') and not is_localhost:
+        # החלף את ה-URL כדי להסיר www, ושמור על הפרוטוקול
+        url = request.url.replace('www.', '', 1)
+        # אם זה HTTP, שנה ל-HTTPS
+        if url.startswith('http://'):
+            url = url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
+    
     # Redirect מ-HTTP ל-HTTPS (בפרודקשן בלבד, לא ב-localhost)
     # Render שולח header X-Forwarded-Proto שמציין את הפרוטוקול המקורי
     # חשוב: לעולם לא לעשות redirect ב-localhost!
     if not is_localhost and not app.debug:
-        forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
-        # ב-Render, אם X-Forwarded-Proto הוא 'https', המשתמש כבר ב-HTTPS
-        # אם הוא 'http' או חסר, צריך לעשות redirect ל-HTTPS
+        # בדיקה משופרת לזיהוי HTTP - בודקים מספר מקורות
+        forwarded_proto = request.headers.get('X-Forwarded-Proto', '').lower()
+        forwarded_ssl = request.headers.get('X-Forwarded-Ssl', '').lower()
+        url_is_http = request.url.startswith('http://')
+        
+        # ב-Render, X-Forwarded-Proto הוא הדרך האמינה ביותר
+        # אם הוא 'http' או חסר והבקשה היא HTTP, צריך redirect
+        needs_https_redirect = False
+        
         if forwarded_proto == 'http':
+            needs_https_redirect = True
+        elif forwarded_proto == 'https':
+            needs_https_redirect = False
+        elif forwarded_ssl == 'on':
+            needs_https_redirect = False
+        elif url_is_http:
+            # אם אין X-Forwarded-Proto אבל ה-URL הוא HTTP, נניח שצריך redirect
+            # זה יכול לקרות אם ה-DNS לא מוגדר נכון אבל הבקשה מגיעה בכל זאת
+            needs_https_redirect = True
+        
+        if needs_https_redirect:
             # ב-Render, צריך לבנות את ה-URL עם הדומיין הנכון
             url = request.url.replace('http://', 'https://', 1)
             return redirect(url, code=301)
-        elif not forwarded_proto and request.scheme == 'http':
-            # אם אין X-Forwarded-Proto (לא Render) והבקשה היא HTTP
-            url = request.url.replace('http://', 'https://', 1)
-            return redirect(url, code=301)
-    
-    # Redirect מ-www.musicaforall.com ל-musicaforall.com (לא ב-localhost)
-    if request.host.startswith('www.') and not is_localhost:
-        # החלף את ה-URL כדי להסיר www
-        url = request.url.replace('www.', '', 1)
-        return redirect(url, code=301)
     
     # הוספת timestamp לבקשה
     request.start_time = datetime.now(timezone.utc)
