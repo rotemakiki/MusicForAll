@@ -6,7 +6,8 @@ class LoopManager {
         this.currentLoop = [];
         this.savedLoops = [];
         this.selectedSavedLoop = null;
-        this.editingLoopId = null; // Track which loop is being edited
+        this.editingLoopId = null; // Track which loop is being edited (for content editing - adding measures)
+        this.editingLoopNameId = null; // Track which loop's name is being edited
 
         // Get utilities from core
         this.utils = window.ChordCore.MeasureUtils;
@@ -35,37 +36,90 @@ class LoopManager {
             loopNameSelect.addEventListener('change', () => {
                 const selectedValue = loopNameSelect.value;
                 
-                // If editing a saved loop, update its name immediately
-                if (this.editingLoopId && selectedValue && selectedValue !== 'other') {
-                    const loop = this.getLoopById(this.editingLoopId);
+                // If editing a saved loop name, update its name immediately
+                if (this.editingLoopNameId && selectedValue && selectedValue !== 'other') {
+                    const loop = this.getLoopById(this.editingLoopNameId);
                     if (loop) {
                         loop.customName = selectedValue;
                         this.renderSavedLoops();
-                        this.editingLoopId = null; // Clear editing state
+                        this.editingLoopNameId = null; // Clear name editing state
                     }
-                } else if (this.editingLoopId && (!selectedValue || selectedValue === 'other')) {
-                    // If user clears selection or selects 'other' while editing, cancel edit mode
-                    this.editingLoopId = null;
-                }
-                
-                if (selectedValue === 'other') {
-                    // Show custom input (only when creating new loop, not editing)
-                    if (loopNameInput && !this.editingLoopId) {
+                } else if (this.editingLoopNameId && selectedValue === 'other') {
+                    // Allow selecting 'other' when editing name - show input field
+                    if (loopNameInput) {
                         loopNameInput.style.display = 'block';
-                        loopNameInput.value = '';
+                        // If loop has a custom name, pre-fill it
+                        const loop = this.getLoopById(this.editingLoopNameId);
+                        if (loop) {
+                            const predefinedOptions = [
+                                "פתיח (Intro)",
+                                "בית (Verse)",
+                                "פזמון (Chorus)",
+                                "מעבר (Bridge)",
+                                "C part",
+                                "סיום (Outro)"
+                            ];
+                            // Only pre-fill if it's not a predefined option
+                            const nameWithoutCopy = loop.customName.replace(/\s*\(עותק\)\s*$/, "").trim();
+                            if (!predefinedOptions.includes(nameWithoutCopy)) {
+                                loopNameInput.value = nameWithoutCopy;
+                            } else {
+                                loopNameInput.value = '';
+                            }
+                        }
                         loopNameInput.focus();
-                    } else if (loopNameInput) {
-                        // Hide input when editing saved loop
-                        loopNameInput.style.display = 'none';
-                        loopNameInput.value = '';
                     }
-                } else {
-                    // Hide custom input
+                } else if (this.editingLoopNameId && !selectedValue) {
+                    // If user clears selection while editing name, cancel edit mode
+                    this.editingLoopNameId = null;
                     if (loopNameInput) {
                         loopNameInput.style.display = 'none';
                         loopNameInput.value = '';
                     }
                 }
+                
+                if (selectedValue === 'other') {
+                    // Show custom input (for both new loops and editing name)
+                    if (loopNameInput) {
+                        loopNameInput.style.display = 'block';
+                        if (!this.editingLoopNameId) {
+                            loopNameInput.value = '';
+                            loopNameInput.focus();
+                        }
+                    }
+                } else {
+                    // Hide custom input if not 'other' (only if not editing name)
+                    if (loopNameInput && !this.editingLoopNameId) {
+                        loopNameInput.style.display = 'none';
+                        loopNameInput.value = '';
+                    }
+                }
+                
+                // Handle saving custom name when editing loop name
+                if (loopNameInput && this.editingLoopNameId && selectedValue === 'other') {
+                    const saveCustomName = () => {
+                        const customName = loopNameInput.value.trim();
+                        if (customName) {
+                            const loop = this.getLoopById(this.editingLoopNameId);
+                            if (loop) {
+                                loop.customName = customName;
+                                this.renderSavedLoops();
+                                this.editingLoopNameId = null;
+                                loopNameInput.style.display = 'none';
+                            }
+                        }
+                    };
+                    
+                    // Save on blur (when user clicks away)
+                    loopNameInput.addEventListener('blur', saveCustomName, { once: true });
+                    // Also save on Enter key
+                    loopNameInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            saveCustomName();
+                        }
+                    }, { once: true });
+                }
+                
                 this.updateSaveButtonState();
             });
         }
@@ -265,6 +319,39 @@ class LoopManager {
 
         console.log("שם הלופ:", loopName);
 
+        // Check if we're editing an existing loop
+        if (this.editingLoopId) {
+            const existingLoop = this.getLoopById(this.editingLoopId);
+            if (existingLoop) {
+                // Update existing loop
+                existingLoop.customName = loopName;
+                existingLoop.measures = [...this.currentLoop];
+                existingLoop.measureCount = this.currentLoop.length;
+                
+                console.log("לופ קיים עודכן:", existingLoop);
+                
+                // Clear current loop
+                this.currentLoop = [];
+                this.editingLoopId = null; // Clear editing state
+                this.editingLoopNameId = null; // Clear name editing state
+                if (loopNameSelect) {
+                    loopNameSelect.value = "";
+                }
+                if (loopNameInput) {
+                    loopNameInput.value = "";
+                    loopNameInput.style.display = 'none';
+                }
+
+                this.renderSavedLoops();
+                this.updateLoopDisplay();
+                this.updateSaveButtonState();
+
+                console.log("✅ לופ עודכן בהצלחה:", existingLoop);
+                return true;
+            }
+        }
+
+        // Create new loop
         const newLoop = {
             id: Date.now(),
             customName: loopName,
@@ -283,6 +370,7 @@ class LoopManager {
         // Clear current loop
         this.currentLoop = [];
         this.editingLoopId = null; // Clear any editing state
+        this.editingLoopNameId = null; // Clear name editing state
         if (loopNameSelect) {
             loopNameSelect.value = "";
         }
@@ -337,6 +425,7 @@ class LoopManager {
         if (confirm("האם אתה בטוח שברצונך לבטל את הלופ הנוכחי?")) {
             this.currentLoop = [];
             this.editingLoopId = null; // Clear any editing state
+            this.editingLoopNameId = null; // Clear name editing state
             const loopNameSelect = document.getElementById("loop-name-select");
             const loopNameInput = document.getElementById("loop-name");
             if (loopNameSelect) {
@@ -372,6 +461,86 @@ class LoopManager {
 
         this.savedLoops.push(newLoop);
         this.renderSavedLoops();
+        return true;
+    }
+
+    /**
+     * Load a saved loop into current loop for editing and extending
+     * This allows adding more measures to an existing loop
+     */
+    loadLoopForEditing(loopId) {
+        const loop = this.getLoopById(loopId);
+        if (!loop) {
+            alert("לופ לא נמצא");
+            return false;
+        }
+
+        // Check if there's already a current loop
+        if (this.currentLoop.length > 0) {
+            if (!confirm("יש לופ נוכחי. האם אתה בטוח שברצונך להחליף אותו?")) {
+                return false;
+            }
+        }
+
+        // Load loop measures into current loop
+        this.currentLoop = loop.measures.map(m => JSON.parse(JSON.stringify(m))); // Deep copy
+        
+        // Set the loop name in the dropdown
+        const loopNameSelect = document.getElementById("loop-name-select");
+        const loopNameInput = document.getElementById("loop-name");
+        
+        const predefinedOptions = [
+            "פתיח (Intro)",
+            "בית (Verse)",
+            "פזמון (Chorus)",
+            "מעבר (Bridge)",
+            "C part",
+            "סיום (Outro)"
+        ];
+
+        // Check if loop name matches a predefined option
+        let matchingOption = predefinedOptions.find(option => option === loop.customName);
+        
+        // If no exact match, try to find match by removing "(עותק)" suffix
+        if (!matchingOption && loop.customName.includes("(עותק)")) {
+            const nameWithoutCopy = loop.customName.replace(/\s*\(עותק\)\s*$/, "").trim();
+            matchingOption = predefinedOptions.find(option => option === nameWithoutCopy);
+        }
+        
+        if (matchingOption) {
+            if (loopNameSelect) {
+                loopNameSelect.value = matchingOption;
+            }
+            if (loopNameInput) {
+                loopNameInput.style.display = 'none';
+                loopNameInput.value = '';
+            }
+        } else {
+            // Custom name - set to 'other' and show input
+            if (loopNameSelect) {
+                loopNameSelect.value = 'other';
+            }
+            if (loopNameInput) {
+                const nameWithoutCopy = loop.customName.replace(/\s*\(עותק\)\s*$/, "").trim();
+                loopNameInput.value = nameWithoutCopy;
+                loopNameInput.style.display = 'block';
+            }
+        }
+
+        // Store the loop ID so we can update it when saving
+        this.editingLoopId = loopId;
+
+        // Update display
+        this.updateLoopDisplay();
+        this.updateSaveButtonState();
+
+        // Scroll to show the current loop section
+        const currentLoopSection = document.querySelector('.current-loop-section');
+        if (currentLoopSection) {
+            currentLoopSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        console.log(`✅ לופ "${loop.customName}" נטען לעריכה. ניתן להוסיף תיבות נוספות.`);
         return true;
     }
 
@@ -432,8 +601,8 @@ class LoopManager {
             return false;
         }
 
-        // Set editing state
-        this.editingLoopId = loopId;
+        // Set name editing state (separate from content editing)
+        this.editingLoopNameId = loopId;
 
         // Find matching option in dropdown
         const predefinedOptions = [
@@ -457,20 +626,23 @@ class LoopManager {
         if (matchingOption) {
             // Set dropdown to matching option
             loopNameSelect.value = matchingOption;
+            if (loopNameInput) {
+                loopNameInput.style.display = 'none';
+                loopNameInput.value = '';
+            }
         } else {
-            // If name doesn't match predefined options, set to empty to force selection
-            loopNameSelect.value = "";
-        }
-
-        // Always hide the text input when editing (no typing allowed)
-        if (loopNameInput) {
-            loopNameInput.style.display = 'none';
-            loopNameInput.value = '';
+            // If name doesn't match predefined options, set to 'other' and show input
+            loopNameSelect.value = 'other';
+            if (loopNameInput) {
+                loopNameInput.style.display = 'block';
+                const nameWithoutCopy = loop.customName.replace(/\s*\(עותק\)\s*$/, "").trim();
+                loopNameInput.value = nameWithoutCopy;
+                loopNameInput.focus();
+            }
         }
 
         // Scroll to the dropdown to make it visible
         loopNameSelect.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        loopNameSelect.focus();
 
         return true;
     }
@@ -583,6 +755,7 @@ class LoopManager {
                     <div class="loop-title" onclick="window.loopManager.editLoopName(${loop.id})" style="cursor: pointer; flex: 1;" title="לחץ לעריכת שם">${loop.customName}</div>
                     <div style="display: flex; align-items: center; gap: 4px;">
                         <div class="loop-info">${loop.measureCount} תיבות</div>
+                        <button class="edit-loop-btn" onclick="window.loopManager.loadLoopForEditing(${loop.id})" title="ערוך והוסף תיבות">✏️</button>
                         <button class="clone-loop-btn" onclick="window.loopManager.cloneSavedLoop(${loop.id})" title="שכפל לופ">📋</button>
                         <button class="delete-loop-btn" onclick="window.loopManager.deleteSavedLoop(${loop.id})" title="מחק לופ">×</button>
                     </div>

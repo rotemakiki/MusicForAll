@@ -6,26 +6,34 @@ let currentSort = 'title';
 
 // Initialize page when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
-    initializePage();
-    setupEventListeners();
-    updateSongCount();
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        initializePage();
+        setupEventListeners();
+    }, 100);
 });
 
 function initializePage() {
     // Store all songs data for filtering
-    const songCards = document.querySelectorAll('.song-card');
-    allSongs = Array.from(songCards).map(card => {
+    const songRows = document.querySelectorAll('.song-row');
+    allSongs = Array.from(songRows).map(row => {
+        const titleEl = row.querySelector('.song-title');
+        const artistEl = row.querySelector('.song-artist');
         return {
-            element: card,
-            title: card.querySelector('h3').textContent.toLowerCase(),
-            artist: card.querySelector('.song-info p').textContent.toLowerCase(),
-            difficulty: card.dataset.difficulty || '',
-            bpm: parseInt(card.dataset.bpm) || 0,
-            key: card.dataset.key || '',
-            timeSignature: card.dataset.timeSignature || ''
+            element: row,
+            title: titleEl ? titleEl.textContent.trim().toLowerCase() : '',
+            artist: artistEl ? artistEl.textContent.trim().toLowerCase() : '',
+            difficulty: row.dataset.difficulty || '',
+            bpm: parseInt(row.dataset.bpm) || 0,
+            key: row.dataset.key || '',
+            timeSignature: row.dataset.timeSignature || '',
+            genres: row.dataset.genres || ''
         };
     });
     filteredSongs = [...allSongs];
+    
+    // Update count with actual songs count
+    updateSongCount();
 }
 
 function setupEventListeners() {
@@ -48,29 +56,53 @@ function setupEventListeners() {
 function handleSearch(event) {
     const searchTerm = event.target.value.toLowerCase().trim();
 
-    filteredSongs = allSongs.filter(song => {
-        return song.title.includes(searchTerm) ||
-               song.artist.includes(searchTerm);
-    });
+    if (!searchTerm) {
+        filteredSongs = [...allSongs];
+    } else {
+        filteredSongs = allSongs.filter(song => {
+            return song.title.includes(searchTerm) ||
+                   song.artist.includes(searchTerm) ||
+                   song.genres.toLowerCase().includes(searchTerm);
+        });
+    }
 
     displayFilteredSongs();
-    updateSongCount();
 }
 
 function handleSort(event) {
     currentSort = event.target.value;
 
+    // Get fresh filtered songs (in case search is active)
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    if (!searchTerm) {
+        filteredSongs = [...allSongs];
+    } else {
+        filteredSongs = allSongs.filter(song => {
+            return song.title.includes(searchTerm) ||
+                   song.artist.includes(searchTerm) ||
+                   song.genres.toLowerCase().includes(searchTerm);
+        });
+    }
+
     filteredSongs.sort((a, b) => {
         switch(currentSort) {
             case 'title':
-                return a.title.localeCompare(b.title);
+                return a.title.localeCompare(b.title, 'he');
             case 'artist':
-                return a.artist.localeCompare(b.artist);
+                return a.artist.localeCompare(b.artist, 'he');
             case 'difficulty':
-                const difficultyOrder = {'קל': 1, 'בינוני': 2, 'קשה': 3};
-                return (difficultyOrder[a.difficulty] || 0) - (difficultyOrder[b.difficulty] || 0);
+                const difficultyOrder = {'beginner': 1, 'intermediate': 2, 'advanced': 3, 'קל': 1, 'בינוני': 2, 'קשה': 3};
+                const aDiff = difficultyOrder[a.difficulty] || 0;
+                const bDiff = difficultyOrder[b.difficulty] || 0;
+                return aDiff - bDiff;
             case 'bpm':
                 return a.bpm - b.bpm;
+            case 'genres':
+                const aGenre = a.genres.split(',')[0] || '';
+                const bGenre = b.genres.split(',')[0] || '';
+                return aGenre.localeCompare(bGenre, 'he');
             default:
                 return 0;
         }
@@ -80,26 +112,21 @@ function handleSort(event) {
 }
 
 function displayFilteredSongs() {
-    const songsGrid = document.querySelector('.songs-grid');
-    if (!songsGrid) return;
+    const songsList = document.querySelector('.songs-list');
+    if (!songsList) return;
 
     // Hide all songs first
     allSongs.forEach(song => {
         song.element.style.display = 'none';
-        song.element.style.opacity = '0';
-        song.element.style.transform = 'translateY(20px)';
     });
 
-    // Show filtered songs with animation
-    setTimeout(() => {
-        filteredSongs.forEach((song, index) => {
-            song.element.style.display = 'block';
-            setTimeout(() => {
-                song.element.style.opacity = '1';
-                song.element.style.transform = 'translateY(0)';
-            }, index * 50);
-        });
-    }, 100);
+    // Show filtered songs and reorder them
+    filteredSongs.forEach((song) => {
+        song.element.style.display = 'flex';
+        songsList.appendChild(song.element);
+    });
+    
+    updateSongCount();
 }
 
 function updateSongCount() {
@@ -126,8 +153,8 @@ function animateCards() {
         threshold: 0.1
     });
 
-    document.querySelectorAll('.song-card').forEach(card => {
-        observer.observe(card);
+    document.querySelectorAll('.song-row').forEach(row => {
+        observer.observe(row);
     });
 }
 
