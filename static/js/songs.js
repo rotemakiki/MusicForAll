@@ -2,7 +2,7 @@
 
 let allSongs = [];
 let filteredSongs = [];
-let currentSort = 'title';
+let currentSort = 'recent';
 
 // Initialize page when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializePage() {
-    // Store all songs data for filtering
+    // Store all songs data for filtering and sorting
     const songRows = document.querySelectorAll('.song-row');
     allSongs = Array.from(songRows).map(row => {
         const titleEl = row.querySelector('.song-title');
@@ -27,7 +27,11 @@ function initializePage() {
             bpm: parseInt(row.dataset.bpm) || 0,
             key: row.dataset.key || '',
             timeSignature: row.dataset.timeSignature || '',
-            genres: row.dataset.genres || ''
+            genres: row.dataset.genres || '',
+            createdAt: row.dataset.createdAt || '',
+            inMyList: row.dataset.inMyList === 'true',
+            watched: row.dataset.watched === 'true',
+            avgRating: parseFloat(row.dataset.avgRating) || 0
         };
     });
     filteredSongs = [...allSongs];
@@ -88,21 +92,38 @@ function handleSort(event) {
 
     filteredSongs.sort((a, b) => {
         switch(currentSort) {
+            case 'alphabetical':
             case 'title':
                 return a.title.localeCompare(b.title, 'he');
+            case 'recent':
+                return (b.createdAt || '').localeCompare(a.createdAt || '');
+            case 'rating':
+                return (b.avgRating || 0) - (a.avgRating || 0);
+            case 'watched':
+                if (a.watched !== b.watched) return a.watched ? -1 : 1;
+                return (b.createdAt || '').localeCompare(a.createdAt || '');
+            case 'my_list':
+                if (a.inMyList !== b.inMyList) return a.inMyList ? -1 : 1;
+                return (b.createdAt || '').localeCompare(a.createdAt || '');
+            case 'personalized': {
+                const score = (s) => (s.inMyList ? 3 : 0) + (s.watched ? 2 : 0) + (s.avgRating || 0) * 0.5;
+                return score(b) - score(a);
+            }
             case 'artist':
                 return a.artist.localeCompare(b.artist, 'he');
-            case 'difficulty':
+            case 'difficulty': {
                 const difficultyOrder = {'beginner': 1, 'intermediate': 2, 'advanced': 3, 'קל': 1, 'בינוני': 2, 'קשה': 3};
                 const aDiff = difficultyOrder[a.difficulty] || 0;
                 const bDiff = difficultyOrder[b.difficulty] || 0;
                 return aDiff - bDiff;
+            }
             case 'bpm':
                 return a.bpm - b.bpm;
-            case 'genres':
+            case 'genres': {
                 const aGenre = a.genres.split(',')[0] || '';
                 const bGenre = b.genres.split(',')[0] || '';
                 return aGenre.localeCompare(bGenre, 'he');
+            }
             default:
                 return 0;
         }

@@ -31,11 +31,11 @@ body {
     flex-direction: column;
 }
 
-/* Header organization - multiple compact rows */
+/* Header - compact, marginal; chord section is the main content */
 .song-header {
     text-align: center;
-    margin-bottom: 3px;
-    padding-bottom: 3px;
+    margin-bottom: 4px;
+    padding: 4px 8px 6px;
     border-bottom: 1px solid #e1e8ed;
     flex-shrink: 0;
 }
@@ -45,10 +45,6 @@ body {
 }
 
 .header-row-2 {
-    margin-bottom: 2px;
-}
-
-.header-row-3 {
     margin-bottom: 0;
 }
 
@@ -71,53 +67,59 @@ body {
     display: inline-block;
 }
 
-/* Song Details Section - Inline compact */
+/* Song Details - compact bar, same button/detail sizes */
 .song-details {
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
-    border-radius: 6px;
-    padding: 3px 6px;
+    border-radius: 10px;
+    padding: 6px 12px;
     border: 1px solid #e1e8ed;
     display: inline-block;
+    width: 100%;
+    max-width: 100%;
 }
 
 .song-info-row {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
+    row-gap: 6px;
 }
 
 .detail-item {
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 2px 6px;
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
+    gap: 6px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 14px;
     font-weight: 600;
-    font-size: 10px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.3s;
+    min-height: 44px;
 }
 
 .detail-item:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .detail-icon {
-    font-size: 10px;
+    font-size: 16px;
 }
 
 .detail-label {
     color: #34495e;
-    font-size: 9px;
+    font-size: 13px;
 }
 
 .detail-value {
     color: #2c3e50;
     font-weight: 700;
+    font-size: 14px;
 }
 
 .pending-approval {
@@ -179,6 +181,42 @@ body {
     margin: 0 auto;
 }
 
+/* קישור "לצפייה ב-YouTube" – פתיחה בטאב חדש כשההטמעה לא זמינה */
+.youtube-open-link {
+    display: inline-block;
+    margin-right: 8px;
+    margin-top: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #1a73e8;
+    background: rgba(26, 115, 232, 0.1);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s;
+}
+.youtube-open-link:hover {
+    background: rgba(26, 115, 232, 0.2);
+    color: #1557b0;
+}
+
+.youtube-fallback-hint {
+    margin: 8px 0 0;
+    padding: 6px 8px;
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+}
+.youtube-fallback-hint a {
+    color: #6bb5ff;
+    text-decoration: underline;
+}
+.youtube-fallback-hint a:hover {
+    color: #9eceff;
+}
+
 .close-youtube-btn {
     position: absolute;
     top: 6px;
@@ -220,6 +258,7 @@ body {
     gap: 4px;
     margin-bottom: 2px;
     margin-left: 8px;
+    margin-top: 4px;
 }
 
 .action-btn {
@@ -250,47 +289,29 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* BPM Info - Inline compact */
-.bpm-info {
-    display: inline-flex;
-    justify-content: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-left: 8px;
+/* BPM in song-info-row - same size as other detail-item, distinct colors */
+.song-info-row .original-bpm-display {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d) !important;
+    color: white !important;
 }
 
-.original-bpm-display, .current-bpm-display {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 10px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+.song-info-row .original-bpm-display .detail-value,
+.song-info-row .current-bpm-display .detail-value {
+    color: inherit;
 }
 
-.original-bpm-display {
-    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-    color: white;
+.song-info-row .current-bpm-display {
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color: white !important;
 }
 
-.current-bpm-display {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-}
-
-.label {
-    font-size: 8px;
-    opacity: 0.9;
-}
-
-/* Main Layout - Full width optimized */
+/* Main Layout - Chord section is the essential content */
 .main-layout {
     display: flex;
     gap: 8px;
     flex: 1;
     min-height: 0;
+    overflow: hidden;
 }
 
 /* Controls Panel - Enhanced with size controls */
@@ -684,6 +705,82 @@ input:checked + .preparation-slider:before {
     font-size: 11px;
 }
 
+.preparation-count-row {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.preparation-count-label {
+    font-weight: 600;
+    color: #34495e;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.preparation-count-input {
+    width: 60px;
+    padding: 6px 8px;
+    border: 2px solid #e1e8ed;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.preparation-count-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Collapsible song parts */
+.song-parts-group .collapsible-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 0;
+    padding: 8px 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: right;
+    font-size: 13px;
+}
+
+.song-parts-group .collapsible-trigger:hover {
+    color: #667eea;
+}
+
+.collapsible-chevron {
+    margin-right: auto;
+    transition: transform 0.2s;
+    font-size: 10px;
+}
+
+.song-parts-group .collapsible-trigger[aria-expanded="true"] .collapsible-chevron {
+    transform: rotate(180deg);
+}
+
+.song-parts-panel {
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.song-parts-panel.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.song-parts-panel:not(.collapsed) {
+    max-height: 500px;
+}
+
 /* Song parts controls */
 .song-parts-controls {
     display: flex;
@@ -795,10 +892,11 @@ input:checked + .preparation-slider:before {
     min-width: 16px;
 }
 
-/* Chord Section - Enhanced with better row layout */
+/* Chord Section - Main content of the page */
 .chord-section {
     flex: 1;
-    padding: 8px;
+    min-height: 0;
+    padding: 12px;
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border-radius: 8px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
@@ -1394,15 +1492,8 @@ input:checked + .preparation-slider:before {
         gap: 2px;
     }
 
-    .bpm-info {
-        flex-direction: row;
-        justify-content: center;
-        gap: 2px;
-    }
-
     .youtube-player-section,
-    .action-buttons,
-    .bpm-info {
+    .action-buttons {
         display: block;
         text-align: center;
         margin: 1px 0;

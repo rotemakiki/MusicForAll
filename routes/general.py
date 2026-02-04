@@ -52,10 +52,11 @@ def upload_profile_image():
     flash("📸 תמונת הפרופיל עודכנה בהצלחה!", "success")
 
     # הפניה אוטומטית לפרופיל הנכון
-    # (מבוסס על session. אם צריך, אפשר למשוך roles מה־DB)
     roles = session.get("roles", [])
     if "teacher" in roles:
         return redirect(url_for('teachers.teacher_profile', teacher_id=user_id))
+    elif "musician" in roles:
+        return redirect(url_for('teachers.musician_profile', musician_id=user_id))
     elif "student" in roles:
         return redirect(url_for('students.user_profile'))
     else:

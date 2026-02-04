@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 from firebase_admin import firestore
 from datetime import datetime
 import json
+from utils.permissions import get_roles, can_manage_courses, is_admin
 
 courses_bp = Blueprint('courses', __name__)
 
@@ -368,9 +369,9 @@ def create_course():
         return jsonify({"error": "נדרש התחברות", "success": False}), 401
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
-    if 'teacher' not in roles and 'admin' not in roles:
+    if not can_manage_courses(roles):
         return jsonify({"error": "אין הרשאה ליצור קורס", "success": False}), 403
     
     try:
@@ -412,7 +413,7 @@ def add_lesson(course_id):
         return jsonify({"error": "נדרש התחברות", "success": False}), 401
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
     try:
         db = firestore.client()
@@ -425,7 +426,7 @@ def add_lesson(course_id):
         course = course_doc.to_dict()
         
         # בדיקת הרשאה
-        if course.get('teacher_id') != user_id and 'admin' not in roles:
+        if course.get('teacher_id') != user_id and not is_admin(roles):
             return jsonify({"error": "אין הרשאה להוסיף שיעור", "success": False}), 403
         
         data = request.get_json()
@@ -470,9 +471,9 @@ def manage_courses():
         return redirect(url_for('auth.login'))
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
-    if 'teacher' not in roles and 'admin' not in roles:
+    if not can_manage_courses(roles):
         flash("אין לך הרשאה לגשת לעמוד זה", "error")
         return redirect(url_for('home'))
     
@@ -485,16 +486,16 @@ def api_manage_courses():
         return jsonify({"error": "נדרש התחברות", "success": False}), 401
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
     try:
         db = firestore.client()
         
-        if 'admin' in roles:
+        if is_admin(roles):
             # מנהל רואה את כל הקורסים
             courses_ref = db.collection("courses").stream()
         else:
-            # מורה רואה רק את הקורסים שלו
+            # מורה/מוסיקאי רואה רק את הקורסים שלו
             courses_ref = db.collection("courses").where("teacher_id", "==", user_id).stream()
         
         courses = []
@@ -520,9 +521,9 @@ def create_edit_course(course_id=None):
         return redirect(url_for('auth.login'))
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
-    if 'teacher' not in roles and 'admin' not in roles:
+    if not can_manage_courses(roles):
         flash("אין לך הרשאה לגשת לעמוד זה", "error")
         return redirect(url_for('home'))
     
@@ -536,7 +537,7 @@ def create_edit_course(course_id=None):
                 course['id'] = course_id
                 
                 # בדיקת הרשאה
-                if course.get('teacher_id') != user_id and 'admin' not in roles:
+                if course.get('teacher_id') != user_id and not is_admin(roles):
                     flash("אין לך הרשאה לערוך קורס זה", "error")
                     return redirect(url_for('courses.manage_courses'))
         except Exception as e:
@@ -553,7 +554,7 @@ def update_course(course_id):
         return jsonify({"error": "נדרש התחברות", "success": False}), 401
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
     try:
         db = firestore.client()
@@ -566,7 +567,7 @@ def update_course(course_id):
         course = course_doc.to_dict()
         
         # בדיקת הרשאה
-        if course.get('teacher_id') != user_id and 'admin' not in roles:
+        if course.get('teacher_id') != user_id and not is_admin(roles):
             return jsonify({"error": "אין הרשאה לערוך קורס", "success": False}), 403
         
         data = request.get_json()
@@ -600,7 +601,7 @@ def delete_course(course_id):
         return jsonify({"error": "נדרש התחברות", "success": False}), 401
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
     try:
         db = firestore.client()
@@ -613,7 +614,7 @@ def delete_course(course_id):
         course = course_doc.to_dict()
         
         # בדיקת הרשאה
-        if course.get('teacher_id') != user_id and 'admin' not in roles:
+        if course.get('teacher_id') != user_id and not is_admin(roles):
             return jsonify({"error": "אין הרשאה למחוק קורס", "success": False}), 403
         
         course_ref.delete()
@@ -634,7 +635,7 @@ def manage_lessons(course_id):
         return redirect(url_for('auth.login'))
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
     try:
         db = firestore.client()
@@ -648,7 +649,7 @@ def manage_lessons(course_id):
         course['id'] = course_id
         
         # בדיקת הרשאה
-        if course.get('teacher_id') != user_id and 'admin' not in roles:
+        if course.get('teacher_id') != user_id and not is_admin(roles):
             flash("אין לך הרשאה לנהל קורס זה", "error")
             return redirect(url_for('courses.manage_courses'))
         
@@ -665,7 +666,7 @@ def update_lesson(course_id, lesson_number):
         return jsonify({"error": "נדרש התחברות", "success": False}), 401
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
     try:
         db = firestore.client()
@@ -678,7 +679,7 @@ def update_lesson(course_id, lesson_number):
         course = course_doc.to_dict()
         
         # בדיקת הרשאה
-        if course.get('teacher_id') != user_id and 'admin' not in roles:
+        if course.get('teacher_id') != user_id and not is_admin(roles):
             return jsonify({"error": "אין הרשאה לערוך שיעור", "success": False}), 403
         
         data = request.get_json()
@@ -727,7 +728,7 @@ def delete_lesson(course_id, lesson_number):
         return jsonify({"error": "נדרש התחברות", "success": False}), 401
     
     user_id = session['user_id']
-    roles = session.get('roles', [])
+    roles = get_roles(session)
     
     try:
         db = firestore.client()
@@ -740,7 +741,7 @@ def delete_lesson(course_id, lesson_number):
         course = course_doc.to_dict()
         
         # בדיקת הרשאה
-        if course.get('teacher_id') != user_id and 'admin' not in roles:
+        if course.get('teacher_id') != user_id and not is_admin(roles):
             return jsonify({"error": "אין הרשאה למחוק שיעור", "success": False}), 403
         
         lessons = course.get('lessons', [])

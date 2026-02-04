@@ -127,10 +127,17 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
+            {% if session.get('user_id') %}
             <button class="action-btn" onclick="contactTeacher('{{ teacher.id }}', '{{ teacher.username }}')">
                 <span>📞</span>
                 <span>צור קשר עם המורה</span>
             </button>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="action-btn" title="התחבר עם משתמש רשום כדי ליצור קשר עם המורה">
+                <span>📞</span>
+                <span>צור קשר עם המורה</span>
+            </a>
+            {% endif %}
             {% if session.get('user_id') == teacher.id %}
                 <a href="{{ url_for('teachers.edit_teacher_profile', teacher_id=teacher.id) }}" class="action-btn tertiary">
                     <span>✏️</span>

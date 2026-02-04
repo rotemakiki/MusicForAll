@@ -13,6 +13,9 @@ def register():
         email = request.form['email']
         password = request.form['password']
         role = request.form['role']
+        if role not in ('student', 'teacher', 'musician'):
+            flash("תפקיד לא תקין", "error")
+            return redirect(url_for('auth.register'))
 
         # Check if email exists
         existing_users = db.collection("users").where("email", "==", email).get()
@@ -42,6 +45,10 @@ def register():
         if role == 'teacher':
             doc_ref = db.collection("users").where("email", "==", email).get()[0]
             return redirect(url_for('teachers.edit_teacher_profile', teacher_id=doc_ref.id))
+        if role == 'musician':
+            doc_ref = db.collection("users").where("email", "==", email).get()[0]
+            flash("ההרשמה הושלמה! תוכל לערוך את פרופיל האמן מהפרופיל שלך.", "success")
+            return redirect(url_for('teachers.musician_profile', musician_id=doc_ref.id))
 
         flash("Registration successful! Please log in.", "success")
         return redirect(url_for('auth.login'))

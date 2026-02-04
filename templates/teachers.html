@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}רשימת מורים{% endblock %}
+{% block title %}מורים{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/teachers.css') }}">
@@ -8,8 +8,8 @@
 <div class="teachers-container">
     <div class="teachers-card">
         <div class="page-header">
-            <h1 class="page-title">🎵 רשימת מורים</h1>
-            <p class="page-subtitle">הכר את הצוות הבוגר שלנו</p>
+            <h1 class="page-title">🎵 מורים</h1>
+            <p class="page-subtitle">חפש מורים לפי אזורים, ז'אנרים ועוד</p>
         </div>
 
         {% if teachers %}

@@ -32,6 +32,7 @@ body {
 .page-header {
     text-align: center;
     margin-bottom: 40px;
+    position: relative;
 }
 
 .page-title {
@@ -49,6 +50,27 @@ body {
     font-size: 1.1rem;
     margin: 0;
     font-weight: 500;
+}
+
+.manage-courses-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+.manage-courses-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    color: white;
 }
 
 .courses-grid {

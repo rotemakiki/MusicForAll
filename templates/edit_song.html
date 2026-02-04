@@ -349,18 +349,19 @@
     const existingLoops = {{ song.loops | tojson }};
 
     // Load existing genres (support both old single genre and new multiple genres)
-    let existingGenres = [];
+    // Expose globally so song_form_manager.js can load them after it initializes
+    window.existingGenresForEdit = [];
     {% if song.genres %}
         // New multiple genres format
         {% if song.genres is iterable and song.genres is not string %}
-            existingGenres = {{ song.genres | tojson }};
+            window.existingGenresForEdit = {{ song.genres | tojson }};
         {% else %}
-            // Handle case where genres is a string (shouldn't happen with new format)
-            existingGenres = [{{ song.genres | tojson }}];
+            // Handle case where genres is a string (e.g. from Firestore)
+            window.existingGenresForEdit = [{{ song.genres | tojson }}];
         {% endif %}
     {% elif song.genre %}
         // Old single genre format - convert to array
-        existingGenres = [{{ song.genre | tojson }}];
+        window.existingGenresForEdit = [{{ song.genre | tojson }}];
     {% endif %}
 
     // Set existing data in hidden fields
@@ -386,11 +387,8 @@
             const videoId = currentUrl.split('/embed/')[1];
             videoUrlField.value = `https://www.youtube.com/watch?v=${videoId}`;
         }
-
-        // Load existing genres after DOM is ready
-        if (window.loadGenres && existingGenres.length > 0) {
-            window.loadGenres(existingGenres);
-        }
+        // Genres are loaded by song_form_manager.js from window.existingGenresForEdit
+        // (after it defines loadGenres) to avoid race condition.
 
         // Handle song version change to show/hide original artist field
         const songVersionSelect = document.getElementById('song_version');

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}פרופיל אמן - {{ musician.username }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/teacher_profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="teacher-profile-container">
+    <div class="profile-header">
+        <div class="profile-image-section">
+            {% if musician.profile_image %}
+                <img src="{{ musician.profile_image }}" alt="תמונת פרופיל" class="profile-image">
+            {% else %}
+                <div class="default-avatar">🎸</div>
+            {% endif %}
+            {% if session.get('user_id') == musician.id %}
+            <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                <div class="file-input-wrapper">
+                    <input type="file" name="profile_image" id="profile-image-input" class="file-input" accept="image/*" required>
+                    <label for="profile-image-input" class="file-input-label">
+                        <span>📷</span>
+                        <span>בחר תמונה</span>
+                    </label>
+                </div>
+                <input type="hidden" name="user_id" value="{{ musician.id }}">
+                <button type="submit" class="action-btn secondary">
+                    <span>⬆️</span>
+                    <span>העלה תמונת פרופיל</span>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <h1 class="teacher-name">{{ musician.username }}</h1>
+        <p class="form-subtitle" style="margin-top: 0.5rem;">פרופיל אמן</p>
+
+        <div class="teacher-details">
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>📅</span>
+                    <span>ותק באתר</span>
+                </div>
+                <div class="detail-value">{{ days_on_site }} ימים</div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>🎵</span>
+                    <span>שירים</span>
+                </div>
+                <div class="detail-value">{{ songs|length }}</div>
+            </div>
+        </div>
+
+        {% if session.get('user_id') == musician.id %}
+        <div class="action-buttons">
+            <a href="{{ url_for('songs.add_song_page') }}" class="action-btn">
+                <span>➕</span>
+                <span>הוסף שיר</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="content-section">
+        <h2 class="section-header">
+            <span>🎵</span>
+            <span>השירים שלי</span>
+        </h2>
+
+        {% if songs %}
+        <div class="videos-grid">
+            {% for song in songs %}
+            <div class="video-card">
+                <div class="video-info">
+                    <h3 class="video-title">{{ song.title }}</h3>
+                    <p class="video-description">{{ song.artist }}{% if song.get('display_genres') %} · {{ song.display_genres | join(', ') }}{% endif %}</p>
+                    <div class="video-actions">
+                        <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="video-btn">
+                            <span>▶️</span>
+                            <span>לעמוד השיר</span>
+                        </a>
+                        {% if session.get('user_id') == musician.id %}
+                        <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="video-btn">
+                            <span>✏️</span>
+                            <span>ערוך</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🎵</div>
+            <h3>אין שירים להצגה</h3>
+            <p>עדיין לא נוספו שירים לפרופיל</p>
+            {% if session.get('user_id') == musician.id %}
+            <a href="{{ url_for('songs.add_song_page') }}" class="action-btn">הוסף שיר ראשון</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

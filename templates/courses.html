@@ -12,6 +12,13 @@
         <div class="page-header">
             <h1 class="page-title">🎓 קורסים</h1>
             <p class="page-subtitle">למד מוזיקה עם המורים הטובים ביותר</p>
+            {% set roles = session.get('roles', []) %}
+            {% if 'teacher' in roles or 'musician' in roles or 'admin' in roles %}
+                <a href="{{ url_for('courses.manage_courses') }}" class="manage-courses-btn">
+                    <i class="fas fa-cog"></i>
+                    <span>ניהול קורסים</span>
+                </a>
+            {% endif %}
         </div>
 
         <div id="loadingState" class="loading-state">

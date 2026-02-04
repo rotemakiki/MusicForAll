@@ -22,6 +22,7 @@
                 </div>
                 <div class="tutorial-content">
                     <p>למדו כיצד להוסיף שיר חדש לאתר, להכניס פרטים ולהתחיל ליצור אקורדים</p>
+                    {% if session.get('user_id') %}
                     <div class="video-placeholder">
                         <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/add-song.jpg') }}">
                             <source src="{{ url_for('static', filename='videos/add-song-tutorial.mp4') }}" type="video/mp4">
@@ -29,6 +30,12 @@
                             הדפדפן שלך לא תומך בווידאו
                         </video>
                     </div>
+                    {% else %}
+                    <div class="video-placeholder guest-video-message">
+                        <p>התחבר כדי לצפות בסרטוני הדרכה</p>
+                        <a href="{{ url_for('auth.login') }}" class="help-btn">התחבר</a>
+                    </div>
+                    {% endif %}
                     <div class="tutorial-stats">
                         <span class="duration">⏱️ 3:45</span>
                         <span class="views">👁️ 1,234 צפיות</span>
@@ -43,6 +50,7 @@
                 </div>
                 <div class="tutorial-content">
                     <p>גלו כיצד להאזין לשירים, לשלוט בנגן ולהתאמן עם האקורדים</p>
+                    {% if session.get('user_id') %}
                     <div class="video-placeholder">
                         <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/listen-song.jpg') }}">
                             <source src="{{ url_for('static', filename='videos/listen-song-tutorial.mp4') }}" type="video/mp4">
@@ -50,6 +58,12 @@
                             הדפדפן שלך לא תומך בווידאו
                         </video>
                     </div>
+                    {% else %}
+                    <div class="video-placeholder guest-video-message">
+                        <p>התחבר כדי לצפות בסרטוני הדרכה</p>
+                        <a href="{{ url_for('auth.login') }}" class="help-btn">התחבר</a>
+                    </div>
+                    {% endif %}
                     <div class="tutorial-stats">
                         <span class="duration">⏱️ 2:30</span>
                         <span class="views">👁️ 987 צפיות</span>
@@ -64,6 +78,7 @@
                 </div>
                 <div class="tutorial-content">
                     <p>למדו כיצד להתחבר לאתר, להירשם כמשתמש חדש ולנהל את הפרופיל שלכם</p>
+                    {% if session.get('user_id') %}
                     <div class="video-placeholder">
                         <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/login.jpg') }}">
                             <source src="{{ url_for('static', filename='videos/login-tutorial.mp4') }}" type="video/mp4">
@@ -71,6 +86,12 @@
                             הדפדפן שלך לא תומך בווידאו
                         </video>
                     </div>
+                    {% else %}
+                    <div class="video-placeholder guest-video-message">
+                        <p>התחבר כדי לצפות בסרטוני הדרכה</p>
+                        <a href="{{ url_for('auth.login') }}" class="help-btn">התחבר</a>
+                    </div>
+                    {% endif %}
                     <div class="tutorial-stats">
                         <span class="duration">⏱️ 4:15</span>
                         <span class="views">👁️ 1,567 צפיות</span>
@@ -85,6 +106,7 @@
                 </div>
                 <div class="tutorial-content">
                     <p>גלו כיצד לערוך אקורדים, ליצור מבנה שיר ולהשתמש בכלי העריכה המתקדמים</p>
+                    {% if session.get('user_id') %}
                     <div class="video-placeholder">
                         <video controls preload="metadata" poster="{{ url_for('static', filename='images/tutorial-posters/chords.jpg') }}">
                             <source src="{{ url_for('static', filename='videos/chords-tutorial.mp4') }}" type="video/mp4">
@@ -92,6 +114,12 @@
                             הדפדפן שלך לא תומך בווידאו
                         </video>
                     </div>
+                    {% else %}
+                    <div class="video-placeholder guest-video-message">
+                        <p>התחבר כדי לצפות בסרטוני הדרכה</p>
+                        <a href="{{ url_for('auth.login') }}" class="help-btn">התחבר</a>
+                    </div>
+                    {% endif %}
                     <div class="tutorial-stats">
                         <span class="duration">⏱️ 6:20</span>
                         <span class="views">👁️ 2,103 צפיות</span>

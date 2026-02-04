@@ -138,7 +138,7 @@ def after_request(response):
     """הרצה אחרי כל בקשה"""
     # הוספת headers לביטחון - חשוב מאוד!
     response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
+    # X-Frame-Options לא מוגדר – שליטה ב־iframe רק דרך CSP (frame-src). DENY חסם הטמעת יוטיוב באתר.
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     
@@ -148,12 +148,14 @@ def after_request(response):
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     
     # Content Security Policy (CSP) - בסיסי
+    # frame-src: חייב לאפשר יוטיוב (כולל תת-דומיינים) כדי שסרטונים ינוגנו באתר
     csp = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
-        "img-src 'self' data: https:; "
+        "img-src 'self' data: https: blob:; "
         "font-src 'self' https://cdnjs.cloudflare.com; "
+        "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://youtube-nocookie.com https://*.youtube.com https://*.youtube-nocookie.com; "
         "connect-src 'self' https://*.googleapis.com; "
     )
     response.headers['Content-Security-Policy'] = csp
@@ -358,19 +360,12 @@ if __name__ == '__main__':
     print(f"[*] Environment: {'Production' if not debug_mode else 'Development'}")
     print(f"[*] Chord System v2.0 enabled")
     
-    # בפיתוח מקומי - תמיכה ב-HTTPS עם self-signed certificate
-    # זה פותר את הבעיה כשהדפדפן מנסה להתחבר ב-HTTPS
+    # בפיתוח מקומי - HTTP בלבד (ללא HTTPS) כדי לטעון מיידית ללא אזהרות אבטחה
+    # שרת מקומי עם תעודה self-signed גורם ל-Chrome להציג NET::ERR_CERT_AUTHORITY_INVALID
     ssl_context = None
     if debug_mode and not is_render:
-        try:
-            # ניסיון ליצור self-signed certificate אוטומטית
-            ssl_context = 'adhoc'
-            print(f"[*] Local development mode - HTTPS enabled with self-signed certificate")
-            print(f"[*] Note: Browser will show security warning - click 'Advanced' and 'Proceed'")
-        except Exception as e:
-            print(f"[*] Could not enable HTTPS: {e}")
-            print(f"[*] Running in HTTP mode only")
-            ssl_context = None
+        print(f"[*] Local development: Running on HTTP - open http://127.0.0.1:{port}")
+        print(f"[*] No security warnings, page loads immediately")
     elif not debug_mode and not is_render:
         print(f"[*] Security: HTTPS redirects enabled")
         print(f"[*] Security: Security headers enabled")

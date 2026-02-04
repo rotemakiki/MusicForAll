@@ -21,6 +21,8 @@ def user_profile():
     roles = user.get("roles", [])
     if "teacher" in roles:
         return redirect(url_for('teachers.teacher_profile', teacher_id=user_id))
+    elif "musician" in roles:
+        return redirect(url_for('teachers.musician_profile', musician_id=user_id))
     elif "student" in roles:
         return render_template("student_profile.html", student=user)
     elif "admin" in roles:

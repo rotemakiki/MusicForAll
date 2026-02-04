@@ -39,6 +39,7 @@ let intervalMs = 60000 / bpm;
 let interval = null;
 let selectedStartMeasure = null;
 let addPreparationMeasure = true;
+let preparationMeasuresCount = 1; // מספר תיבות ריקות בתחילה (ברירת מחדל: 1)
 let enabledLoops = new Set();
 let loopStates = {};
 const metronome = document.getElementById("metronome-sound");
@@ -290,20 +291,26 @@ function buildAllMeasures() {
     allMeasures = [];
     let globalIndex = 0;
 
-    // הוסף תיבת הכנה עם מספר 0
+    // הוסף תיבות הכנה (תיבה ראשונה = "הכנה", השאר ריקות)
     if (addPreparationMeasure) {
-        allMeasures.push({
-            globalIndex: globalIndex++,
-            isPreparation: true,
-            chords: [{ chord: "הכנה", beats: beatsPerMeasure, width: beatsPerMeasure }],
-            totalBeats: beatsPerMeasure,
-            loopIndex: null,
-            repeatNumber: null,
-            measureInLoop: null,
-            lineIdx: -1,
-            startChordIdx: 0,
-            measureNumber: 0 // תיבת הכנה = 0
-        });
+        const count = Math.max(1, Math.min(8, preparationMeasuresCount));
+        for (let i = 0; i < count; i++) {
+            allMeasures.push({
+                globalIndex: globalIndex++,
+                isPreparation: true,
+                isEmptyPreparation: i > 0, // תיבה ריקה (בלי אקורד "הכנה")
+                chords: i === 0
+                    ? [{ chord: "הכנה", beats: beatsPerMeasure, width: beatsPerMeasure }]
+                    : [],
+                totalBeats: beatsPerMeasure,
+                loopIndex: null,
+                repeatNumber: null,
+                measureInLoop: null,
+                lineIdx: -1,
+                startChordIdx: 0,
+                measureNumber: 0
+            });
+        }
     }
 
     // בנה תיבות מהאקורדים עם מיפוי ללופים ולחזרות
@@ -339,7 +346,7 @@ function buildAllMeasures() {
                         measureInLoop: measureInLoop,
                         lineIdx: -1,
                         startChordIdx: 0,
-                        measureNumber: globalIndex - (addPreparationMeasure ? 1 : 0) // מספר התיבה מתחיל מ-1 אחרי ההכנה
+                        measureNumber: globalIndex - (addPreparationMeasure ? preparationMeasuresCount : 0)
                     });
                 }
             }
@@ -373,7 +380,7 @@ function buildAllMeasures() {
                         measureInLoop: null,
                         lineIdx: lineIdx,
                         startChordIdx: chordIdx - currentMeasure.length + 1,
-                        measureNumber: globalIndex - (addPreparationMeasure ? 1 : 0)
+                        measureNumber: globalIndex - (addPreparationMeasure ? preparationMeasuresCount : 0)
                     });
 
                     totalBeats = 0;
@@ -394,8 +401,9 @@ function renderChords() {
 
     const measures = buildAllMeasures();
 
-    // Render preparation measure if exists
-    if (addPreparationMeasure && measures[0] && measures[0].isPreparation) {
+    // Render preparation measures if exist (כל התיבות הריקות/הכנה בשורות של 4)
+    const prepMeasures = measures.filter(m => m.isPreparation);
+    if (addPreparationMeasure && prepMeasures.length > 0) {
         const prepSection = document.createElement("div");
         prepSection.className = "loop-section preparation-section";
 
@@ -406,18 +414,20 @@ function renderChords() {
         const prepContent = document.createElement("div");
         prepContent.className = "loop-content";
 
-        const prepRow = document.createElement("div");
-        prepRow.className = "chord-row fixed-four-per-row";
-        prepRow.appendChild(createMeasureElement(measures[0]));
-
-        // הוסף 3 תיבות ריקות כדי להשלים ל-4
-        for (let i = 0; i < 3; i++) {
-            const emptyDiv = document.createElement("div");
-            emptyDiv.className = "measure-box empty-measure";
-            prepRow.appendChild(emptyDiv);
+        const measuresPerRow = 4;
+        for (let i = 0; i < prepMeasures.length; i += measuresPerRow) {
+            const rowMeasures = prepMeasures.slice(i, i + measuresPerRow);
+            const prepRow = document.createElement("div");
+            prepRow.className = "chord-row fixed-four-per-row";
+            rowMeasures.forEach(m => prepRow.appendChild(createMeasureElement(m)));
+            while (prepRow.children.length < 4) {
+                const emptyDiv = document.createElement("div");
+                emptyDiv.className = "measure-box empty-measure";
+                prepRow.appendChild(emptyDiv);
+            }
+            prepContent.appendChild(prepRow);
         }
 
-        prepContent.appendChild(prepRow);
         prepSection.appendChild(prepHeader);
         prepSection.appendChild(prepContent);
         wrapper.appendChild(prepSection);
@@ -598,6 +608,9 @@ function createMeasureElement(measureData) {
 
     if (measureData.isPreparation) {
         measureDiv.classList.add("preparation-measure");
+        if (measureData.isEmptyPreparation) {
+            measureDiv.classList.add("empty-measure");
+        }
     }
 
     // Style based on loop enabled state
@@ -616,7 +629,7 @@ function createMeasureElement(measureData) {
     const title = document.createElement("div");
     title.className = "measure-title";
     if (measureData.isPreparation) {
-        title.innerText = "תיבה 0 - הכנה";
+        title.innerText = measureData.isEmptyPreparation ? "תיבה ריקה" : "תיבה 0 - הכנה";
     } else {
         title.innerText = `תיבה ${measureData.measureNumber}`;
     }
@@ -775,6 +788,21 @@ function initializeSongPartsControls() {
 // Toggle loop from side controls
 function toggleLoopFromControls(loopIndex) {
     toggleLoopEnabled(loopIndex);
+}
+
+// Toggle song parts panel (חלקי השיר - פתיחה/סגירה)
+function toggleSongPartsPanel() {
+    const panel = document.getElementById("song-parts-panel");
+    const trigger = document.getElementById("song-parts-trigger");
+    if (!panel || !trigger) return;
+    const isCollapsed = panel.classList.contains("collapsed");
+    if (isCollapsed) {
+        panel.classList.remove("collapsed");
+        trigger.setAttribute("aria-expanded", "true");
+    } else {
+        panel.classList.add("collapsed");
+        trigger.setAttribute("aria-expanded", "false");
+    }
 }
 
 // Beat dots update with chord tracking
@@ -1073,6 +1101,19 @@ document.addEventListener("DOMContentLoaded", () => {
         renderChords();
     });
 
+    // Number of preparation (empty) measures
+    const preparationCountInput = document.getElementById("preparation-count");
+    if (preparationCountInput) {
+        preparationCountInput.addEventListener("change", (e) => {
+            let val = parseInt(e.target.value, 10);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 8) val = 8;
+            preparationCountInput.value = val;
+            preparationMeasuresCount = val;
+            renderChords();
+        });
+    }
+
     // Keyboard shortcuts
     document.addEventListener("keydown", (e) => {
         switch(e.code) {
@@ -1147,6 +1188,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize everything
     initializeSongPartsControls();
+    // חלקי השיר - סגור כברירת מחדל
+    const songPartsPanel = document.getElementById("song-parts-panel");
+    const songPartsTrigger = document.getElementById("song-parts-trigger");
+    if (songPartsPanel && songPartsTrigger) {
+        songPartsPanel.classList.add("collapsed");
+        songPartsTrigger.setAttribute("aria-expanded", "false");
+    }
     updateTransposeInfo();
     renderChords();
 

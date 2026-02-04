@@ -57,7 +57,7 @@
         <!-- Action Buttons -->
         <div class="action-buttons">
             {% set roles = session.get('roles', []) %}
-            {% if 'teacher' in roles or 'admin' in roles %}
+            {% if 'teacher' in roles or 'musician' in roles or 'admin' in roles %}
                 <a href="{{ url_for('songs.add_song_page') }}" class="add-song-btn">
                     <span>➕</span>
                     <span>הוסף שיר חדש</span>
@@ -65,6 +65,11 @@
             {% endif %}
             {% if session.get('user_id') %}
                 <a href="{{ url_for('my_songs.my_songs_page') }}" class="my-songs-link-btn">
+                    <span>❤️</span>
+                    <span>השירים שלי</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="my-songs-link-btn" title="התחבר כדי לגשת לרשימת השירים שלך">
                     <span>❤️</span>
                     <span>השירים שלי</span>
                 </a>
@@ -82,6 +87,12 @@
             </div>
 
             <select id="sort-select" class="sort-dropdown">
+                <option value="alphabetical">אלפביתי (שם שיר)</option>
+                <option value="recent" selected>הועלה לאחרונה</option>
+                <option value="rating">דירוג משתמשים</option>
+                <option value="watched">שירים שצפיתי בהם</option>
+                <option value="my_list">שירים מרשימת השירים שלי</option>
+                <option value="personalized">בהתאמה אישית</option>
                 <option value="title">מיון לפי שם השיר</option>
                 <option value="artist">מיון לפי אמן</option>
                 <option value="difficulty">מיון לפי רמת קושי</option>
@@ -100,7 +111,11 @@
                      data-bpm="{{ song.bpm }}"
                      data-key="{{ song.key }}"
                      data-time-signature="{{ song.time_signature }}"
-                     data-genres="{{ song.display_genres | join(',') }}">
+                     data-genres="{{ song.display_genres | join(',') }}"
+                     data-created-at="{{ song.created_at_iso }}"
+                     data-in-my-list="{{ 'true' if song.in_my_list else 'false' }}"
+                     data-watched="{{ 'true' if song.watched else 'false' }}"
+                     data-avg-rating="{{ song.avg_rating }}">
 
                     <div class="song-row-content">
                         <div class="song-main-info">
@@ -152,6 +167,11 @@
                                     <span class="icon">❤️</span>
                                     <span class="text">הוסף לשירים שלי</span>
                                 </button>
+                            {% else %}
+                                <a href="{{ url_for('auth.login') }}" class="action-btn my-songs-btn guest-add-my-songs" title="התחבר עם משתמש רשום כדי להוסיף שירים לרשימה שלך">
+                                    <span class="icon">❤️</span>
+                                    <span class="text">הוסף לשירים שלי</span>
+                                </a>
                             {% endif %}
 
                             {% if session.get('user_id') == song.created_by %}
@@ -176,7 +196,7 @@
             <h3>אין שירים זמינים</h3>
             <p>עדיין לא נוספו שירים למערכת</p>
             {% set roles = session.get('roles', []) %}
-            {% if 'teacher' in roles or 'admin' in roles %}
+            {% if 'teacher' in roles or 'musician' in roles or 'admin' in roles %}
                 <a href="{{ url_for('songs.add_song_page') }}" class="browse-btn">
                     <span>➕</span>
                     <span>הוסף שיר ראשון</span>

@@ -791,6 +791,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // אתחול מערכת ריבוי ז'אנרים
     initializeMultiGenre();
 
+    // בעריכת שיר: טעינת ז'אנרים מהשרת (מהטמפלייט) אחרי ש-loadGenres זמין
+    if (mode.isEditMode && window.existingGenresForEdit) {
+        let genresToLoad = window.existingGenresForEdit;
+        if (typeof genresToLoad === 'string') {
+            try { genresToLoad = JSON.parse(genresToLoad); } catch (e) { genresToLoad = [genresToLoad]; }
+        }
+        window.existingGenresForEdit = null; // נקה אחרי שימוש
+        if (Array.isArray(genresToLoad) && genresToLoad.length > 0 && window.loadGenres) {
+            window.loadGenres(genresToLoad);
+        }
+    }
+
     // אתחול לפי מצב
     if (mode.isEditMode) {
         // מצב עריכת שיר קיים

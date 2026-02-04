@@ -78,38 +78,15 @@ class GuitarTuner {
                 </div>
             `;
             
-            // Insert into controls panel
-            const controlsPanel = document.querySelector('.controls-panel');
-            if (controlsPanel) {
-                // Find transpose control group by looking for transpose-controls
-                const allGroups = controlsPanel.querySelectorAll('.control-group');
-                let transposeGroup = null;
-                
-                for (let group of allGroups) {
-                    if (group.querySelector('.transpose-controls')) {
-                        transposeGroup = group;
-                        break;
-                    }
-                }
-                
-                if (transposeGroup) {
-                    // Insert after transpose controls
-                    transposeGroup.insertAdjacentElement('afterend', container);
-                } else {
-                    // Fallback: insert after volume control
-                    const volumeGroup = Array.from(allGroups).find(group => 
-                        group.querySelector('#volume-slider')
-                    );
-                    if (volumeGroup) {
-                        volumeGroup.insertAdjacentElement('afterend', container);
-                    } else {
-                        // Last resort: insert after first control group
-                        if (allGroups.length > 0) {
-                            allGroups[0].insertAdjacentElement('afterend', container);
-                        } else {
-                            controlsPanel.insertBefore(container, controlsPanel.firstChild);
-                        }
-                    }
+            // Insert into global top-left anchor (all pages) - צד שמאלי עליון
+            const globalAnchor = document.getElementById('tuner-global-anchor');
+            if (globalAnchor) {
+                globalAnchor.appendChild(container);
+            } else {
+                // Fallback: insert into controls panel (e.g. old play_song layout)
+                const controlsPanel = document.querySelector('.controls-panel');
+                if (controlsPanel) {
+                    controlsPanel.insertBefore(container, controlsPanel.firstChild);
                 }
             }
         }
@@ -145,10 +122,15 @@ class GuitarTuner {
             // Request microphone access
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             
-            // Create audio context
+            // Create audio context (must be after user gesture)
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
             this.microphone = this.audioContext.createMediaStreamSource(stream);
+            
+            // Critical: resume if suspended (browser autoplay policy - otherwise no audio data)
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
             
             // Configure analyser
             this.analyser.fftSize = 8192; // Higher FFT size for better frequency resolution
@@ -191,7 +173,9 @@ class GuitarTuner {
     }
     
     startAnalysis() {
-        if (!this.isListening) return;
+        if (!this.isListening || !this.analyser) return;
+        // If context was closed or suspended, stop the loop
+        if (this.audioContext && this.audioContext.state === 'closed') return;
         
         this.analyser.getFloatTimeDomainData(this.dataArray);
         
@@ -244,9 +228,11 @@ class GuitarTuner {
             }
         }
         
-        // Only return frequency if correlation is strong enough
-        if (maxCorrelation > 0.1 && bestPeriod > 0) {
-            return sampleRate / bestPeriod;
+        // Return frequency if we have a plausible period (lower threshold for quiet/strings)
+        if (bestPeriod > 0 && maxCorrelation > 0.02) {
+            const freq = sampleRate / bestPeriod;
+            // Guitar range roughly 82–330 Hz
+            if (freq >= 55 && freq <= 450) return freq;
         }
         
         return 0;
@@ -358,15 +344,18 @@ class GuitarTuner {
         const statusText = document.getElementById('tuner-status');
         const content = document.getElementById('tuner-content');
         const toggleBtn = document.getElementById('tuner-toggle-btn');
+        const container = document.getElementById('tuner-container');
         
         if (this.isListening) {
             statusText.textContent = 'כבה טיונר';
             content.style.display = 'block';
             toggleBtn.classList.add('active');
+            if (container) container.classList.add('tuner-open');
         } else {
             statusText.textContent = 'הפעל טיונר';
             content.style.display = 'none';
             toggleBtn.classList.remove('active');
+            if (container) container.classList.remove('tuner-open');
         }
     }
 }

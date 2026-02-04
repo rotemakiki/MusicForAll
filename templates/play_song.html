@@ -8,6 +8,9 @@
 {% endblock %}
 
 {% block content %}
+<!-- טיונר גיטרה - רק בעמוד נגן שיר -->
+<div id="tuner-global-anchor" class="tuner-global-anchor"></div>
+
 <div class="play-song-container">
     <header class="song-header">
         <!-- שורה 1: שם השיר והאמן -->
@@ -60,30 +63,59 @@
                         </span>
                     </span>
                     {% endif %}
+                    <span class="detail-item original-bpm-display">
+                        <span class="detail-icon">🎵</span>
+                        <span class="detail-label">BPM מקורי:</span>
+                        <span class="detail-value">{{ song.bpm }}</span>
+                    </span>
+                    <span class="detail-item current-bpm-display">
+                        <span class="detail-icon">▶️</span>
+                        <span class="detail-label">BPM נוכחי:</span>
+                        <span class="detail-value" id="current-bpm">{{ song.bpm }}</span>
+                    </span>
                 </div>
             </div>
 
-            <!-- נגן יוטיוב -->
+            <!-- נגן יוטיוב - רק למשתמשים מחוברים -->
+            {% if can_watch_videos %}
             <div class="youtube-player-section">
                 <button onclick="toggleYouTubePlayer()" class="youtube-toggle-btn">
                     <span class="youtube-icon">📺</span>
                     <span>השמע/הסתר וידאו</span>
                 </button>
+                {% if song.video_watch_url %}
+                <a href="{{ song.video_watch_url }}" target="_blank" rel="noopener noreferrer" class="youtube-open-link" title="פתח את הסרטון ביוטיוב">🔗 לצפייה ב-YouTube</a>
+                {% endif %}
                 <div id="youtube-player-container" class="youtube-player-container" style="display: none;">
                     <button onclick="toggleYouTubePlayer()" class="close-youtube-btn">×</button>
-                    <iframe id="youtube-iframe" src="{{ song.video_url }}" frameborder="0" allowfullscreen></iframe>
+                    <iframe id="youtube-iframe" data-src="{{ song.video_embed_url }}" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    {% if song.video_watch_url %}
+                    <p class="youtube-fallback-hint">אם הסרטון לא מתנגן כאן (הגבלת הטמעה), <a href="{{ song.video_watch_url }}" target="_blank" rel="noopener noreferrer">לחץ לצפייה ב-YouTube</a>.</p>
+                    {% endif %}
                 </div>
                 {% if song.tutorial_video_url %}
                 <button onclick="toggleTutorialPlayer()" class="youtube-toggle-btn" style="margin-top: 10px;">
                     <span class="youtube-icon">📚</span>
                     <span>פתח/סגור סרטון הדרכה</span>
                 </button>
+                {% if song.tutorial_watch_url %}
+                <a href="{{ song.tutorial_watch_url }}" target="_blank" rel="noopener noreferrer" class="youtube-open-link" title="פתח סרטון ההדרכה ביוטיוב">🔗 הדרכה ב-YouTube</a>
+                {% endif %}
                 <div id="tutorial-player-container" class="youtube-player-container" style="display: none;">
                     <button onclick="toggleTutorialPlayer()" class="close-youtube-btn">×</button>
-                    <iframe id="tutorial-iframe" src="{{ song.tutorial_video_url }}" frameborder="0" allowfullscreen></iframe>
+                    <iframe id="tutorial-iframe" data-src="{{ song.tutorial_embed_url }}" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    {% if song.tutorial_watch_url %}
+                    <p class="youtube-fallback-hint">אם הסרטון לא מתנגן כאן, <a href="{{ song.tutorial_watch_url }}" target="_blank" rel="noopener noreferrer">לחץ לצפייה ב-YouTube</a>.</p>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
+            {% else %}
+            <div class="youtube-player-section guest-video-block">
+                <p class="guest-video-message">התחבר עם משתמש רשום כדי לצפות בסרטונים</p>
+                <a href="{{ url_for('auth.login') }}" class="action-btn">התחבר</a>
+            </div>
+            {% endif %}
 
             <!-- כפתורי פעולה -->
             <div class="action-buttons">
@@ -102,28 +134,53 @@
                     <span id="my-songs-icon">❤️</span>
                     <span id="my-songs-text">הוסף לשירים שלי</span>
                 </button>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="action-btn my-songs-btn" title="התחבר כדי להוסיף שירים לרשימה שלך">
+                    <span>❤️</span>
+                    <span>הוסף לשירים שלי</span>
+                </a>
                 {% endif %}
-            </div>
-        </div>
-
-        <!-- שורה 3: מידע BPM -->
-        <div class="header-row-3">
-            <div class="bpm-info">
-                <span class="original-bpm-display">
-                    <span class="label">BPM מקורי:</span>
-                    <span>{{ song.bpm }}</span>
-                </span>
-                <span class="current-bpm-display">
-                    <span class="label">BPM נוכחי:</span>
-                    <span id="current-bpm">{{ song.bpm }}</span>
-                </span>
             </div>
         </div>
     </header>
 
     <div class="main-layout">
         <div class="controls-panel">
-            <!-- בקרת BPM -->
+            <!-- 1. הכנה לתחילת השיר + כפתורי ניגון (הכי למעלה) -->
+            <div class="control-group">
+                <label class="control-label">
+                    <span class="control-icon">⏳</span>
+                    הכנה לתחילת השיר
+                </label>
+                <div class="preparation-controls">
+                    <label class="preparation-checkbox">
+                        <input type="checkbox" id="add-preparation" checked>
+                        <span class="preparation-slider"></span>
+                    </label>
+                    <span class="preparation-label">הוסף תיבה ריקה לתחילה</span>
+                </div>
+                <div class="preparation-count-row">
+                    <label for="preparation-count" class="preparation-count-label">מספר תיבות ריקות:</label>
+                    <input type="number" id="preparation-count" min="1" max="8" value="1" class="preparation-count-input" title="ברירת מחדל: תיבה אחת">
+                </div>
+            </div>
+
+            <div class="playback-controls">
+                <button onclick="startPlayback()" class="control-btn play-btn">
+                    <span class="btn-icon">▶️</span>
+                    <span class="btn-text">החל לנגן</span>
+                </button>
+                <button onclick="restartPlayback()" class="control-btn restart-btn">
+                    <span class="btn-icon">⏮️</span>
+                    <span class="btn-text">התחל מחדש</span>
+                </button>
+                <button onclick="stopPlayback()" class="control-btn stop-btn">
+                    <span class="btn-icon">⏹️</span>
+                    <span class="btn-text">עצור</span>
+                </button>
+            </div>
+
+            <!-- 2. מטרונום -->
             <div class="control-group">
                 <label for="bpm-slider" class="control-label">
                     <span class="control-icon">🥁</span>
@@ -136,7 +193,6 @@
                 </div>
             </div>
 
-            <!-- בקרת עוצמה -->
             <div class="control-group">
                 <label for="volume-slider" class="control-label">
                     <span class="control-icon">🔊</span>
@@ -145,7 +201,7 @@
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1" class="volume-slider">
             </div>
 
-            <!-- בקרת טרנספוזיציה -->
+            <!-- 3. טרנספוזיציה -->
             <div class="control-group">
                 <label for="transpose-slider" class="control-label">
                     <span class="control-icon">🎹</span>
@@ -165,7 +221,7 @@
                 </div>
             </div>
 
-            <!-- Size Controls Section -->
+            <!-- 4. בקרת גודל -->
             <div class="control-group">
                 <div class="size-controls">
                     <div class="size-controls-title">
@@ -200,7 +256,7 @@
                 </div>
             </div>
 
-            <!-- User Instructions -->
+            <!-- 5. איך להשתמש -->
             <div class="control-group">
                 <div class="user-instructions">
                     <div class="instructions-title">
@@ -235,44 +291,17 @@
                 </div>
             </div>
 
-            <!-- תיבה ריקה לתחילת השיר -->
-            <div class="control-group">
-                <label class="control-label">
-                    <span class="control-icon">⏳</span>
-                    הכנה לתחילת השיר
-                </label>
-                <div class="preparation-controls">
-                    <label class="preparation-checkbox">
-                        <input type="checkbox" id="add-preparation" checked>
-                        <span class="preparation-slider"></span>
-                    </label>
-                    <span class="preparation-label">הוסף תיבה ריקה לתחילה</span>
-                </div>
-            </div>
-
-            <div class="playback-controls">
-                <button onclick="startPlayback()" class="control-btn play-btn">
-                    <span class="btn-icon">▶️</span>
-                    <span class="btn-text">החל לנגן</span>
-                </button>
-                <button onclick="restartPlayback()" class="control-btn restart-btn">
-                    <span class="btn-icon">⏮️</span>
-                    <span class="btn-text">התחל מחדש</span>
-                </button>
-                <button onclick="stopPlayback()" class="control-btn stop-btn">
-                    <span class="btn-icon">⏹️</span>
-                    <span class="btn-text">עצור</span>
-                </button>
-            </div>
-
-            <!-- בקרת חלקי השיר -->
-            <div class="control-group">
-                <label class="control-label">
+            <!-- 6. חלקי השיר - מתקפל, סגור כברירת מחדל -->
+            <div class="control-group song-parts-group">
+                <button type="button" class="control-label collapsible-trigger" id="song-parts-trigger" onclick="toggleSongPartsPanel()" aria-expanded="false">
                     <span class="control-icon">🎼</span>
-                    חלקי השיר
-                </label>
-                <div id="song-parts-controls" class="song-parts-controls">
-                    <!-- יוכנס דינמית -->
+                    <span>חלקי השיר</span>
+                    <span class="collapsible-chevron" aria-hidden="true">▼</span>
+                </button>
+                <div id="song-parts-panel" class="song-parts-panel collapsed">
+                    <div id="song-parts-controls" class="song-parts-controls">
+                        <!-- יוכנס דינמית -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -310,37 +339,37 @@
         timeSignature: "{{ song.time_signature }}"
     };
 
-    // נגן יוטיוב
+    // נגן יוטיוב – טעינת iframe רק בלחיצה (lazy load) + שימוש ב־youtube-nocookie
     function toggleYouTubePlayer() {
         const container = document.getElementById('youtube-player-container');
+        const iframe = document.getElementById('youtube-iframe');
         const isVisible = container.style.display !== 'none';
 
         if (isVisible) {
             container.style.display = 'none';
-            // עצור וידאו אם נסגר
-            const iframe = document.getElementById('youtube-iframe');
-            const src = iframe.src;
             iframe.src = '';
-            iframe.src = src;
         } else {
             container.style.display = 'block';
+            if (!iframe.src && iframe.dataset.src) {
+                iframe.src = iframe.dataset.src;
+            }
         }
     }
 
     // נגן סרטון הדרכה
     function toggleTutorialPlayer() {
         const container = document.getElementById('tutorial-player-container');
+        const iframe = document.getElementById('tutorial-iframe');
         const isVisible = container.style.display !== 'none';
 
         if (isVisible) {
             container.style.display = 'none';
-            // עצור וידאו אם נסגר
-            const iframe = document.getElementById('tutorial-iframe');
-            const src = iframe.src;
             iframe.src = '';
-            iframe.src = src;
         } else {
             container.style.display = 'block';
+            if (!iframe.src && iframe.dataset.src) {
+                iframe.src = iframe.dataset.src;
+            }
         }
     }
 
@@ -392,5 +421,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/play_song.js') }}"></script>
-<script src="{{ url_for('static', filename='js/tuner.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tuner.js') }}" defer></script>
 {% endblock %}

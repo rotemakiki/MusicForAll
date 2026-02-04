@@ -15,21 +15,20 @@
     <!-- תפריט ניווט - רק אייקון -->
     <nav class="modern-navbar">
         <div class="navbar-container">
-            <!-- אייקון תפריט עם תמונת פרופיל -->
+            <!-- אייקון תפריט + תמונת פרופיל (לחיצה על התמונה → פרופיל) -->
             <div class="navbar-toggle">
                 {% if session.get('user_id') %}
+                    <div class="menu-trigger" onclick="toggleMenu()" title="תפריט">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                     {% set profile_image = session.get('profile_image', '') %}
                     {% if profile_image %}
-                        <div class="profile-menu-trigger" onclick="toggleMenu()">
+                        <a href="{{ url_for('students.user_profile') }}" class="profile-menu-trigger" title="הפרופיל שלי">
                             <img src="{{ profile_image }}" alt="תמונת פרופיל" class="navbar-profile-img">
                             <div class="status-indicator"></div>
-                        </div>
-                    {% else %}
-                        <div class="menu-trigger" onclick="toggleMenu()">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
+                        </a>
                     {% endif %}
                 {% else %}
                     <div class="menu-trigger" onclick="toggleMenu()">
@@ -48,20 +47,31 @@
                 <!-- כותרת תפריט -->
                 <div class="menu-header">
                     {% if session.get('user_id') %}
-                        <div class="user-info">
-                            {% set profile_image = session.get('profile_image', '') %}
-                            {% if profile_image %}
-                                <img src="{{ profile_image }}" alt="תמונת פרופיל" class="menu-profile-img">
-                            {% else %}
-                                <div class="menu-avatar-placeholder">
-                                    <i class="fas fa-user"></i>
+                        {% set role_names = {'admin': 'אדמין', 'teacher': 'מורה', 'musician': 'מוסיקאי', 'student': 'תלמיד'} %}
+                        {% set roles = session.get('roles', []) %}
+                        {% set ns = namespace(labels=[]) %}
+                        {% for r in ['admin', 'teacher', 'musician', 'student'] %}
+                            {% if r in roles %}{% set _ = ns.labels.append(role_names[r]) %}{% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('students.user_profile') }}" class="user-info-link" onclick="document.getElementById('navbar-menu').classList.remove('active'); document.body.style.overflow='auto';">
+                            <div class="user-info">
+                                {% set profile_image = session.get('profile_image', '') %}
+                                {% if profile_image %}
+                                    <img src="{{ profile_image }}" alt="תמונת פרופיל" class="menu-profile-img">
+                                {% else %}
+                                    <div class="menu-avatar-placeholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="user-details">
+                                    <h3>{{ session.get('username') }}</h3>
+                                    <p>הפרופיל שלי</p>
+                                    {% if ns.labels %}
+                                        <p class="user-roles">{{ ns.labels | join(' • ') }}</p>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
-                            <div class="user-details">
-                                <h3>{{ session.get('username') }}</h3>
-                                <p>משתמש רשום</p>
                             </div>
-                        </div>
+                        </a>
                     {% else %}
                         <div class="guest-info">
                             <h3>🎵 מוזיקה לכולם</h3>
@@ -81,9 +91,9 @@
                             </a>
                         </li>
                         <li class="menu-item">
-                            <a href="{{ url_for('courses.courses_list') }}" class="menu-link">
-                                <i class="fas fa-graduation-cap"></i>
-                                <span>קורסים</span>
+                            <a href="{{ url_for('students.user_profile') }}" class="menu-link">
+                                <i class="fas fa-user-circle"></i>
+                                <span>הפרופיל שלי</span>
                             </a>
                         </li>
                         <li class="menu-item">
@@ -93,33 +103,33 @@
                             </a>
                         </li>
                         <li class="menu-item">
-                            <a href="{{ url_for('products.products_page') }}" class="menu-link">
-                                <i class="fas fa-shopping-cart"></i>
-                                <span>מוצרים למוזיקאים</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
-                            <a href="{{ url_for('teachers.list_teachers') }}" class="menu-link">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                                <span>רשימת מורים</span>
-                            </a>
-                        </li>
-                        <li class="menu-item">
                             <a href="{{ url_for('my_songs.my_songs_page') }}" class="menu-link">
                                 <i class="fas fa-heart"></i>
                                 <span>השירים שלי</span>
                             </a>
                         </li>
                         <li class="menu-item">
-                            <a href="{{ url_for('tutorials.tutorials') }}" class="menu-link">
-                                <i class="fas fa-book"></i>
-                                <span>עמוד הדרכה</span>
+                            <a href="{{ url_for('teachers.list_teachers') }}" class="menu-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>מורים</span>
                             </a>
                         </li>
                         <li class="menu-item">
-                            <a href="{{ url_for('info.info_page') }}" class="menu-link">
-                                <i class="fas fa-info-circle"></i>
-                                <span>עמוד מידע</span>
+                            <a href="{{ url_for('tutorials.tutorials') }}" class="menu-link">
+                                <i class="fas fa-book"></i>
+                                <span>שיעורים בודדים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('courses.courses_list') }}" class="menu-link">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>קורסים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('products.products_page') }}" class="menu-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>מוצרים למוסיקאים</span>
                             </a>
                         </li>
                         <li class="menu-item">
@@ -128,26 +138,6 @@
                                 <span>יצירת קשר</span>
                             </a>
                         </li>
-                        <li class="menu-item">
-                            <a href="{{ url_for('students.user_profile') }}" class="menu-link">
-                                <i class="fas fa-user-circle"></i>
-                                <span>הפרופיל שלי</span>
-                            </a>
-                        </li>
-                        {% if 'teacher' in roles or 'admin' in roles %}
-                            <li class="menu-item special">
-                                <a href="{{ url_for('courses.manage_courses') }}" class="menu-link">
-                                    <i class="fas fa-graduation-cap"></i>
-                                    <span>ניהול קורסים</span>
-                                </a>
-                            </li>
-                            <li class="menu-item special">
-                                <a href="{{ url_for('songs.add_song_page') }}" class="menu-link">
-                                    <i class="fas fa-plus"></i>
-                                    <span>הוספת שיר</span>
-                                </a>
-                            </li>
-                        {% endif %}
                         <li class="menu-item logout">
                             <a href="{{ url_for('auth.logout') }}" class="menu-link">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -164,19 +154,37 @@
                         <li class="menu-item">
                             <a href="{{ url_for('songs.songs') }}" class="menu-link">
                                 <i class="fas fa-music"></i>
-                                <span>רשימת שירים</span>
+                                <span>שירים</span>
                             </a>
                         </li>
                         <li class="menu-item">
-                            <a href="{{ url_for('products.products_page') }}" class="menu-link">
-                                <i class="fas fa-shopping-cart"></i>
-                                <span>מוצרים למוזיקאים</span>
+                            <a href="{{ url_for('auth.login') }}" class="menu-link" title="התחבר כדי לגשת לרשימת השירים שלך">
+                                <i class="fas fa-heart"></i>
+                                <span>השירים שלי</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('teachers.list_teachers') }}" class="menu-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>מורים</span>
                             </a>
                         </li>
                         <li class="menu-item">
                             <a href="{{ url_for('tutorials.tutorials') }}" class="menu-link">
                                 <i class="fas fa-book"></i>
-                                <span>עמוד הדרכה</span>
+                                <span>שיעורים בודדים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('courses.courses_list') }}" class="menu-link">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>קורסים</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('products.products_page') }}" class="menu-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>מוצרים למוסיקאים</span>
                             </a>
                         </li>
                         <li class="menu-item">

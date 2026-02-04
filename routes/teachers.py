@@ -44,6 +44,47 @@ def teacher_profile(teacher_id):
 
     return render_template("teacher_profile.html", teacher=teacher, videos=most_viewed, days_on_site=days_on_site)
 
+
+@teachers_bp.route('/musician/<string:musician_id>')
+def musician_profile(musician_id):
+    """פרופיל מוסיקאי (אמן) - שירים והופעות."""
+    doc_ref = firestore.client().collection("users").document(musician_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        return "מוסיקאי לא נמצא", 404
+
+    musician = doc.to_dict()
+    musician["id"] = doc.id
+    roles = musician.get("roles", [])
+    if "musician" not in roles and "teacher" not in roles:
+        return "משתמש זה אינו מוסיקאי או מורה", 404
+
+    # שירים שהמוסיקאי יצר (ללא order_by כדי לא לדרוש אינדקס)
+    songs_ref = firestore.client().collection("songs").where("created_by", "==", musician_id).limit(100).stream()
+    songs = []
+    for s in songs_ref:
+        data = s.to_dict()
+        data["id"] = s.id
+        if data.get("genres"):
+            data["display_genres"] = data["genres"] if isinstance(data["genres"], list) else [data["genres"]]
+        else:
+            data["display_genres"] = [data.get("genre", "לא צוין")]
+        songs.append(data)
+    songs.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+
+    created_at = musician.get("created_at")
+    if isinstance(created_at, str):
+        try:
+            from dateutil.parser import parse
+            created_at = parse(created_at)
+        except Exception:
+            created_at = None
+    from datetime import timezone
+    days_on_site = (datetime.now(timezone.utc) - created_at).days if created_at else 0
+
+    return render_template("musician_profile.html", musician=musician, songs=songs, days_on_site=days_on_site)
+
+
 @teachers_bp.route('/edit_teacher_profile/<string:teacher_id>', methods=['GET', 'POST'])
 def edit_teacher_profile(teacher_id):
     if 'user_id' not in session or session['user_id'] != teacher_id:

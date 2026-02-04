@@ -2,8 +2,37 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from firebase_admin import firestore
 from datetime import datetime
 import json
+import re
+from utils.permissions import get_roles, can_upload_songs, can_edit_any_content
 
 songs_bp = Blueprint('songs', __name__)
+
+
+def youtube_video_id(url):
+    """מחלץ מזהה סרטון יוטיוב (11 תווים) מכל פורמט קישור."""
+    if not url or not isinstance(url, str):
+        return None
+    m = re.search(r"(?:youtube\.com/embed/|youtube\.com/v/|youtu\.be/)([a-zA-Z0-9_-]{11})", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"[?&]v=([a-zA-Z0-9_-]{11})", url)
+    if m:
+        return m.group(1)
+    return None
+
+
+def youtube_watch_url(url):
+    """ממיר קישור יוטיוב (embed או watch) ל-URL צפייה סטנדרטי לפתיחה בטאב חדש."""
+    vid = youtube_video_id(url)
+    return f"https://www.youtube.com/watch?v={vid}" if vid else (url or "")
+
+
+def youtube_embed_url(url):
+    """מחזיר כתובת הטמעה נקייה ל־iframe. משתמש ב־youtube-nocookie.com כדי למקסם סיכוי שהסרטון ינוגן באתר."""
+    vid = youtube_video_id(url)
+    if vid:
+        return f"https://www.youtube-nocookie.com/embed/{vid}?rel=0"
+    return url or ""
 
 # =============================================================================
 # MAIN SONGS ROUTES
@@ -11,12 +40,36 @@ songs_bp = Blueprint('songs', __name__)
 
 @songs_bp.route('/songs')
 def songs():
-    song_docs = firestore.client().collection("songs").order_by("created_at", direction=firestore.Query.DESCENDING).stream()
+    db = firestore.client()
+    song_docs = db.collection("songs").order_by("created_at", direction=firestore.Query.DESCENDING).stream()
+
+    # For logged-in user: get my_songs IDs and watched (song_views) IDs
+    user_my_song_ids = set()
+    user_watched_song_ids = set()
+    if "user_id" in session:
+        user_id = session["user_id"]
+        for doc in db.collection("my_songs").where("user_id", "==", user_id).stream():
+            user_my_song_ids.add(doc.to_dict().get("song_id"))
+        for doc in db.collection("song_views").where("user_id", "==", user_id).stream():
+            user_watched_song_ids.add(doc.to_dict().get("song_id"))
+
     all_songs = []
     for doc in song_docs:
         song = doc.to_dict()
         song["id"] = doc.id
         song["created_by"] = song.get("created_by", None)
+
+        # Serialize created_at for client-side sorting
+        created_at = song.get("created_at")
+        if created_at:
+            song["created_at_iso"] = created_at.isoformat() if hasattr(created_at, "isoformat") else str(created_at)
+        else:
+            song["created_at_iso"] = ""
+
+        # User-specific flags for sorting
+        song["in_my_list"] = song["id"] in user_my_song_ids
+        song["watched"] = song["id"] in user_watched_song_ids
+        song["avg_rating"] = float(song.get("avg_rating", 0) or 0)
 
         # Handle genres - support both old single genre and new multiple genres
         if "genres" in song and song["genres"]:
@@ -56,8 +109,8 @@ def edit_song(song_id):
         return "שיר לא נמצא", 404
 
     song = doc.to_dict()
-    user_roles = session.get("roles", [])
-    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+    user_roles = get_roles(session)
+    if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
         flash("אין לך הרשאה לערוך שיר זה", "error")
         return redirect(url_for('songs.songs'))
 
@@ -119,9 +172,29 @@ def edit_song(song_id):
 
 @songs_bp.route('/play/<string:song_id>')
 def play_song(song_id):
-    doc = firestore.client().collection("songs").document(song_id).get()
+    db = firestore.client()
+    doc = db.collection("songs").document(song_id).get()
     if not doc.exists:
         return "שיר לא נמצא", 404
+
+    # Record view for logged-in user (for "songs I watched" sort)
+    if "user_id" in session:
+        try:
+            user_id = session["user_id"]
+            # Avoid duplicate views in same session; we store one per user+song (latest view)
+            views_ref = db.collection("song_views").where("user_id", "==", user_id).where("song_id", "==", song_id).limit(1).get()
+            if not views_ref:
+                db.collection("song_views").add({
+                    "user_id": user_id,
+                    "song_id": song_id,
+                    "viewed_at": datetime.utcnow()
+                })
+            else:
+                # Update viewed_at so "recently watched" works
+                views_ref[0].reference.update({"viewed_at": datetime.utcnow()})
+        except Exception as e:
+            print(f"Error recording song view: {e}")
+
     song = doc.to_dict()
     song["id"] = doc.id
 
@@ -171,6 +244,15 @@ def play_song(song_id):
     except:
         beats_per_measure = 4
 
+    can_watch_videos = "user_id" in session
+    video_url = song.get("video_url", "")
+    tutorial_url = song.get("tutorial_video_url", "")
+    # קישור לצפייה ביוטיוב (לפתיחה בטאב חדש)
+    video_watch_url = youtube_watch_url(video_url) if video_url else ""
+    tutorial_watch_url = youtube_watch_url(tutorial_url) if tutorial_url else ""
+    # כתובת הטמעה לנגן באתר (youtube-nocookie.com – מגדילה סיכוי שהסרטון ינוגן)
+    video_embed_url = youtube_embed_url(video_url) if video_url else ""
+    tutorial_embed_url = youtube_embed_url(tutorial_url) if tutorial_url else ""
     # העברת כל הנתונים הנדרשים לטמפלייט המעודכן
     return render_template("play_song.html", song={
         "id": song_id,
@@ -184,15 +266,19 @@ def play_song(song_id):
         "difficulty_approved": song.get("difficulty_approved", False),
         "time_signature": song["time_signature"],
         "bpm": song["bpm"],
-        "video_url": song["video_url"],
-        "tutorial_video_url": song.get("tutorial_video_url", ""),
+        "video_url": video_url,
+        "tutorial_video_url": tutorial_url,
+        "video_embed_url": video_embed_url,
+        "tutorial_embed_url": tutorial_embed_url,
+        "video_watch_url": video_watch_url,
+        "tutorial_watch_url": tutorial_watch_url,
         "song_version": song.get("song_version", ""),
         "original_artist": song.get("original_artist", ""),
         "chords": chords_list,
         "loops": loops_data,
         "beats": beats_per_measure,
         "created_by": song.get("created_by", None)
-    })
+    }, can_watch_videos=can_watch_videos)
 
 # Legacy chord route - redirect to player
 @songs_bp.route('/chords/<string:song_id>')
@@ -219,8 +305,8 @@ def edit_chords_for_song(song_id):
         return "שיר לא נמצא", 404
 
     song = doc.to_dict()
-    user_roles = session.get("roles", [])
-    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+    user_roles = get_roles(session)
+    if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
         flash("אין לך הרשאה לערוך שיר זה", "error")
         return redirect(url_for('songs.songs'))
 
@@ -262,8 +348,8 @@ def edit_chords_for_song(song_id):
 
 @songs_bp.route('/api/add_song', methods=['POST'])
 def add_song():
-    user_roles = session.get("roles", [])
-    if not ("teacher" in user_roles or "admin" in user_roles):
+    user_roles = get_roles(session)
+    if not can_upload_songs(user_roles):
         return jsonify({"error": "Unauthorized"}), 403
 
     data = request.get_json()
@@ -316,8 +402,8 @@ def edit_song_api(song_id):
         return jsonify({"error": "Song not found"}), 404
 
     song = doc.to_dict()
-    user_roles = session.get("roles", [])
-    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+    user_roles = get_roles(session)
+    if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
         return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
 
     data = request.get_json()
@@ -363,8 +449,8 @@ def delete_song(song_id):
         return jsonify({"error": "Song not found"}), 404
 
     song = song_doc.to_dict()
-    user_roles = session.get("roles", [])
-    if song.get("created_by") != session.get("user_id") and "admin" not in user_roles:
+    user_roles = get_roles(session)
+    if song.get("created_by") != session.get("user_id") and not can_edit_any_content(user_roles):
         return jsonify({"error": "Unauthorized"}), 403
 
     doc_ref.delete()
@@ -391,6 +477,50 @@ def get_recent_songs():
         print(f"Error fetching recent songs: {e}")
         return jsonify({"songs": [], "success": False, "error": str(e)})
 
+
+@songs_bp.route('/api/songs/<string:song_id>/rate', methods=['POST'])
+def rate_song(song_id):
+    """API לדירוג שיר (1–5). מעדכן דירוג ממוצע בשדה avg_rating של השיר."""
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "יש להתחבר כדי לדרג"}), 401
+
+    data = request.get_json() or {}
+    rating = data.get("rating")
+    if rating is None:
+        return jsonify({"success": False, "error": "חסר דירוג"}), 400
+    try:
+        rating = float(rating)
+        if rating < 1 or rating > 5:
+            return jsonify({"success": False, "error": "דירוג חייב להיות בין 1 ל-5"}), 400
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "דירוג לא תקין"}), 400
+
+    db = firestore.client()
+    song_ref = db.collection("songs").document(song_id)
+    if not song_ref.get().exists:
+        return jsonify({"success": False, "error": "שיר לא נמצא"}), 404
+
+    user_id = session["user_id"]
+    ratings_ref = db.collection("song_ratings").where("user_id", "==", user_id).where("song_id", "==", song_id).limit(1).get()
+
+    if ratings_ref:
+        ratings_ref[0].reference.update({"rating": rating, "updated_at": datetime.utcnow()})
+    else:
+        db.collection("song_ratings").add({
+            "user_id": user_id,
+            "song_id": song_id,
+            "rating": rating,
+            "created_at": datetime.utcnow()
+        })
+
+    # Recompute avg_rating for song
+    all_ratings = db.collection("song_ratings").where("song_id", "==", song_id).stream()
+    ratings_list = [r.to_dict().get("rating", 0) for r in all_ratings]
+    avg_rating = round(sum(ratings_list) / len(ratings_list), 1) if ratings_list else 0
+    song_ref.update({"avg_rating": avg_rating})
+
+    return jsonify({"success": True, "avg_rating": avg_rating})
+
 # =============================================================================
 # API ENDPOINTS - SONG DATA ACCESS
 # =============================================================================
@@ -406,10 +536,10 @@ def get_song_data(song_id):
         return jsonify({"error": "Song not found"}), 404
 
     song = doc.to_dict()
-    user_roles = session.get("roles", [])
+    user_roles = get_roles(session)
 
     # בדוק הרשאות עריכה
-    if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+    if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
         return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
 
     # Parse chords safely
@@ -457,10 +587,10 @@ def get_song_complete_data(song_id):
             return jsonify({"error": "Song not found"}), 404
 
         song = doc.to_dict()
-        user_roles = session.get("roles", [])
+        user_roles = get_roles(session)
 
         # בדוק הרשאות עריכה
-        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
             return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
 
         # Parse chords safely
@@ -534,10 +664,10 @@ def update_song_chords_loops(song_id):
             return jsonify({"error": "Song not found"}), 404
 
         song = doc.to_dict()
-        user_roles = session.get("roles", [])
+        user_roles = get_roles(session)
 
         # בדוק הרשאות עריכה
-        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
             return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
 
         data = request.get_json()
@@ -581,8 +711,8 @@ def create_song_with_chords_loops():
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized - please login"}), 401
 
-    user_roles = session.get("roles", [])
-    if not ("teacher" in user_roles or "admin" in user_roles):
+    user_roles = get_roles(session)
+    if not can_upload_songs(user_roles):
         return jsonify({"error": "Unauthorized - insufficient permissions"}), 403
 
     try:
@@ -640,10 +770,10 @@ def get_song_loops(song_id):
             return jsonify({"error": "Song not found"}), 404
 
         song = doc.to_dict()
-        user_roles = session.get("roles", [])
+        user_roles = get_roles(session)
 
         # בדוק הרשאות קריאה
-        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
             return jsonify({"error": "Unauthorized - you can only access your own songs"}), 403
 
         # Parse loops safely
@@ -681,10 +811,10 @@ def get_song_structure(song_id):
             return jsonify({"error": "Song not found"}), 404
 
         song = doc.to_dict()
-        user_roles = session.get("roles", [])
+        user_roles = get_roles(session)
 
         # בדוק הרשאות קריאה
-        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
             return jsonify({"error": "Unauthorized - you can only access your own songs"}), 403
 
         # Parse song structure safely
@@ -722,10 +852,10 @@ def update_song_structure(song_id):
             return jsonify({"error": "Song not found"}), 404
 
         song = doc.to_dict()
-        user_roles = session.get("roles", [])
+        user_roles = get_roles(session)
 
         # בדוק הרשאות עריכה
-        if song.get("created_by") != session["user_id"] and "admin" not in user_roles:
+        if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
             return jsonify({"error": "Unauthorized - you can only edit your own songs"}), 403
 
         data = request.get_json()
