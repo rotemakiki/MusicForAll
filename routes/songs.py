@@ -28,7 +28,7 @@ def youtube_watch_url(url):
 
 
 def youtube_embed_url(url):
-    """מחזיר כתובת הטמעה נקייה ל־iframe. משתמש ב־youtube-nocookie.com כדי למקסם סיכוי שהסרטון ינוגן באתר."""
+    """מחזיר כתובת הטמעה ל־iframe. youtube-nocookie.com עם referrerpolicy תקין."""
     vid = youtube_video_id(url)
     if vid:
         return f"https://www.youtube-nocookie.com/embed/{vid}?rel=0"
@@ -257,6 +257,14 @@ def play_song(song_id):
     # כתובת הטמעה לנגן באתר (youtube-nocookie.com – מגדילה סיכוי שהסרטון ינוגן)
     video_embed_url = youtube_embed_url(video_url) if video_url else ""
     tutorial_embed_url = youtube_embed_url(tutorial_url) if tutorial_url else ""
+    # #region agent log
+    try:
+        vid = youtube_video_id(video_url) if video_url else None
+        log_line = json.dumps({"id": "log_play_song_embed", "timestamp": int(datetime.now().timestamp() * 1000), "location": "songs.py:play_song", "message": "video embed url built", "data": {"video_url": video_url[:80] if video_url else "", "vid": vid, "video_embed_url": (video_embed_url[:80] if video_embed_url else "")}, "hypothesisId": "A"}) + "\n"
+        open(r"c:\Users\rotem\Desktop\MusicForAll\.cursor\debug.log", "a", encoding="utf-8").write(log_line)
+    except Exception:
+        pass
+    # #endregion
     # העברת כל הנתונים הנדרשים לטמפלייט המעודכן
     return render_template("play_song.html", song={
         "id": song_id,
@@ -284,7 +292,7 @@ def play_song(song_id):
         "loops": loops_data,
         "beats": beats_per_measure,
         "created_by": song.get("created_by", None)
-    }, can_watch_videos=can_watch_videos)
+    }, can_watch_videos=can_watch_videos, is_localhost=request.host.startswith("localhost") or "127.0.0.1" in request.host)
 
 # Legacy chord route - redirect to player
 @songs_bp.route('/chords/<string:song_id>')

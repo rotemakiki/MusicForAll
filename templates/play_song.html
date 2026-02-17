@@ -109,6 +109,9 @@
                     {% if song.video_watch_url %}
                     <p class="youtube-fallback-hint">אם הסרטון לא מתנגן כאן (הגבלת הטמעה), <a href="{{ song.video_watch_url }}" target="_blank" rel="noopener noreferrer">לחץ לצפייה ב-YouTube</a>.</p>
                     {% endif %}
+                    {% if is_localhost %}
+                    <p class="youtube-localhost-hint">אתה גולש מ-localhost. יוטיוב לא מאפשר הטמעה מכאן; בפרודקשן או דרך <a href="https://ngrok.com" target="_blank" rel="noopener">ngrok</a> הסרטונים אמורים להתנגן.</p>
+                    {% endif %}
                 </div>
                 {% if song.tutorial_video_url %}
                 <button onclick="toggleTutorialPlayer()" class="youtube-toggle-btn" style="margin-top: 10px;">
@@ -376,9 +379,16 @@
             iframe.src = '';
         } else {
             container.style.display = 'block';
-            if (!iframe.src && iframe.dataset.src) {
+            // #region agent log
+            var _iframeSrcBefore = iframe.src || '';
+            var _datasetSrc = iframe.dataset.src || '';
+            // #endregion
+            if (iframe.dataset.src) {
                 iframe.src = iframe.dataset.src;
             }
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'play_song.html:toggleYouTubePlayer',message:'youtube player opened',data:{iframeSrcBefore:_iframeSrcBefore,datasetSrc:_datasetSrc,iframeSrcAfter:iframe.src||''},timestamp:Date.now(),hypothesisId:'B','runId':'post-fix'})}).catch(function(){});
+            // #endregion
         }
     }
 
@@ -393,7 +403,7 @@
             iframe.src = '';
         } else {
             container.style.display = 'block';
-            if (!iframe.src && iframe.dataset.src) {
+            if (iframe.dataset.src) {
                 iframe.src = iframe.dataset.src;
             }
         }

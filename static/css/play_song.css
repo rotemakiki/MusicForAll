@@ -217,6 +217,20 @@ body {
     color: #9eceff;
 }
 
+.youtube-localhost-hint {
+    margin: 6px 0 0;
+    padding: 6px 8px;
+    font-size: 11px;
+    color: #8a7a2e;
+    text-align: center;
+    background: rgba(255, 235, 150, 0.2);
+    border-radius: 6px;
+}
+.youtube-localhost-hint a {
+    color: #b8922e;
+    text-decoration: underline;
+}
+
 .close-youtube-btn {
     position: absolute;
     top: 6px;
