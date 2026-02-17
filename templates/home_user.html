@@ -7,29 +7,31 @@
 {% endblock %}
 
 {% block content %}
+{% set stats = stats or {} %}
+{% set user_stats = user_stats or {} %}
 <div class="home-user-container">
     <!-- Welcome Header -->
     <div class="welcome-header">
         <h1 class="welcome-title">🎵 ברוך הבא, {{ session.get('username') }}! 🎶</h1>
         <p class="welcome-subtitle">מוכן להמשיך את המסע המוזיקלי שלך? בואו נראה מה חדש</p>
 
-        <!-- Quick Stats -->
+        <!-- Quick Stats - מספרים אמיתיים -->
         <div class="quick-stats">
             <div class="stat-item">
-                <div class="stat-number">12</div>
-                <div class="stat-label">שירים ברשימה</div>
+                <div class="stat-number">{{ user_stats.get('my_songs_count', 0) }}</div>
+                <div class="stat-label">שירים ברשימה שלי</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">8</div>
-                <div class="stat-label">שיעורים שנצפו</div>
+                <div class="stat-number">{{ stats.get('videos_count', 0) }}</div>
+                <div class="stat-label">שיעורים באתר</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">5</div>
-                <div class="stat-label">ימי רצף תרגול</div>
+                <div class="stat-number">{{ stats.get('songs_count', 0) }}</div>
+                <div class="stat-label">שירים באתר</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">23</div>
-                <div class="stat-label">דקות היום</div>
+                <div class="stat-number">{{ stats.get('courses_count', 0) }}</div>
+                <div class="stat-label">קורסים זמינים</div>
             </div>
         </div>
 
@@ -49,149 +51,47 @@
             </a>
         </div>
 
-        <!-- Progress Indicator -->
+        <!-- Progress - בהמשך יתווסף מעקב התקדמות -->
         <div class="progress-indicator">
             <div class="progress-title">
                 <span>📊</span>
-                <span>ההתקדמות שלך השבוע</span>
+                <span>סיכום מהיר</span>
             </div>
-            <div class="progress-bars">
-                <div class="progress-item">
-                    <div class="progress-label">תרגול יומי</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" data-progress="75"></div>
-                    </div>
-                    <div class="progress-percentage">75%</div>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-label">שירים חדשים</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" data-progress="60"></div>
-                    </div>
-                    <div class="progress-percentage">60%</div>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-label">שיעורים</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" data-progress="40"></div>
-                    </div>
-                    <div class="progress-percentage">40%</div>
-                </div>
-            </div>
+            <p style="margin: 0; opacity: 0.9;">יש לך {{ user_stats.get('my_songs_count', 0) }} שירים ברשימה. גלה שירים חדשים, הוסף לרשימה ותתרגל בנגן.</p>
         </div>
     </div>
 
-    <!-- Started Videos Section -->
+    <!-- שיעורים וסרטונים -->
     <div class="video-section">
         <div class="section-header">
             <div>
                 <h2 class="section-title">
                     <span>🎬</span>
-                    <span>המשך מאיפה שעצרת</span>
+                    <span>שיעורים וסרטונים</span>
                 </h2>
-                <p class="section-subtitle">שיעורים שהתחלת לצפות בהם</p>
+                <p class="section-subtitle">שיעורי מוזיקה מהמורים שלנו</p>
             </div>
             <a href="{{ url_for('videos.videos') }}" class="view-all-btn">
                 <span>👁️</span>
-                <span>צפייה בכל השיעורים</span>
+                <span>לעמוד השיעורים</span>
             </a>
         </div>
-
         <div class="video-scroll-wrapper">
-            <button class="scroll-arrow scroll-right" onclick="scrollVideos('started-videos', -400)">
-                ➡️
-            </button>
-            <button class="scroll-arrow scroll-left" onclick="scrollVideos('started-videos', 400)">
-                ⬅️
-            </button>
-
             <div class="video-scroll-container" id="started-videos">
                 <div class="video-grid">
-                    {% for i in range(8) %}
-                    <div class="video-card">
-                        <video preload="metadata" poster="{{ url_for('static', filename='images/video-placeholder.jpg') }}">
-                            <source src="{{ url_for('static', filename='videos/sample.mp4') }}" type="video/mp4">
-                            הדפדפן שלך לא תומך בווידאו.
-                        </video>
-                        <div class="video-info">
-                            <h3 class="video-title">שיעור {{ i + 1 }}: יסודות גיטרה</h3>
-                            <div class="video-meta">
-                                <span>⏱️ 15:32</span>
-                                <span>👁️ 234 צפיות</span>
-                                <span>📅 שבוע שעבר</span>
-                            </div>
-                            <p class="video-description">למד את היסודות הבסיסיים של נגינה בגיטרה עם טכניקות מתקדמות לשיפור הביצוע.</p>
-                            <div class="video-actions">
-                                <a href="#" class="video-btn" onclick="openVideoModal('{{ url_for('static', filename='videos/sample.mp4') }}', 'שיעור {{ i + 1 }}: יסודות גיטרה')">
-                                    <span>▶️</span>
-                                    <span>המשך צפייה</span>
-                                </a>
-                                <a href="#" class="video-btn secondary">
-                                    <span>📝</span>
-                                    <span>רשימת נגינה</span>
-                                </a>
-                            </div>
-                        </div>
+                    {% if stats.get('videos_count', 0) > 0 %}
+                    <p style="grid-column: 1/-1; margin: 1rem 0;">יש {{ stats.get('videos_count', 0) }} שיעורים זמינים. <a href="{{ url_for('videos.videos') }}">צפה בכולם</a>.</p>
+                    {% else %}
+                    <div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; grid-column: 1/-1;">
+                        <div class="empty-icon" style="font-size: 3rem; margin-bottom: 1rem;">🎬</div>
+                        <h3 style="margin: 0 0 0.5rem;">שיעורים יופיעו כאן בהמשך</h3>
+                        <p style="margin: 0 0 1rem; opacity: 0.9;">בינתיים אפשר לגלות שירים, מורים וקורסים.</p>
+                        <a href="{{ url_for('courses.courses_list') }}" class="action-btn">
+                            <span>📚</span>
+                            <span>עיין בקורסים</span>
+                        </a>
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recommended Videos Section -->
-    <div class="video-section">
-        <div class="section-header">
-            <div>
-                <h2 class="section-title">
-                    <span>🎯</span>
-                    <span>מומלץ בשבילך</span>
-                </h2>
-                <p class="section-subtitle">בהתאם לתחומי העניין והרמה שלך</p>
-            </div>
-            <a href="{{ url_for('videos.videos') }}" class="view-all-btn">
-                <span>🔍</span>
-                <span>גלה עוד תוכן</span>
-            </a>
-        </div>
-
-        <div class="video-scroll-wrapper">
-            <button class="scroll-arrow scroll-right" onclick="scrollVideos('recommended-videos', -400)">
-                ➡️
-            </button>
-            <button class="scroll-arrow scroll-left" onclick="scrollVideos('recommended-videos', 400)">
-                ⬅️
-            </button>
-
-            <div class="video-scroll-container" id="recommended-videos">
-                <div class="video-grid">
-                    {% for i in range(10) %}
-                    <div class="video-card">
-                        <video preload="metadata" poster="{{ url_for('static', filename='images/video-placeholder.jpg') }}">
-                            <source src="{{ url_for('static', filename='videos/sample.mp4') }}" type="video/mp4">
-                            הדפדפן שלך לא תומך בווידאו.
-                        </video>
-                        <div class="video-info">
-                            <h3 class="video-title">{{ ['טכניקות נגינה מתקדמות', 'אקורדים בסיסיים', 'ריתם וחזרה', 'סולואים קלאסיים', 'נגינה בקבוצה', 'עיבוד שירים', 'תיאוריה מוזיקלית', 'אימפרוביזציה', 'רקורדינג ביתי', 'הופעה חיה'][i] }}</h3>
-                            <div class="video-meta">
-                                <span>⏱️ {{ [12, 18, 25, 8, 33, 15, 22, 19, 28, 16][i] }}:{{ [30, 45, 12, 55, 22, 38, 15, 50, 33, 42][i] }}</span>
-                                <span>👁️ {{ [156, 289, 412, 95, 367, 203, 178, 334, 445, 267][i] }} צפיות</span>
-                                <span>⭐ {{ [4.8, 4.6, 4.9, 4.7, 4.5, 4.8, 4.9, 4.6, 4.7, 4.8][i] }}</span>
-                            </div>
-                            <p class="video-description">{{ ['שיפור טכניקות הנגינה שלך עם תרגילים מעשיים ומתקדמים', 'למד אקורדים בסיסיים שיעזרו לך לנגן רוב השירים', 'תרגול ריתם וחזרה לשיפור הביצוע המוזיקלי', 'סולואים קלאסיים מהמורשת המוזיקלית העולמית', 'טכניקות נגינה בקבוצה ותיאום מוזיקלי', 'איך לעבד שירים קיימים בסגנון אישי', 'יסודות התיאוריה המוזיקלית הכרחיים', 'פיתוח כישורי אימפרוביזציה מתקדמים', 'הקלטה ביתית באיכות מקצועית', 'הכנה והופעה מול קהל'][i] }}</p>
-                            <div class="video-actions">
-                                <a href="#" class="video-btn" onclick="openVideoModal('{{ url_for('static', filename='videos/sample.mp4') }}', '{{ ['טכניקות נגינה מתקדמות', 'אקורדים בסיסיים', 'ריתם וחזרה', 'סולואים קלאסיים', 'נגינה בקבוצה', 'עיבוד שירים', 'תיאוריה מוזיקלית', 'אימפרוביזציה', 'רקורדינג ביתי', 'הופעה חיה'][i] }}')">
-                                    <span>▶️</span>
-                                    <span>צפה עכשיו</span>
-                                </a>
-                                <a href="#" class="video-btn secondary">
-                                    <span>⭐</span>
-                                    <span>שמור למועדפים</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </div>

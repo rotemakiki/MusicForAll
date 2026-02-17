@@ -297,29 +297,10 @@ function initButtonEffects() {
     });
 }
 
-// Dynamic stats loading
-function loadStats() {
-    // Simulate API call for real stats
-    const stats = [
-        { element: '.stat-songs', value: 150 },
-        { element: '.stat-teachers', value: 25 },
-        { element: '.stat-students', value: 500 },
-        { element: '.stat-lessons', value: 1200 }
-    ];
-
-    stats.forEach(stat => {
-        const element = document.querySelector(stat.element);
-        if (element) {
-            element.setAttribute('data-target', stat.value);
-        }
-    });
-}
-
-// Initialize all features when page loads
+// Initialize all features when page loads (stats come from server - data-target already set in HTML)
 window.addEventListener('load', function() {
     initButtonEffects();
     initSmoothScroll();
-    loadStats();
 });
 
 // Add some keyboard shortcuts for better UX
@@ -347,7 +328,7 @@ document.addEventListener('keydown', function(e) {
 
 // Add console welcome message
 console.log(`
-🎵 ברוכים הבאים ל-Musica For All! 🎵
+🎵 ברוכים הבאים למוזיקה לכולם! 🎵
 Keyboard shortcuts:
 - L: Login
 - R: Register

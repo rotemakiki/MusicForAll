@@ -259,13 +259,58 @@ def api_status():
 # דף הבית ונתיבים בסיסיים
 # =============================================================================
 
+def get_home_stats():
+    """מחזיר ספירות אמיתיות מ-Firestore לתצוגה בעמוד הבית."""
+    try:
+        from firebase_admin import firestore
+        db = firestore.client()
+        songs_count = len(list(db.collection("songs").stream()))
+        users = list(db.collection("users").stream())
+        teachers_count = sum(1 for d in users if "teacher" in (d.to_dict().get("roles") or []))
+        students_count = sum(1 for d in users if "student" in (d.to_dict().get("roles") or []))
+        courses_docs = list(db.collection("courses").where("is_published", "==", True).stream())
+        courses_count = len(courses_docs)
+        lessons_count = sum(len((d.to_dict() or {}).get("lessons") or []) for d in courses_docs)
+        videos_count = len(list(db.collection("videos").stream()))
+        return {
+            "songs_count": songs_count,
+            "teachers_count": teachers_count,
+            "students_count": students_count,
+            "courses_count": courses_count,
+            "lessons_count": lessons_count,
+            "videos_count": videos_count,
+        }
+    except Exception:
+        return {
+            "songs_count": 0,
+            "teachers_count": 0,
+            "students_count": 0,
+            "courses_count": 0,
+            "lessons_count": 0,
+            "videos_count": 0,
+        }
+
+
 @app.route('/')
 def home():
     """דף הבית"""
+    stats = get_home_stats()
     if 'user_id' in session:
-        return render_template('home_user.html')
+        user_stats = get_user_home_stats(session['user_id'])
+        return render_template('home_user.html', stats=stats, user_stats=user_stats)
     else:
-        return render_template('home_guest.html')
+        return render_template('home_guest.html', stats=stats)
+
+
+def get_user_home_stats(user_id):
+    """ספירות אישיות למשתמש מחובר (רשימת שירים שלי וכו')."""
+    try:
+        from firebase_admin import firestore
+        db = firestore.client()
+        my_songs_count = len(list(db.collection("my_songs").where("user_id", "==", user_id).stream()))
+        return {"my_songs_count": my_songs_count}
+    except Exception:
+        return {"my_songs_count": 0}
 
 
 @app.route('/api/session-info')

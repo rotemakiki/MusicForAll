@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}ברוכים הבאים - Musica For All{% endblock %}
+{% block title %}ברוכים הבאים - מוזיקה לכולם{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home_guest.css') }}">
 {% endblock %}
 
 {% block content %}
+{% set stats = stats or {} %}
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-content">
-        <h1 class="hero-title">🎵 Musica For All 🎶</h1>
-        <p class="hero-subtitle">פלטפורמה שיתופית ללימוד והוראת מוזיקה • מורים מקצועיים • שיעורים אינטראקטיביים • קהילה מוזיקלית</p>
+        <h1 class="hero-title">🎵 מוזיקה לכולם 🎶</h1>
+        <p class="hero-subtitle">פלטפורמה ללימוד והוראת מוזיקה • שירים עם אקורדים • מורים וקורסים • קהילה מוזיקלית</p>
 
         <div class="hero-buttons">
             <a href="{{ url_for('auth.register') }}" class="hero-btn primary">
@@ -41,8 +42,8 @@
 <section class="features-section">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">למה Musica For All?</h2>
-            <p class="section-subtitle">הפלטפורמה המתקדמת ביותר ללימוד מוזיקה בישראל</p>
+            <h2 class="section-title">למה מוזיקה לכולם?</h2>
+            <p class="section-subtitle">פלטפורמה ללימוד מוזיקה עם שירים, אקורדים, מורים וקורסים</p>
         </div>
 
         <div class="features-grid">
@@ -66,14 +67,14 @@
 
             <div class="feature-card">
                 <span class="feature-icon">🎵</span>
-                <h3 class="feature-title">ספריית שירים ענקית</h3>
-                <p class="feature-description">מאות שירים עם אקורדים מדויקים, הדרכות וידאו, ואפשרות לנגן עם מטרונום. מכל הסגנונות והתקופות.</p>
+                <h3 class="feature-title">ספריית שירים</h3>
+                <p class="feature-description">שירים עם אקורדים וטאבים, הדרכות וידאו ואפשרות לנגן עם מטרונום. הספרייה גדלה כל הזמן עם תוכן חדש.</p>
             </div>
 
             <div class="feature-card">
                 <span class="feature-icon">👥</span>
                 <h3 class="feature-title">קהילה מוזיקלית</h3>
-                <p class="feature-description">הצטרף לקהילה של אלפי מוזיקאים, שתף יצירות, קבל המלצות ולמד יחד עם אחרים. מוזיקה היא חוויה חברתית!</p>
+                <p class="feature-description">הצטרף לקהילה של לומדי מוזיקה ומורים, שתף שירים, קבל המלצות ולמד בקצב שלך.</p>
             </div>
 
             <div class="feature-card">
@@ -85,25 +86,25 @@
     </div>
 </section>
 
-<!-- Stats Section -->
+<!-- Stats Section - מספרים אמיתיים מה-DB -->
 <section class="stats-section">
     <div class="container">
         <div class="stats-grid">
             <div class="stat-item">
-                <span class="stat-number stat-songs" data-target="150">0</span>
+                <span class="stat-number stat-songs" data-target="{{ stats.get('songs_count', 0) }}">0</span>
                 <span class="stat-label">שירים באתר</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number stat-teachers" data-target="25">0</span>
-                <span class="stat-label">מורים מקצועיים</span>
+                <span class="stat-number stat-teachers" data-target="{{ stats.get('teachers_count', 0) }}">0</span>
+                <span class="stat-label">מורים</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number stat-students" data-target="500">0</span>
-                <span class="stat-label">תלמידים פעילים</span>
+                <span class="stat-number stat-students" data-target="{{ stats.get('students_count', 0) }}">0</span>
+                <span class="stat-label">תלמידים רשומים</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number stat-lessons" data-target="1200">0</span>
-                <span class="stat-label">שיעורים הועברו</span>
+                <span class="stat-number stat-lessons" data-target="{{ stats.get('courses_count', 0) }}">0</span>
+                <span class="stat-label">קורסים זמינים</span>
             </div>
         </div>
     </div>
