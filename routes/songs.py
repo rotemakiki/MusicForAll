@@ -121,9 +121,13 @@ def edit_song(song_id):
             "artist": data.get("artist"),
             "key": data.get("key"),
             "key_type": data.get("key_type"),
+            "secondary_key": data.get("secondary_key", ""),
+            "secondary_key_type": data.get("secondary_key_type", ""),
             "time_signature": data.get("time_signature"),
             "bpm": int(data.get("bpm", 120)),
-            "video_url": data.get("video_url")
+            "video_url": data.get("video_url"),
+            "song_version": data.get("song_version", ""),
+            "original_artist": data.get("original_artist", "")
         }
         firestore.client().collection("songs").document(song_id).update(updated_fields)
         flash("🎵 השיר עודכן בהצלחה!", "success")
@@ -262,6 +266,8 @@ def play_song(song_id):
         "genres": song["display_genres"],  # New field for multiple genres
         "key": song["key"],
         "key_type": song["key_type"],
+        "secondary_key": song.get("secondary_key", ""),
+        "secondary_key_type": song.get("secondary_key_type", ""),
         "difficulty": song.get("difficulty", ""),
         "difficulty_approved": song.get("difficulty_approved", False),
         "time_signature": song["time_signature"],
@@ -372,6 +378,8 @@ def add_song():
         "genres": genres_data,  # Store as array
         "key": data["key"],
         "key_type": data["key_type"],
+        "secondary_key": data.get("secondary_key", ""),  # Optional - for songs with multiple keys
+        "secondary_key_type": data.get("secondary_key_type", ""),
         "difficulty": data["difficulty"],
         "difficulty_approved": False,
         "time_signature": data["time_signature"],
@@ -426,6 +434,8 @@ def edit_song_api(song_id):
         "genres": genres_data,  # Store as array
         "key": data["key"],
         "key_type": data["key_type"],
+        "secondary_key": data.get("secondary_key", ""),
+        "secondary_key_type": data.get("secondary_key_type", ""),
         "difficulty": data["difficulty"],
         "time_signature": data["time_signature"],
         "bpm": int(data["bpm"]),
@@ -733,6 +743,8 @@ def create_song_with_chords_loops():
             "genres": data.get("genres", []),  # Support multiple genres
             "key": data.get("key", "C"),
             "key_type": data.get("key_type", "major"),
+            "secondary_key": data.get("secondary_key", ""),
+            "secondary_key_type": data.get("secondary_key_type", ""),
             "difficulty": data.get("difficulty", ""),
             "difficulty_approved": False,
             "time_signature": data.get("time_signature", "4/4"),

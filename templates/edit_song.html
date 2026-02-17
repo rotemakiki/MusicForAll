@@ -18,7 +18,7 @@
         <!-- Current Song Info -->
         <div class="song-info">
             <h3>🎵 {{ song.title }} - {{ song.artist }}</h3>
-            <p><strong>סולם נוכחי:</strong> {{ song.key }} ({{ song.key_type }})</p>
+            <p><strong>סולם נוכחי:</strong> {{ song.key }} ({{ song.key_type }}){% if song.get('secondary_key') %} / סולם משני: {{ song.secondary_key }} ({{ song.secondary_key_type }}){% endif %}</p>
             <p><strong>מקצב:</strong> {{ song.time_signature }} | <strong>BPM:</strong> {{ song.bpm }}</p>
         </div>
 
@@ -184,6 +184,63 @@
                             <option value="octatonic" {% if song.key_type == 'octatonic' %}selected{% endif %}>אוקטטוני / דימינישד - Octatonic / Diminished</option>
                         </select>
                         <div class="field-validation" id="key_type-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="secondary_key">
+                            <span class="label-icon">🔑</span>
+                            סולם משני (אופציונלי)
+                        </label>
+                        <select id="secondary_key" name="secondary_key" class="form-select">
+                            <option value="">ללא סולם משני</option>
+                            <option value="C" {% if song.get('secondary_key') == 'C' %}selected{% endif %}>דו - C</option>
+                            <option value="C#" {% if song.get('secondary_key') == 'C#' %}selected{% endif %}>דו דיאז - C#</option>
+                            <option value="Db" {% if song.get('secondary_key') == 'Db' %}selected{% endif %}>רה במול - Db</option>
+                            <option value="D" {% if song.get('secondary_key') == 'D' %}selected{% endif %}>רה - D</option>
+                            <option value="D#" {% if song.get('secondary_key') == 'D#' %}selected{% endif %}>רה דיאז - D#</option>
+                            <option value="Eb" {% if song.get('secondary_key') == 'Eb' %}selected{% endif %}>מי במול - Eb</option>
+                            <option value="E" {% if song.get('secondary_key') == 'E' %}selected{% endif %}>מי - E</option>
+                            <option value="F" {% if song.get('secondary_key') == 'F' %}selected{% endif %}>פה - F</option>
+                            <option value="F#" {% if song.get('secondary_key') == 'F#' %}selected{% endif %}>פה דיאז - F#</option>
+                            <option value="Gb" {% if song.get('secondary_key') == 'Gb' %}selected{% endif %}>סול במול - Gb</option>
+                            <option value="G" {% if song.get('secondary_key') == 'G' %}selected{% endif %}>סול - G</option>
+                            <option value="G#" {% if song.get('secondary_key') == 'G#' %}selected{% endif %}>סול דיאז - G#</option>
+                            <option value="Ab" {% if song.get('secondary_key') == 'Ab' %}selected{% endif %}>לה במול - Ab</option>
+                            <option value="A" {% if song.get('secondary_key') == 'A' %}selected{% endif %}>לה - A</option>
+                            <option value="A#" {% if song.get('secondary_key') == 'A#' %}selected{% endif %}>לה דיאז - A#</option>
+                            <option value="Bb" {% if song.get('secondary_key') == 'Bb' %}selected{% endif %}>סי במול - Bb</option>
+                            <option value="B" {% if song.get('secondary_key') == 'B' %}selected{% endif %}>סי - B</option>
+                        </select>
+                        <div class="input-hint">לשירים עם שילוב סולמות</div>
+                        <div class="field-validation" id="secondary_key-validation"></div>
+                    </div>
+
+                    <div class="form-group" id="secondary_key_type_group">
+                        <label class="form-label" for="secondary_key_type">
+                            <span class="label-icon">🎹</span>
+                            סוג סולם משני
+                        </label>
+                        <select id="secondary_key_type" name="secondary_key_type" class="form-select">
+                            <option value="">בחר סוג</option>
+                            <option value="major" {% if song.get('secondary_key_type') == 'major' %}selected{% endif %}>מז'ור - Major</option>
+                            <option value="natural_minor" {% if song.get('secondary_key_type') == 'natural_minor' %}selected{% endif %}>מינור טבעי - Natural Minor</option>
+                            <option value="harmonic_minor" {% if song.get('secondary_key_type') == 'harmonic_minor' %}selected{% endif %}>מינור הרמוני - Harmonic Minor</option>
+                            <option value="melodic_minor" {% if song.get('secondary_key_type') == 'melodic_minor' %}selected{% endif %}>מינור מלודי - Melodic Minor</option>
+                            <option value="ionian" {% if song.get('secondary_key_type') == 'ionian' %}selected{% endif %}>יוֹני - Ionian</option>
+                            <option value="dorian" {% if song.get('secondary_key_type') == 'dorian' %}selected{% endif %}>דוֹרי - Dorian</option>
+                            <option value="phrygian" {% if song.get('secondary_key_type') == 'phrygian' %}selected{% endif %}>פריגי - Phrygian</option>
+                            <option value="lydian" {% if song.get('secondary_key_type') == 'lydian' %}selected{% endif %}>לידי - Lydian</option>
+                            <option value="mixolydian" {% if song.get('secondary_key_type') == 'mixolydian' %}selected{% endif %}>מיקסולידי - Mixolydian</option>
+                            <option value="aeolian" {% if song.get('secondary_key_type') == 'aeolian' %}selected{% endif %}>אאולי - Aeolian</option>
+                            <option value="locrian" {% if song.get('secondary_key_type') == 'locrian' %}selected{% endif %}>לוֹקרי - Locrian</option>
+                            <option value="major_pentatonic" {% if song.get('secondary_key_type') == 'major_pentatonic' %}selected{% endif %}>פנטטוני מז'ורי - Major Pentatonic</option>
+                            <option value="minor_pentatonic" {% if song.get('secondary_key_type') == 'minor_pentatonic' %}selected{% endif %}>פנטטוני מינורי - Minor Pentatonic</option>
+                            <option value="chromatic" {% if song.get('secondary_key_type') == 'chromatic' %}selected{% endif %}>כרומטי - Chromatic</option>
+                            <option value="whole_tone" {% if song.get('secondary_key_type') == 'whole_tone' %}selected{% endif %}>שלם טונים - Whole Tone</option>
+                            <option value="blues" {% if song.get('secondary_key_type') == 'blues' %}selected{% endif %}>בלוז - Blues</option>
+                            <option value="octatonic" {% if song.get('secondary_key_type') == 'octatonic' %}selected{% endif %}>אוקטטוני / דימינישד - Octatonic / Diminished</option>
+                        </select>
+                        <div class="field-validation" id="secondary_key_type-validation"></div>
                     </div>
 
                     <div class="form-group">

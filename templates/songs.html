@@ -29,6 +29,33 @@
     font-size: 0.8rem;
 }
 
+/* Song version badge in list */
+.song-version-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 4px;
+    font-weight: 600;
+}
+.song-version-badge.version-cover {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+    color: white;
+}
+.song-version-badge.version-original {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+}
+.song-version-badge.version-live {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: #1a1a1a;
+}
+.song-version-cover-hint {
+    font-size: 0.85em;
+    color: #888;
+    font-weight: normal;
+}
+
 @media (max-width: 768px) {
     .genres-container {
         gap: 2px;
@@ -115,19 +142,32 @@
                      data-created-at="{{ song.created_at_iso }}"
                      data-in-my-list="{{ 'true' if song.in_my_list else 'false' }}"
                      data-watched="{{ 'true' if song.watched else 'false' }}"
-                     data-avg-rating="{{ song.avg_rating }}">
+                     data-avg-rating="{{ song.avg_rating }}"
+                     data-song-version="{{ song.get('song_version', '') }}">
 
                     <div class="song-row-content">
                         <div class="song-main-info">
                             <div class="song-title-artist">
                                 <h3 class="song-title">{{ song.title }}</h3>
-                                <p class="song-artist">{{ song.artist }}</p>
+                                <p class="song-artist">{{ song.artist }}
+                                    {% if song.get('song_version') == 'cover' and song.get('original_artist') %}
+                                        <span class="song-version-cover-hint">(קאבר של {{ song.original_artist }})</span>
+                                    {% endif %}
+                                </p>
+                                {% if song.get('song_version') %}
+                                <span class="song-version-badge version-{{ song.song_version }}" title="גרסת השיר">
+                                    {% if song.song_version == 'cover' %}קאבר
+                                    {% elif song.song_version == 'original' %}גרסת אלבום
+                                    {% elif song.song_version == 'live' %}הופעה חיה
+                                    {% else %}{{ song.song_version }}{% endif %}
+                                </span>
+                                {% endif %}
                             </div>
                             
                             <div class="song-meta-info">
                                 <div class="song-details-row">
                                     <span class="detail-badge">
-                                        🎼 {{ song.key }} {{ song.key_type }}
+                                        🎼 {{ song.key }} {{ song.key_type }}{% if song.get('secondary_key') and song.get('secondary_key_type') %} / {{ song.secondary_key }} {{ song.secondary_key_type }}{% endif %}
                                     </span>
                                     <span class="detail-badge">
                                         🎵 {{ song.time_signature }}
@@ -174,7 +214,7 @@
                                 </a>
                             {% endif %}
 
-                            {% if session.get('user_id') == song.created_by %}
+                            {% if session.get('user_id') == song.created_by or 'admin' in (session.get('roles') or []) %}
                                 <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
                                     <span>✏️</span>
                                     <span>ערוך</span>

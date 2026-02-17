@@ -119,8 +119,16 @@ class GuitarTuner {
     
     async startListening() {
         try {
-            // Request microphone access
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Request microphone access with RAW audio - no voice processing.
+            // Browsers default to echoCancellation + noiseSuppression + autoGainControl
+            // which filter out guitar and favor speech; we need the actual guitar sound.
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                }
+            });
             
             // Create audio context (must be after user gesture)
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();

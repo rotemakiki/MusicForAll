@@ -381,6 +381,8 @@ function saveFormData() {
         genres: JSON.stringify(genresToSave),
         key: document.getElementById("key").value,
         key_type: document.getElementById("key_type").value,
+        secondary_key: document.getElementById("secondary_key") ? document.getElementById("secondary_key").value : "",
+        secondary_key_type: document.getElementById("secondary_key_type") ? document.getElementById("secondary_key_type").value : "",
         difficulty: document.getElementById("difficulty").value,
         time_signature: document.getElementById("time_signature").value,
         bpm: document.getElementById("bpm").value,
@@ -640,6 +642,8 @@ function handleFormSubmission(event) {
         genres: selectedGenres, // שלח כמערך
         key: document.getElementById("key").value,
         key_type: document.getElementById("key_type").value,
+        secondary_key: document.getElementById("secondary_key") ? document.getElementById("secondary_key").value : "",
+        secondary_key_type: document.getElementById("secondary_key_type") ? document.getElementById("secondary_key_type").value : "",
         difficulty: document.getElementById("difficulty").value,
         time_signature: document.getElementById("time_signature").value,
         bpm: parseInt(document.getElementById("bpm").value),
@@ -871,7 +875,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 500);
 
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'difficulty', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {

@@ -32,7 +32,7 @@
                     </div>
 
                     <div class="song-details">
-                        <span class="detail-badge">🎼 {{ song.key }} {{ song.key_type }}</span>
+                        <span class="detail-badge">🎼 {{ song.key }} {{ song.key_type }}{% if song.get('secondary_key') and song.get('secondary_key_type') %} / {{ song.secondary_key }} {{ song.secondary_key_type }}{% endif %}</span>
                         <span class="detail-badge">🎵 {{ song.time_signature }}</span>
                         <span class="detail-badge">⚡ {{ song.bpm }} BPM</span>
                         {% if song.difficulty %}

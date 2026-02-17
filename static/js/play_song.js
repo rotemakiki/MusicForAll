@@ -1031,6 +1031,42 @@ function resetBpm() {
     document.getElementById("current-bpm").innerText = bpm;
 }
 
+function increaseBpm() {
+    const slider = document.getElementById("bpm-slider");
+    const input = document.getElementById("bpm-input");
+    let val = parseInt(input.value) || parseInt(slider.value) || bpm;
+    if (val < 200) {
+        val = Math.min(val + 1, 200);
+        slider.value = val;
+        input.value = val;
+        bpm = val;
+        intervalMs = 60000 / bpm;
+        document.getElementById("current-bpm").innerText = val;
+        if (interval) {
+            stopPlayback();
+            startPlayback();
+        }
+    }
+}
+
+function decreaseBpm() {
+    const slider = document.getElementById("bpm-slider");
+    const input = document.getElementById("bpm-input");
+    let val = parseInt(input.value) || parseInt(slider.value) || bpm;
+    if (val > 40) {
+        val = Math.max(val - 1, 40);
+        slider.value = val;
+        input.value = val;
+        bpm = val;
+        intervalMs = 60000 / bpm;
+        document.getElementById("current-bpm").innerText = val;
+        if (interval) {
+            stopPlayback();
+            startPlayback();
+        }
+    }
+}
+
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
     const bpmSlider = document.getElementById("bpm-slider");
@@ -1271,4 +1307,24 @@ function updateMySongsButton() {
 // Initialize my songs check when page loads
 if (typeof window.songData !== 'undefined') {
     checkIfSongInMyList();
+}
+
+// Delete current song (owner or admin) – used on play_song page
+async function deleteCurrentSong() {
+    const songId = window.songData?.songId;
+    const songTitle = window.songData?.songTitle || 'השיר';
+    if (!songId) return;
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את השיר "${songTitle}"?`)) return;
+    try {
+        const response = await fetch(`/api/delete_song/${songId}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (response.ok && data.message) {
+            window.location.href = '/songs';
+        } else {
+            alert(data.error || 'שגיאה במחיקת השיר');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('שגיאה במחיקת השיר');
+    }
 }

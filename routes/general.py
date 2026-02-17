@@ -8,6 +8,21 @@ from werkzeug.utils import secure_filename
 
 general_bp = Blueprint('general', __name__)
 
+def _get_firebase_storage_client():
+    """מחזיר Google Storage client עם נתיב קובץ credentials תקין (תומך בשורש הפרויקט ו-secrets/)."""
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    key_paths = [
+        os.path.join(project_root, "music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json"),
+        os.path.join(project_root, "secrets", "firebase-key.json"),
+    ]
+    for path in key_paths:
+        if os.path.exists(path):
+            return storage.Client.from_service_account_json(path)
+    raise FileNotFoundError(
+        "לא נמצא קובץ credentials ל-Firebase. בדוק ש-music-for-all-...json או secrets/firebase-key.json קיימים."
+    )
+
+
 @general_bp.route('/upload_profile_image', methods=['POST'])
 def upload_profile_image():
     if 'user_id' not in session:
@@ -16,40 +31,82 @@ def upload_profile_image():
 
     file = request.files.get('profile_image')
     user_id = request.form.get('user_id')
+    referrer = request.referrer or url_for('home')
 
-    if not file or not user_id:
-        flash("חסר קובץ או מזהה משתמש", "error")
-        return redirect(request.referrer)
+    if not file or not file.filename:
+        flash("חסר קובץ תמונה", "error")
+        return redirect(referrer)
+
+    if not user_id:
+        flash("חסר מזהה משתמש", "error")
+        return redirect(referrer)
 
     # רק המשתמש עצמו (או בעתיד אדמין) יכול לעדכן
     if session['user_id'] != user_id:
         flash("אין לך הרשאה לשנות תמונה זו", "error")
         return redirect(url_for('home'))
 
-    # שמירת הקובץ זמנית
-    TEMP_UPLOAD_FOLDER = "temp_uploads"
-    os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
+    # סוגי קבצים מותרים וגודל מקסימלי (5MB)
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    raw_name = file.filename
+    ext = (raw_name.rsplit(".", 1)[-1].lower()) if "." in raw_name else "jpg"
+    if ext not in allowed_extensions:
+        flash("סוג קובץ לא נתמך. השתמש בתמונה (PNG, JPG, GIF, WEBP)", "error")
+        return redirect(referrer)
+
     filename = secure_filename(file.filename)
-    temp_path = os.path.join(TEMP_UPLOAD_FOLDER, filename)
-    file.save(temp_path)
+    if not filename:
+        filename = f"image_{uuid.uuid4().hex}.{ext}"
 
-    # העלאה ל־Firebase Storage
-    storage_client = storage.Client.from_service_account_json("music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json")
-    bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
-    blob_name = f"profile_images/{user_id}_{uuid.uuid4().hex}_{filename}"
-    blob = bucket.blob(blob_name)
-    blob.upload_from_filename(temp_path)
-    blob.make_public()
+    TEMP_UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "temp_uploads")
+    os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
+    temp_path = os.path.join(TEMP_UPLOAD_FOLDER, f"{uuid.uuid4().hex}_{filename}")
 
-    # מחיקת הקובץ הזמני
-    os.remove(temp_path)
+    try:
+        file.save(temp_path)
 
-    # עדכון URL במסד
-    firestore.client().collection("users").document(user_id).update({
-        "profile_image": blob.public_url
-    })
+        # בדיקת גודל (5MB)
+        size = os.path.getsize(temp_path)
+        if size > 5 * 1024 * 1024:
+            raise ValueError("הקובץ גדול מדי (מקסימום 5MB)")
 
-    flash("📸 תמונת הפרופיל עודכנה בהצלחה!", "success")
+        storage_client = _get_firebase_storage_client()
+        bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
+        blob_name = f"profile_images/{user_id}_{uuid.uuid4().hex}_{filename}"
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(temp_path)
+        blob.make_public()
+
+        firestore.client().collection("users").document(user_id).update({
+            "profile_image": blob.public_url
+        })
+
+        # עדכון ה-session כדי שהתמונה תופיע מיד navbar
+        session["profile_image"] = blob.public_url
+
+        flash("📸 תמונת הפרופיל עודכנה בהצלחה!", "success")
+    except FileNotFoundError as e:
+        flash("שגיאה בהגדרת האחסון. אנא פנה למנהל המערכת.", "error")
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+        return redirect(referrer)
+    except Exception as e:
+        flash(f"שגיאה בהעלאת התמונה. נסה שוב. ({str(e)[:80]})", "error")
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+        return redirect(referrer)
+    finally:
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
 
     # הפניה אוטומטית לפרופיל הנכון
     roles = session.get("roles", [])

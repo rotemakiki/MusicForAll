@@ -194,6 +194,63 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label" for="secondary_key">
+                            <span class="label-icon">🔑</span>
+                            סולם משני (אופציונלי)
+                        </label>
+                        <select id="secondary_key" name="secondary_key" class="form-select">
+                            <option value="">ללא סולם משני</option>
+                            <option value="C">דו - C</option>
+                            <option value="C#">דו דיאז - C#</option>
+                            <option value="Db">רה במול - Db</option>
+                            <option value="D">רה - D</option>
+                            <option value="D#">רה דיאז - D#</option>
+                            <option value="Eb">מי במול - Eb</option>
+                            <option value="E">מי - E</option>
+                            <option value="F">פה - F</option>
+                            <option value="F#">פה דיאז - F#</option>
+                            <option value="Gb">סול במול - Gb</option>
+                            <option value="G">סול - G</option>
+                            <option value="G#">סול דיאז - G#</option>
+                            <option value="Ab">לה במול - Ab</option>
+                            <option value="A">לה - A</option>
+                            <option value="A#">לה דיאז - A#</option>
+                            <option value="Bb">סי במול - Bb</option>
+                            <option value="B">סי - B</option>
+                        </select>
+                        <div class="input-hint">לשירים עם שילוב סולמות (למשל פזמון בסולם אחר)</div>
+                        <div class="field-validation" id="secondary_key-validation"></div>
+                    </div>
+
+                    <div class="form-group" id="secondary_key_type_group">
+                        <label class="form-label" for="secondary_key_type">
+                            <span class="label-icon">🎹</span>
+                            סוג סולם משני
+                        </label>
+                        <select id="secondary_key_type" name="secondary_key_type" class="form-select">
+                            <option value="">בחר סוג</option>
+                            <option value="major">מז'ור - Major</option>
+                            <option value="natural_minor">מינור טבעי - Natural Minor</option>
+                            <option value="harmonic_minor">מינור הרמוני - Harmonic Minor</option>
+                            <option value="melodic_minor">מינור מלודי - Melodic Minor</option>
+                            <option value="ionian">יוֹני - Ionian</option>
+                            <option value="dorian">דוֹרי - Dorian</option>
+                            <option value="phrygian">פריגי - Phrygian</option>
+                            <option value="lydian">לידי - Lydian</option>
+                            <option value="mixolydian">מיקסולידי - Mixolydian</option>
+                            <option value="aeolian">אאולי - Aeolian</option>
+                            <option value="locrian">לוֹקרי - Locrian</option>
+                            <option value="major_pentatonic">פנטטוני מז'ורי - Major Pentatonic</option>
+                            <option value="minor_pentatonic">פנטטוני מינורי - Minor Pentatonic</option>
+                            <option value="chromatic">כרומטי - Chromatic</option>
+                            <option value="whole_tone">שלם טונים - Whole Tone</option>
+                            <option value="blues">בלוז - Blues</option>
+                            <option value="octatonic">אוקטטוני / דימינישד - Octatonic / Diminished</option>
+                        </select>
+                        <div class="field-validation" id="secondary_key_type-validation"></div>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label" for="difficulty">
                             <span class="label-icon">⭐</span>
                             רמת קושי

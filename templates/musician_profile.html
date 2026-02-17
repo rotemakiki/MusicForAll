@@ -81,7 +81,7 @@
                             <span>▶️</span>
                             <span>לעמוד השיר</span>
                         </a>
-                        {% if session.get('user_id') == musician.id %}
+                        {% if session.get('user_id') == musician.id or 'admin' in (session.get('roles') or []) %}
                         <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="video-btn">
                             <span>✏️</span>
                             <span>ערוך</span>

@@ -27,10 +27,27 @@
         <div class="header-row-2">
             <div class="song-details">
                 <div class="song-info-row">
+                    {% if song.song_version %}
+                    <span class="detail-item song-version-detail">
+                        <span class="detail-icon">🎬</span>
+                        <span class="detail-label">גרסת שיר:</span>
+                        <span class="detail-value">
+                            {% if song.song_version == 'cover' and song.original_artist %}
+                                קאבר (מקור: {{ song.original_artist }})
+                            {% elif song.song_version == 'original' %}
+                                גרסת אלבום (מקורית)
+                            {% elif song.song_version == 'live' %}
+                                גרסת הופעה חיה
+                            {% else %}
+                                {{ song.song_version }}
+                            {% endif %}
+                        </span>
+                    </span>
+                    {% endif %}
                     <span class="detail-item">
                         <span class="detail-icon">🎼</span>
                         <span class="detail-label">סולם:</span>
-                        <span class="detail-value">{{ song.key }} ({{ song.key_type }})</span>
+                        <span class="detail-value">{{ song.key }} ({{ song.key_type }}){% if song.secondary_key and song.secondary_key_type %} / סולם משני: {{ song.secondary_key }} ({{ song.secondary_key_type }}){% endif %}</span>
                     </span>
                     <span class="detail-item">
                         <span class="detail-icon">🎭</span>
@@ -119,11 +136,15 @@
 
             <!-- כפתורי פעולה -->
             <div class="action-buttons">
-                {% if session.get('user_id') == song.created_by %}
+                {% if session.get('user_id') == song.created_by or 'admin' in (session.get('roles') or []) %}
                 <a href="{{ url_for('songs.edit_song', song_id=song.id) }}" class="action-btn edit-btn">
                     <span>✏️</span>
                     <span>ערוך שיר</span>
                 </a>
+                <button type="button" onclick="deleteCurrentSong()" class="action-btn delete-btn" title="הסר שיר">
+                    <span>🗑️</span>
+                    <span>הסר שיר</span>
+                </button>
                 {% endif %}
                 <a href="{{ url_for('songs.songs') }}" class="action-btn list-btn">
                     <span>📚</span>
@@ -181,14 +202,18 @@
             </div>
 
             <!-- 2. מטרונום -->
-            <div class="control-group">
-                <label for="bpm-slider" class="control-label">
+            <div class="control-group bpm-control-group">
+                <label for="bpm-slider" class="control-label bpm-label">
                     <span class="control-icon">🥁</span>
                     מהירות (BPM)
                 </label>
                 <div class="bpm-controls">
                     <input type="range" id="bpm-slider" min="40" max="200" value="{{ song.bpm }}" class="bpm-slider">
-                    <input type="number" id="bpm-input" min="40" max="200" value="{{ song.bpm }}" class="bpm-input">
+                    <div class="bpm-input-row">
+                        <button onclick="decreaseBpm()" class="bpm-step-btn decrease" title="הקטן BPM">−</button>
+                        <input type="number" id="bpm-input" min="40" max="200" value="{{ song.bpm }}" class="bpm-input">
+                        <button onclick="increaseBpm()" class="bpm-step-btn" title="הגדל BPM">+</button>
+                    </div>
                     <button onclick="resetBpm()" class="reset-btn" title="אפס BPM למקורי">🔄</button>
                 </div>
             </div>
@@ -333,6 +358,7 @@
     // Pass data from Flask to JavaScript
     window.songData = {
         songId: "{{ song.id }}",
+        songTitle: {{ song.title | tojson }},
         chords: {{ song.chords | tojson }},
         loops: {{ song.loops | tojson }},
         originalBpm: {{ song.bpm }},
