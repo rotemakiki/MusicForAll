@@ -291,17 +291,15 @@ function buildAllMeasures() {
     allMeasures = [];
     let globalIndex = 0;
 
-    // הוסף תיבות הכנה (תיבה ראשונה = "הכנה", השאר ריקות)
+    // הוסף תיבות הכנה (כולן עם אותו מראה כתום; הראשונה "תיבה 0", הנוספות "תיבה ריקה" לתצוגה)
     if (addPreparationMeasure) {
         const count = Math.max(1, Math.min(8, preparationMeasuresCount));
         for (let i = 0; i < count; i++) {
             allMeasures.push({
                 globalIndex: globalIndex++,
                 isPreparation: true,
-                isEmptyPreparation: i > 0, // תיבה ריקה (בלי אקורד "הכנה")
-                chords: i === 0
-                    ? [{ chord: "הכנה", beats: beatsPerMeasure, width: beatsPerMeasure }]
-                    : [],
+                isEmptyPreparation: i > 0, // לכותרת בלבד – "תיבה ריקה" מול "תיבה 0 - הכנה"
+                chords: [{ chord: "הכנה", beats: beatsPerMeasure, width: beatsPerMeasure }],
                 totalBeats: beatsPerMeasure,
                 loopIndex: null,
                 repeatNumber: null,
@@ -608,9 +606,6 @@ function createMeasureElement(measureData) {
 
     if (measureData.isPreparation) {
         measureDiv.classList.add("preparation-measure");
-        if (measureData.isEmptyPreparation) {
-            measureDiv.classList.add("empty-measure");
-        }
     }
 
     // Style based on loop enabled state
@@ -865,6 +860,46 @@ function updateBeatDots() {
     }
 }
 
+/** עדכון מחלקות תיבות (נוכחית/עבר) בלי לבנות מחדש את כל ה-DOM */
+function updateMeasurePlaybackClasses() {
+    document.querySelectorAll(".measure-box.clickable").forEach((box) => {
+        const idx = parseInt(box.dataset.globalIndex, 10);
+        if (Number.isNaN(idx)) return;
+        box.classList.remove("current", "past");
+        if (!isPlaying) return;
+        if (idx === currentGlobalMeasureIndex) box.classList.add("current");
+        else if (idx < currentGlobalMeasureIndex) box.classList.add("past");
+    });
+}
+
+/** הדגשת לופ נוכחי בלי renderChords מלא */
+function updateLoopSectionHighlight() {
+    const measures = buildAllMeasures();
+    const currentMeasure = measures[currentGlobalMeasureIndex];
+    document.querySelectorAll(".loop-section:not(.preparation-section)").forEach((section) => {
+        section.classList.remove("current-repeat");
+        const li = section.dataset.loopIndex;
+        const rn = section.dataset.repeatNumber;
+        if (li === undefined || rn === undefined) return;
+        if (
+            currentMeasure &&
+            !currentMeasure.isPreparation &&
+            currentMeasure.loopIndex === parseInt(li, 10) &&
+            currentMeasure.repeatNumber === parseInt(rn, 10) &&
+            isPlaying
+        ) {
+            section.classList.add("current-repeat");
+        }
+    });
+}
+
+/** עדכון ויזואלי קל בזמן ניגון — חיוני בפרודקשן (לא חוסם את ה-main thread) */
+function syncPlaybackVisuals() {
+    updateBeatDots();
+    updateMeasurePlaybackClasses();
+    updateLoopSectionHighlight();
+}
+
 // Enhanced playback with proper measure and beat tracking + auto-scroll
 function startPlayback() {
     stopPlayback();
@@ -890,56 +925,58 @@ function startPlayback() {
     // Check if starting measure should be played
     const startMeasure = measures[currentGlobalMeasureIndex];
     if (startMeasure && startMeasure.loopIndex !== null && !enabledLoops.has(startMeasure.loopIndex)) {
-        // Skip to next enabled measure
         findNextEnabledMeasure(measures);
     }
 
-    // First beat - play immediately
-    setTimeout(() => {
-        playMetronome();
+    const startMetronomeAndInterval = () => {
+        if (!isPlaying) return;
+
         currentBeatInMeasure = 0;
-        updateBeatDots();
-        renderChords();
-        scrollToCurrentMeasure(); // גלילה אוטומטית
-    }, 100);
-
-    // Main interval
-    interval = setInterval(() => {
-        const currentMeasure = measures[currentGlobalMeasureIndex];
-
-        if (!currentMeasure) {
-            stopPlayback();
-            return;
-        }
-
-        // Check if current measure should be played
-        if (currentMeasure.loopIndex !== null && !enabledLoops.has(currentMeasure.loopIndex)) {
-            findNextEnabledMeasure(measures);
-            return;
-        }
-
-        currentBeatInMeasure++;
+        syncPlaybackVisuals();
+        updatePlayingInfo();
         playMetronome();
+        scrollToCurrentMeasure();
 
-        // Check if we've completed this measure
-        if (currentBeatInMeasure >= Math.round(currentMeasure.totalBeats)) {
-            currentGlobalMeasureIndex++;
-            currentBeatInMeasure = 0;
+        // מקצב אחיד: כל נקישה במרווח intervalMs מהנקישה הקודמת (בלי קפיצה של 100ms מול setInterval)
+        interval = setInterval(() => {
+            const currentMeasure = measures[currentGlobalMeasureIndex];
 
-            // Check if we've reached the end
-            if (currentGlobalMeasureIndex >= measures.length) {
+            if (!currentMeasure) {
                 stopPlayback();
                 return;
             }
 
-            // גלילה אוטומטית לתיבה הבאה
-            scrollToCurrentMeasure();
-        }
+            if (currentMeasure.loopIndex !== null && !enabledLoops.has(currentMeasure.loopIndex)) {
+                findNextEnabledMeasure(measures);
+                syncPlaybackVisuals();
+                updatePlayingInfo();
+                return;
+            }
 
-        updateBeatDots();
-        renderChords();
-        updatePlayingInfo();
-    }, intervalMs);
+            currentBeatInMeasure++;
+            playMetronome();
+
+            if (currentBeatInMeasure >= Math.round(currentMeasure.totalBeats)) {
+                currentGlobalMeasureIndex++;
+                currentBeatInMeasure = 0;
+
+                if (currentGlobalMeasureIndex >= measures.length) {
+                    stopPlayback();
+                    return;
+                }
+
+                scrollToCurrentMeasure();
+            }
+
+            syncPlaybackVisuals();
+            updatePlayingInfo();
+        }, intervalMs);
+    };
+
+    // אחרי בניית DOM: שני פריימים כדי שהדפדפן יצייר את הנקודות לפני הסאונד (במיוחד בפרודקשן)
+    requestAnimationFrame(() => {
+        requestAnimationFrame(startMetronomeAndInterval);
+    });
 }
 
 // Find next enabled measure
@@ -1233,6 +1270,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     updateTransposeInfo();
     renderChords();
+
+    // טעינת מוקדמת של המטרונום — בפרודקשן מפחית עיכוב בנקישה הראשונה
+    if (metronome) {
+        try {
+            metronome.load();
+        } catch (e) { /* ignore */ }
+    }
 
     // Show keyboard shortcuts hint
     console.log("Keyboard shortcuts:");

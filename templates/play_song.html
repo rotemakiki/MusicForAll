@@ -355,7 +355,7 @@
 <!-- Size Indicator -->
 <div id="size-indicator" class="size-indicator"></div>
 
-<audio id="metronome-sound" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
+<audio id="metronome-sound" preload="auto" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
 
 <script>
     // Pass data from Flask to JavaScript

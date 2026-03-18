@@ -1199,6 +1199,15 @@ input:checked + .preparation-slider:before {
     background: linear-gradient(145deg, #fff8e1, #fffde7);
 }
 
+/* אם תיבת הכנה סומנה בטעות כ-empty-measure – נשמור על מראה ברור */
+.measure-box.preparation-measure.empty-measure {
+    opacity: 1;
+    background: linear-gradient(145deg, #fff8e1, #fffde7);
+    border: 2px solid #ffc107;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
 .measure-box.disabled-measure {
     opacity: 0.6;
     border-style: dashed;
