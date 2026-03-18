@@ -311,6 +311,84 @@ body {
     color: #dc3545;
 }
 
+/* Musician Tools section (inside the main navbar) */
+.tools-menu-item {
+    padding: 0;
+}
+
+.tools-details {
+    direction: rtl;
+}
+
+.tools-details > summary {
+    list-style: none;
+}
+
+/* Hide default triangle marker */
+.tools-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.tools-summary {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+    padding: 18px 25px;
+    color: #2c3e50;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tools-summary:hover {
+    background: linear-gradient(135deg, #f0f8ff, #e8f4fd);
+    color: #667eea;
+    transform: translateX(5px);
+}
+
+.tools-summary i {
+    width: 20px;
+    text-align: center;
+    color: #667eea;
+}
+
+.tools-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tools-submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 25px;
+    text-decoration: none;
+    color: #2c3e50;
+    direction: rtl;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.tools-submenu-link i {
+    width: 20px;
+    text-align: center;
+    color: #667eea;
+}
+
+.tools-submenu-link:hover {
+    background: rgba(232, 244, 255, 0.9);
+    color: #667eea;
+}
+
+.tools-submenu-link--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
     .menu-content {

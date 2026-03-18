@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}מעגל הקווינטות והקוורטות{% endblock %}
+
+{% block head %}
+<style>
+    .musician-tool-page {
+        width: 100%;
+        max-width: 1100px;
+        padding: 100px 20px 40px 20px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .musician-tool-page h1 {
+        margin: 0 0 20px 0;
+        font-size: 2rem;
+        color: #2c3e50;
+        font-weight: 900;
+    }
+
+    .musician-tool-image-wrap {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(102, 126, 234, 0.25);
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+    }
+
+    .musician-tool-image {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+    }
+
+    .musician-tool-empty {
+        color: #64748b;
+        font-size: 1rem;
+        padding: 30px 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="musician-tool-page">
+    <h1>מעגל הקווינטות והקוורטות</h1>
+
+    <div class="musician-tool-image-wrap">
+        {% if circle_of_fifths_image %}
+            <img
+                src="{{ url_for('photos_image', filename=circle_of_fifths_image) }}"
+                alt="מעגל הקווינטות והקוורטות"
+                class="musician-tool-image"
+            >
+        {% else %}
+            <div class="musician-tool-empty">
+                לא נמצאה תמונת הכלי. צריך להוסיף תמונה לתיקייה <code>photos/</code>.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

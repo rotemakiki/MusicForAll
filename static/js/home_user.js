@@ -18,8 +18,111 @@ function initializePage() {
     // Initialize intersection observers
     setupIntersectionObserver();
 
-    // טען שירים חדשים
+    // טען שירים חדשים + צפיתי לאחרונה
+    loadRecentlyWatched();
     loadRecentSongs();
+}
+
+const MFA_RECENTLY_VIEWED_KEY = 'mfa_recently_viewed_v1';
+
+function escapeHtml(str) {
+    if (str == null || str === '') return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function buildSongCardHTML(song) {
+    const id = escapeHtml(song.id);
+    const title = escapeHtml(song.title);
+    const artist = escapeHtml(song.artist);
+    const key = escapeHtml(song.key);
+    const bpm = song.bpm != null ? Number(song.bpm) : 0;
+    const genre = escapeHtml(song.genre || 'ללא ז\'אנר');
+    const keyType = escapeHtml(song.key_type || '');
+    return `
+            <div class="video-card">
+                <div style="height: 200px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; border-radius: 15px 15px 0 0;">
+                    🎵
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">${title}</h3>
+                    <div class="video-meta">
+                        <span>🎤 ${artist}</span>
+                        <span>🎼 ${key}</span>
+                        <span>⚡ ${bpm} BPM</span>
+                    </div>
+                    <p class="video-description">${genre} • ${keyType}</p>
+                    <div class="video-actions">
+                        <a href="/play/${id}" class="video-btn">
+                            <span>🎵</span>
+                            <span>נגן שיר</span>
+                        </a>
+                        <a href="#" class="video-btn secondary" onclick="addToMyList('${id}'); return false;">
+                            <span>❤️</span>
+                            <span>הוסף לרשימה</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+}
+
+function fillSongScrollGrid(containerId, songs) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const grid = container.querySelector('.video-grid');
+    if (!grid) return;
+    grid.innerHTML = songs.map((s) => buildSongCardHTML(s)).join('');
+    const wrapper = container.closest('.video-scroll-wrapper');
+    if (wrapper) {
+        wrapper.style.display = songs.length >= 1 ? 'block' : 'none';
+    }
+    requestAnimationFrame(() => {
+        updateArrowVisibility(containerId);
+    });
+}
+
+function loadRecentlyWatched() {
+    const section = document.getElementById('recent-watched-section');
+    if (!section) return;
+
+    fetch('/api/recently_viewed_songs')
+        .then((r) => r.json())
+        .then((data) => {
+            let songs = [];
+            if (data.logged_in && data.success && data.songs && data.songs.length > 0) {
+                songs = data.songs;
+            } else {
+                try {
+                    songs = JSON.parse(localStorage.getItem(MFA_RECENTLY_VIEWED_KEY) || '[]');
+                    if (!Array.isArray(songs)) songs = [];
+                } catch (e) {
+                    songs = [];
+                }
+            }
+            if (songs.length > 0) {
+                fillSongScrollGrid('recent-watched-songs', songs);
+                section.style.display = '';
+            } else {
+                section.style.display = 'none';
+            }
+        })
+        .catch(() => {
+            let songs = [];
+            try {
+                songs = JSON.parse(localStorage.getItem(MFA_RECENTLY_VIEWED_KEY) || '[]');
+            } catch (e) {}
+            if (!Array.isArray(songs)) songs = [];
+            if (songs.length > 0) {
+                fillSongScrollGrid('recent-watched-songs', songs);
+                section.style.display = '';
+            } else {
+                section.style.display = 'none';
+            }
+        });
 }
 
 function animateElements() {
@@ -37,20 +140,28 @@ function animateElements() {
 }
 
 function setupScrollListeners() {
-    // Enhanced scroll functionality with smooth animations
-    window.scrollVideos = function(containerId, amount) {
+    window.scrollVideos = function (containerId, amount) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
+        const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
         const currentScroll = container.scrollLeft;
-        const targetScroll = currentScroll - amount;
+        let targetScroll = currentScroll - amount;
+        targetScroll = Math.max(0, Math.min(maxScroll, targetScroll));
 
-        // Smooth scroll with easing
         animateScroll(container, currentScroll, targetScroll, 300);
-
-        // Update arrow visibility
-        setTimeout(() => updateArrowVisibility(containerId), 350);
+        setTimeout(() => updateArrowVisibility(containerId), 360);
     };
+
+    document.querySelectorAll('.video-scroll-container[id]').forEach((el) => {
+        el.addEventListener(
+            'scroll',
+            () => {
+                updateArrowVisibility(el.id);
+            },
+            { passive: true }
+        );
+    });
 }
 
 function animateScroll(element, start, end, duration) {
@@ -76,20 +187,26 @@ function animateScroll(element, start, end, duration) {
 
 function updateArrowVisibility(containerId) {
     const container = document.getElementById(containerId);
+    if (!container) return;
     const wrapper = container.closest('.video-scroll-wrapper');
+    if (!wrapper) return;
     const leftArrow = wrapper.querySelector('.scroll-left');
     const rightArrow = wrapper.querySelector('.scroll-right');
-
     if (!leftArrow || !rightArrow) return;
 
-    const canScrollLeft = container.scrollLeft > 0;
-    const canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth);
+    const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
+    const eps = 4;
+    const sl = container.scrollLeft;
+    const canScrollLeft = sl > eps;
+    const canScrollRight = maxScroll <= eps ? false : sl < maxScroll - eps;
 
-    leftArrow.style.opacity = canScrollLeft ? '1' : '0.3';
-    rightArrow.style.opacity = canScrollRight ? '1' : '0.3';
-
-    leftArrow.style.pointerEvents = canScrollLeft ? 'auto' : 'none';
-    rightArrow.style.pointerEvents = canScrollRight ? 'auto' : 'none';
+    /* לא משתמשים ב-disabled — מאפשר ללחוץ תמיד; scrollVideos כבר מגביל לגבול */
+    leftArrow.style.opacity = canScrollLeft ? '1' : '0.42';
+    rightArrow.style.opacity = canScrollRight ? '1' : '0.42';
+    leftArrow.style.cursor = canScrollLeft ? 'pointer' : 'default';
+    rightArrow.style.cursor = canScrollRight ? 'pointer' : 'default';
+    leftArrow.setAttribute('aria-disabled', canScrollLeft ? 'false' : 'true');
+    rightArrow.setAttribute('aria-disabled', canScrollRight ? 'false' : 'true');
 }
 
 function setupAutoScroll() {
@@ -298,53 +415,12 @@ function loadRecentSongs() {
 
 function displayRecentSongs(songs) {
     const container = document.getElementById('recent-songs');
-    const grid = container.querySelector('.video-grid');
+    if (!container) return;
+    fillSongScrollGrid('recent-songs', songs);
 
-    // נקה את התוכן הקיים
-    grid.innerHTML = '';
-
-    songs.forEach(song => {
-        const songCard = `
-            <div class="video-card">
-                <div style="height: 200px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; border-radius: 15px 15px 0 0;">
-                    🎵
-                </div>
-                <div class="video-info">
-                    <h3 class="video-title">${song.title}</h3>
-                    <div class="video-meta">
-                        <span>🎤 ${song.artist}</span>
-                        <span>🎼 ${song.key}</span>
-                        <span>⚡ ${song.bpm} BPM</span>
-                    </div>
-                    <p class="video-description">${song.genre || 'ללא ז\'אנר'} • ${song.key_type}</p>
-                    <div class="video-actions">
-                        <a href="/play/${song.id}" class="video-btn">
-                            <span>🎵</span>
-                            <span>נגן שיר</span>
-                        </a>
-                        <a href="#" class="video-btn secondary" onclick="addToMyList('${song.id}')">
-                            <span>❤️</span>
-                            <span>הוסף לרשימה</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        `;
-        grid.innerHTML += songCard;
-    });
-
-    // הסתר את empty state
-    const emptyState = document.querySelector('.empty-state');
+    const emptyState = document.querySelector('.video-section .empty-state');
     if (emptyState) {
         emptyState.style.display = 'none';
-    }
-
-    // הוסף scroll wrapper אם יש יותר משיר אחד
-    if (songs.length > 1) {
-        const wrapper = container.closest('.video-scroll-wrapper');
-        if (wrapper) {
-            wrapper.style.display = 'block';
-        }
     }
 }
 

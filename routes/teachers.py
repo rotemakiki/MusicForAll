@@ -120,7 +120,7 @@ def edit_teacher_profile(teacher_id):
 
 import os
 import uuid
-from google.cloud import storage
+from firebase_config import get_gcs_storage_client
 from werkzeug.utils import secure_filename
 
 TEMP_UPLOAD_FOLDER = "temp_uploads"
@@ -150,7 +150,7 @@ def upload_video():
     os.makedirs(TEMP_UPLOAD_FOLDER, exist_ok=True)
     file.save(temp_path)
 
-    storage_client = storage.Client.from_service_account_json("music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json")
+    storage_client = get_gcs_storage_client()
     bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
     blob_name = f"videos/{uuid.uuid4()}_{filename}"
     blob = bucket.blob(blob_name)

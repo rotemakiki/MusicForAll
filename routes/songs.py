@@ -186,16 +186,21 @@ def play_song(song_id):
         try:
             user_id = session["user_id"]
             # Avoid duplicate views in same session; we store one per user+song (latest view)
-            views_ref = db.collection("song_views").where("user_id", "==", user_id).where("song_id", "==", song_id).limit(1).get()
-            if not views_ref:
+            q = (
+                db.collection("song_views")
+                .where("user_id", "==", user_id)
+                .where("song_id", "==", song_id)
+                .limit(1)
+            )
+            existing = list(q.stream())
+            if not existing:
                 db.collection("song_views").add({
                     "user_id": user_id,
                     "song_id": song_id,
-                    "viewed_at": datetime.utcnow()
+                    "viewed_at": datetime.utcnow(),
                 })
             else:
-                # Update viewed_at so "recently watched" works
-                views_ref[0].reference.update({"viewed_at": datetime.utcnow()})
+                existing[0].reference.update({"viewed_at": datetime.utcnow()})
         except Exception as e:
             print(f"Error recording song view: {e}")
 
@@ -474,26 +479,106 @@ def delete_song(song_id):
     doc_ref.delete()
     return jsonify({"message": "Song deleted successfully!"}), 200
 
+def _genre_display_line(song):
+    """מחרוזת ז'אנר לכרטיסי שיר (API/בית)."""
+    genres = song.get("genres")
+    if isinstance(genres, list) and genres:
+        return ", ".join(genres)
+    if isinstance(genres, str):
+        try:
+            lj = json.loads(genres)
+            return ", ".join(lj) if isinstance(lj, list) else genres
+        except (json.JSONDecodeError, TypeError):
+            return genres or song.get("genre") or "ללא ז'אנר"
+    return song.get("genre") or "ללא ז'אנר"
+
+
+def _song_card_payload(song, doc_id):
+    """שדות מינימליים לכרטיס בדף הבית (בלי אקורדים כבדים)."""
+    out = {
+        "id": doc_id,
+        "title": song.get("title") or "",
+        "artist": song.get("artist") or "",
+        "key": song.get("key") or "",
+        "key_type": song.get("key_type") or "",
+        "bpm": song.get("bpm") or 0,
+        "genre": _genre_display_line(song),
+    }
+    return out
+
+
 @songs_bp.route('/api/recent_songs')
 def get_recent_songs():
-    """API להחזרת שירים שנוספו בשבוע האחרון"""
-    from datetime import datetime, timedelta
-
+    """השירים האחרונים שהועלו לאתר (לפי created_at), לא מוגבל לשבוע."""
     try:
-        week_ago = datetime.utcnow() - timedelta(days=7)
-        recent_songs_query = firestore.client().collection("songs").where("created_at", ">=", week_ago).order_by("created_at", direction=firestore.Query.DESCENDING).limit(6)
-
-        recent_songs_docs = recent_songs_query.stream()
+        db = firestore.client()
+        recent_songs_docs = (
+            db.collection("songs")
+            .order_by("created_at", direction=firestore.Query.DESCENDING)
+            .limit(24)
+            .stream()
+        )
         recent_songs = []
         for doc in recent_songs_docs:
-            song = doc.to_dict()
-            song["id"] = doc.id
-            recent_songs.append(song)
+            song = doc.to_dict() or {}
+            recent_songs.append(_song_card_payload(song, doc.id))
 
         return jsonify({"songs": recent_songs, "success": True})
     except Exception as e:
         print(f"Error fetching recent songs: {e}")
         return jsonify({"songs": [], "success": False, "error": str(e)})
+
+
+@songs_bp.route('/api/recently_viewed_songs')
+def get_recently_viewed_songs():
+    """שירים שצפית בהם לאחרונה (מחוברים: לפי song_views; אורחים יקבלו רשימה ריקה וישתמשו ב-localStorage)."""
+    if "user_id" not in session:
+        return jsonify({"songs": [], "success": True, "logged_in": False})
+
+    user_id = session["user_id"]
+    db = firestore.client()
+
+    def _view_ts(data):
+        v = data.get("viewed_at")
+        if v is None:
+            return 0.0
+        try:
+            if hasattr(v, "timestamp"):
+                return float(v.timestamp())
+        except (TypeError, ValueError, OSError):
+            pass
+        if isinstance(v, str):
+            try:
+                from dateutil.parser import parse as parse_dt
+
+                return parse_dt(v).timestamp()
+            except Exception:
+                return 0.0
+        return 0.0
+
+    try:
+        docs = list(db.collection("song_views").where("user_id", "==", user_id).stream())
+        docs.sort(key=lambda d: _view_ts(d.to_dict() or {}), reverse=True)
+        seen_ids = set()
+        songs = []
+        for doc in docs:
+            data = doc.to_dict() or {}
+            sid = data.get("song_id")
+            if not sid or sid in seen_ids:
+                continue
+            seen_ids.add(sid)
+            sdoc = db.collection("songs").document(sid).get()
+            if not sdoc.exists:
+                continue
+            song = sdoc.to_dict() or {}
+            songs.append(_song_card_payload(song, sdoc.id))
+            if len(songs) >= 24:
+                break
+
+        return jsonify({"songs": songs, "success": True, "logged_in": True})
+    except Exception as e:
+        print(f"Error fetching recently viewed songs: {e}")
+        return jsonify({"songs": [], "success": False, "logged_in": True, "error": str(e)})
 
 
 @songs_bp.route('/api/songs/<string:song_id>/rate', methods=['POST'])

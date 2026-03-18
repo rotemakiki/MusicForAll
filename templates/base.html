@@ -23,7 +23,7 @@
                         <span></span>
                         <span></span>
                     </div>
-                    {% set profile_image = session.get('profile_image', '') %}
+                    {% set profile_image = navbar_profile_image %}
                     {% if profile_image %}
                         <a href="{{ url_for('students.user_profile') }}" class="profile-menu-trigger" title="הפרופיל שלי">
                             <img src="{{ profile_image }}" alt="תמונת פרופיל" class="navbar-profile-img">
@@ -55,7 +55,7 @@
                         {% endfor %}
                         <a href="{{ url_for('students.user_profile') }}" class="user-info-link" onclick="document.getElementById('navbar-menu').classList.remove('active'); document.body.style.overflow='auto';">
                             <div class="user-info">
-                                {% set profile_image = session.get('profile_image', '') %}
+                                {% set profile_image = navbar_profile_image %}
                                 {% if profile_image %}
                                     <img src="{{ profile_image }}" alt="תמונת פרופיל" class="menu-profile-img">
                                 {% else %}
@@ -132,6 +132,48 @@
                                 <span>יצירת קשר</span>
                             </a>
                         </li>
+                        <li class="menu-item tools-menu-item">
+                            <details class="tools-details">
+                                <summary class="tools-summary">
+                                    <i class="fas fa-wrench"></i>
+                                    <span>כלים למוסיקאים</span>
+                                </summary>
+
+                                <ul class="tools-submenu">
+                                    <li>
+                                        {% if circle_of_fifths_image %}
+                                            <a href="{{ url_for('tool_circle_of_fifths') }}" class="tools-submenu-link">
+                                                <i class="fas fa-gear"></i>
+                                                <span>כלי 1 - מעגל הקווינטות והקוורטות</span>
+                                            </a>
+                                        {% else %}
+                                            <div class="tools-submenu-link tools-submenu-link--disabled" role="text">
+                                                <i class="fas fa-gear"></i>
+                                                <span>כלי 1 - מעגל הקווינטות והקוורטות</span>
+                                            </div>
+                                        {% endif %}
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for('tool_positions') }}" class="tools-submenu-link">
+                                            <i class="fas fa-wave-square"></i>
+                                            <span>כלי 2 - פוזיציות</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for('tool_hebrew_english_notes') }}" class="tools-submenu-link">
+                                            <i class="fas fa-language"></i>
+                                            <span>כלי 3 - תווים בעברית ובאנגלית</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for('tool_ear_keyboard') }}" class="tools-submenu-link">
+                                            <i class="fas fa-volume-up"></i>
+                                            <span>כלי 4 - פיתוח שמיעה</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </details>
+                        </li>
                         <li class="menu-item logout">
                             <a href="{{ url_for('auth.logout') }}" class="menu-link">
                                 <i class="fas fa-sign-out-alt"></i>
@@ -186,6 +228,48 @@
                                 <i class="fas fa-envelope"></i>
                                 <span>יצירת קשר</span>
                             </a>
+                        </li>
+                        <li class="menu-item tools-menu-item">
+                            <details class="tools-details">
+                                <summary class="tools-summary">
+                                    <i class="fas fa-wrench"></i>
+                                    <span>כלים למוסיקאים</span>
+                                </summary>
+
+                                <ul class="tools-submenu">
+                                    <li>
+                                        {% if circle_of_fifths_image %}
+                                            <a href="{{ url_for('tool_circle_of_fifths') }}" class="tools-submenu-link">
+                                                <i class="fas fa-gear"></i>
+                                                <span>כלי 1 - מעגל הקווינטות והקוורטות</span>
+                                            </a>
+                                        {% else %}
+                                            <div class="tools-submenu-link tools-submenu-link--disabled" role="text">
+                                                <i class="fas fa-gear"></i>
+                                                <span>כלי 1 - מעגל הקווינטות והקוורטות</span>
+                                            </div>
+                                        {% endif %}
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for('tool_positions') }}" class="tools-submenu-link">
+                                            <i class="fas fa-wave-square"></i>
+                                            <span>כלי 2 - פוזיציות</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for('tool_hebrew_english_notes') }}" class="tools-submenu-link">
+                                            <i class="fas fa-language"></i>
+                                            <span>כלי 3 - תווים בעברית ובאנגלית</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for('tool_ear_keyboard') }}" class="tools-submenu-link">
+                                            <i class="fas fa-volume-up"></i>
+                                            <span>כלי 4 - פיתוח שמיעה</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </details>
                         </li>
                         <li class="menu-item special">
                             <a href="{{ url_for('auth.login') }}" class="menu-link">

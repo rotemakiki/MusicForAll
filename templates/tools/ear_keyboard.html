@@ -1,0 +1,534 @@
+{% extends "base.html" %}
+
+{% block title %}כלי 4 - פיתוח שמיעה{% endblock %}
+
+{% block head %}
+<style>
+    .musician-tool-page--ear {
+        padding-top: 105px;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .ear-layout {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 18px;
+        align-items: start;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 980px) {
+        .ear-layout { grid-template-columns: 1fr; }
+    }
+
+    .ear-panel {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(102, 126, 234, 0.22);
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+        padding: 16px;
+    }
+
+    .ear-panel h2 {
+        margin: 0 0 10px 0;
+        font-weight: 950;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        text-align: right;
+    }
+
+    .ear-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 720px) {
+        .ear-row { grid-template-columns: 1fr; }
+    }
+
+    .ear-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        text-align: right;
+    }
+
+    .ear-field label {
+        font-weight: 900;
+        color: #2c3e50;
+        font-size: 0.92rem;
+    }
+
+    .ear-field select, .ear-field button {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(102, 126, 234, 0.25);
+        background: #f8f9ff;
+        font-weight: 900;
+        outline: none;
+    }
+
+    .ear-btn {
+        cursor: pointer;
+        background: linear-gradient(135deg, #667eea, #764ba2) !important;
+        color: #fff !important;
+        border: none !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25) !important;
+        transition: transform 0.2s ease;
+    }
+
+    .ear-btn:hover { transform: translateY(-2px); }
+
+    .ear-btn.secondary {
+        background: linear-gradient(135deg, #17a2b8, #20c997) !important;
+        box-shadow: 0 6px 20px rgba(23, 162, 184, 0.25) !important;
+    }
+
+    .ear-status {
+        margin-top: 12px;
+        background: rgba(102, 126, 234, 0.10);
+        border: 1px solid rgba(102, 126, 234, 0.25);
+        border-radius: 14px;
+        padding: 12px 14px;
+        color: #2c3e50;
+        font-weight: 950;
+        text-align: right;
+        min-height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .ear-status .sub {
+        opacity: 0.85;
+        font-weight: 800;
+        font-size: 0.9rem;
+    }
+
+    .keyboard-wrap {
+        margin-top: 12px;
+        direction: ltr;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .keyboard {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        padding: 10px;
+        background: linear-gradient(135deg, rgba(232,244,255,0.8), rgba(240,248,255,0.75));
+        border-radius: 14px;
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .key {
+        width: 50px;
+        height: 160px;
+        border-radius: 14px;
+        border: 1px solid rgba(0,0,0,0.10);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.12s ease, filter 0.12s ease;
+    }
+
+    .key:hover { transform: translateY(-3px); }
+    .key.white {
+        background: #fff;
+        color: #111827;
+    }
+
+    .key.black {
+        background: #111827;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .key .note-letter {
+        font-weight: 1000;
+        font-size: 1.2rem;
+        letter-spacing: 0.2px;
+    }
+
+    .key .note-hebrew {
+        font-weight: 950;
+        font-size: 0.95rem;
+        opacity: 0.95;
+    }
+
+    .key.active {
+        filter: brightness(1.05);
+        box-shadow: 0 14px 40px rgba(102,126,234,0.25);
+        outline: 2px solid rgba(102,126,234,0.45);
+        outline-offset: 2px;
+    }
+
+    .ear-footer {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: #475569;
+        font-weight: 800;
+        text-align: right;
+        opacity: 0.9;
+        line-height: 1.4;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="musician-tool-page musician-tool-page--ear">
+    <h1>כלי 4 - פיתוח שמיעה</h1>
+
+    <div class="ear-layout">
+        <section class="ear-panel">
+            <h2>המשחק</h2>
+
+            <div class="ear-row">
+                <div class="ear-field">
+                    <label for="ear-level">רמת קושי</label>
+                    <select id="ear-level">
+                        <option value="easy" selected>1 - תווים טבעיים (C-G-A-B וכו')</option>
+                        <option value="medium">2 - 12 תווים כרומטיים (עם #)</option>
+                        <option value="hard">3 - 12 כרומטי + אוקטבות שונות</option>
+                    </select>
+                </div>
+
+                <div class="ear-field">
+                    <label for="ear-octave-mode">אוקטבות</label>
+                    <select id="ear-octave-mode">
+                        <option value="fixed" selected>קבוע (אוקטבה 4)</option>
+                        <option value="random">רנדומלי (בין 2 ל-5)</option>
+                    </select>
+                </div>
+
+                <div class="ear-field">
+                    <label>&nbsp;</label>
+                    <button id="ear-start" class="ear-btn" type="button">התחל סיבוב</button>
+                </div>
+            </div>
+
+            <div class="ear-row" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 12px;">
+                <div class="ear-field">
+                    <label for="ear-auto">Auto</label>
+                    <select id="ear-auto">
+                        <option value="on" selected>נגן תו חדש אוטומטית</option>
+                        <option value="off">רק אחרי שאני לוחץ Next</option>
+                    </select>
+                </div>
+
+                <div class="ear-field">
+                    <label>&nbsp;</label>
+                    <button id="ear-reference" class="ear-btn secondary" type="button" disabled>האזן ליחס עם דו (C)</button>
+                </div>
+
+                <div class="ear-field">
+                    <label>&nbsp;</label>
+                    <button id="ear-next" class="ear-btn" type="button" style="display:none;">Next</button>
+                </div>
+            </div>
+
+            <div class="ear-status" id="ear-status">
+                <div>
+                    <div id="ear-status-main">ממתין להתחלה...</div>
+                    <div class="sub" id="ear-substatus">בחר/י רמה ולחץ/י “התחל סיבוב”.</div>
+                </div>
+                <div style="text-align:left; min-width: 140px;">
+                    <div>ניקוד</div>
+                    <div style="font-weight:1000;" id="ear-score">0 / 0</div>
+                </div>
+            </div>
+
+            <div class="ear-footer">
+                איך זה עובד: האתר מנגן תו רנדומלי. אתה/את לוחץ/ת על התו המתאים בפסנתר.
+                מצב “יחס עם דו (C)” עוזר להשוות את המרחק בין התו שהתלמיד קיבל לבין דו.
+            </div>
+        </section>
+
+        <aside class="ear-panel">
+            <h2>הפסנתר (זיהוי)</h2>
+
+            <div class="keyboard-wrap">
+                <div class="keyboard" id="ear-keyboard"></div>
+            </div>
+
+            <div class="ear-footer" id="ear-correct-hint" style="margin-top: 10px;">
+                בעת סיבוב פעיל, התו המנוגן מסומן.
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // English pitch class with sharps (C, C#, D,...)
+    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const NOTE_TO_HE = {
+        "C": "דו",
+        "C#": "דו#",
+        "D": "רה",
+        "D#": "רה#",
+        "E": "מי",
+        "F": "פה",
+        "F#": "פה#",
+        "G": "סול",
+        "G#": "סול#",
+        "A": "לה",
+        "A#": "לה#",
+        "B": "סי"
+    };
+
+    // WebAudio (synth) - no external samples needed
+    let audioCtx = null;
+    let activeNodes = [];
+
+    function ensureAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === "suspended") {
+            return audioCtx.resume();
+        }
+        return Promise.resolve();
+    }
+
+    function midiToFreq(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    function noteToMidi(noteName, octave) {
+        const pc = NOTE_NAMES.indexOf(noteName);
+        if (pc < 0) return 69;
+        // MIDI: C4 = 60
+        return 12 * (octave + 1) + pc;
+    }
+
+    function stopAll() {
+        activeNodes.forEach(n => {
+            try { n.stop(); } catch (e) {}
+        });
+        activeNodes = [];
+    }
+
+    function playTone(noteName, octave, durationSec = 0.9, whenSec = 0) {
+        const now = audioCtx.currentTime;
+        const startAt = now + whenSec;
+        const endAt = startAt + durationSec;
+
+        const osc = audioCtx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.value = midiToFreq(noteToMidi(noteName, octave));
+
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 3500;
+
+        // Simple envelope to reduce clicks
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.exponentialRampToValueAtTime(0.20, startAt + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(startAt);
+        osc.stop(endAt + 0.02);
+
+        activeNodes.push(osc);
+    }
+
+    function playChordWithC(targetName, targetOctave) {
+        stopAll();
+        // Keep C aligned to the same octave for relative interval clarity
+        playTone("C", targetOctave, 0.95, 0);
+        playTone(targetName, targetOctave, 0.95, 0);
+    }
+
+    function setStatus(main, sub, scoreText) {
+        const substatus = document.getElementById("ear-substatus");
+        if (scoreText) {
+            document.getElementById("ear-score").innerText = scoreText;
+        }
+        const mainEl = document.getElementById("ear-status-main");
+        if (mainEl) mainEl.textContent = main;
+        substatus.textContent = sub || "";
+    }
+
+    // Difficulty -> available pitch classes + octave randomization
+    function getDifficultyConfig(level, octaveMode) {
+        if (level === "easy") {
+            return { pitchClasses: ["C","D","E","F","G","A","B"], octaveRandom: false, octaveFixed: 4 };
+        }
+        if (level === "medium") {
+            return { pitchClasses: NOTE_NAMES.slice(), octaveRandom: octaveMode === "random", octaveFixed: 4 };
+        }
+        // hard
+        return { pitchClasses: NOTE_NAMES.slice(), octaveRandom: true, octaveFixed: 4 };
+    }
+
+    function randomInt(min, maxInclusive) {
+        return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
+    }
+
+    let round = {
+        targetPc: null,
+        targetOctave: 4,
+        attempts: 0,
+        correct: 0,
+        total: 0,
+        config: null
+    };
+
+    function renderKeyboard(pitchClasses, activePc) {
+        const kb = document.getElementById("ear-keyboard");
+        kb.innerHTML = "";
+
+        pitchClasses.forEach(pc => {
+            const isBlack = ["C#", "D#", "F#", "G#", "A#"].includes(pc);
+            const key = document.createElement("div");
+            key.className = "key " + (isBlack ? "black" : "white");
+            if (activePc && pc === activePc) key.classList.add("active");
+
+            key.innerHTML = `
+                <div class="note-letter">${pc}</div>
+                <div class="note-hebrew">${NOTE_TO_HE[pc] || ""}</div>
+            `;
+
+            key.addEventListener("click", async () => {
+                if (!round.targetPc) return;
+                await ensureAudio();
+                // If user clicks C, play reference chord to aid identification.
+                if (pc === "C") {
+                    playChordWithC(round.targetPc, round.targetOctave);
+                } else {
+                    playTone(pc, round.targetOctave, 0.6, 0);
+                }
+                selectAnswer(pc);
+            });
+
+            kb.appendChild(key);
+        });
+    }
+
+    function chooseNextTarget() {
+        const { pitchClasses } = round.config;
+        const pc = pitchClasses[randomInt(0, pitchClasses.length - 1)];
+
+        let octave = round.config.octaveFixed;
+        if (round.config.octaveRandom) {
+            octave = randomInt(2, 5);
+        }
+
+        round.targetPc = pc;
+        round.targetOctave = octave;
+    }
+
+    function playTarget() {
+        stopAll();
+        playTone(round.targetPc, round.targetOctave, 0.95, 0);
+        // Mark active key
+        renderKeyboard(round.config.pitchClasses, round.targetPc);
+    }
+
+    function selectAnswer(pc) {
+        round.attempts += 1;
+        const isCorrect = pc === round.targetPc;
+        round.total += 1;
+
+        const scoreText = `${round.correct} / ${round.total}`;
+        if (isCorrect) {
+            round.correct += 1;
+            setStatus("נכון!", `אנס/ת בדיוק: ${round.targetPc}`, scoreText);
+
+            if (document.getElementById("ear-auto").value === "on") {
+                setTimeout(() => {
+                    startRound();
+                }, 1200);
+            } else {
+                document.getElementById("ear-next").style.display = "";
+            }
+        } else {
+            setStatus("כמעט...", `התשובה הנכונה: ${round.targetPc}. נסה/י שוב או Next.`, scoreText);
+            if (document.getElementById("ear-auto").value === "on") {
+                setTimeout(() => {
+                    startRound();
+                }, 1600);
+            } else {
+                document.getElementById("ear-next").style.display = "";
+            }
+        }
+    }
+
+    function startRound() {
+        const level = document.getElementById("ear-level").value;
+        const octaveMode = document.getElementById("ear-octave-mode").value;
+        round.config = getDifficultyConfig(level, octaveMode);
+
+        round.targetPc = null;
+        round.attempts = 0;
+
+        const referenceBtn = document.getElementById("ear-reference");
+        referenceBtn.disabled = true;
+
+        document.getElementById("ear-next").style.display = "none";
+
+        setStatus("מכין סיבוב...", "מנגן תו רנדומלי...");
+        chooseNextTarget();
+        referenceBtn.disabled = false;
+
+        // Small delay for better UX
+        setTimeout(() => {
+            playTarget();
+            setStatus("שומע תו...", `לחץ/י על התו המתאים. רמה: ${level}`, `${round.correct} / ${round.total}`);
+        }, 400);
+    }
+
+    async function onReference() {
+        if (!round.targetPc) return;
+        await ensureAudio();
+        playChordWithC(round.targetPc, round.targetOctave);
+        // Do not change score / answer
+    }
+
+    function initKeyboardEmpty() {
+        const level = document.getElementById("ear-level").value;
+        const octaveMode = document.getElementById("ear-octave-mode").value;
+        const cfg = getDifficultyConfig(level, octaveMode);
+        renderKeyboard(cfg.pitchClasses, null);
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        document.getElementById("ear-start").addEventListener("click", async () => {
+            await ensureAudio();
+            startRound();
+        });
+
+        document.getElementById("ear-reference").addEventListener("click", onReference);
+
+        document.getElementById("ear-next").addEventListener("click", () => {
+            startRound();
+        });
+
+        document.getElementById("ear-level").addEventListener("change", initKeyboardEmpty);
+        document.getElementById("ear-octave-mode").addEventListener("change", initKeyboardEmpty);
+
+        initKeyboardEmpty();
+    });
+</script>
+{% endblock %}
+

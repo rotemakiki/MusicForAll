@@ -362,11 +362,33 @@
     window.songData = {
         songId: "{{ song.id }}",
         songTitle: {{ song.title | tojson }},
+        songArtist: {{ song.artist | tojson }},
+        songKey: {{ song.key | tojson }},
+        songKeyType: {{ song.key_type | tojson }},
         chords: {{ song.chords | tojson }},
         loops: {{ song.loops | tojson }},
         originalBpm: {{ song.bpm }},
         timeSignature: "{{ song.time_signature }}"
     };
+    (function recordRecentlyViewedLocal() {
+        var d = window.songData;
+        if (!d || !d.songId) return;
+        try {
+            var key = 'mfa_recently_viewed_v1';
+            var item = {
+                id: d.songId,
+                title: d.songTitle,
+                artist: d.songArtist || '',
+                key: d.songKey || '',
+                key_type: d.songKeyType || '',
+                bpm: d.originalBpm || 0
+            };
+            var arr = JSON.parse(localStorage.getItem(key) || '[]');
+            arr = arr.filter(function (x) { return x && x.id !== item.id; });
+            arr.unshift(item);
+            localStorage.setItem(key, JSON.stringify(arr.slice(0, 40)));
+        } catch (e) { /* ignore */ }
+    })();
 
     // נגן יוטיוב – טעינת iframe רק בלחיצה (lazy load) + שימוש ב־youtube-nocookie
     function toggleYouTubePlayer() {
@@ -379,16 +401,9 @@
             iframe.src = '';
         } else {
             container.style.display = 'block';
-            // #region agent log
-            var _iframeSrcBefore = iframe.src || '';
-            var _datasetSrc = iframe.dataset.src || '';
-            // #endregion
             if (iframe.dataset.src) {
                 iframe.src = iframe.dataset.src;
             }
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'play_song.html:toggleYouTubePlayer',message:'youtube player opened',data:{iframeSrcBefore:_iframeSrcBefore,datasetSrc:_datasetSrc,iframeSrcAfter:iframe.src||''},timestamp:Date.now(),hypothesisId:'B','runId':'post-fix'})}).catch(function(){});
-            // #endregion
         }
     }
 

@@ -1,26 +1,12 @@
 from flask import Blueprint, request, redirect, url_for, flash, session, render_template
 from firebase_admin import firestore
+from firebase_config import get_gcs_storage_client
 from datetime import datetime
 import os
 import uuid
-from google.cloud import storage
 from werkzeug.utils import secure_filename
 
 general_bp = Blueprint('general', __name__)
-
-def _get_firebase_storage_client():
-    """מחזיר Google Storage client עם נתיב קובץ credentials תקין (תומך בשורש הפרויקט ו-secrets/)."""
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    key_paths = [
-        os.path.join(project_root, "music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json"),
-        os.path.join(project_root, "secrets", "firebase-key.json"),
-    ]
-    for path in key_paths:
-        if os.path.exists(path):
-            return storage.Client.from_service_account_json(path)
-    raise FileNotFoundError(
-        "לא נמצא קובץ credentials ל-Firebase. בדוק ש-music-for-all-...json או secrets/firebase-key.json קיימים."
-    )
 
 
 @general_bp.route('/upload_profile_image', methods=['POST'])
@@ -37,12 +23,13 @@ def upload_profile_image():
         flash("חסר קובץ תמונה", "error")
         return redirect(referrer)
 
+    user_id = (user_id or "").strip()
     if not user_id:
         flash("חסר מזהה משתמש", "error")
         return redirect(referrer)
 
     # רק המשתמש עצמו (או בעתיד אדמין) יכול לעדכן
-    if session['user_id'] != user_id:
+    if str(session['user_id']) != str(user_id):
         flash("אין לך הרשאה לשנות תמונה זו", "error")
         return redirect(url_for('home'))
 
@@ -70,19 +57,25 @@ def upload_profile_image():
         if size > 5 * 1024 * 1024:
             raise ValueError("הקובץ גדול מדי (מקסימום 5MB)")
 
-        storage_client = _get_firebase_storage_client()
+        storage_client = get_gcs_storage_client()
         bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
         blob_name = f"profile_images/{user_id}_{uuid.uuid4().hex}_{filename}"
         blob = bucket.blob(blob_name)
         blob.upload_from_filename(temp_path)
-        blob.make_public()
+        try:
+            blob.make_public()
+        except Exception:
+            # דלי עם Uniform bucket-level access — הקובץ עדיין נגיש אם כללי Storage מאפשרים
+            pass
 
-        firestore.client().collection("users").document(user_id).update({
-            "profile_image": blob.public_url
-        })
+        public_url = blob.public_url
+        firestore.client().collection("users").document(user_id).set(
+            {"profile_image": public_url},
+            merge=True,
+        )
 
-        # עדכון ה-session כדי שהתמונה תופיע מיד navbar
-        session["profile_image"] = blob.public_url
+        session["profile_image"] = public_url
+        session.modified = True
 
         flash("📸 תמונת הפרופיל עודכנה בהצלחה!", "success")
     except FileNotFoundError as e:

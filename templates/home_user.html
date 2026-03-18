@@ -97,6 +97,34 @@
         </div>
     </div>
 
+    <!-- צפיתי לאחרונה (כמו נטפליקס / המשך צפייה) -->
+    <div class="video-section" id="recent-watched-section" style="display: none;">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">
+                    <span>▶️</span>
+                    <span>צפיתי לאחרונה</span>
+                </h2>
+                <p class="section-subtitle">המשך מאיפה שהפסקת — לפי סדר הצפייה האחרון</p>
+            </div>
+            <a href="{{ url_for('songs.songs') }}" class="view-all-btn">
+                <span>🎶</span>
+                <span>כל השירים</span>
+            </a>
+        </div>
+        <div class="video-scroll-wrapper" id="recent-watched-wrapper">
+            <button type="button" class="scroll-arrow scroll-right" onclick="scrollVideos('recent-watched-songs', -400)">
+                ➡️
+            </button>
+            <button type="button" class="scroll-arrow scroll-left" onclick="scrollVideos('recent-watched-songs', 400)">
+                ⬅️
+            </button>
+            <div class="video-scroll-container" id="recent-watched-songs">
+                <div class="video-grid"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Songs Section -->
     <div class="video-section">
         <div class="section-header">

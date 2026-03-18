@@ -51,3 +51,34 @@ For more details, see: secrets/README.md
 cred = get_firebase_credentials()
 firebase_app = initialize_app(cred)
 db = firestore.client()
+
+
+def get_gcs_storage_client():
+    """
+    Google Cloud Storage — אותם credentials כמו Firestore.
+    בפרודקשן (Render וכו') משתמשים ב-FIREBASE_KEY_BASE64 בלי קובץ JSON על השרת;
+    לכן חובה לא להסתמך רק על קבצים על הדיסק (אחרת העלאת תמונת פרופיל נכשלת ו-Firestore לא מתעדכן).
+    """
+    import base64
+    from google.cloud import storage
+    from google.oauth2 import service_account
+
+    root = os.path.dirname(os.path.abspath(__file__))
+    encoded_key = os.environ.get("FIREBASE_KEY_BASE64")
+    if encoded_key:
+        try:
+            info = json.loads(base64.b64decode(encoded_key))
+        except Exception as e:
+            raise ValueError(f"FIREBASE_KEY_BASE64 לא תקין: {e}") from e
+        creds = service_account.Credentials.from_service_account_info(info)
+        return storage.Client(credentials=creds, project=info.get("project_id"))
+
+    for rel in ("secrets/firebase-key.json", "music-for-all-f5d9c-firebase-adminsdk-fbsvc-33869b4b24.json"):
+        path = os.path.join(root, rel)
+        if os.path.exists(path):
+            return storage.Client.from_service_account_json(path)
+
+    raise FileNotFoundError(
+        "לא נמצאו credentials ל-Google Storage. "
+        "הגדר FIREBASE_KEY_BASE64 או secrets/firebase-key.json"
+    )

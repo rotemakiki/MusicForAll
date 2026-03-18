@@ -1,6 +1,6 @@
 import mimetypes
 
-from flask import Flask, session, render_template, request, jsonify, redirect, url_for
+from flask import Flask, session, render_template, request, jsonify, redirect, url_for, send_from_directory, abort
 from routes.auth import auth_bp
 from routes.products import products_bp
 from routes.songs import songs_bp
@@ -68,6 +68,103 @@ app.register_blueprint(general_bp)
 app.register_blueprint(my_songs_bp)
 app.register_blueprint(products_bp)
 app.register_blueprint(chords_system_bp)  # הוספת המערכת החדשה
+
+
+@app.context_processor
+def inject_navbar_profile_image():
+    """תמונת פרופיל מ-Firestore (מקור אמת) — נשמרת אחרי רענון כש-Firestore מתעדכן."""
+    from firebase_config import db
+
+    img = session.get("profile_image", "")
+    uid = session.get("user_id")
+    if uid:
+        try:
+            snap = db.collection("users").document(uid).get()
+            if snap.exists:
+                img = (snap.to_dict() or {}).get("profile_image") or ""
+        except Exception:
+            pass
+        if img != session.get("profile_image"):
+            session["profile_image"] = img
+            session.modified = True
+    return {"navbar_profile_image": img}
+
+
+def _get_musician_tools_images():
+    """
+    Finds images under ./photos and picks the most likely one for:
+    "מעגל הקווינטות והקוורטות".
+    """
+    photos_dir = os.path.join(app.root_path, "photos")
+    allowed_exts = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
+
+    if not os.path.isdir(photos_dir):
+        return {"circle_of_fifths_image": None}
+
+    try:
+        candidates = [
+            f for f in os.listdir(photos_dir)
+            if os.path.isfile(os.path.join(photos_dir, f)) and os.path.splitext(f)[1].lower() in allowed_exts
+        ]
+    except Exception:
+        candidates = []
+
+    if not candidates:
+        return {"circle_of_fifths_image": None}
+
+    # Best-effort matching by filename keywords (English + Hebrew).
+    keywords = [
+        "circle", "fifth", "fifths", "quint", "quints", "quart", "quarts",
+        "מעגל", "קווינט", "קווינטות", "קוורט", "קוורטות", "רביעיות",
+    ]
+    lowered = {f: f.lower() for f in candidates}
+    for kw in keywords:
+        for f in candidates:
+            if kw in lowered[f]:
+                return {"circle_of_fifths_image": f}
+
+    # Fallback: first image (keeps UI working until the right filename exists).
+    return {"circle_of_fifths_image": candidates[0]}
+
+
+@app.context_processor
+def inject_musician_tools():
+    return _get_musician_tools_images()
+
+
+@app.route("/photos/<path:filename>")
+def photos_image(filename: str):
+    """Serve image assets that live in the project root ./photos folder."""
+    allowed_exts = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"}
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in allowed_exts:
+        abort(404)
+    return send_from_directory(os.path.join(app.root_path, "photos"), filename)
+
+
+@app.route("/tools/circle-of-fifths")
+def tool_circle_of_fifths():
+    """Tool page: Circle of Fifths / Quartes."""
+    return render_template("tools/circle_of_fifths.html")
+
+
+@app.route("/tools/positions")
+def tool_positions():
+    """Tool page: Guitar positions for the selected scale (notes + diatonic chords)."""
+    return render_template("tools/positions.html")
+
+
+@app.route("/tools/hebrew-english-notes")
+def tool_hebrew_english_notes():
+    """Tool page: Convert Hebrew solfege (דו/רה/מי...) to English note letters (C/D/E...)."""
+    return render_template("tools/hebrew_english_notes.html")
+
+
+@app.route("/tools/ear-keyboard")
+def tool_ear_keyboard():
+    """Tool page: ear training keyboard (random note identification)."""
+    return render_template("tools/ear_keyboard.html")
+
 
 # =============================================================================
 # MIDDLEWARE לשיפור ביצועים ומעקב

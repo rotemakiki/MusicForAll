@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block title %}כלי 2 - פוזיציות{% endblock %}
+
+{% block head %}
+<style>
+    .musician-tool-page--positions {
+        padding-top: 105px;
+    }
+
+    .positions-layout {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 18px;
+        align-items: start;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 980px) {
+        .positions-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .positions-panel {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(102, 126, 234, 0.22);
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+        padding: 16px;
+    }
+
+    .positions-controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    @media (max-width: 720px) {
+        .positions-controls {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .control {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        text-align: right;
+    }
+
+    .control label {
+        font-weight: 800;
+        color: #2c3e50;
+        font-size: 0.92rem;
+    }
+
+    .control select {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(102, 126, 234, 0.25);
+        background: #f8f9ff;
+        font-weight: 700;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .scale-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        direction: rtl;
+    }
+
+    .scale-table th, .scale-table td {
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        padding: 10px 8px;
+        font-size: 0.95rem;
+        vertical-align: middle;
+    }
+
+    .scale-table th {
+        color: #2c3e50;
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: 900;
+        text-align: center;
+    }
+
+    .scale-table td {
+        color: #334155;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .chord-tones-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        direction: rtl;
+    }
+
+    .chord-tones-table th, .chord-tones-table td {
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        padding: 8px 6px;
+        text-align: center;
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #334155;
+    }
+
+    .chord-tones-table th {
+        font-size: 0.86rem;
+        opacity: 0.9;
+        font-weight: 950;
+        color: #2c3e50;
+    }
+
+    .neck-wrap {
+        direction: ltr;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .guitar-neck {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(102, 126, 234, 0.22);
+        background: #ffffff;
+    }
+
+    .guitar-neck table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .guitar-neck th, .guitar-neck td {
+        border-right: 1px solid rgba(0,0,0,0.04);
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        padding: 8px 6px;
+        min-width: 54px;
+        text-align: center;
+        font-weight: 900;
+        color: #334155;
+        font-size: 0.9rem;
+    }
+
+    .guitar-neck th:last-child, .guitar-neck td:last-child {
+        border-right: none;
+    }
+
+    .guitar-neck thead th {
+        background: linear-gradient(135deg, #f0f8ff, #e8f4fd);
+        color: #2c3e50;
+    }
+
+    .string-label {
+        background: #f8f9ff;
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        min-width: 86px !important;
+    }
+
+    .note-cell {
+        background: #fff;
+        transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .note-scale {
+        background: rgba(102, 126, 234, 0.10);
+    }
+
+    .note-highlight {
+        background: rgba(102, 126, 234, 0.25);
+        box-shadow: inset 0 0 0 2px rgba(102, 126, 234, 0.45);
+    }
+
+    .note-text {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+
+    .hint {
+        font-size: 0.86rem;
+        opacity: 0.8;
+        margin-top: 10px;
+        text-align: right;
+        color: #475569;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="musician-tool-page musician-tool-page--positions">
+    <h1>כלי 2 - פוזיציות</h1>
+
+    <div class="positions-layout">
+        <section class="positions-panel">
+            <div class="positions-controls">
+                <div class="control">
+                    <label for="positions-root-note">Root note</label>
+                    <select id="positions-root-note"></select>
+                </div>
+
+                <div class="control">
+                    <label for="positions-scale-type">Scale type</label>
+                    <select id="positions-scale-type">
+                        <option value="major" selected>Major</option>
+                        <option value="minor">Minor (Natural)</option>
+                    </select>
+                </div>
+
+                <div class="control">
+                    <label for="positions-range">Fret range</label>
+                    <select id="positions-range">
+                        <option value="12" selected>0 - 12</option>
+                        <option value="15">0 - 15</option>
+                        <option value="17">0 - 17</option>
+                        <option value="20">0 - 20</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="positions-controls" style="margin-top: 2px;">
+                <div class="control">
+                    <label for="positions-highlight">Highlight</label>
+                    <select id="positions-highlight">
+                        <option value="all" selected>כל תווי הסולם</option>
+                        <option value="deg0">תו 1 (Root)</option>
+                        <option value="deg1">תו 2</option>
+                        <option value="deg2">תו 3</option>
+                        <option value="deg3">תו 4</option>
+                        <option value="deg4">תו 5</option>
+                        <option value="deg5">תו 6</option>
+                        <option value="deg6">תו 7</option>
+                        <option value="chord0">אקורד 1 (7th)</option>
+                        <option value="chord1">אקורד 2 (7th)</option>
+                        <option value="chord2">אקורד 3 (7th)</option>
+                        <option value="chord3">אקורד 4 (7th)</option>
+                        <option value="chord4">אקורד 5 (7th)</option>
+                        <option value="chord5">אקורד 6 (7th)</option>
+                        <option value="chord6">אקורד 7 (7th)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="positions-scale-table-wrap"></div>
+            <div id="positions-chords-table-wrap"></div>
+        </section>
+
+        <aside class="positions-panel">
+            <div style="font-weight: 950; color: #2c3e50; margin-bottom: 10px; font-size: 1.05rem;">
+                Neck diagram
+            </div>
+            <div class="neck-wrap">
+                <div class="guitar-neck" id="guitar-neck"></div>
+            </div>
+            <div class="hint">
+                התאים שמסומנים הם תווים מהסולם. מצב "Highlight" משנה מה יודגש: דרגה או אקורד 7th.
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Pitch class helpers (using sharps like the screenshots: A#, C#, etc.)
+    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    // Standard tuning: low E -> high E (E A D G B E)
+    const TUNING_SEMITONES = {
+        // C=0 => E=4, A=9, D=2, G=7, B=11
+        "E": 4,
+        "A": 9,
+        "D": 2,
+        "G": 7,
+        "B": 11
+    };
+    const STANDARD_TUNING = [TUNING_SEMITONES["E"], TUNING_SEMITONES["A"], TUNING_SEMITONES["D"], TUNING_SEMITONES["G"], TUNING_SEMITONES["B"], TUNING_SEMITONES["E"]];
+    const STANDARD_TUNING_LABELS = ["E", "A", "D", "G", "B", "E"];
+
+    function mod12(n) {
+        return ((n % 12) + 12) % 12;
+    }
+
+    function rootNoteToSemitone(root) {
+        const idx = NOTE_NAMES.indexOf(root);
+        return idx >= 0 ? idx : 9; // fallback to A
+    }
+
+    function scaleOffsets(scaleType) {
+        // Major: 0 2 4 5 7 9 11
+        if (scaleType === "major") return [0, 2, 4, 5, 7, 9, 11];
+        // Natural minor (Aeolian): 0 2 3 5 7 8 10
+        return [0, 2, 3, 5, 7, 8, 10];
+    }
+
+    function degreeNames(scaleType) {
+        if (scaleType === "major") {
+            return ["Root", "Major 2nd", "Major 3rd", "Perfect 4th", "Perfect 5th", "Major 6th", "Major 7th"];
+        }
+        return ["Root", "Minor 2nd", "Minor 3rd", "Perfect 4th", "Perfect 5th", "Minor 6th", "Minor 7th"];
+    }
+
+    function triadAndSeventhLabel(rootAbs, thirdAbs, fifthAbs, seventhAbs) {
+        const thirdDiff = mod12(thirdAbs - rootAbs);
+        const fifthDiff = mod12(fifthAbs - rootAbs);
+        const seventhDiff = mod12(seventhAbs - rootAbs);
+
+        let triad;
+        if (thirdDiff === 4 && fifthDiff === 7) triad = "Maj";
+        else if (thirdDiff === 3 && fifthDiff === 7) triad = "m";
+        else if (thirdDiff === 3 && fifthDiff === 6) triad = "dim";
+        else triad = "unk";
+
+        if (triad === "Maj" && seventhDiff === 11) return "maj7";
+        if (triad === "Maj" && seventhDiff === 10) return "7";
+        if (triad === "m" && seventhDiff === 10) return "m7";
+        if (triad === "dim" && seventhDiff === 10) return "m7b5";
+        if (triad === "dim" && seventhDiff === 9) return "dim7";
+
+        // Fallback - keep it explicit
+        return `7(${seventhDiff})`;
+    }
+
+    function computeScale(rootSemitone, scaleType) {
+        const offsets = scaleOffsets(scaleType);
+        // pitch classes for scale notes
+        const scaleNotes = offsets.map(off => NOTE_NAMES[mod12(rootSemitone + off)]);
+        return { offsets, scaleNotes };
+    }
+
+    function computeDiatonicSeventhChords(rootSemitone, scaleType) {
+        // Use absolute semitone offsets to correctly label chord types (maj7 vs 7 vs m7b5 etc.)
+        const offsets = scaleOffsets(scaleType);
+
+        // Extended offsets for wrapping (so i+2, i+4, i+6 point to the correct octave)
+        const ext = offsets.concat(offsets.map(x => x + 12));
+        const chords = [];
+
+        for (let i = 0; i < 7; i++) {
+            const rootAbs = rootSemitone + offsets[i];
+            const thirdAbs = rootSemitone + ext[i + 2];   // +2 scale degrees
+            const fifthAbs = rootSemitone + ext[i + 4];   // +4
+            const seventhAbs = rootSemitone + ext[i + 6]; // +6
+
+            const rootPc = mod12(rootAbs);
+            const thirdPc = mod12(thirdAbs);
+            const fifthPc = mod12(fifthAbs);
+            const seventhPc = mod12(seventhAbs);
+
+            const label = triadAndSeventhLabel(rootAbs, thirdAbs, fifthAbs, seventhAbs);
+            const chordName = `${NOTE_NAMES[rootPc]} ${label}`;
+
+            chords.push({
+                root: NOTE_NAMES[rootPc],
+                third: NOTE_NAMES[thirdPc],
+                fifth: NOTE_NAMES[fifthPc],
+                seventh: NOTE_NAMES[seventhPc],
+                chordLabel: label,
+                chordName
+            });
+        }
+
+        return chords;
+    }
+
+    function renderScaleAndChords(rootNote, scaleType) {
+        const rootSemitone = rootNoteToSemitone(rootNote);
+        const { offsets, scaleNotes } = computeScale(rootSemitone, scaleType);
+        const chords = computeDiatonicSeventhChords(rootSemitone, scaleType);
+        const names = degreeNames(scaleType);
+
+        // Table 1: degrees -> note + chord
+        const scaleTable = document.createElement("table");
+        scaleTable.className = "scale-table";
+        scaleTable.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Degree</th>
+                    <th>Note</th>
+                    <th>Diatonic 7th chord</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${names.map((d, i) => {
+                    const note = scaleNotes[i];
+                    const chord = chords[i].chordName;
+                    return `
+                        <tr>
+                            <td>${d}</td>
+                            <td>${note}</td>
+                            <td>${chord}</td>
+                        </tr>
+                    `;
+                }).join("")}
+            </tbody>
+        `;
+
+        const scaleWrap = document.getElementById("positions-scale-table-wrap");
+        scaleWrap.innerHTML = "";
+        const header1 = document.createElement("div");
+        header1.style.fontWeight = "950";
+        header1.style.color = "#2c3e50";
+        header1.style.marginTop = "2px";
+        header1.style.marginBottom = "6px";
+        header1.innerHTML = `Selected: <span style="color:#667eea">${rootNote}</span> / ${scaleType === "major" ? "Major" : "Minor (Natural)"}`;
+        scaleWrap.appendChild(header1);
+        scaleWrap.appendChild(scaleTable);
+
+        // Table 2: chord tones stacked per degree (Root/Third/Fifth/Seventh)
+        const toneTable = document.createElement("table");
+        toneTable.className = "chord-tones-table";
+        const rows = [
+            { label: "Root", key: "root" },
+            { label: "Third", key: "third" },
+            { label: "Fifth", key: "fifth" },
+            { label: "Seventh", key: "seventh" }
+        ];
+
+        const thead = `
+            <thead>
+                <tr>
+                    <th></th>
+                    ${names.map(n => `<th>${n}</th>`).join("")}
+                </tr>
+            </thead>
+        `;
+
+        const tbody = `
+            <tbody>
+                ${rows.map(r => `
+                    <tr>
+                        <th>${r.label}</th>
+                        ${chords.map(c => `<td>${c[r.key]}</td>`).join("")}
+                    </tr>
+                `).join("")}
+            </tbody>
+        `;
+
+        toneTable.innerHTML = thead + tbody;
+        const chordsWrap = document.getElementById("positions-chords-table-wrap");
+        chordsWrap.innerHTML = "";
+
+        const header2 = document.createElement("div");
+        header2.style.fontWeight = "950";
+        header2.style.color = "#2c3e50";
+        header2.style.marginTop = "14px";
+        header2.style.marginBottom = "6px";
+        header2.innerText = "Diatonic 7th chords (notes by degree)";
+        chordsWrap.appendChild(header2);
+        chordsWrap.appendChild(toneTable);
+
+        return { scaleNotes, chords };
+    }
+
+    function renderNeck(rootNote, scaleType, fretMax, highlightMode) {
+        const rootSemitone = rootNoteToSemitone(rootNote);
+        const { scaleNotes } = computeScale(rootSemitone, scaleType);
+        const chords = computeDiatonicSeventhChords(rootSemitone, scaleType);
+
+        const scaleSet = new Set(scaleNotes);
+        let highlightSet = new Set(scaleNotes);
+
+        if (highlightMode === "all") {
+            highlightSet = new Set(scaleNotes);
+        } else if (highlightMode.startsWith("deg")) {
+            const i = parseInt(highlightMode.replace("deg", ""), 10);
+            highlightSet = new Set([scaleNotes[i]]);
+        } else if (highlightMode.startsWith("chord")) {
+            const i = parseInt(highlightMode.replace("chord", ""), 10);
+            const c = chords[i];
+            highlightSet = new Set([c.root, c.third, c.fifth, c.seventh]);
+        }
+
+        const container = document.getElementById("guitar-neck");
+        container.innerHTML = "";
+
+        const table = document.createElement("table");
+        table.style.width = "100%";
+
+        const thead = document.createElement("thead");
+        const hrow = document.createElement("tr");
+
+        const emptyTh = document.createElement("th");
+        emptyTh.className = "string-label";
+        emptyTh.innerText = "String";
+        hrow.appendChild(emptyTh);
+
+        for (let fret = 0; fret <= fretMax; fret++) {
+            const th = document.createElement("th");
+            th.innerText = fret;
+            hrow.appendChild(th);
+        }
+        thead.appendChild(hrow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+
+        // rows: low E -> high E
+        for (let s = 0; s < 6; s++) {
+            const tr = document.createElement("tr");
+
+            const label = document.createElement("td");
+            label.className = "string-label";
+            label.innerText = STANDARD_TUNING_LABELS[s] + " string";
+            tr.appendChild(label);
+
+            for (let fret = 0; fret <= fretMax; fret++) {
+                // compute pitch class of this string/fret
+                const semitoneAbs = STANDARD_TUNING[s] + fret;
+                const pc = mod12(semitoneAbs);
+                const noteName = NOTE_NAMES[pc];
+
+                const td = document.createElement("td");
+                td.className = "note-cell";
+
+                // scale note tint
+                if (scaleSet.has(noteName)) td.classList.add("note-scale");
+                // selection highlight
+                if (highlightSet.has(noteName)) td.classList.add("note-highlight");
+
+                const inner = document.createElement("span");
+                inner.className = "note-text";
+                inner.innerText = noteName;
+                td.appendChild(inner);
+
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+    }
+
+    function initPositionsTool() {
+        const rootSelect = document.getElementById("positions-root-note");
+        const rootDefault = "A"; // matches screenshots most commonly
+
+        NOTE_NAMES.forEach(n => {
+            const opt = document.createElement("option");
+            opt.value = n;
+            opt.innerText = n;
+            rootSelect.appendChild(opt);
+        });
+        rootSelect.value = rootDefault;
+
+        const scaleTypeSelect = document.getElementById("positions-scale-type");
+        const rangeSelect = document.getElementById("positions-range");
+        const highlightSelect = document.getElementById("positions-highlight");
+
+        function rerender() {
+            const root = rootSelect.value;
+            const scaleType = scaleTypeSelect.value;
+            const fretMax = parseInt(rangeSelect.value, 10);
+            const highlight = highlightSelect.value;
+
+            const { scaleNotes } = renderScaleAndChords(root, scaleType);
+            renderNeck(root, scaleType, fretMax, highlight);
+        }
+
+        rootSelect.addEventListener("change", rerender);
+        scaleTypeSelect.addEventListener("change", rerender);
+        rangeSelect.addEventListener("change", rerender);
+        highlightSelect.addEventListener("change", rerender);
+
+        rerender();
+    }
+
+    document.addEventListener("DOMContentLoaded", initPositionsTool);
+</script>
+{% endblock %}
+

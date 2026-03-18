@@ -37,7 +37,7 @@ document.addEventListener('keydown', function(event) {
 
 // Close menu when clicking on a menu link
 document.addEventListener('DOMContentLoaded', function() {
-    const menuLinks = document.querySelectorAll('.menu-link');
+    const menuLinks = document.querySelectorAll('.menu-link, .tools-submenu-link');
     menuLinks.forEach(link => {
         link.addEventListener('click', function() {
             const menu = document.getElementById("navbar-menu");
