@@ -10,16 +10,14 @@
     <p>מקצב: {{ song.time_signature }}</p>
     <p>BPM (מהירות): {{ song.bpm }}</p>
 
-    {% if song.difficulty %}
     <p>
-        <b>רמת קושי:</b>
-        {{ song.difficulty }}
-        {% if not song.difficulty_approved %}
+        <b>רמת ליווי:</b> {{ song.get('accompaniment_level', '—') }}{% if song.get('accompaniment_level_title') %} — {{ song.accompaniment_level_title }}{% endif %}
+        {% if not song.get('difficulty_approved', True) %}
             <span style="color: orange; font-size: 0.93em;">*</span>
-            <span style="font-size: 0.85em; color: gray;">(ממתין לאישור מנהל)</span>
         {% endif %}
+        &nbsp;|&nbsp;
+        <b>רמת הובלה:</b> {{ song.get('lead_level', '—') }} / 10
     </p>
-    {% endif %}
 
     <!-- וידאו של השיר -->
     <div class="video-container">

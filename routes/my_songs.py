@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for
 from firebase_admin import firestore
 from datetime import datetime
+from utils.song_levels import attach_song_level_fields
 
 my_songs_bp = Blueprint('my_songs', __name__)
 
@@ -94,6 +95,7 @@ def my_songs_page():
                 song = song_doc.to_dict()
                 song['id'] = song_id
                 song['added_at'] = my_song_data.get('added_at', datetime.utcnow())
+                attach_song_level_fields(song)
                 songs_with_dates.append(song)
 
         # מיון בצד הלקוח לפי תאריך הוספה (החדשים ראשונים)

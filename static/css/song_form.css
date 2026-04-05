@@ -645,3 +645,56 @@ body {
         max-width: 200px;
     }
 }
+
+/* רמות ליווי / הובלה — בחירה 0–10 */
+.level-picker-section {
+    grid-column: 1 / -1;
+}
+
+.level-picker-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.level-picker-header .form-label {
+    margin-bottom: 0;
+}
+
+.level-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.level-chip {
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 6px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+    font-family: inherit;
+}
+
+.level-chip:hover {
+    border-color: #a5b4fc;
+    color: #4338ca;
+}
+
+.level-chip.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: transparent;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+}

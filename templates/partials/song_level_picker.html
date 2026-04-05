@@ -1,0 +1,37 @@
+{# דורש: level_picker_accompaniment, level_picker_lead (מספרים 0–10) #}
+{% set acc_sel = level_picker_accompaniment | int %}
+{% set lead_sel = level_picker_lead | int %}
+<div class="form-group level-picker-section">
+    <div class="level-picker-header">
+        <label class="form-label" for="accompaniment_level">
+            <span class="label-icon">🎸</span>
+            רמת ליווי (גיטרת ליווי / אקורדים)
+        </label>
+        <button type="button" class="levels-help-link js-open-accompaniment-levels-help" aria-label="פתח הסבר על רמות הליווי">מה אומרות הרמות?</button>
+    </div>
+    <input type="hidden" id="accompaniment_level" name="accompaniment_level" value="{{ acc_sel }}">
+    <div class="level-picker" data-target="accompaniment_level" role="group" aria-label="בחירת רמת ליווי">
+        {% for n in range(11) %}
+        <button type="button" class="level-chip{% if n == acc_sel %} active{% endif %}" data-level="{{ n }}" aria-pressed="{% if n == acc_sel %}true{% else %}false{% endif %}">{{ n }}</button>
+        {% endfor %}
+    </div>
+    <p class="input-hint">0 = אין חלק ליווי גיטרה בשיר</p>
+    <div class="field-validation" id="accompaniment_level-validation"></div>
+</div>
+
+<div class="form-group level-picker-section">
+    <div class="level-picker-header">
+        <label class="form-label" for="lead_level">
+            <span class="label-icon">🎶</span>
+            רמת הובלה (סולואים / מלודיות)
+        </label>
+    </div>
+    <input type="hidden" id="lead_level" name="lead_level" value="{{ lead_sel }}">
+    <div class="level-picker" data-target="lead_level" role="group" aria-label="בחירת רמת הובלה">
+        {% for n in range(11) %}
+        <button type="button" class="level-chip{% if n == lead_sel %} active{% endif %}" data-level="{{ n }}" aria-pressed="{% if n == lead_sel %}true{% else %}false{% endif %}">{{ n }}</button>
+        {% endfor %}
+    </div>
+    <p class="input-hint">0 = אין חלק הובלה מובהק. מדריך מפורט לרמות ההובלה יתווסף בהמשך.</p>
+    <div class="field-validation" id="lead_level-validation"></div>
+</div>

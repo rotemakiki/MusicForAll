@@ -1,0 +1,48 @@
+<style>
+.accompaniment-levels-dialog { border: none; border-radius: 16px; padding: 0; max-width: min(520px, 94vw); box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+.accompaniment-levels-dialog::backdrop { background: rgba(0,0,0,0.45); }
+.levels-dialog-inner { padding: 1.25rem 1.5rem; max-height: 80vh; overflow-y: auto; }
+.levels-dialog-inner h2 { margin: 0 0 1rem; font-size: 1.15rem; color: #1e293b; }
+.levels-dialog-list { list-style: none; margin: 0; padding: 0; }
+.levels-dialog-list li { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; }
+.levels-dialog-list li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.levels-dialog-list strong { display: block; color: #334155; margin-bottom: 0.35rem; font-size: 0.95rem; }
+.levels-dialog-list p { margin: 0; font-size: 0.88rem; line-height: 1.5; color: #475569; }
+.levels-dialog-close { margin-top: 1rem; width: 100%; padding: 0.65rem; border-radius: 10px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; font-weight: 600; cursor: pointer; }
+.levels-help-link { background: none; border: none; color: #667eea; font-size: 0.85rem; cursor: pointer; text-decoration: underline; padding: 0; font-family: inherit; }
+.levels-help-link:hover { color: #764ba2; }
+</style>
+<dialog id="accompaniment-levels-dialog" class="accompaniment-levels-dialog" dir="rtl">
+    <div class="levels-dialog-inner">
+        <h2>רמות ליווי (גיטרת ליווי) — 0 עד 10</h2>
+        <ul class="levels-dialog-list">
+            {% for row in accompaniment_levels_help %}
+            <li>
+                <strong>{{ row.level }} — {{ row.title }}</strong>
+                <p>{{ row.description }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="levels-dialog-close">סגור</button>
+    </div>
+</dialog>
+<script>
+(function () {
+    function openDialog() {
+        var d = document.getElementById('accompaniment-levels-dialog');
+        if (d && typeof d.showModal === 'function') d.showModal();
+    }
+    document.body.addEventListener('click', function (e) {
+        if (e.target.closest('.js-open-accompaniment-levels-help')) {
+            e.preventDefault();
+            openDialog();
+        }
+    });
+    var d = document.getElementById('accompaniment-levels-dialog');
+    if (d) {
+        var closeBtn = d.querySelector('.levels-dialog-close');
+        if (closeBtn) closeBtn.addEventListener('click', function () { d.close(); });
+        d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
+    }
+})();
+</script>

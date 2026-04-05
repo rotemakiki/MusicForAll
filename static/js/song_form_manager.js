@@ -1,6 +1,46 @@
 // Unified Song Form Manager - Handles both Add and Edit Song forms
 // Enhanced User Experience with New Chord System Integration
 
+// ===== רמות ליווי / הובלה (0–10) =====
+
+function syncLevelPickerRow(row, value) {
+    const v = String(value);
+    row.querySelectorAll(".level-chip").forEach((btn) => {
+        const on = btn.getAttribute("data-level") === v;
+        btn.classList.toggle("active", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+}
+
+function syncAllLevelPickersFromHidden() {
+    document.querySelectorAll(".level-picker").forEach((row) => {
+        const targetId = row.getAttribute("data-target");
+        const hidden = targetId ? document.getElementById(targetId) : null;
+        if (hidden) syncLevelPickerRow(row, hidden.value);
+    });
+}
+
+let levelPickersBound = false;
+
+function bindLevelPickersOnce() {
+    if (levelPickersBound) return;
+    levelPickersBound = true;
+    document.querySelectorAll(".level-picker").forEach((row) => {
+        const targetId = row.getAttribute("data-target");
+        const hidden = targetId ? document.getElementById(targetId) : null;
+        if (!hidden) return;
+        row.querySelectorAll(".level-chip").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const v = btn.getAttribute("data-level");
+                hidden.value = v;
+                syncLevelPickerRow(row, v);
+                if (targetId) validateField(targetId, v);
+                saveFormData();
+            });
+        });
+    });
+}
+
 // ===== MODE DETECTION & STATE MANAGEMENT =====
 
 // גלה באיזה מצב אנחנו
@@ -383,7 +423,10 @@ function saveFormData() {
         key_type: document.getElementById("key_type").value,
         secondary_key: document.getElementById("secondary_key") ? document.getElementById("secondary_key").value : "",
         secondary_key_type: document.getElementById("secondary_key_type") ? document.getElementById("secondary_key_type").value : "",
-        difficulty: document.getElementById("difficulty").value,
+        accompaniment_level: document.getElementById("accompaniment_level")
+            ? document.getElementById("accompaniment_level").value
+            : "",
+        lead_level: document.getElementById("lead_level") ? document.getElementById("lead_level").value : "",
         time_signature: document.getElementById("time_signature").value,
         bpm: document.getElementById("bpm").value,
         video_url: document.getElementById("video_url").value,
@@ -502,6 +545,13 @@ function validateField(fieldId, value) {
             isValid = selectedGenres.length > 0;
             message = isValid ? '✅ ז\'אנרים נבחרו!' : '❌ יש לבחור לפחות ז\'אנר אחד';
             break;
+        case 'accompaniment_level':
+        case 'lead_level': {
+            const nv = parseInt(value, 10);
+            isValid = !Number.isNaN(nv) && nv >= 0 && nv <= 10;
+            message = isValid ? '✅ נבחר!' : '❌ יש לבחור רמה בין 0 ל-10';
+            break;
+        }
         case 'bpm':
             const bpmValue = parseInt(value);
             isValid = bpmValue >= 40 && bpmValue <= 200;
@@ -519,14 +569,16 @@ function validateField(fieldId, value) {
 
     validation.innerHTML = message;
     validation.className = isValid ? 'field-success' : 'field-error';
-    field.className = field.className.replace(/ (error|success)/g, '') + (isValid ? ' success' : ' error');
+    if (field.type !== 'hidden') {
+        field.className = field.className.replace(/ (error|success)/g, '') + (isValid ? ' success' : ' error');
+    }
 
     return isValid;
 }
 
 // הגדרת validation בזמן אמת
 function setupValidation() {
-    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'time_signature', 'bpm', 'video_url'];
 
     fields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
@@ -581,6 +633,12 @@ function resetForm() {
     document.getElementById("chords").value = "";
     document.getElementById("loops").value = "";
 
+    const accH = document.getElementById("accompaniment_level");
+    const leadH = document.getElementById("lead_level");
+    if (accH) accH.value = "1";
+    if (leadH) leadH.value = "0";
+    syncAllLevelPickersFromHidden();
+
     // איפוס ז'אנרים
     if (window.clearGenres) {
         window.clearGenres();
@@ -615,7 +673,7 @@ function handleFormSubmission(event) {
     addButtonLoading(submitBtn);
 
     // אימות כל השדות
-    const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url'];
     let allValid = true;
 
     fields.forEach(fieldId => {
@@ -644,7 +702,8 @@ function handleFormSubmission(event) {
         key_type: document.getElementById("key_type").value,
         secondary_key: document.getElementById("secondary_key") ? document.getElementById("secondary_key").value : "",
         secondary_key_type: document.getElementById("secondary_key_type") ? document.getElementById("secondary_key_type").value : "",
-        difficulty: document.getElementById("difficulty").value,
+        accompaniment_level: parseInt(document.getElementById("accompaniment_level").value, 10),
+        lead_level: parseInt(document.getElementById("lead_level").value, 10),
         time_signature: document.getElementById("time_signature").value,
         bpm: parseInt(document.getElementById("bpm").value),
         video_url: document.getElementById("video_url").value,
@@ -792,6 +851,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // אתחול בסיסי
     setupValidation();
 
+    bindLevelPickersOnce();
+    syncAllLevelPickersFromHidden();
+
     // אתחול מערכת ריבוי ז'אנרים
     initializeMultiGenre();
 
@@ -813,13 +875,14 @@ document.addEventListener("DOMContentLoaded", function () {
         initializeEditSong(mode.songId);
 
         // אימות שדות קיימים
-        const fields = ['title', 'artist', 'key', 'key_type', 'difficulty', 'time_signature', 'bpm', 'video_url'];
+        const fields = ['title', 'artist', 'key', 'key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url'];
         fields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
-            if (field && field.value) {
+            if (field && field.value !== undefined && field.value !== null && field.value !== '') {
                 validateField(fieldId, field.value);
             }
         });
+        syncAllLevelPickersFromHidden();
     } else {
         // מצב הוספת שיר חדש
         const justReturned = localStorage.getItem("justReturnedFromChords");
@@ -839,6 +902,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // נחכה קצת כדי לוודא ש-initializeMultiGenre סיים
         setTimeout(() => {
             loadFormData();
+            syncAllLevelPickersFromHidden();
         }, 150);
     }
 
@@ -875,7 +939,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 500);
 
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'difficulty', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
+    const fields = ['title', 'artist', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {

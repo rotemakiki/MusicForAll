@@ -250,19 +250,9 @@
                         <div class="field-validation" id="secondary_key_type-validation"></div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="difficulty">
-                            <span class="label-icon">⭐</span>
-                            רמת קושי
-                        </label>
-                        <select id="difficulty" name="difficulty" class="form-select" required>
-                            <option value="">בחר רמת קושי</option>
-                            <option value="beginner">מתחילים</option>
-                            <option value="intermediate">ביניים</option>
-                            <option value="advanced">מתקדמים</option>
-                        </select>
-                        <div class="field-validation" id="difficulty-validation"></div>
-                    </div>
+                    {% set level_picker_accompaniment = 1 %}
+                    {% set level_picker_lead = 0 %}
+                    {% include 'partials/song_level_picker.html' %}
                 </div>
 
                 <!-- Timing Section -->
@@ -401,6 +391,7 @@
         <div id="response-message" class="response-message" style="display: none;"></div>
     </div>
 </div>
+{% include 'partials/accompaniment_levels_dialog.html' %}
 {% endblock %}
 
 {% block scripts %}

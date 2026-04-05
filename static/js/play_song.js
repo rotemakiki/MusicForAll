@@ -965,7 +965,9 @@ function startPlayback() {
                     return;
                 }
 
-                scrollToCurrentMeasure();
+                // דלג על לופים מושבתים באותו טיק — לא להשאיר את הלופ המושבת כ"נוכחי" למחזור מטרונום שלם
+                findNextEnabledMeasure(measures);
+                if (!isPlaying) return;
             }
 
             syncPlaybackVisuals();
@@ -981,6 +983,7 @@ function startPlayback() {
 
 // Find next enabled measure
 function findNextEnabledMeasure(measures) {
+    const startIdx = currentGlobalMeasureIndex;
     while (currentGlobalMeasureIndex < measures.length) {
         const measure = measures[currentGlobalMeasureIndex];
         if (!measure) break;
@@ -990,6 +993,10 @@ function findNextEnabledMeasure(measures) {
         }
 
         currentGlobalMeasureIndex++;
+    }
+
+    if (currentGlobalMeasureIndex !== startIdx) {
+        currentBeatInMeasure = 0;
     }
 
     if (currentGlobalMeasureIndex >= measures.length) {

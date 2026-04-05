@@ -23,7 +23,8 @@ function initializePage() {
             element: row,
             title: titleEl ? titleEl.textContent.trim().toLowerCase() : '',
             artist: artistEl ? artistEl.textContent.trim().toLowerCase() : '',
-            difficulty: row.dataset.difficulty || '',
+            accompanimentLevel: parseInt(row.dataset.accompanimentLevel, 10) || 0,
+            leadLevel: parseInt(row.dataset.leadLevel, 10) || 0,
             bpm: parseInt(row.dataset.bpm) || 0,
             key: row.dataset.key || '',
             timeSignature: row.dataset.timeSignature || '',
@@ -111,12 +112,10 @@ function handleSort(event) {
             }
             case 'artist':
                 return a.artist.localeCompare(b.artist, 'he');
-            case 'difficulty': {
-                const difficultyOrder = {'beginner': 1, 'intermediate': 2, 'advanced': 3, 'קל': 1, 'בינוני': 2, 'קשה': 3};
-                const aDiff = difficultyOrder[a.difficulty] || 0;
-                const bDiff = difficultyOrder[b.difficulty] || 0;
-                return aDiff - bDiff;
-            }
+            case 'accompaniment':
+                return a.accompanimentLevel - b.accompanimentLevel;
+            case 'lead':
+                return a.leadLevel - b.leadLevel;
             case 'bpm':
                 return a.bpm - b.bpm;
             case 'genres': {

@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 import re
 from utils.permissions import get_roles, can_upload_songs, can_edit_any_content
+from utils.song_levels import attach_song_level_fields, parse_level_payload
 
 songs_bp = Blueprint('songs', __name__)
 
@@ -87,6 +88,7 @@ def songs():
         else:
             song["display_genres"] = ["לא צוין"]
 
+        attach_song_level_fields(song)
         all_songs.append(song)
     return render_template('songs.html', songs=all_songs)
 
@@ -172,6 +174,8 @@ def edit_song(song_id):
         print(f"Error parsing loops for song {song_id}: {e}")
         song["loops"] = []
 
+    attach_song_level_fields(song)
+
     return render_template("edit_song.html", song=song)
 
 @songs_bp.route('/play/<string:song_id>')
@@ -248,6 +252,8 @@ def play_song(song_id):
         print(f"Error parsing loops for song {song_id}: {e}")
         loops_data = []
 
+    attach_song_level_fields(song)
+
     try:
         beats_per_measure = int(song["time_signature"].split("/")[0])
     except:
@@ -281,7 +287,10 @@ def play_song(song_id):
         "key_type": song["key_type"],
         "secondary_key": song.get("secondary_key", ""),
         "secondary_key_type": song.get("secondary_key_type", ""),
-        "difficulty": song.get("difficulty", ""),
+        "accompaniment_level": song["accompaniment_level"],
+        "lead_level": song["lead_level"],
+        "accompaniment_level_title": song["accompaniment_level_title"],
+        "accompaniment_level_description": song["accompaniment_level_description"],
         "difficulty_approved": song.get("difficulty_approved", False),
         "time_signature": song["time_signature"],
         "bpm": song["bpm"],
@@ -382,6 +391,11 @@ def add_song():
     if not isinstance(genres_data, list) or len(genres_data) == 0:
         return jsonify({"error": "יש לבחור לפחות ז'אנר אחד"}), 400
 
+    acc = parse_level_payload(data.get("accompaniment_level"))
+    lead = parse_level_payload(data.get("lead_level"))
+    if acc is None or lead is None:
+        return jsonify({"error": "יש לבחור רמת ליווי והובלה בין 0 ל-10"}), 400
+
     # Handle loops data if provided
     loops_data = data.get("loops", [])
 
@@ -393,7 +407,8 @@ def add_song():
         "key_type": data["key_type"],
         "secondary_key": data.get("secondary_key", ""),  # Optional - for songs with multiple keys
         "secondary_key_type": data.get("secondary_key_type", ""),
-        "difficulty": data["difficulty"],
+        "accompaniment_level": acc,
+        "lead_level": lead,
         "difficulty_approved": False,
         "time_signature": data["time_signature"],
         "bpm": int(data["bpm"]),
@@ -438,6 +453,11 @@ def edit_song_api(song_id):
     if not isinstance(genres_data, list) or len(genres_data) == 0:
         return jsonify({"error": "יש לבחור לפחות ז'אנר אחד"}), 400
 
+    acc = parse_level_payload(data.get("accompaniment_level"))
+    lead = parse_level_payload(data.get("lead_level"))
+    if acc is None or lead is None:
+        return jsonify({"error": "יש לבחור רמת ליווי והובלה בין 0 ל-10"}), 400
+
     # Handle loops data if provided
     loops_data = data.get("loops", [])
 
@@ -449,7 +469,8 @@ def edit_song_api(song_id):
         "key_type": data["key_type"],
         "secondary_key": data.get("secondary_key", ""),
         "secondary_key_type": data.get("secondary_key_type", ""),
-        "difficulty": data["difficulty"],
+        "accompaniment_level": acc,
+        "lead_level": lead,
         "time_signature": data["time_signature"],
         "bpm": int(data["bpm"]),
         "video_url": data["video_url"],
@@ -830,6 +851,13 @@ def create_song_with_chords_loops():
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
         # יצירת השיר החדש
+        acc = parse_level_payload(data.get("accompaniment_level"))
+        lead = parse_level_payload(data.get("lead_level"))
+        if acc is None:
+            acc = 1
+        if lead is None:
+            lead = 0
+
         new_song = {
             "title": data["title"],
             "artist": data["artist"],
@@ -838,7 +866,8 @@ def create_song_with_chords_loops():
             "key_type": data.get("key_type", "major"),
             "secondary_key": data.get("secondary_key", ""),
             "secondary_key_type": data.get("secondary_key_type", ""),
-            "difficulty": data.get("difficulty", ""),
+            "accompaniment_level": acc,
+            "lead_level": lead,
             "difficulty_approved": False,
             "time_signature": data.get("time_signature", "4/4"),
             "bpm": int(data.get("bpm", 120)),

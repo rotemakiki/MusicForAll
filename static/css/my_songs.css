@@ -148,22 +148,16 @@ body {
     color: #34495e;
 }
 
-.detail-badge.difficulty-beginner {
-    background: linear-gradient(135deg, #d4edda, #c3e6cb);
-    border-color: #28a745;
-    color: #155724;
+.detail-badge.level-badge-accompaniment {
+    background: linear-gradient(135deg, #e0e7ff, #ddd6fe);
+    border-color: #818cf8;
+    color: #3730a3;
 }
 
-.detail-badge.difficulty-intermediate {
-    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-    border-color: #ffc107;
-    color: #856404;
-}
-
-.detail-badge.difficulty-advanced {
-    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-    border-color: #dc3545;
-    color: #721c24;
+.detail-badge.level-badge-lead {
+    background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+    border-color: #f472b6;
+    color: #9d174d;
 }
 
 .added-date {

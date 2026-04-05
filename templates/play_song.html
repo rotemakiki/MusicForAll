@@ -69,17 +69,24 @@
                         <span class="detail-label">מקצב:</span>
                         <span class="detail-value">{{ song.time_signature }}</span>
                     </span>
-                    {% if song.difficulty %}
                     <span class="detail-item">
-                        <span class="detail-icon">⭐</span>
-                        <span class="detail-label">רמת קושי:</span>
-                        <span class="detail-value">{{ song.difficulty }}
+                        <span class="detail-icon">🎸</span>
+                        <span class="detail-label">רמת ליווי:</span>
+                        <span class="detail-value" title="{{ song.accompaniment_level_description | e }}">
+                            {{ song.accompaniment_level }} — {{ song.accompaniment_level_title }}
                             {% if not song.difficulty_approved %}
                                 <span class="pending-approval">*</span>
                             {% endif %}
                         </span>
                     </span>
-                    {% endif %}
+                    <span class="detail-item">
+                        <span class="detail-icon">🎶</span>
+                        <span class="detail-label">רמת הובלה:</span>
+                        <span class="detail-value" title="מדריך מפורט לרמות ההובלה יתווסף בהמשך.">{{ song.lead_level }} / 10</span>
+                    </span>
+                    <span class="detail-item detail-item-inline-help">
+                        <button type="button" class="play-song-levels-help js-open-accompaniment-levels-help">מה אומרות רמות הליווי?</button>
+                    </span>
                     <span class="detail-item original-bpm-display">
                         <span class="detail-icon">🎵</span>
                         <span class="detail-label">BPM מקורי:</span>
@@ -351,6 +358,8 @@
         </div>
     </div>
 </div>
+
+{% include 'partials/accompaniment_levels_dialog.html' %}
 
 <!-- Size Indicator -->
 <div id="size-indicator" class="size-indicator"></div>

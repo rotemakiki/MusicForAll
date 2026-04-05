@@ -71,6 +71,13 @@ app.register_blueprint(chords_system_bp)  # הוספת המערכת החדשה
 
 
 @app.context_processor
+def inject_accompaniment_levels_help():
+    from utils.song_levels import ACCOMPANIMENT_LEVELS
+
+    return {"accompaniment_levels_help": ACCOMPANIMENT_LEVELS}
+
+
+@app.context_processor
 def inject_navbar_profile_image():
     """תמונת פרופיל מ-Firestore (מקור אמת) — נשמרת אחרי רענון כש-Firestore מתעדכן."""
     from firebase_config import db

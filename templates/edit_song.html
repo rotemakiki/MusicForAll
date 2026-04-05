@@ -243,19 +243,9 @@
                         <div class="field-validation" id="secondary_key_type-validation"></div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="difficulty">
-                            <span class="label-icon">⭐</span>
-                            רמת קושי
-                        </label>
-                        <select id="difficulty" name="difficulty" class="form-select" required>
-                            <option value="">בחר רמת קושי</option>
-                            <option value="beginner" {% if song.difficulty == 'beginner' %}selected{% endif %}>מתחילים</option>
-                            <option value="intermediate" {% if song.difficulty == 'intermediate' %}selected{% endif %}>ביניים</option>
-                            <option value="advanced" {% if song.difficulty == 'advanced' %}selected{% endif %}>מתקדמים</option>
-                        </select>
-                        <div class="field-validation" id="difficulty-validation"></div>
-                    </div>
+                    {% set level_picker_accompaniment = song.accompaniment_level %}
+                    {% set level_picker_lead = song.lead_level %}
+                    {% include 'partials/song_level_picker.html' %}
                 </div>
 
                 <!-- Timing Section -->
@@ -398,6 +388,7 @@
         <div id="response-message" class="response-message" style="display: none;"></div>
     </div>
 </div>
+{% include 'partials/accompaniment_levels_dialog.html' %}
 
 <script>
     // Pass data from Flask to JavaScript

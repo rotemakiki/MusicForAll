@@ -35,11 +35,8 @@
                         <span class="detail-badge">🎼 {{ song.key }} {{ song.key_type }}{% if song.get('secondary_key') and song.get('secondary_key_type') %} / {{ song.secondary_key }} {{ song.secondary_key_type }}{% endif %}</span>
                         <span class="detail-badge">🎵 {{ song.time_signature }}</span>
                         <span class="detail-badge">⚡ {{ song.bpm }} BPM</span>
-                        {% if song.difficulty %}
-                        <span class="detail-badge difficulty-{{ song.difficulty }}">
-                            ⭐ {{ song.difficulty }}
-                        </span>
-                        {% endif %}
+                        <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">🎸 ליווי {{ song.accompaniment_level }}</span>
+                        <span class="detail-badge level-badge-lead" title="רמת הובלה: {{ song.lead_level }} מתוך 10">🎶 הובלה {{ song.lead_level }}</span>
                     </div>
 
                     <div class="added-date">
