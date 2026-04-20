@@ -418,6 +418,7 @@ function saveFormData() {
     const formData = {
         title: document.getElementById("title").value,
         artist: document.getElementById("artist").value,
+        language: document.getElementById("language") ? document.getElementById("language").value : "",
         genres: JSON.stringify(genresToSave),
         key: document.getElementById("key").value,
         key_type: document.getElementById("key_type").value,
@@ -698,6 +699,7 @@ function handleFormSubmission(event) {
         title: document.getElementById("title").value,
         artist: document.getElementById("artist").value,
         genres: selectedGenres, // שלח כמערך
+        language: document.getElementById("language") ? document.getElementById("language").value : "",
         key: document.getElementById("key").value,
         key_type: document.getElementById("key_type").value,
         secondary_key: document.getElementById("secondary_key") ? document.getElementById("secondary_key").value : "",
@@ -939,7 +941,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 500);
 
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
+    const fields = ['title', 'artist', 'language', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {

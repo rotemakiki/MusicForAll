@@ -54,6 +54,27 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label" for="language">
+                            <span class="label-icon">🌐</span>
+                            שפה
+                        </label>
+                        <select id="language" name="language" class="form-select">
+                            <option value="" {% if not song.get('language') %}selected{% endif %}>בחר שפה (אופציונלי)</option>
+                            <option value="he" {% if song.get('language') == 'he' %}selected{% endif %}>עברית</option>
+                            <option value="en" {% if song.get('language') == 'en' %}selected{% endif %}>אנגלית</option>
+                            <option value="es" {% if song.get('language') == 'es' %}selected{% endif %}>ספרדית</option>
+                            <option value="fr" {% if song.get('language') == 'fr' %}selected{% endif %}>צרפתית</option>
+                            <option value="ru" {% if song.get('language') == 'ru' %}selected{% endif %}>רוסית</option>
+                            <option value="ar" {% if song.get('language') == 'ar' %}selected{% endif %}>ערבית</option>
+                            <option value="pt" {% if song.get('language') == 'pt' %}selected{% endif %}>פורטוגזית</option>
+                            <option value="it" {% if song.get('language') == 'it' %}selected{% endif %}>איטלקית</option>
+                            <option value="de" {% if song.get('language') == 'de' %}selected{% endif %}>גרמנית</option>
+                            <option value="other" {% if song.get('language') == 'other' %}selected{% endif %}>אחר</option>
+                        </select>
+                        <div class="input-hint">בינתיים בסיסי — נשתמש בזה בהמשך לסינון/גלובליזציה</div>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label" for="genre">
                             <span class="label-icon">🎭</span>
                             ז'אנרים מוזיקליים
@@ -81,6 +102,8 @@
                                 <option value="world">מוزיקת עולם - World Musica</option>
                                 <option value="mizrahi">מזרחי</option>
                                 <option value="israeli">ישראלי</option>
+                                <option value="bossa_nova">בוסה נובה - Bossa Nova</option>
+                                <option value="latin">לטיני - Latin</option>
                                 <option value="other">אחר</option>
                             </select>
                             <button type="button" class="add-genre-btn" id="add-genre-btn">
@@ -242,17 +265,13 @@
                         </select>
                         <div class="field-validation" id="secondary_key_type-validation"></div>
                     </div>
-
-                    {% set level_picker_accompaniment = song.accompaniment_level %}
-                    {% set level_picker_lead = song.lead_level %}
-                    {% include 'partials/song_level_picker.html' %}
                 </div>
 
                 <!-- Timing Section -->
                 <div class="form-section">
                     <h3 class="section-title">
                         <span class="section-icon">⏱️</span>
-                        מקצב וקצב
+                        קצב ורמה
                     </h3>
 
                     <div class="form-group">
@@ -297,6 +316,10 @@
                         <div class="input-hint">מהירות הקצב בין 40-200 פעימות לדקה</div>
                         <div class="field-validation" id="bpm-validation"></div>
                     </div>
+
+                    {% set level_picker_accompaniment = song.accompaniment_level %}
+                    {% set level_picker_lead = song.lead_level %}
+                    {% include 'partials/song_level_picker.html' %}
                 </div>
 
                 <!-- Media Section -->

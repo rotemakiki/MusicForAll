@@ -94,6 +94,23 @@
         font-weight: 700;
     }
 
+    .scale-table .scale-note-cell {
+        background: rgba(102, 126, 234, 0.14);
+    }
+
+    .scale-table .scale-note-root {
+        background: rgba(67, 56, 202, 0.32);
+        color: #1e1b4b;
+        font-weight: 950;
+        box-shadow: inset 0 0 0 1px rgba(67, 56, 202, 0.35);
+    }
+
+    .scale-table .scale-chord-cell {
+        color: #047857;
+        font-weight: 800;
+        background: rgba(16, 185, 129, 0.10);
+    }
+
     .chord-tones-table {
         width: 100%;
         border-collapse: collapse;
@@ -107,7 +124,11 @@
         text-align: center;
         font-size: 0.92rem;
         font-weight: 800;
-        color: #334155;
+    }
+
+    .chord-tones-table td {
+        color: #047857;
+        background: rgba(16, 185, 129, 0.08);
     }
 
     .chord-tones-table th {
@@ -115,6 +136,11 @@
         opacity: 0.9;
         font-weight: 950;
         color: #2c3e50;
+    }
+
+    .chord-tones-table thead th:not(:first-child) {
+        color: #047857;
+        background: rgba(16, 185, 129, 0.12);
     }
 
     .neck-wrap {
@@ -172,9 +198,34 @@
         background: rgba(102, 126, 234, 0.10);
     }
 
+    /* Scale-only cells when an chord is selected: stay in the scale but visually step back */
+    .guitar-neck td.note-scale-muted {
+        background: rgba(102, 126, 234, 0.045);
+        color: #94a3b8;
+    }
+
+    .guitar-neck td.note-scale-muted .note-text {
+        font-weight: 700;
+    }
+
     .note-highlight {
         background: rgba(102, 126, 234, 0.25);
         box-shadow: inset 0 0 0 2px rgba(102, 126, 234, 0.45);
+    }
+
+    .guitar-neck td.note-highlight-chord {
+        background: linear-gradient(165deg, rgba(16, 185, 129, 0.42), rgba(5, 150, 105, 0.52));
+        box-shadow:
+            inset 0 0 0 3px rgba(4, 120, 87, 0.95),
+            0 0 0 1px rgba(4, 120, 87, 0.35);
+        position: relative;
+        z-index: 1;
+    }
+
+    .guitar-neck td.note-highlight-chord .note-text {
+        color: #022c22;
+        font-weight: 950;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
     }
 
     .note-text {
@@ -284,6 +335,13 @@
     const STANDARD_TUNING = [TUNING_SEMITONES["E"], TUNING_SEMITONES["A"], TUNING_SEMITONES["D"], TUNING_SEMITONES["G"], TUNING_SEMITONES["B"], TUNING_SEMITONES["E"]];
     const STANDARD_TUNING_LABELS = ["E", "A", "D", "G", "B", "E"];
 
+    /** Row 0 = low E (shown as "e"), row 5 = high E (shown as "E") for clear distinction. */
+    function guitarStringLabel(stringIndex) {
+        if (stringIndex === 0) return "e string";
+        if (stringIndex === 5) return "E string";
+        return STANDARD_TUNING_LABELS[stringIndex] + " string";
+    }
+
     function mod12(n) {
         return ((n % 12) + 12) % 12;
     }
@@ -391,11 +449,14 @@
                 ${names.map((d, i) => {
                     const note = scaleNotes[i];
                     const chord = chords[i].chordName;
+                    const noteCellClass = i === 0
+                        ? "scale-note-cell scale-note-root"
+                        : "scale-note-cell";
                     return `
                         <tr>
                             <td>${d}</td>
-                            <td>${note}</td>
-                            <td>${chord}</td>
+                            <td class="${noteCellClass}">${note}</td>
+                            <td class="scale-chord-cell">${chord}</td>
                         </tr>
                     `;
                 }).join("")}
@@ -478,6 +539,8 @@
             highlightSet = new Set([c.root, c.third, c.fifth, c.seventh]);
         }
 
+        const chordHighlight = highlightMode.startsWith("chord");
+
         const container = document.getElementById("guitar-neck");
         container.innerHTML = "";
 
@@ -502,13 +565,14 @@
 
         const tbody = document.createElement("tbody");
 
-        // rows: low E -> high E
-        for (let s = 0; s < 6; s++) {
+        // rows top -> bottom: high E -> low E (standard neck diagram; low "e" at bottom-left)
+        for (let row = 0; row < 6; row++) {
+            const s = 5 - row;
             const tr = document.createElement("tr");
 
             const label = document.createElement("td");
             label.className = "string-label";
-            label.innerText = STANDARD_TUNING_LABELS[s] + " string";
+            label.innerText = guitarStringLabel(s);
             tr.appendChild(label);
 
             for (let fret = 0; fret <= fretMax; fret++) {
@@ -520,10 +584,16 @@
                 const td = document.createElement("td");
                 td.className = "note-cell";
 
-                // scale note tint
-                if (scaleSet.has(noteName)) td.classList.add("note-scale");
-                // selection highlight
-                if (highlightSet.has(noteName)) td.classList.add("note-highlight");
+                const inScale = scaleSet.has(noteName);
+                const inHighlight = highlightSet.has(noteName);
+
+                if (inScale) td.classList.add("note-scale");
+                if (chordHighlight) {
+                    if (inHighlight) td.classList.add("note-highlight-chord");
+                    else if (inScale) td.classList.add("note-scale-muted");
+                } else if (inHighlight) {
+                    td.classList.add("note-highlight");
+                }
 
                 const inner = document.createElement("span");
                 inner.className = "note-text";

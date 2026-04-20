@@ -283,6 +283,7 @@ def play_song(song_id):
         "artist": song["artist"],
         "genre": song.get("genre", ", ".join(song["display_genres"])),  # For template compatibility
         "genres": song["display_genres"],  # New field for multiple genres
+        "language": song.get("language", ""),
         "key": song["key"],
         "key_type": song["key_type"],
         "secondary_key": song.get("secondary_key", ""),
@@ -403,6 +404,7 @@ def add_song():
         "title": data["title"],
         "artist": data["artist"],
         "genres": genres_data,  # Store as array
+        "language": data.get("language", ""),  # Optional - song language (basic for now)
         "key": data["key"],
         "key_type": data["key_type"],
         "secondary_key": data.get("secondary_key", ""),  # Optional - for songs with multiple keys
@@ -465,6 +467,7 @@ def edit_song_api(song_id):
         "title": data["title"],
         "artist": data["artist"],
         "genres": genres_data,  # Store as array
+        "language": data.get("language", ""),  # Optional - song language (basic for now)
         "key": data["key"],
         "key_type": data["key_type"],
         "secondary_key": data.get("secondary_key", ""),

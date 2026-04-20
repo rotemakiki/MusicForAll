@@ -64,6 +64,26 @@
                             {% endif %}
                         </span>
                     </span>
+                    {% if song.language %}
+                    <span class="detail-item">
+                        <span class="detail-icon">🌐</span>
+                        <span class="detail-label">שפה:</span>
+                        <span class="detail-value">
+                            {% if song.language == 'he' %}עברית
+                            {% elif song.language == 'en' %}אנגלית
+                            {% elif song.language == 'es' %}ספרדית
+                            {% elif song.language == 'fr' %}צרפתית
+                            {% elif song.language == 'ru' %}רוסית
+                            {% elif song.language == 'ar' %}ערבית
+                            {% elif song.language == 'pt' %}פורטוגזית
+                            {% elif song.language == 'it' %}איטלקית
+                            {% elif song.language == 'de' %}גרמנית
+                            {% elif song.language == 'other' %}אחר
+                            {% else %}{{ song.language }}
+                            {% endif %}
+                        </span>
+                    </span>
+                    {% endif %}
                     <span class="detail-item">
                         <span class="detail-icon">⏱️</span>
                         <span class="detail-label">מקצב:</span>
