@@ -434,7 +434,14 @@ function saveFormData() {
         tutorial_video_url: document.getElementById("tutorial_video_url") ? document.getElementById("tutorial_video_url").value : "",
         song_version: document.getElementById("song_version") ? document.getElementById("song_version").value : "",
         original_artist: document.getElementById("original_artist") ? document.getElementById("original_artist").value : "",
-        notes: document.getElementById("notes") ? document.getElementById("notes").value : ""
+        teacher_notes: document.getElementById("teacher_notes") ? document.getElementById("teacher_notes").value : "",
+        student_notes: document.getElementById("student_notes") ? document.getElementById("student_notes").value : "",
+        note_tags: document.getElementById("note_tags") ? document.getElementById("note_tags").value : "",
+        easy_capo_fret: document.getElementById("easy_capo_fret") ? document.getElementById("easy_capo_fret").value : "0",
+        play_method: document.getElementById("play_method") ? document.getElementById("play_method").value : PLAY_METHODS.BOXES,
+        tabs_text: document.getElementById("tabs_text") ? document.getElementById("tabs_text").value : "",
+        chords_lyrics_text: document.getElementById("chords_lyrics_text") ? document.getElementById("chords_lyrics_text").value : "",
+        lyrics_text: document.getElementById("lyrics_text") ? document.getElementById("lyrics_text").value : ""
     };
 
     const storageKey = mode.isEditMode ? "editSongData" : "songData";
@@ -502,9 +509,9 @@ function loadFormData() {
                         }
                     }
                 }
-            } else if (key === 'notes') {
-                // textarea - צריך לטפל בו בנפרד
-                if (savedData[key]) {
+            } else if (key === 'teacher_notes' || key === 'student_notes' || key === 'tabs_text' || key === 'chords_lyrics_text' || key === 'lyrics_text') {
+                // textarea fields
+                if (savedData[key] !== undefined && savedData[key] !== null) {
                     element.value = savedData[key];
                 }
             } else {
@@ -515,6 +522,13 @@ function loadFormData() {
                 }
             }
         }
+    }
+
+    // Restore play method view after saved data loaded (in case of refresh/return)
+    if (savedData.play_method) {
+        setTimeout(() => {
+            setActivePlayMethod(savedData.play_method);
+        }, 0);
     }
 }
 
@@ -661,6 +675,92 @@ function resetForm() {
     });
 }
 
+// ===== PLAY METHODS (WAYS TO PLAY) - BASIC UI ONLY =====
+
+const PLAY_METHODS = {
+    BOXES: "boxes",
+    TABS: "tabs",
+    CHORDS_LYRICS: "chords_lyrics",
+    LYRICS: "lyrics",
+};
+
+function getPlayMethodStorageKey() {
+    const mode = detectFormMode();
+    return mode.isEditMode ? `play_method_edit_${mode.songId}` : "play_method_new";
+}
+
+function getPlayMethodTextsStorageKey(type) {
+    const mode = detectFormMode();
+    const suffix = mode.isEditMode ? `edit_${mode.songId}` : "new";
+    return `play_method_${type}_${suffix}`;
+}
+
+function setActivePlayMethod(method) {
+    const playMethodHidden = document.getElementById("play_method");
+    if (playMethodHidden) playMethodHidden.value = method;
+    try {
+        localStorage.setItem(getPlayMethodStorageKey(), method);
+    } catch (e) { /* ignore */ }
+
+    document.querySelectorAll(".play-method-btn").forEach((btn) => {
+        const isActive = btn.getAttribute("data-play-method") === method;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+
+    document.querySelectorAll("[data-play-method-panel]").forEach((panel) => {
+        const panelMethod = panel.getAttribute("data-play-method-panel");
+        const show = panelMethod === method;
+        panel.hidden = !show;
+    });
+}
+
+function bindPlayMethodsUI() {
+    const bar = document.querySelector(".play-methods-bar");
+    if (!bar) return; // Not present on this page
+
+    const buttons = Array.from(document.querySelectorAll(".play-method-btn"));
+    if (buttons.length === 0) return;
+
+    // Persist textareas (basic: store in localStorage only for now)
+    const tabsEl = document.getElementById("tabs_text");
+    const chordsLyricsEl = document.getElementById("chords_lyrics_text");
+    const lyricsEl = document.getElementById("lyrics_text");
+
+    const restore = (el, key) => {
+        if (!el) return;
+        try {
+            const v = localStorage.getItem(key);
+            if (v !== null && v !== undefined) el.value = v;
+        } catch (e) { /* ignore */ }
+        el.addEventListener("input", () => {
+            try { localStorage.setItem(key, el.value || ""); } catch (e) { /* ignore */ }
+            saveFormData();
+        });
+    };
+
+    restore(tabsEl, getPlayMethodTextsStorageKey("tabs_text"));
+    restore(chordsLyricsEl, getPlayMethodTextsStorageKey("chords_lyrics_text"));
+    restore(lyricsEl, getPlayMethodTextsStorageKey("lyrics_text"));
+
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const method = btn.getAttribute("data-play-method") || PLAY_METHODS.BOXES;
+            setActivePlayMethod(method);
+            saveFormData();
+        });
+    });
+
+    // Initial selection (default: boxes)
+    let method = PLAY_METHODS.BOXES;
+    try {
+        method = localStorage.getItem(getPlayMethodStorageKey()) || method;
+    } catch (e) { /* ignore */ }
+    if (!Object.values(PLAY_METHODS).includes(method)) method = PLAY_METHODS.BOXES;
+    setActivePlayMethod(method);
+}
+
 // ===== FORM SUBMISSION =====
 
 function handleFormSubmission(event) {
@@ -712,7 +812,13 @@ function handleFormSubmission(event) {
         tutorial_video_url: document.getElementById("tutorial_video_url") ? document.getElementById("tutorial_video_url").value : "",
         song_version: document.getElementById("song_version") ? document.getElementById("song_version").value : "",
         original_artist: document.getElementById("original_artist") ? document.getElementById("original_artist").value : "",
-        notes: document.getElementById("notes") ? document.getElementById("notes").value : ""
+        teacher_notes: document.getElementById("teacher_notes") ? document.getElementById("teacher_notes").value : "",
+        student_notes: document.getElementById("student_notes") ? document.getElementById("student_notes").value : "",
+        note_tags: (document.getElementById("note_tags") ? document.getElementById("note_tags").value : "")
+            .split(",")
+            .map(s => s.trim())
+            .filter(Boolean),
+        easy_capo_fret: parseInt(document.getElementById("easy_capo_fret") ? document.getElementById("easy_capo_fret").value : "0", 10) || 0
     };
 
     // טיפול בקישורי YouTube
@@ -914,6 +1020,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // עדכון כפתור האקורדים
     updateChordsButton();
 
+    // אתחול סרגל "דרכי נגינה" (שימוש בסיסי: החלפת תצוגה ושמירה מקומית)
+    bindPlayMethodsUI();
+
     // בדיקה נוספת - אם יש ז'אנרים שמורים אבל לא נטענו, ננסה לטעון אותם שוב
     setTimeout(() => {
         const storageKey = mode.isEditMode ? "editSongData" : "songData";
@@ -941,7 +1050,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 500);
 
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'language', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'notes'];
+    const fields = ['title', 'artist', 'language', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'teacher_notes', 'student_notes', 'note_tags', 'easy_capo_fret'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {

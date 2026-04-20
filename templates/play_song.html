@@ -274,6 +274,14 @@
                 <div class="transpose-info" id="transpose-info">
                     <span>שינוי: 0 טונים (0 סמיטונים)</span>
                 </div>
+                {% if song.easy_capo_fret and song.easy_capo_fret|int > 0 %}
+                <div class="easy-version-controls">
+                    <button type="button" class="easy-version-btn" id="easy-version-btn" onclick="toggleEasyCapoVersion()">
+                        🎸 גרסה קלה (קאפו)
+                    </button>
+                    <div class="easy-version-hint" id="easy-version-hint" style="display:none;"></div>
+                </div>
+                {% endif %}
             </div>
 
             <!-- 4. בקרת גודל -->
@@ -359,6 +367,48 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 7. הערות - לתלמידים / למורים -->
+            {% set has_student_notes = song.student_notes and (song.student_notes|string)|trim %}
+            {% set has_teacher_notes = song.teacher_notes and (song.teacher_notes|string)|trim %}
+            {% set has_note_tags = song.note_tags and song.note_tags|length > 0 %}
+            {% if has_student_notes or has_teacher_notes or has_note_tags %}
+            <div class="control-group notes-group">
+                <div class="notes-panel">
+                    <div class="notes-title">
+                        <span class="control-icon">📝</span>
+                        הערות
+                    </div>
+
+                    {% if has_student_notes %}
+                    <div class="notes-block">
+                        <div class="notes-block-title">לתלמידים</div>
+                        <div class="notes-text" id="student-notes">{{ song.student_notes }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% if can_see_teacher_notes and has_teacher_notes %}
+                    <div class="notes-block">
+                        <div class="notes-block-title">למורים</div>
+                        <div class="notes-text" id="teacher-notes">{{ song.teacher_notes }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% if has_note_tags %}
+                    <div class="notes-tags">
+                        <div class="notes-block-title">סוגי הערות</div>
+                        <div class="notes-tags-list" id="notes-tags-list">
+                            {% for t in song.note_tags %}
+                                <span class="note-tag">{{ t }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="notes-tags-summary" id="notes-tags-summary" style="display:none;"></div>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <div class="chord-section">
@@ -397,7 +447,9 @@
         chords: {{ song.chords | tojson }},
         loops: {{ song.loops | tojson }},
         originalBpm: {{ song.bpm }},
-        timeSignature: "{{ song.time_signature }}"
+        timeSignature: "{{ song.time_signature }}",
+        easyCapoFret: {{ (song.easy_capo_fret or 0) | int }},
+        studentNotes: {{ (song.student_notes or "") | tojson }}
     };
     (function recordRecentlyViewedLocal() {
         var d = window.songData;

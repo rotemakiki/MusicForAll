@@ -260,6 +260,8 @@ def play_song(song_id):
         beats_per_measure = 4
 
     can_watch_videos = "user_id" in session
+    roles = get_roles(session) if "user_id" in session else []
+    can_see_teacher_notes = ("teacher" in roles) or ("admin" in roles)
     video_url = song.get("video_url", "")
     tutorial_url = song.get("tutorial_video_url", "")
     # קישור לצפייה ביוטיוב (לפתיחה בטאב חדש)
@@ -306,8 +308,12 @@ def play_song(song_id):
         "chords": chords_list,
         "loops": loops_data,
         "beats": beats_per_measure,
-        "created_by": song.get("created_by", None)
-    }, can_watch_videos=can_watch_videos, is_localhost=request.host.startswith("localhost") or "127.0.0.1" in request.host)
+        "created_by": song.get("created_by", None),
+        "teacher_notes": song.get("teacher_notes", song.get("notes", "")),
+        "student_notes": song.get("student_notes", ""),
+        "note_tags": song.get("note_tags", []),
+        "easy_capo_fret": int(song.get("easy_capo_fret") or 0),
+    }, can_watch_videos=can_watch_videos, can_see_teacher_notes=can_see_teacher_notes, is_localhost=request.host.startswith("localhost") or "127.0.0.1" in request.host)
 
 # Legacy chord route - redirect to player
 @songs_bp.route('/chords/<string:song_id>')
@@ -400,6 +406,15 @@ def add_song():
     # Handle loops data if provided
     loops_data = data.get("loops", [])
 
+    teacher_notes = data.get("teacher_notes", data.get("notes", ""))  # backward compatible
+    student_notes = data.get("student_notes", "")
+    note_tags = data.get("note_tags", [])
+    easy_capo_fret = data.get("easy_capo_fret", 0)
+    try:
+        easy_capo_fret = int(easy_capo_fret or 0)
+    except (TypeError, ValueError):
+        easy_capo_fret = 0
+
     new_song = {
         "title": data["title"],
         "artist": data["artist"],
@@ -420,7 +435,11 @@ def add_song():
         "loops": json.dumps(loops_data),
         "song_version": data.get("song_version", ""),  # Optional field
         "original_artist": data.get("original_artist", ""),  # Optional field - for cover songs
-        "notes": data.get("notes", ""),  # Optional field
+        "notes": data.get("notes", ""),  # Optional field (legacy)
+        "teacher_notes": teacher_notes,
+        "student_notes": student_notes,
+        "note_tags": note_tags if isinstance(note_tags, list) else [],
+        "easy_capo_fret": easy_capo_fret,
         "created_at": datetime.utcnow(),
         "created_by": session.get("user_id"),
     }
@@ -463,6 +482,15 @@ def edit_song_api(song_id):
     # Handle loops data if provided
     loops_data = data.get("loops", [])
 
+    teacher_notes = data.get("teacher_notes", data.get("notes", ""))
+    student_notes = data.get("student_notes", "")
+    note_tags = data.get("note_tags", [])
+    easy_capo_fret = data.get("easy_capo_fret", 0)
+    try:
+        easy_capo_fret = int(easy_capo_fret or 0)
+    except (TypeError, ValueError):
+        easy_capo_fret = 0
+
     updated_fields = {
         "title": data["title"],
         "artist": data["artist"],
@@ -482,7 +510,11 @@ def edit_song_api(song_id):
         "loops": json.dumps(loops_data),
         "song_version": data.get("song_version", ""),  # Optional field
         "original_artist": data.get("original_artist", ""),  # Optional field - for cover songs
-        "notes": data.get("notes", ""),  # Optional field
+        "notes": data.get("notes", ""),  # Optional field (legacy)
+        "teacher_notes": teacher_notes,
+        "student_notes": student_notes,
+        "note_tags": note_tags if isinstance(note_tags, list) else [],
+        "easy_capo_fret": easy_capo_fret,
         "updated_at": datetime.utcnow()
     }
     firestore.client().collection("songs").document(song_id).update(updated_fields)

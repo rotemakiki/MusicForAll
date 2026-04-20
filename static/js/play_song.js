@@ -47,6 +47,16 @@ const metronome = document.getElementById("metronome-sound");
 // Transposition state
 let transposeSemitones = 0; // Current transposition in semitones
 
+// Easy version (Capo) state
+let easyVersionActive = false;
+let easyCapoFret = 0;
+try {
+    const raw = window.songData?.easyCapoFret;
+    easyCapoFret = typeof raw === 'number' ? raw : parseInt(raw || 0, 10) || 0;
+} catch (e) {
+    easyCapoFret = 0;
+}
+
 // משתני גודל התיבות והפונט
 let measureScale = 1.0; // גודל בסיסי של התיבות
 let fontScale = 1.0;    // גודל בסיסי של הפונט
@@ -191,8 +201,54 @@ function resetTranspose() {
     input.value = 0;
     slider.value = 0;
     transposeSemitones = 0;
+    setEasyVersionActive(false);
     updateTransposeInfo();
     renderChords();
+}
+
+function setEasyVersionActive(active) {
+    easyVersionActive = !!active;
+    const btn = document.getElementById('easy-version-btn');
+    const hint = document.getElementById('easy-version-hint');
+    if (btn) btn.classList.toggle('active', easyVersionActive);
+    if (hint) hint.style.display = easyVersionActive ? 'block' : 'none';
+}
+
+function applyTransposeBySemitones(semitones) {
+    // UI uses "tones" with 0.5 tone steps => 1 semitone per step
+    const tonesValue = semitones / 2;
+    const input = document.getElementById('transpose-input');
+    const slider = document.getElementById('transpose-slider');
+    if (!input || !slider) return;
+
+    // Clamp to UI min/max
+    let v = tonesValue;
+    if (v < -6) v = -6;
+    if (v > 6) v = 6;
+
+    input.value = v;
+    slider.value = v;
+    transposeSemitones = Math.round(v * 2);
+    updateTransposeInfo();
+    renderChords();
+}
+
+function toggleEasyCapoVersion() {
+    if (!easyCapoFret || easyCapoFret <= 0) return;
+
+    const next = !easyVersionActive;
+    setEasyVersionActive(next);
+
+    if (next) {
+        // Each capo fret is a semitone. To keep original key, we transpose DOWN by fret count.
+        applyTransposeBySemitones(-easyCapoFret);
+        const hint = document.getElementById('easy-version-hint');
+        if (hint) {
+            hint.textContent = `יש להניח את הקאפו על סריג מספר ${easyCapoFret} בשביל לנגן בסולם המקורי של השיר.`;
+        }
+    } else {
+        applyTransposeBySemitones(0);
+    }
 }
 
 function updateTransposeInfo() {
@@ -206,6 +262,25 @@ function updateTransposeInfo() {
     }
     
     info.innerHTML = `<span>${text}</span>`;
+}
+
+function renderNotesTagSummary() {
+    const tagsWrap = document.getElementById('notes-tags-list');
+    const summary = document.getElementById('notes-tags-summary');
+    if (!tagsWrap || !summary) return;
+    const tags = Array.from(tagsWrap.querySelectorAll('.note-tag'))
+        .map((el) => (el.textContent || '').trim())
+        .filter(Boolean);
+    if (tags.length === 0) return;
+
+    const counts = new Map();
+    tags.forEach((t) => counts.set(t, (counts.get(t) || 0) + 1));
+    const sorted = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([t, n]) => `${t}×${n}`);
+
+    summary.textContent = `חזרות בסוגי הערות: ${sorted.join(' · ')}`;
+    summary.style.display = 'block';
 }
 
 // פונקציות הגדלה/הקטנה של התיבות
@@ -1277,6 +1352,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     updateTransposeInfo();
     renderChords();
+    renderNotesTagSummary();
 
     // טעינת מוקדמת של המטרונום — בפרודקשן מפחית עיכוב בנקישה הראשונה
     if (metronome) {

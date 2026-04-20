@@ -383,14 +383,48 @@
                     </h3>
 
                     <div class="form-group">
-                        <label class="form-label" for="notes">
+                        <label class="form-label" for="teacher_notes">
                             <span class="label-icon">💬</span>
-                            הערות למורה
+                            הערות למורים
                         </label>
-                        <textarea id="notes" name="notes" class="form-input" rows="4"
-                                  placeholder="הכנס הערות חשובות על השיר, דגשים מיוחדים, או מידע נוסף שיכול לעזור...">{{ song.get('notes', '') }}</textarea>
-                        <div class="input-hint">הערות שיכולות לעזור למורים אחרים להבין את השיר טוב יותר</div>
-                        <div class="field-validation" id="notes-validation"></div>
+                        <textarea id="teacher_notes" name="teacher_notes" class="form-input" rows="4"
+                                  placeholder="הכנס הערות למורים...">{{ song.get('teacher_notes', song.get('notes', '')) }}</textarea>
+                        <div class="input-hint">מוצג רק למורים/אדמין</div>
+                        <div class="field-validation" id="teacher_notes-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="student_notes">
+                            <span class="label-icon">🎓</span>
+                            הערות לתלמידים
+                        </label>
+                        <textarea id="student_notes" name="student_notes" class="form-input" rows="3"
+                                  placeholder="הכנס הערות לתלמידים...">{{ song.get('student_notes', '') }}</textarea>
+                        <div class="input-hint">יופיע בנגן השיר לכל התלמידים</div>
+                        <div class="field-validation" id="student_notes-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="note_tags">
+                            <span class="label-icon">🏷️</span>
+                            סוגי הערות (אופציונלי)
+                        </label>
+                        <input type="text" id="note_tags" name="note_tags" class="form-input"
+                               value="{% if song.get('note_tags') %}{{ song.get('note_tags')|join(', ') }}{% endif %}"
+                               placeholder="למשל: אצבוע, קצב, פריטה (מופרד בפסיקים)">
+                        <div class="input-hint">נשמר כרשימה ומאפשר לראות חזרות בסוגים</div>
+                        <div class="field-validation" id="note_tags-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="easy_capo_fret">
+                            <span class="label-icon">🎸</span>
+                            גרסה קלה (קאפו) — סריג
+                        </label>
+                        <input type="number" id="easy_capo_fret" name="easy_capo_fret" class="form-input"
+                               min="0" max="12" step="1" value="{{ song.get('easy_capo_fret', 0) }}" placeholder="0">
+                        <div class="input-hint">אם תבחר סריג \(>0\), יופיע בנגן כפתור “גרסה קלה (קאפו)” שיוריד טרנספוזיציה במספר סמיטונים זהה לסריג.</div>
+                        <div class="field-validation" id="easy_capo_fret-validation"></div>
                     </div>
                 </div>
             </div>

@@ -373,13 +373,61 @@
                         </div>
                     </div>
 
-                    <button type="button" class="chords-btn" id="chords-btn">
-                        <span>🎸</span>
-                        <span>הוסף אקורדים</span>
-                    </button>
+                    <div class="play-methods-bar" role="tablist" aria-label="דרכי נגינה">
+                        <div class="play-methods-title">דרכי נגינה</div>
+                        <div class="play-methods-buttons">
+                            <button type="button" class="play-method-btn active" data-play-method="boxes" role="tab" aria-selected="true">
+                                אקורדים בתיבות
+                            </button>
+                            <button type="button" class="play-method-btn" data-play-method="tabs" role="tab" aria-selected="false">
+                                טאבים
+                            </button>
+                            <button type="button" class="play-method-btn" data-play-method="chords_lyrics" role="tab" aria-selected="false">
+                                אקורדים ומילים
+                            </button>
+                            <button type="button" class="play-method-btn" data-play-method="lyrics" role="tab" aria-selected="false">
+                                מילים
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-boxes" data-play-method-panel="boxes" role="tabpanel">
+                        <button type="button" class="chords-btn" id="chords-btn">
+                            <span>🎸</span>
+                            <span>הוסף אקורדים</span>
+                        </button>
+                        <div class="input-hint" style="margin-top: 10px;">
+                            זה המצב הייחודי שלנו באתר (חלוקה לתיבות/לופים). כרגע יצירת שיר עדיין דורשת אקורדים בתיבות.
+                        </div>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-tabs" data-play-method-panel="tabs" role="tabpanel" hidden>
+                        <div class="input-hint play-method-hint">
+                            6 שורות שמייצגות מיתרי גיטרה (e, B, G, D, A, E). בשלב הזה זה שלד בסיסי; בהמשך נוסיף “משבצות” כמו Songsterr.
+                        </div>
+                        <textarea id="tabs_text" class="form-input play-method-textarea play-method-textarea-tabs" rows="10"
+                                  placeholder="e|----------------\nB|----------------\nG|----------------\nD|----------------\nA|----------------\nE|----------------"></textarea>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-chords-lyrics" data-play-method-panel="chords_lyrics" role="tabpanel" hidden>
+                        <div class="input-hint play-method-hint">
+                            כמו Tab4U: לכל שורת מילים יש שורת אקורדים קטנה מעליה לפי התזמון ביחס למילים (לא לפי קצב).
+                        </div>
+                        <textarea id="chords_lyrics_text" class="form-input play-method-textarea" rows="10"
+                                  placeholder="Am      G        C      F\nכולם היו כאן טוב גם בלעדי\n\nAm      G        C\nגם אם לא הייתי בכלל..."></textarea>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-lyrics" data-play-method-panel="lyrics" role="tabpanel" hidden>
+                        <div class="input-hint play-method-hint">
+                            מילים בלבד (בשלב הזה כטקסט). בהמשך נוכל להציג לתלמיד חלון צדדי בנגן.
+                        </div>
+                        <textarea id="lyrics_text" class="form-input play-method-textarea" rows="10"
+                                  placeholder="הדבק כאן את מילות השיר..."></textarea>
+                    </div>
 
                     <input type="hidden" id="chords" name="chords" required>
                     <input type="hidden" id="loops" name="loops">
+                    <input type="hidden" id="play_method" name="play_method" value="boxes">
                 </div>
 
                 <!-- Notes Section -->
@@ -390,14 +438,47 @@
                     </h3>
 
                     <div class="form-group">
-                        <label class="form-label" for="notes">
+                        <label class="form-label" for="teacher_notes">
                             <span class="label-icon">💬</span>
-                            הערות למורה
+                            הערות למורים
                         </label>
-                        <textarea id="notes" name="notes" class="form-input" rows="4"
-                                  placeholder="הכנס הערות חשובות על השיר, דגשים מיוחדים, או מידע נוסף שיכול לעזור..."></textarea>
-                        <div class="input-hint">הערות שיכולות לעזור למורים אחרים להבין את השיר טוב יותר</div>
-                        <div class="field-validation" id="notes-validation"></div>
+                        <textarea id="teacher_notes" name="teacher_notes" class="form-input" rows="4"
+                                  placeholder="הכנס הערות למורים: דגשים בהוראה, אצבועים מומלצים, ריתמיקה, מקומות בעייתיים..."></textarea>
+                        <div class="input-hint">מוצג רק למורים/אדמין</div>
+                        <div class="field-validation" id="teacher_notes-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="student_notes">
+                            <span class="label-icon">🎓</span>
+                            הערות לתלמידים
+                        </label>
+                        <textarea id="student_notes" name="student_notes" class="form-input" rows="3"
+                                  placeholder="הכנס הערות לתלמידים: איך לנגן, טיפים, תרגול מומלץ..."></textarea>
+                        <div class="input-hint">יופיע בנגן השיר לכל התלמידים</div>
+                        <div class="field-validation" id="student_notes-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="note_tags">
+                            <span class="label-icon">🏷️</span>
+                            סוגי הערות (אופציונלי)
+                        </label>
+                        <input type="text" id="note_tags" name="note_tags" class="form-input"
+                               placeholder="למשל: אצבוע, קצב, פריטה, מעבר אקורדים (מופרד בפסיקים)">
+                        <div class="input-hint">נשמר כרשימה ומאפשר לראות חזרות בסוגים</div>
+                        <div class="field-validation" id="note_tags-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="easy_capo_fret">
+                            <span class="label-icon">🎸</span>
+                            גרסה קלה (קאפו) — סריג
+                        </label>
+                        <input type="number" id="easy_capo_fret" name="easy_capo_fret" class="form-input"
+                               min="0" max="12" step="1" value="0" placeholder="0">
+                        <div class="input-hint">אם תבחר סריג \(>0\), יופיע בנגן כפתור “גרסה קלה (קאפו)” שיוריד טרנספוזיציה במספר סמיטונים זהה לסריג.</div>
+                        <div class="field-validation" id="easy_capo_fret-validation"></div>
                     </div>
                 </div>
             </div>
