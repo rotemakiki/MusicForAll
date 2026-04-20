@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}אקורדים ומילים{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_chords_lyrics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="acl-container">
+  <div class="acl-card">
+    <div class="acl-header">
+      <div class="acl-title">📝 אקורדים ומילים</div>
+      <div class="acl-subtitle">כל שורה: אקורדים למעלה, מילים למטה. (בהמשך נשפר יישור/גריד.)</div>
+    </div>
+
+    <div class="acl-toolbar">
+      <button type="button" class="acl-btn acl-btn-primary" id="acl-add-line">➕ הוסף שורה</button>
+      <button type="button" class="acl-btn" id="acl-import">ייבוא מטקסט</button>
+      <button type="button" class="acl-btn" id="acl-export">העתק לטקסט</button>
+      <div class="acl-spacer"></div>
+      <button type="button" class="acl-btn acl-btn-success" id="acl-save-return">✅ שמור וחזור</button>
+      <a class="acl-btn acl-btn-ghost" id="acl-cancel" href="{{ return_to | e }}">חזרה בלי לשמור</a>
+    </div>
+
+    <div class="acl-editor" id="acl-editor" aria-label="עורך אקורדים ומילים">
+      <!-- lines inserted by JS -->
+    </div>
+
+    <div class="acl-footer">
+      <div class="acl-hint">
+        טיפ: אפשר לכתוב שורת אקורדים עם רווחים כדי למקם מעל המילים (כמו Tab4U).
+      </div>
+    </div>
+  </div>
+
+  <div class="acl-modal" id="acl-modal" hidden>
+    <div class="acl-modal-backdrop" data-close></div>
+    <div class="acl-modal-card" role="dialog" aria-modal="true" aria-labelledby="acl-modal-title">
+      <div class="acl-modal-header">
+        <div class="acl-modal-title" id="acl-modal-title">ייבוא / ייצוא</div>
+        <button type="button" class="acl-modal-close" data-close>×</button>
+      </div>
+      <div class="acl-modal-body">
+        <textarea class="acl-modal-textarea" id="acl-modal-text" rows="12" placeholder="הדבק כאן טקסט..."></textarea>
+        <div class="acl-modal-actions">
+          <button type="button" class="acl-btn acl-btn-primary" id="acl-modal-apply">החל</button>
+          <button type="button" class="acl-btn" data-close>סגור</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.aclReturnTo = {{ return_to | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/add_chords_lyrics.js') }}"></script>
+{% endblock %}
+

@@ -405,24 +405,36 @@
                         <div class="input-hint play-method-hint">
                             6 שורות שמייצגות מיתרי גיטרה (e, B, G, D, A, E). בשלב הזה זה שלד בסיסי; בהמשך נוסיף “משבצות” כמו Songsterr.
                         </div>
-                        <textarea id="tabs_text" class="form-input play-method-textarea play-method-textarea-tabs" rows="10"
-                                  placeholder="e|----------------\nB|----------------\nG|----------------\nD|----------------\nA|----------------\nE|----------------"></textarea>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 8px 0 12px;">
+                            <a class="chords-btn" href="/add-tabs?return=/add_song" style="min-width: 240px; text-decoration:none;">
+                                <span>🎼</span>
+                                <span>ערוך טאבים</span>
+                            </a>
+                        </div>
                     </div>
 
                     <div class="play-method-content" id="play-method-chords-lyrics" data-play-method-panel="chords_lyrics" role="tabpanel" hidden>
                         <div class="input-hint play-method-hint">
-                            כמו Tab4U: לכל שורת מילים יש שורת אקורדים קטנה מעליה לפי התזמון ביחס למילים (לא לפי קצב).
+                            לכל שורת מילים אפשר להוסיף שורת אקורדים מעליה לפי התזמון ביחס למילים (לא לפי קצב).
                         </div>
-                        <textarea id="chords_lyrics_text" class="form-input play-method-textarea" rows="10"
-                                  placeholder="Am      G        C      F\nכולם היו כאן טוב גם בלעדי\n\nAm      G        C\nגם אם לא הייתי בכלל..."></textarea>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 8px 0 12px;">
+                            <a class="chords-btn" href="/add-chords-lyrics?return=/add_song" style="min-width: 240px; text-decoration:none;">
+                                <span>📝</span>
+                                <span>ערוך אקורדים+טקסט</span>
+                            </a>
+                        </div>
                     </div>
 
                     <div class="play-method-content" id="play-method-lyrics" data-play-method-panel="lyrics" role="tabpanel" hidden>
                         <div class="input-hint play-method-hint">
                             מילים בלבד (בשלב הזה כטקסט). בהמשך נוכל להציג לתלמיד חלון צדדי בנגן.
                         </div>
-                        <textarea id="lyrics_text" class="form-input play-method-textarea" rows="10"
-                                  placeholder="הדבק כאן את מילות השיר..."></textarea>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 8px 0 12px;">
+                            <a class="chords-btn" href="/add-lyrics?return=/add_song" style="min-width: 240px; text-decoration:none;">
+                                <span>📄</span>
+                                <span>ערוך מילים</span>
+                            </a>
+                        </div>
                     </div>
 
                     <input type="hidden" id="chords" name="chords" required>

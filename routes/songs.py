@@ -313,6 +313,10 @@ def play_song(song_id):
         "student_notes": song.get("student_notes", ""),
         "note_tags": song.get("note_tags", []),
         "easy_capo_fret": int(song.get("easy_capo_fret") or 0),
+        "play_method": song.get("play_method", "boxes"),
+        "tabs_text": song.get("tabs_text", ""),
+        "chords_lyrics_text": song.get("chords_lyrics_text", ""),
+        "lyrics_text": song.get("lyrics_text", ""),
     }, can_watch_videos=can_watch_videos, can_see_teacher_notes=can_see_teacher_notes, is_localhost=request.host.startswith("localhost") or "127.0.0.1" in request.host)
 
 # Legacy chord route - redirect to player
@@ -327,6 +331,22 @@ def chords(song_id):
 @songs_bp.route('/add-chords')
 def add_chords_page():
     return render_template('add_chords_base.html')
+
+@songs_bp.route('/add-chords-lyrics')
+def add_chords_lyrics_page():
+    # return target (default back to add song)
+    return_to = request.args.get("return") or "/add_song"
+    return render_template('add_chords_lyrics.html', return_to=return_to)
+
+@songs_bp.route('/add-tabs')
+def add_tabs_page():
+    return_to = request.args.get("return") or "/add_song"
+    return render_template('add_tabs.html', return_to=return_to)
+
+@songs_bp.route('/add-lyrics')
+def add_lyrics_page():
+    return_to = request.args.get("return") or "/add_song"
+    return render_template('add_lyrics.html', return_to=return_to)
 
 @songs_bp.route('/edit-chords/<string:song_id>')
 def edit_chords_for_song(song_id):
@@ -440,6 +460,11 @@ def add_song():
         "student_notes": student_notes,
         "note_tags": note_tags if isinstance(note_tags, list) else [],
         "easy_capo_fret": easy_capo_fret,
+        # play methods (optional)
+        "play_method": data.get("play_method", "boxes"),
+        "tabs_text": data.get("tabs_text", ""),
+        "chords_lyrics_text": data.get("chords_lyrics_text", ""),
+        "lyrics_text": data.get("lyrics_text", ""),
         "created_at": datetime.utcnow(),
         "created_by": session.get("user_id"),
     }
@@ -515,6 +540,11 @@ def edit_song_api(song_id):
         "student_notes": student_notes,
         "note_tags": note_tags if isinstance(note_tags, list) else [],
         "easy_capo_fret": easy_capo_fret,
+        # play methods (optional)
+        "play_method": data.get("play_method", "boxes"),
+        "tabs_text": data.get("tabs_text", ""),
+        "chords_lyrics_text": data.get("chords_lyrics_text", ""),
+        "lyrics_text": data.get("lyrics_text", ""),
         "updated_at": datetime.utcnow()
     }
     firestore.client().collection("songs").document(song_id).update(updated_fields)

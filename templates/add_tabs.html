@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}טאבים{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_tabs.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="tabs-container">
+  <div class="tabs-card">
+    <div class="tabs-header">
+      <div class="tabs-title">🎼 טאבים</div>
+      <div class="tabs-subtitle">6 מיתרים (e, B, G, D, A, E). בשלב הזה זה עורך טקסט נוח עם שמירה וחזרה.</div>
+    </div>
+
+    <div class="tabs-toolbar">
+      <button type="button" class="tabs-btn tabs-btn-success" id="tabs-save-return">✅ שמור וחזור</button>
+      <a class="tabs-btn tabs-btn-ghost" href="{{ return_to | e }}">חזרה בלי לשמור</a>
+      <div class="tabs-spacer"></div>
+      <button type="button" class="tabs-btn" id="tabs-insert-template">הכנס תבנית ריקה</button>
+    </div>
+
+    <textarea id="tabs-editor" class="tabs-editor" rows="16"
+              placeholder="e|----------------\nB|----------------\nG|----------------\nD|----------------\nA|----------------\nE|----------------"></textarea>
+
+    <div class="tabs-hint">
+      אפשר להשתמש במספרים לסריגים, ובאותיות H, P, B, S, V בין תווים. (בשלב הבא נהפוך את זה לגריד אמיתי.)
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.tabsReturnTo = {{ return_to | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/add_tabs.js') }}"></script>
+{% endblock %}
+

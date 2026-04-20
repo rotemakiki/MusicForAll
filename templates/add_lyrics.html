@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}מילים{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add_lyrics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="lyrics-container">
+  <div class="lyrics-card">
+    <div class="lyrics-header">
+      <div class="lyrics-title">📄 מילים</div>
+      <div class="lyrics-subtitle">הדבקה/עריכה של מילות השיר. בהמשך נציג אותן לתלמיד בחלון צדדי בנגן.</div>
+    </div>
+
+    <div class="lyrics-toolbar">
+      <button type="button" class="lyrics-btn lyrics-btn-success" id="lyrics-save-return">✅ שמור וחזור</button>
+      <a class="lyrics-btn lyrics-btn-ghost" href="{{ return_to | e }}">חזרה בלי לשמור</a>
+      <div class="lyrics-spacer"></div>
+      <button type="button" class="lyrics-btn" id="lyrics-clear">נקה</button>
+    </div>
+
+    <textarea id="lyrics-editor" class="lyrics-editor" rows="16" placeholder="הדבק כאן את מילות השיר..."></textarea>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.lyricsReturnTo = {{ return_to | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/add_lyrics.js') }}"></script>
+{% endblock %}
+

@@ -414,17 +414,41 @@
         <div class="chord-section">
             <h2 class="section-title">
                 <span class="title-icon">🎸</span>
-                אקורדים
+                תצוגת נגינה
             </h2>
 
-            <div class="selected-measure-info" id="selected-measure-info" style="display: none;">
-                <div class="info-content">
-                    <span class="info-icon">📍</span>
-                    <span class="info-text">לחץ על תיבה כדי להתחיל לנגן ממנה</span>
-                </div>
+            <div class="play-views-bar" role="tablist" aria-label="דרכי נגינה בנגן">
+                <button type="button" class="play-view-btn active" data-play-view="boxes" role="tab" aria-selected="true">תיבות</button>
+                <button type="button" class="play-view-btn{% if not (song.tabs_text and (song.tabs_text|string)|trim) %} disabled{% endif %}" data-play-view="tabs" role="tab" aria-selected="false" {% if not (song.tabs_text and (song.tabs_text|string)|trim) %}disabled{% endif %}>טאבים</button>
+                <button type="button" class="play-view-btn{% if not (song.chords_lyrics_text and (song.chords_lyrics_text|string)|trim) %} disabled{% endif %}" data-play-view="chords_lyrics" role="tab" aria-selected="false" {% if not (song.chords_lyrics_text and (song.chords_lyrics_text|string)|trim) %}disabled{% endif %}>אקורדים+טקסט</button>
+                <button type="button" class="play-view-btn{% if not (song.lyrics_text and (song.lyrics_text|string)|trim) %} disabled{% endif %}" data-play-view="lyrics" role="tab" aria-selected="false" {% if not (song.lyrics_text and (song.lyrics_text|string)|trim) %}disabled{% endif %}>טקסט</button>
+                <div class="play-views-spacer"></div>
+                {% if song.lyrics_text and (song.lyrics_text|string)|trim %}
+                <button type="button" class="play-view-side-btn" id="lyrics-panel-open">פתח חלון מילים</button>
+                {% endif %}
             </div>
 
-            <div id="chords-wrapper" class="chords-wrapper"></div>
+            <div class="play-view-panel" id="play-view-boxes" data-play-view-panel="boxes" role="tabpanel">
+                <div class="selected-measure-info" id="selected-measure-info" style="display: none;">
+                    <div class="info-content">
+                        <span class="info-icon">📍</span>
+                        <span class="info-text">לחץ על תיבה כדי להתחיל לנגן ממנה</span>
+                    </div>
+                </div>
+                <div id="chords-wrapper" class="chords-wrapper"></div>
+            </div>
+
+            <div class="play-view-panel" id="play-view-tabs" data-play-view-panel="tabs" role="tabpanel" hidden>
+                <pre class="play-text-panel play-text-panel-tabs" id="tabs-text-panel">{{ song.tabs_text or '' }}</pre>
+            </div>
+
+            <div class="play-view-panel" id="play-view-chords-lyrics" data-play-view-panel="chords_lyrics" role="tabpanel" hidden>
+                <pre class="play-text-panel" id="chords-lyrics-text-panel">{{ song.chords_lyrics_text or '' }}</pre>
+            </div>
+
+            <div class="play-view-panel" id="play-view-lyrics" data-play-view-panel="lyrics" role="tabpanel" hidden>
+                <pre class="play-text-panel play-text-panel-lyrics" id="lyrics-text-panel">{{ song.lyrics_text or '' }}</pre>
+            </div>
         </div>
     </div>
 </div>
@@ -435,6 +459,18 @@
 <div id="size-indicator" class="size-indicator"></div>
 
 <audio id="metronome-sound" preload="auto" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
+
+{% if song.lyrics_text and (song.lyrics_text|string)|trim %}
+<div class="lyrics-side-panel" id="lyrics-side-panel" aria-label="חלון מילים" aria-hidden="true">
+    <div class="lyrics-side-header">
+        <div>📄 מילים</div>
+        <button type="button" class="lyrics-side-close" id="lyrics-panel-close" aria-label="סגור">×</button>
+    </div>
+    <div class="lyrics-side-body">
+        <div class="lyrics-side-text" id="lyrics-side-text">{{ song.lyrics_text }}</div>
+    </div>
+</div>
+{% endif %}
 
 <script>
     // Pass data from Flask to JavaScript
@@ -449,7 +485,11 @@
         originalBpm: {{ song.bpm }},
         timeSignature: "{{ song.time_signature }}",
         easyCapoFret: {{ (song.easy_capo_fret or 0) | int }},
-        studentNotes: {{ (song.student_notes or "") | tojson }}
+        studentNotes: {{ (song.student_notes or "") | tojson }},
+        playMethod: {{ (song.play_method or "boxes") | tojson }},
+        tabsText: {{ (song.tabs_text or "") | tojson }},
+        chordsLyricsText: {{ (song.chords_lyrics_text or "") | tojson }},
+        lyricsText: {{ (song.lyrics_text or "") | tojson }}
     };
     (function recordRecentlyViewedLocal() {
         var d = window.songData;

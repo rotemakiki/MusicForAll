@@ -439,9 +439,9 @@ function saveFormData() {
         note_tags: document.getElementById("note_tags") ? document.getElementById("note_tags").value : "",
         easy_capo_fret: document.getElementById("easy_capo_fret") ? document.getElementById("easy_capo_fret").value : "0",
         play_method: document.getElementById("play_method") ? document.getElementById("play_method").value : PLAY_METHODS.BOXES,
-        tabs_text: document.getElementById("tabs_text") ? document.getElementById("tabs_text").value : "",
-        chords_lyrics_text: document.getElementById("chords_lyrics_text") ? document.getElementById("chords_lyrics_text").value : "",
-        lyrics_text: document.getElementById("lyrics_text") ? document.getElementById("lyrics_text").value : ""
+        tabs_text: getPlayMethodTextValue("tabs_text"),
+        chords_lyrics_text: getPlayMethodTextValue("chords_lyrics_text"),
+        lyrics_text: getPlayMethodTextValue("lyrics_text")
     };
 
     const storageKey = mode.isEditMode ? "editSongData" : "songData";
@@ -684,6 +684,16 @@ const PLAY_METHODS = {
     LYRICS: "lyrics",
 };
 
+function getPlayMethodTextValue(type) {
+    const el = document.getElementById(type);
+    if (el) return el.value || "";
+    try {
+        return localStorage.getItem(getPlayMethodTextsStorageKey(type)) || "";
+    } catch (e) {
+        return "";
+    }
+}
+
 function getPlayMethodStorageKey() {
     const mode = detectFormMode();
     return mode.isEditMode ? `play_method_edit_${mode.songId}` : "play_method_new";
@@ -722,26 +732,7 @@ function bindPlayMethodsUI() {
     const buttons = Array.from(document.querySelectorAll(".play-method-btn"));
     if (buttons.length === 0) return;
 
-    // Persist textareas (basic: store in localStorage only for now)
-    const tabsEl = document.getElementById("tabs_text");
-    const chordsLyricsEl = document.getElementById("chords_lyrics_text");
-    const lyricsEl = document.getElementById("lyrics_text");
-
-    const restore = (el, key) => {
-        if (!el) return;
-        try {
-            const v = localStorage.getItem(key);
-            if (v !== null && v !== undefined) el.value = v;
-        } catch (e) { /* ignore */ }
-        el.addEventListener("input", () => {
-            try { localStorage.setItem(key, el.value || ""); } catch (e) { /* ignore */ }
-            saveFormData();
-        });
-    };
-
-    restore(tabsEl, getPlayMethodTextsStorageKey("tabs_text"));
-    restore(chordsLyricsEl, getPlayMethodTextsStorageKey("chords_lyrics_text"));
-    restore(lyricsEl, getPlayMethodTextsStorageKey("lyrics_text"));
+    // Text values are edited in dedicated pages and stored in localStorage.
 
     buttons.forEach((btn) => {
         btn.addEventListener("click", (e) => {
@@ -818,7 +809,12 @@ function handleFormSubmission(event) {
             .split(",")
             .map(s => s.trim())
             .filter(Boolean),
-        easy_capo_fret: parseInt(document.getElementById("easy_capo_fret") ? document.getElementById("easy_capo_fret").value : "0", 10) || 0
+        easy_capo_fret: parseInt(document.getElementById("easy_capo_fret") ? document.getElementById("easy_capo_fret").value : "0", 10) || 0,
+        // Play methods (optional)
+        play_method: document.getElementById("play_method") ? document.getElementById("play_method").value : PLAY_METHODS.BOXES,
+        tabs_text: getPlayMethodTextValue("tabs_text"),
+        chords_lyrics_text: getPlayMethodTextValue("chords_lyrics_text"),
+        lyrics_text: getPlayMethodTextValue("lyrics_text")
     };
 
     // טיפול בקישורי YouTube

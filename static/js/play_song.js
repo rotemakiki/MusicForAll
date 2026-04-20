@@ -5,6 +5,10 @@ const chords = window.songData.chords;
 const loops = window.songData.loops || [];
 const originalBpm = window.songData.originalBpm;
 const timeSignature = window.songData.timeSignature || "4/4";
+const playMethod = window.songData.playMethod || "boxes";
+const tabsText = window.songData.tabsText || "";
+const chordsLyricsText = window.songData.chordsLyricsText || "";
+const lyricsText = window.songData.lyricsText || "";
 
 // Parse time signature to get beats per measure
 function getBeatsPerMeasure(timeSig) {
@@ -67,6 +71,53 @@ let currentBeatInMeasure = 0;
 let selectedStartBeat = 0;
 let allMeasures = [];
 let isPlaying = false;
+
+// Play view state (boxes/tabs/chords_lyrics/lyrics)
+let currentPlayView = "boxes";
+
+function getPlayViewStorageKey() {
+    const sid = window.songData?.songId || "unknown";
+    return `mfa_play_view_v1_${sid}`;
+}
+
+function setPlayView(view) {
+    currentPlayView = view;
+    try { localStorage.setItem(getPlayViewStorageKey(), view); } catch (e) { /* ignore */ }
+
+    document.querySelectorAll(".play-view-btn").forEach((btn) => {
+        const on = btn.getAttribute("data-play-view") === view;
+        btn.classList.toggle("active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+
+    document.querySelectorAll("[data-play-view-panel]").forEach((panel) => {
+        panel.hidden = panel.getAttribute("data-play-view-panel") !== view;
+    });
+
+    // If leaving boxes while playing, stop to avoid "invisible playback"
+    if (view !== "boxes" && isPlaying) {
+        stopPlayback();
+    }
+
+    // Ensure boxes view is rendered when switching back
+    if (view === "boxes") {
+        renderChords();
+    }
+}
+
+function openLyricsPanel() {
+    const panel = document.getElementById("lyrics-side-panel");
+    if (!panel) return;
+    panel.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+}
+
+function closeLyricsPanel() {
+    const panel = document.getElementById("lyrics-side-panel");
+    if (!panel) return;
+    panel.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+}
 
 // Initialize enabled loops - all enabled by default
 loops.forEach((loop, index) => {
@@ -1353,6 +1404,42 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTransposeInfo();
     renderChords();
     renderNotesTagSummary();
+
+    // Play views (ways to display)
+    const playViewButtons = Array.from(document.querySelectorAll(".play-view-btn"));
+    if (playViewButtons.length > 0) {
+        playViewButtons.forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const v = btn.getAttribute("data-play-view") || "boxes";
+                setPlayView(v);
+            });
+        });
+
+        let initialView = "boxes";
+        try {
+            initialView = localStorage.getItem(getPlayViewStorageKey()) || initialView;
+        } catch (e) { /* ignore */ }
+
+        // If the saved view has no data, fall back
+        const hasTabs = !!String(tabsText || "").trim();
+        const hasChordsLyrics = !!String(chordsLyricsText || "").trim();
+        const hasLyrics = !!String(lyricsText || "").trim();
+        if (initialView === "tabs" && !hasTabs) initialView = "boxes";
+        if (initialView === "chords_lyrics" && !hasChordsLyrics) initialView = "boxes";
+        if (initialView === "lyrics" && !hasLyrics) initialView = "boxes";
+
+        setPlayView(initialView);
+    }
+
+    // Lyrics side panel
+    const openLyricsBtn = document.getElementById("lyrics-panel-open");
+    const closeLyricsBtn = document.getElementById("lyrics-panel-close");
+    if (openLyricsBtn) openLyricsBtn.addEventListener("click", openLyricsPanel);
+    if (closeLyricsBtn) closeLyricsBtn.addEventListener("click", closeLyricsPanel);
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeLyricsPanel();
+    });
 
     // טעינת מוקדמת של המטרונום — בפרודקשן מפחית עיכוב בנקישה הראשונה
     if (metronome) {
