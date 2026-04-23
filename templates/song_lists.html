@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}רשימות שירים{% endblock %}
+
+{% block content %}
+<div style="max-width: 980px; margin: 26px auto; padding: 0 16px;" dir="rtl">
+  <div style="background: rgba(255,255,255,0.95); border-radius: 18px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+    <div style="display:flex; gap: 12px; align-items:center; justify-content: space-between; flex-wrap: wrap;">
+      <div>
+        <h1 style="margin:0;">רשימות שירים</h1>
+        <p style="margin:6px 0 0; color:#475569;">רשימות שירים שאפשר לשתף ולבנות לתלמידים.</p>
+      </div>
+      <div style="display:flex; gap: 10px; align-items:center; flex-wrap: wrap;">
+        <a href="{{ url_for('my_songs.my_songs_page') }}" style="text-decoration:none; border:1px solid #cbd5e1; padding:10px 14px; border-radius: 12px; font-weight: 700; color:#0f172a;">השירים שלי</a>
+        {% if can_create %}
+          <button id="create-list-btn" type="button" style="background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; border:none; padding:10px 14px; border-radius: 12px; font-weight: 800; cursor: pointer;">➕ צור רשימה</button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if not can_create %}
+      <div style="margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: #fff7ed; border: 1px solid #fed7aa; color:#9a3412;">
+        יצירת רשימות זמינה כרגע ל<strong>מורים במנוי פרימיום</strong> (או אדמין). עדיין תוכל לפתוח רשימות שמשתפים איתך.
+      </div>
+    {% endif %}
+
+    <div style="margin-top: 18px; display:grid; grid-template-columns: 1fr; gap: 18px;">
+      <div>
+        <h2 style="margin:0 0 10px; font-size: 1.1rem;">הרשימות שלי</h2>
+        {% if owned_lists and owned_lists|length > 0 %}
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
+            {% for l in owned_lists %}
+              <a href="{{ url_for('my_songs.song_list_detail_page', list_id=l.id) }}" style="text-decoration:none; border:1px solid #e2e8f0; border-radius: 14px; padding: 12px; background: #fff; color:#0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                <div style="font-weight: 900;">{{ l.name }}</div>
+                <div style="margin-top: 6px; color:#64748b; font-size: 0.9rem;">עודכן: {{ l.updated_at if l.updated_at else l.created_at }}</div>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="color:#64748b;">אין לך עדיין רשימות.</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <h2 style="margin:0 0 10px; font-size: 1.1rem;">רשימות ששיתפו איתי</h2>
+        {% if shared_lists and shared_lists|length > 0 %}
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;">
+            {% for l in shared_lists %}
+              <a href="{{ url_for('my_songs.song_list_detail_page', list_id=l.id) }}" style="text-decoration:none; border:1px solid #e2e8f0; border-radius: 14px; padding: 12px; background: #fff; color:#0f172a; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                <div style="font-weight: 900;">{{ l.name }}</div>
+                <div style="margin-top: 6px; color:#64748b; font-size: 0.9rem;">בעלים: {{ l.owner_id }}</div>
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div style="color:#64748b;">עוד לא שיתפו איתך רשימות.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var btn = document.getElementById('create-list-btn');
+  if (!btn) return;
+  btn.addEventListener('click', async function() {
+    var name = prompt('שם הרשימה החדשה');
+    if (!name) return;
+    try {
+      var resp = await fetch('/api/song-lists', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name }) });
+      var data = await resp.json();
+      if (data && data.success) {
+        location.href = '/song-lists/' + data.list_id;
+      } else {
+        alert((data && data.error) || 'שגיאה ביצירת רשימה');
+      }
+    } catch (e) {
+      alert('שגיאה בחיבור לשרת');
+    }
+  });
+})();
+</script>
+{% endblock %}
+

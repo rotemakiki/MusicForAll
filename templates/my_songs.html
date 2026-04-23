@@ -15,32 +15,127 @@
             <span class="count-number">{{ songs|length }}</span>
             <span class="count-label">שירים ברשימה</span>
         </div>
+        <div style="margin-top: 14px; display:flex; gap: 10px; justify-content:center; flex-wrap: wrap;">
+            <a href="{{ url_for('my_songs.song_lists_page') }}" style="text-decoration:none; border:1px solid #cbd5e1; padding:10px 14px; border-radius: 12px; font-weight: 800; color:#0f172a;">רשימות שירים</a>
+        </div>
     </div>
 
     {% if songs %}
+        <div class="filter-section">
+            <div class="filter-controls">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="חפש שיר או אמן...">
+                </div>
+
+                <select id="language-select" class="filter-dropdown" aria-label="סינון לפי שפה">
+                    <option value="">כל השפות</option>
+                    <option value="he">עברית</option>
+                    <option value="en">אנגלית</option>
+                    <option value="es">ספרדית</option>
+                    <option value="ru">רוסית</option>
+                    <option value="fr">צרפתית</option>
+                </select>
+
+                <select id="genre-select" class="filter-dropdown" aria-label="סינון לפי ז'אנר">
+                    <option value="">כל הז'אנרים</option>
+                    {% set ns = namespace(genres=[]) %}
+                    {% for s in songs %}
+                        {% for g in (s.display_genres or s.genres or []) %}
+                            {% if g and g not in ns.genres and g != 'לא צוין' %}
+                                {% set ns.genres = ns.genres + [g] %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    {% for g in ns.genres|sort %}
+                        <option value="{{ g }}">{{ g }}</option>
+                    {% endfor %}
+                </select>
+
+                <select id="bpm-range-select" class="filter-dropdown" aria-label="סינון לפי טווח BPM">
+                    <option value="">כל ה-BPM</option>
+                    <option value="40-60">40–60</option>
+                    <option value="61-80">61–80</option>
+                    <option value="81-100">81–100</option>
+                    <option value="101-120">101–120</option>
+                    <option value="121-140">121–140</option>
+                    <option value="141-160">141–160</option>
+                    <option value="161-180">161–180</option>
+                    <option value="181-200">181–200</option>
+                </select>
+
+                <select id="acc-level-select" class="filter-dropdown" aria-label="סינון לפי רמת ליווי">
+                    <option value="">כל רמות הליווי</option>
+                    {% for n in range(11) %}
+                        <option value="{{ n }}">ליווי {{ n }}</option>
+                    {% endfor %}
+                </select>
+
+                <select id="solo-level-select" class="filter-dropdown" aria-label="סינון לפי רמת סולו">
+                    <option value="">כל רמות הסולו</option>
+                    {% for n in range(11) %}
+                        <option value="{{ n }}">סולו {{ n }}</option>
+                    {% endfor %}
+                </select>
+
+                <select id="sort-select" class="filter-dropdown" aria-label="מיון">
+                    <option value="recent" selected>נוסף לאחרונה</option>
+                    <option value="alphabetical">אלפביתי (שם שיר)</option>
+                    <option value="artist">מיון לפי אמן</option>
+                    <option value="accompaniment">מיון לפי רמת ליווי</option>
+                    <option value="lead">מיון לפי רמת סולו</option>
+                    <option value="bpm">מיון לפי BPM</option>
+                    <option value="genres">מיון לפי ז'אנרים</option>
+                </select>
+            </div>
+        </div>
+
         <div class="songs-grid">
             {% for song in songs %}
-                <div class="song-card" data-song-id="{{ song.id }}">
-                    <div class="song-header">
-                        <div class="song-info">
-                            <h3 class="song-title">{{ song.title }}</h3>
-                            <p class="song-artist">{{ song.artist }}</p>
+                <div class="song-card" data-song-id="{{ song.id }}"
+                     data-title="{{ song.title|lower }}"
+                     data-artist="{{ song.artist|lower }}"
+                     data-accompaniment-level="{{ song.accompaniment_level }}"
+                     data-lead-level="{{ song.lead_level }}"
+                     data-bpm="{{ song.bpm }}"
+                     data-genres="{{ (song.display_genres or song.genres or []) | join(',') }}"
+                     data-language="{{ song.get('language','') }}"
+                     data-added-at="{{ song.added_at.isoformat() if song.added_at and song.added_at.isoformat else song.added_at }}">
+
+                    <div class="song-card-top">
+                        <div class="song-cover">
+                            {% if song.get('album_image_url') %}
+                                <img src="{{ song.album_image_url }}" alt="תמונת אלבום" loading="lazy">
+                            {% else %}
+                                <div class="song-cover-placeholder" aria-hidden="true">🎵</div>
+                            {% endif %}
                         </div>
-                        <button class="remove-btn" onclick="removeSong('{{ song.id }}', '{{ song.title }}')">
+
+                        <button class="remove-btn" onclick="removeSong('{{ song.id }}', '{{ song.title }}')" title="הסר מהרשימה">
                             <span>🗑️</span>
                         </button>
                     </div>
 
-                    <div class="song-details">
-                        <span class="detail-badge">🎼 {{ song.key }} {{ song.key_type }}{% if song.get('secondary_key') and song.get('secondary_key_type') %} / {{ song.secondary_key }} {{ song.secondary_key_type }}{% endif %}</span>
-                        <span class="detail-badge">🎵 {{ song.time_signature }}</span>
-                        <span class="detail-badge">⚡ {{ song.bpm }} BPM</span>
-                        <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">🎸 ליווי {{ song.accompaniment_level }}</span>
-                        <span class="detail-badge level-badge-lead" title="רמת הובלה: {{ song.lead_level }} מתוך 10">🎶 הובלה {{ song.lead_level }}</span>
+                    <div class="song-basic">
+                        <h3 class="song-title">{{ song.title }}</h3>
+                        <p class="song-artist">{{ song.artist }}</p>
                     </div>
 
-                    <div class="added-date">
-                        נוסף ב: {{ song.added_at.strftime('%d/%m/%Y %H:%M') }}
+                    <div class="song-hover-meta" aria-hidden="true">
+                        <div class="meta-line">
+                            <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">🎸 ליווי {{ song.accompaniment_level }}</span>
+                            <span class="detail-badge level-badge-lead" title="רמת סולו: {{ song.lead_level }} מתוך 10">🎶 סולו {{ song.lead_level }}</span>
+                        </div>
+                        <div class="genres-line">
+                            {% set g_list = song.display_genres or song.genres or [] %}
+                            {% if g_list and g_list|length > 0 %}
+                                {% for g in g_list %}
+                                    <span class="genre-tag">{{ g }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="genre-tag">לא צוין</span>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="song-actions">

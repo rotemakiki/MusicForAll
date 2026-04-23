@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}עריכת טבלאות רמות{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 30px auto; padding: 0 16px;" dir="rtl">
+  <div style="background: rgba(255,255,255,0.95); border-radius: 18px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+    <h1 style="margin: 0 0 10px 0;">עריכת טבלאות רמות</h1>
+    <p style="margin: 0 0 18px 0; color: #475569;">
+      העמוד הזה פתוח ל-Admin בלבד. עריכה נשמרת ב-Firestore ומשפיעה על תיאורי רמות הליווי בכל האתר.
+    </p>
+
+    <form method="post">
+      <div style="display:grid; grid-template-columns: 1fr; gap: 18px;">
+        <div>
+          <h2 style="margin: 0 0 8px 0; font-size: 1.1rem;">רמות ליווי (0–10)</h2>
+          <textarea name="accompaniment_levels_json" rows="18" style="width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; direction:ltr; border-radius: 12px; padding: 12px; border: 1px solid #cbd5e1;">{{ accompaniment_levels_json }}</textarea>
+          <p style="margin: 8px 0 0 0; color:#64748b; font-size:0.9rem;">
+            חייב להיות מערך JSON באורך 11. כל איבר: <code>{"level": מספר, "title": מחרוזת, "description": מחרוזת}</code>
+          </p>
+        </div>
+
+        <div>
+          <h2 style="margin: 0 0 8px 0; font-size: 1.1rem;">רמות סולו (0–10)</h2>
+          <textarea name="solo_levels_json" rows="14" style="width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; direction:ltr; border-radius: 12px; padding: 12px; border: 1px solid #cbd5e1;">{{ solo_levels_json }}</textarea>
+          <p style="margin: 8px 0 0 0; color:#64748b; font-size:0.9rem;">
+            כרגע לא מוצג כהסבר קבוע לתלמידים, אבל נשמר לעתיד.
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap: 12px; margin-top: 18px; flex-wrap: wrap;">
+        <button type="submit" style="background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; border:none; padding: 12px 18px; border-radius: 12px; font-weight: 700; cursor: pointer;">שמור</button>
+        <a href="{{ url_for('songs.songs') }}" style="display:inline-flex; align-items:center; justify-content:center; padding: 12px 18px; border-radius: 12px; border:1px solid #cbd5e1; text-decoration:none; color:#0f172a; font-weight:700;">חזרה לשירים</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

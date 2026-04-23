@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}{{ list_name }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/my_songs.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="my-songs-container">
+  <div class="page-header">
+    <h1 class="page-title">📋 {{ list_name }}</h1>
+    <p class="page-subtitle">רשימת שירים משותפת.</p>
+    <div class="songs-count">
+      <span class="count-number">{{ songs|length }}</span>
+      <span class="count-label">שירים ברשימה</span>
+    </div>
+
+    <div style="margin-top: 14px; display:flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('my_songs.song_lists_page') }}" style="text-decoration:none; border:1px solid #cbd5e1; padding:10px 14px; border-radius: 12px; font-weight: 800; color:#0f172a;">כל הרשימות</a>
+      <a href="{{ url_for('songs.songs') }}" style="text-decoration:none; border:1px solid #cbd5e1; padding:10px 14px; border-radius: 12px; font-weight: 800; color:#0f172a;">חיפוש שירים</a>
+      {% if share_token %}
+        <button type="button" id="copy-share-link-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; border:none; padding:10px 14px; border-radius: 12px; font-weight: 900; cursor: pointer;">🔗 העתק לינק שיתוף</button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if songs %}
+    <div class="filter-section">
+      <div class="filter-controls">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="חפש שיר או אמן...">
+        </div>
+
+        <select id="language-select" class="filter-dropdown" aria-label="סינון לפי שפה">
+          <option value="">כל השפות</option>
+          <option value="he">עברית</option>
+          <option value="en">אנגלית</option>
+          <option value="es">ספרדית</option>
+          <option value="ru">רוסית</option>
+          <option value="fr">צרפתית</option>
+        </select>
+
+        <select id="genre-select" class="filter-dropdown" aria-label="סינון לפי ז'אנר">
+          <option value="">כל הז'אנרים</option>
+          {% set ns = namespace(genres=[]) %}
+          {% for s in songs %}
+            {% for g in (s.display_genres or s.genres or []) %}
+              {% if g and g not in ns.genres and g != 'לא צוין' %}
+                {% set ns.genres = ns.genres + [g] %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          {% for g in ns.genres|sort %}
+            <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+
+        <select id="bpm-range-select" class="filter-dropdown" aria-label="סינון לפי טווח BPM">
+          <option value="">כל ה-BPM</option>
+          <option value="40-60">40–60</option>
+          <option value="61-80">61–80</option>
+          <option value="81-100">81–100</option>
+          <option value="101-120">101–120</option>
+          <option value="121-140">121–140</option>
+          <option value="141-160">141–160</option>
+          <option value="161-180">161–180</option>
+          <option value="181-200">181–200</option>
+        </select>
+
+        <select id="acc-level-select" class="filter-dropdown" aria-label="סינון לפי רמת ליווי">
+          <option value="">כל רמות הליווי</option>
+          {% for n in range(11) %}
+            <option value="{{ n }}">ליווי {{ n }}</option>
+          {% endfor %}
+        </select>
+
+        <select id="solo-level-select" class="filter-dropdown" aria-label="סינון לפי רמת סולו">
+          <option value="">כל רמות הסולו</option>
+          {% for n in range(11) %}
+            <option value="{{ n }}">סולו {{ n }}</option>
+          {% endfor %}
+        </select>
+
+        <select id="sort-select" class="filter-dropdown" aria-label="מיון">
+          <option value="recent" selected>נוסף לאחרונה</option>
+          <option value="alphabetical">אלפביתי (שם שיר)</option>
+          <option value="artist">מיון לפי אמן</option>
+          <option value="accompaniment">מיון לפי רמת ליווי</option>
+          <option value="lead">מיון לפי רמת סולו</option>
+          <option value="bpm">מיון לפי BPM</option>
+          <option value="genres">מיון לפי ז'אנרים</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="songs-grid">
+      {% for song in songs %}
+        <div class="song-card" data-song-id="{{ song.id }}"
+             data-title="{{ song.title|lower }}"
+             data-artist="{{ song.artist|lower }}"
+             data-accompaniment-level="{{ song.accompaniment_level }}"
+             data-lead-level="{{ song.lead_level }}"
+             data-bpm="{{ song.bpm }}"
+             data-genres="{{ (song.display_genres or song.genres or []) | join(',') }}"
+             data-language="{{ song.get('language','') }}"
+             data-added-at="{{ song.added_at.isoformat() if song.added_at and song.added_at.isoformat else song.added_at }}">
+
+          <div class="song-card-top">
+            <div class="song-cover">
+              {% if song.get('album_image_url') %}
+                <img src="{{ song.album_image_url }}" alt="תמונת אלבום" loading="lazy">
+              {% else %}
+                <div class="song-cover-placeholder" aria-hidden="true">🎵</div>
+              {% endif %}
+            </div>
+
+            {% if can_edit %}
+              <button class="remove-btn" onclick="removeFromSharedList('{{ song.id }}', '{{ song.title }}')" title="הסר מהרשימה">
+                <span>🗑️</span>
+              </button>
+            {% endif %}
+          </div>
+
+          <div class="song-basic">
+            <h3 class="song-title">{{ song.title }}</h3>
+            <p class="song-artist">{{ song.artist }}</p>
+          </div>
+
+          <div class="song-hover-meta" aria-hidden="true">
+            <div class="meta-line">
+              <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">🎸 ליווי {{ song.accompaniment_level }}</span>
+              <span class="detail-badge level-badge-lead" title="רמת סולו: {{ song.lead_level }} מתוך 10">🎶 סולו {{ song.lead_level }}</span>
+            </div>
+            <div class="genres-line">
+              {% set g_list = song.display_genres or song.genres or [] %}
+              {% if g_list and g_list|length > 0 %}
+                {% for g in g_list %}
+                  <span class="genre-tag">{{ g }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="genre-tag">לא צוין</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="song-actions">
+            <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="action-btn play-btn single-action">
+              <span>🎵</span>
+              <span>פתח שיר</span>
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🎵</div>
+      <h3>אין שירים ברשימה</h3>
+      <p>הוסף שירים לרשימה דרך דף “רשימת שירים” (כרגע דרך המערכת).</p>
+      <a href="{{ url_for('songs.songs') }}" class="browse-btn">
+        <span>🔍</span>
+        <span>עבור לדף השירים</span>
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/my_songs.js') }}"></script>
+<script>
+(function() {
+  var listId = {{ list_id|tojson }};
+  var shareToken = {{ share_token|tojson }};
+
+  var btn = document.getElementById('copy-share-link-btn');
+  if (btn && shareToken) {
+    btn.addEventListener('click', async function() {
+      var link = location.origin + '/song-lists/' + listId + '?token=' + encodeURIComponent(shareToken);
+      try {
+        await navigator.clipboard.writeText(link);
+        alert('הועתק ללוח');
+      } catch (e) {
+        prompt('העתק את הלינק', link);
+      }
+    });
+  }
+
+  window.removeFromSharedList = async function(songId, songTitle) {
+    if (!confirm('להסיר את "' + songTitle + '" מהרשימה?')) return;
+    try {
+      var resp = await fetch('/api/song-lists/' + listId + '/items/remove/' + songId, { method: 'POST' });
+      var data = await resp.json();
+      if (data && data.success) location.reload();
+      else alert((data && data.error) || 'שגיאה בהסרה');
+    } catch (e) {
+      alert('שגיאה בחיבור לשרת');
+    }
+  }
+})();
+</script>
+{% endblock %}
+

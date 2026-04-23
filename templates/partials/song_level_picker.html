@@ -23,15 +23,15 @@
     <div class="level-picker-header">
         <label class="form-label" for="lead_level">
             <span class="label-icon">🎶</span>
-            רמת הובלה (סולואים / מלודיות)
+            רמת סולו (סולואים / מלודיות)
         </label>
     </div>
     <input type="hidden" id="lead_level" name="lead_level" value="{{ lead_sel }}">
-    <div class="level-picker" data-target="lead_level" role="group" aria-label="בחירת רמת הובלה">
+    <div class="level-picker" data-target="lead_level" role="group" aria-label="בחירת רמת סולו">
         {% for n in range(11) %}
         <button type="button" class="level-chip{% if n == lead_sel %} active{% endif %}" data-level="{{ n }}" aria-pressed="{% if n == lead_sel %}true{% else %}false{% endif %}">{{ n }}</button>
         {% endfor %}
     </div>
-    <p class="input-hint">0 = אין חלק הובלה מובהק. מדריך מפורט לרמות ההובלה יתווסף בהמשך.</p>
+    <p class="input-hint">0 = אין חלק סולו מובהק. מדריך מפורט לרמות הסולו יתווסף בהמשך.</p>
     <div class="field-validation" id="lead_level-validation"></div>
 </div>

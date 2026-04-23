@@ -1,5 +1,181 @@
 // My Songs Page JavaScript
 let songToRemove = null;
+let allCards = [];
+let filteredCards = [];
+let currentSort = 'recent';
+let currentFilters = {
+    search: '',
+    language: '',
+    genre: '',
+    bpmRange: '',
+    accLevel: '',
+    soloLevel: ''
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeCards();
+    bindFilters();
+});
+
+function initializeCards() {
+    const cards = document.querySelectorAll('.song-card');
+    allCards = Array.from(cards).map((el) => ({
+        el,
+        id: el.dataset.songId || '',
+        title: (el.dataset.title || '').toLowerCase(),
+        artist: (el.dataset.artist || '').toLowerCase(),
+        accompanimentLevel: parseInt(el.dataset.accompanimentLevel, 10) || 0,
+        soloLevel: parseInt(el.dataset.leadLevel, 10) || 0,
+        bpm: parseInt(el.dataset.bpm, 10) || 0,
+        genres: (el.dataset.genres || ''),
+        language: (el.dataset.language || '').toLowerCase(),
+        addedAt: (el.dataset.addedAt || ''),
+    }));
+    filteredCards = [...allCards];
+    updateCount();
+}
+
+function bindFilters() {
+    const search = document.getElementById('search-input');
+    if (search) {
+        search.addEventListener('input', debounce((e) => {
+            currentFilters.search = (e.target.value || '').toLowerCase().trim();
+            applyFiltersAndSort();
+        }, 250));
+    }
+
+    const language = document.getElementById('language-select');
+    if (language) {
+        language.addEventListener('change', () => {
+            currentFilters.language = (language.value || '').toLowerCase();
+            applyFiltersAndSort();
+        });
+    }
+
+    const genre = document.getElementById('genre-select');
+    if (genre) {
+        genre.addEventListener('change', () => {
+            currentFilters.genre = genre.value || '';
+            applyFiltersAndSort();
+        });
+    }
+
+    const bpmRange = document.getElementById('bpm-range-select');
+    if (bpmRange) {
+        bpmRange.addEventListener('change', () => {
+            currentFilters.bpmRange = bpmRange.value || '';
+            applyFiltersAndSort();
+        });
+    }
+
+    const acc = document.getElementById('acc-level-select');
+    if (acc) {
+        acc.addEventListener('change', () => {
+            currentFilters.accLevel = acc.value || '';
+            applyFiltersAndSort();
+        });
+    }
+
+    const solo = document.getElementById('solo-level-select');
+    if (solo) {
+        solo.addEventListener('change', () => {
+            currentFilters.soloLevel = solo.value || '';
+            applyFiltersAndSort();
+        });
+    }
+
+    const sort = document.getElementById('sort-select');
+    if (sort) {
+        sort.addEventListener('change', () => {
+            currentSort = sort.value || 'recent';
+            applyFiltersAndSort();
+        });
+    }
+}
+
+function applyFiltersAndSort() {
+    filteredCards = allCards.filter((c) => {
+        if (currentFilters.search) {
+            const t = currentFilters.search;
+            const genresText = (c.genres || '').toLowerCase();
+            if (!(c.title.includes(t) || c.artist.includes(t) || genresText.includes(t))) return false;
+        }
+        if (currentFilters.language) {
+            if ((c.language || '') !== currentFilters.language) return false;
+        }
+        if (currentFilters.genre) {
+            const parts = (c.genres || '').split(',').map(s => s.trim());
+            if (!parts.includes(currentFilters.genre)) return false;
+        }
+        if (currentFilters.bpmRange) {
+            const m = currentFilters.bpmRange.match(/^(\d+)\-(\d+)$/);
+            if (m) {
+                const min = parseInt(m[1], 10);
+                const max = parseInt(m[2], 10);
+                if (!(c.bpm >= min && c.bpm <= max)) return false;
+            }
+        }
+        if (currentFilters.accLevel !== '') {
+            const n = parseInt(currentFilters.accLevel, 10);
+            if (!Number.isNaN(n) && c.accompanimentLevel !== n) return false;
+        }
+        if (currentFilters.soloLevel !== '') {
+            const n = parseInt(currentFilters.soloLevel, 10);
+            if (!Number.isNaN(n) && c.soloLevel !== n) return false;
+        }
+        return true;
+    });
+
+    filteredCards.sort((a, b) => {
+        switch (currentSort) {
+            case 'alphabetical':
+                return (a.title || '').localeCompare(b.title || '', 'he');
+            case 'artist':
+                return (a.artist || '').localeCompare(b.artist || '', 'he');
+            case 'accompaniment':
+                return a.accompanimentLevel - b.accompanimentLevel;
+            case 'lead':
+                return a.soloLevel - b.soloLevel;
+            case 'bpm':
+                return a.bpm - b.bpm;
+            case 'genres': {
+                const ag = (a.genres || '').split(',')[0] || '';
+                const bg = (b.genres || '').split(',')[0] || '';
+                return ag.localeCompare(bg, 'he');
+            }
+            case 'recent':
+            default:
+                return (b.addedAt || '').localeCompare(a.addedAt || '');
+        }
+    });
+
+    renderCards();
+}
+
+function renderCards() {
+    const grid = document.querySelector('.songs-grid');
+    if (!grid) return;
+
+    allCards.forEach(c => { c.el.style.display = 'none'; });
+    filteredCards.forEach(c => {
+        c.el.style.display = '';
+        grid.appendChild(c.el);
+    });
+    updateCount();
+}
+
+function updateCount() {
+    const count = document.querySelector('.count-number');
+    if (count) count.textContent = filteredCards.length;
+}
+
+function debounce(fn, wait) {
+    let t;
+    return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), wait);
+    };
+}
 
 function removeSong(songId, songTitle) {
     songToRemove = songId;

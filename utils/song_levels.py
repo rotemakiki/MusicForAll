@@ -58,6 +58,20 @@ ACCOMPANIMENT_LEVELS = [
     },
 ]
 
+SOLO_LEVELS = [
+    {"level": 0, "title": "ללא סולו", "description": "אין חלק סולו/מלודיה מוביל מובהק בשיר."},
+    {"level": 1, "title": "סולו קצר ופשוט", "description": "מלודיה קצרה, איטית יחסית, בעיקר תווים בודדים ומעברים קלים."},
+    {"level": 2, "title": "סולו בסיסי", "description": "כולל קפיצות מיתרים קלות/סליידים בסיסיים ולעיתים בנדים קלים."},
+    {"level": 3, "title": "סולו בקצב", "description": "משפטים מהירים יותר, שילוב טכניקות בסיסיות כמו Hammer-on/Pull-off."},
+    {"level": 4, "title": "סולו מגוון", "description": "טכניקות מגוונות יותר (בנדים מדויקים, סליידים, ויברטו) לאורך זמן."},
+    {"level": 5, "title": "סולו בינוני", "description": "רצפים מהירים יותר, נדרשת שליטה בקצב ובדיוק אצבעות."},
+    {"level": 6, "title": "סולו מתקדם", "description": "כולל ליקים מהירים, מעבר בין פוזיציות, ולעיתים פרזינג מורכב."},
+    {"level": 7, "title": "סולו מהיר ומורכב", "description": "שליטה גבוהה בטכניקה, תזמון, ודיוק לאורך סולו ארוך יותר."},
+    {"level": 8, "title": "סולו וירטואוזי", "description": "קטעים מהירים מאוד/טכניקות מתקדמות (למשל טאפינג בסיסי) בהתאם לשיר."},
+    {"level": 9, "title": "סולו קיצוני", "description": "טכניקות מתקדמות ותזמון מורכב לאורך זמן."},
+    {"level": 10, "title": "מאסטר", "description": "רמת סולו גבוהה במיוחד: מהירות, דיוק, דינמיקה ושליטה מלאה."},
+]
+
 
 def _clamp_int_level(value, default):
     if value is None or value == "":
@@ -102,6 +116,24 @@ def attach_song_level_fields(song: dict) -> None:
     meta = ACCOMPANIMENT_LEVELS[acc]
     song["accompaniment_level_title"] = meta["title"]
     song["accompaniment_level_description"] = meta["description"]
+
+
+def attach_song_level_fields_with_tables(song: dict, accompaniment_levels=None) -> None:
+    """
+    כמו attach_song_level_fields, אבל מאפשר להעביר טבלת רמות דינמית (למשל מתוך Firestore).
+    מונע גישה קבועה ל-ACCOMPANIMENT_LEVELS במקרה שיש override.
+    """
+    acc = normalize_accompaniment_level(song)
+    lead = normalize_lead_level(song)
+    song["accompaniment_level"] = acc
+    song["lead_level"] = lead
+    levels = accompaniment_levels or ACCOMPANIMENT_LEVELS
+    try:
+        meta = levels[acc]
+    except Exception:
+        meta = ACCOMPANIMENT_LEVELS[acc]
+    song["accompaniment_level_title"] = meta.get("title", "")
+    song["accompaniment_level_description"] = meta.get("description", "")
 
 
 def parse_level_payload(value):

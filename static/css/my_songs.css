@@ -51,6 +51,67 @@ body {
     padding: 12px 20px;
 }
 
+.filter-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.filter-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 10px 14px;
+    gap: 10px;
+    transition: all 0.3s;
+    min-width: 260px;
+}
+
+.search-box:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    flex: 1;
+    background: transparent;
+}
+
+.search-icon { color: #667eea; font-size: 1.1rem; }
+
+.filter-dropdown {
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.filter-dropdown:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .count-number {
     font-size: 1.5rem;
     font-weight: 700;
@@ -64,8 +125,8 @@ body {
 
 .songs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
     margin-bottom: 30px;
 }
 
@@ -73,10 +134,11 @@ body {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 16px;
-    padding: 20px;
+    padding: 14px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .song-card:hover {
@@ -84,15 +146,30 @@ body {
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
 }
 
-.song-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 15px;
-}
+.song-card-top { position: relative; }
 
-.song-info {
-    flex: 1;
+.song-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
+    border: 1px solid #e1e8ed;
+}
+.song-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.song-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: #667eea;
 }
 
 .song-title {
@@ -124,6 +201,10 @@ body {
     justify-content: center;
     transition: all 0.3s;
     box-shadow: 0 3px 10px rgba(255, 71, 87, 0.3);
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
 }
 
 .remove-btn:hover {
@@ -131,20 +212,30 @@ body {
     box-shadow: 0 4px 15px rgba(255, 71, 87, 0.5);
 }
 
-.song-details {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 15px;
+.song-basic { margin-top: 10px; }
+.song-title { font-size: 1.05rem; }
+.song-artist { font-size: 0.95rem; }
+
+.song-hover-meta {
+    margin-top: 10px;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.25s ease;
 }
+.song-card:hover .song-hover-meta {
+    opacity: 1;
+    max-height: 140px;
+}
+.meta-line { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 
 .detail-badge {
     background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
     border: 1px solid #e1e8ed;
     border-radius: 8px;
     padding: 4px 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.82rem;
+    font-weight: 600;
     color: #34495e;
 }
 
@@ -160,16 +251,22 @@ body {
     color: #9d174d;
 }
 
-.added-date {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-bottom: 15px;
-    font-style: italic;
+.genres-line { display: flex; flex-wrap: wrap; gap: 6px; }
+.genre-tag {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: inline-block;
+    white-space: nowrap;
 }
 
 .song-actions {
     display: flex;
     gap: 10px;
+    margin-top: 12px;
 }
 
 .action-btn {
@@ -385,8 +482,8 @@ body {
     }
 
     .songs-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 12px;
     }
 
     .page-header {

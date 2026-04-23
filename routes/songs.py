@@ -4,7 +4,30 @@ from datetime import datetime
 import json
 import re
 from utils.permissions import get_roles, can_upload_songs, can_edit_any_content
-from utils.song_levels import attach_song_level_fields, parse_level_payload
+from utils.song_levels import attach_song_level_fields_with_tables, parse_level_payload, ACCOMPANIMENT_LEVELS, SOLO_LEVELS
+
+
+def _get_song_levels_config():
+    """
+    טוען טבלאות רמות מ-Firestore אם קיימות (Admin יכול לערוך),
+    אחרת חוזר לברירות המחדל בקוד.
+    """
+    try:
+        db = firestore.client()
+        doc = db.collection("site_config").document("song_levels").get()
+        if not doc.exists:
+            return {"accompaniment_levels": ACCOMPANIMENT_LEVELS, "solo_levels": SOLO_LEVELS}
+        data = doc.to_dict() or {}
+        acc = data.get("accompaniment_levels") or ACCOMPANIMENT_LEVELS
+        solo = data.get("solo_levels") or SOLO_LEVELS
+        # Ensure shape is list-like
+        if not isinstance(acc, list) or len(acc) < 11:
+            acc = ACCOMPANIMENT_LEVELS
+        if not isinstance(solo, list) or len(solo) < 11:
+            solo = SOLO_LEVELS
+        return {"accompaniment_levels": acc, "solo_levels": solo}
+    except Exception:
+        return {"accompaniment_levels": ACCOMPANIMENT_LEVELS, "solo_levels": SOLO_LEVELS}
 
 songs_bp = Blueprint('songs', __name__)
 
@@ -42,6 +65,8 @@ def youtube_embed_url(url):
 @songs_bp.route('/songs')
 def songs():
     db = firestore.client()
+    levels_cfg = _get_song_levels_config()
+    accompaniment_levels = levels_cfg["accompaniment_levels"]
     song_docs = db.collection("songs").order_by("created_at", direction=firestore.Query.DESCENDING).stream()
 
     # For logged-in user: get my_songs IDs and watched (song_views) IDs
@@ -88,7 +113,7 @@ def songs():
         else:
             song["display_genres"] = ["לא צוין"]
 
-        attach_song_level_fields(song)
+        attach_song_level_fields_with_tables(song, accompaniment_levels=accompaniment_levels)
         all_songs.append(song)
     return render_template('songs.html', songs=all_songs)
 
@@ -174,7 +199,8 @@ def edit_song(song_id):
         print(f"Error parsing loops for song {song_id}: {e}")
         song["loops"] = []
 
-    attach_song_level_fields(song)
+    levels_cfg = _get_song_levels_config()
+    attach_song_level_fields_with_tables(song, accompaniment_levels=levels_cfg["accompaniment_levels"])
 
     return render_template("edit_song.html", song=song)
 
@@ -252,7 +278,8 @@ def play_song(song_id):
         print(f"Error parsing loops for song {song_id}: {e}")
         loops_data = []
 
-    attach_song_level_fields(song)
+    levels_cfg = _get_song_levels_config()
+    attach_song_level_fields_with_tables(song, accompaniment_levels=levels_cfg["accompaniment_levels"])
 
     try:
         beats_per_measure = int(song["time_signature"].split("/")[0])
@@ -318,6 +345,112 @@ def play_song(song_id):
         "chords_lyrics_text": song.get("chords_lyrics_text", ""),
         "lyrics_text": song.get("lyrics_text", ""),
     }, can_watch_videos=can_watch_videos, can_see_teacher_notes=can_see_teacher_notes, is_localhost=request.host.startswith("localhost") or "127.0.0.1" in request.host)
+
+
+@songs_bp.route('/admin/song-levels', methods=['GET', 'POST'])
+def admin_song_levels():
+    """עריכת טבלאות רמות (ליווי + סולו) — לאדמין בלבד."""
+    if 'user_id' not in session:
+        flash("יש להתחבר כדי לגשת לעמוד זה", "error")
+        return redirect(url_for('auth.login'))
+
+    roles = get_roles(session)
+    if "admin" not in (roles or []):
+        flash("אין לך הרשאה לגשת לעמוד זה", "error")
+        return redirect(url_for('songs.songs'))
+
+    db = firestore.client()
+    cfg = _get_song_levels_config()
+
+    if request.method == 'POST':
+        acc_json = (request.form.get("accompaniment_levels_json") or "").strip()
+        solo_json = (request.form.get("solo_levels_json") or "").strip()
+        try:
+            acc_levels = json.loads(acc_json)
+            solo_levels = json.loads(solo_json)
+            if not isinstance(acc_levels, list) or len(acc_levels) < 11:
+                raise ValueError("טבלת רמות ליווי חייבת להיות מערך באורך 11 (0–10).")
+            if not isinstance(solo_levels, list) or len(solo_levels) < 11:
+                raise ValueError("טבלת רמות סולו חייבת להיות מערך באורך 11 (0–10).")
+            db.collection("site_config").document("song_levels").set({
+                "accompaniment_levels": acc_levels,
+                "solo_levels": solo_levels,
+                "updated_at": datetime.utcnow(),
+                "updated_by": session.get("user_id"),
+            }, merge=True)
+            flash("הטבלאות עודכנו בהצלחה", "success")
+            return redirect(url_for('songs.admin_song_levels'))
+        except Exception as e:
+            flash(f"שגיאה בשמירת הטבלאות: {e}", "error")
+            cfg = {"accompaniment_levels": ACCOMPANIMENT_LEVELS, "solo_levels": SOLO_LEVELS}
+
+    return render_template(
+        "admin_song_levels.html",
+        accompaniment_levels=cfg["accompaniment_levels"],
+        solo_levels=cfg["solo_levels"],
+        accompaniment_levels_json=json.dumps(cfg["accompaniment_levels"], ensure_ascii=False, indent=2),
+        solo_levels_json=json.dumps(cfg["solo_levels"], ensure_ascii=False, indent=2),
+    )
+
+
+@songs_bp.route('/api/songs/<string:song_id>/album-image', methods=['POST'])
+def upload_song_album_image(song_id):
+    """העלאת תמונת אלבום לשיר — היוצר או אדמין."""
+    if 'user_id' not in session:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    db = firestore.client()
+    doc = db.collection("songs").document(song_id).get()
+    if not doc.exists:
+        return jsonify({"success": False, "error": "Song not found"}), 404
+
+    song = doc.to_dict() or {}
+    roles = get_roles(session)
+    if song.get("created_by") != session.get("user_id") and "admin" not in (roles or []):
+        return jsonify({"success": False, "error": "Forbidden"}), 403
+
+    if 'image_file' not in request.files:
+        return jsonify({"success": False, "error": "Missing image_file"}), 400
+    f = request.files['image_file']
+    if not f or not f.filename:
+        return jsonify({"success": False, "error": "No file selected"}), 400
+
+    import os
+    import uuid
+    from werkzeug.utils import secure_filename
+    from firebase_config import get_gcs_storage_client
+
+    filename = secure_filename(f.filename)
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in (".png", ".jpg", ".jpeg", ".webp"):
+        return jsonify({"success": False, "error": "Unsupported file type"}), 400
+
+    temp_dir = "temp_uploads"
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_path = os.path.join(temp_dir, f"{uuid.uuid4()}_{filename}")
+    f.save(temp_path)
+
+    try:
+        storage_client = get_gcs_storage_client()
+        bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
+        blob_name = f"song_album_images/{song_id}/{uuid.uuid4()}_{filename}"
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(temp_path)
+        blob.make_public()
+        public_url = blob.public_url
+    finally:
+        try:
+            os.remove(temp_path)
+        except Exception:
+            pass
+
+    db.collection("songs").document(song_id).update({
+        "album_image_url": public_url,
+        "album_image_updated_at": datetime.utcnow(),
+        "album_image_updated_by": session.get("user_id"),
+    })
+
+    return jsonify({"success": True, "album_image_url": public_url})
 
 # Legacy chord route - redirect to player
 @songs_bp.route('/chords/<string:song_id>')
@@ -421,7 +554,7 @@ def add_song():
     acc = parse_level_payload(data.get("accompaniment_level"))
     lead = parse_level_payload(data.get("lead_level"))
     if acc is None or lead is None:
-        return jsonify({"error": "יש לבחור רמת ליווי והובלה בין 0 ל-10"}), 400
+        return jsonify({"error": "יש לבחור רמת ליווי וסולו בין 0 ל-10"}), 400
 
     # Handle loops data if provided
     loops_data = data.get("loops", [])
@@ -502,7 +635,7 @@ def edit_song_api(song_id):
     acc = parse_level_payload(data.get("accompaniment_level"))
     lead = parse_level_payload(data.get("lead_level"))
     if acc is None or lead is None:
-        return jsonify({"error": "יש לבחור רמת ליווי והובלה בין 0 ל-10"}), 400
+        return jsonify({"error": "יש לבחור רמת ליווי וסולו בין 0 ל-10"}), 400
 
     # Handle loops data if provided
     loops_data = data.get("loops", [])

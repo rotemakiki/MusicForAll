@@ -3,6 +3,14 @@
 let allSongs = [];
 let filteredSongs = [];
 let currentSort = 'recent';
+let currentFilters = {
+    search: '',
+    language: '',
+    genre: '',
+    bpmRange: '',
+    accLevel: '',
+    soloLevel: ''
+};
 
 // Initialize page when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -29,6 +37,8 @@ function initializePage() {
             key: row.dataset.key || '',
             timeSignature: row.dataset.timeSignature || '',
             genres: row.dataset.genres || '',
+            language: (row.dataset.language || '').toLowerCase(),
+            albumImageUrl: row.dataset.albumImageUrl || '',
             createdAt: row.dataset.createdAt || '',
             inMyList: row.dataset.inMyList === 'true',
             watched: row.dataset.watched === 'true',
@@ -48,6 +58,46 @@ function setupEventListeners() {
         searchInput.addEventListener('input', debounce(handleSearch, 300));
     }
 
+    const languageSelect = document.getElementById('language-select');
+    if (languageSelect) {
+        languageSelect.addEventListener('change', () => {
+            currentFilters.language = (languageSelect.value || '').toLowerCase();
+            applyAllFiltersAndSort();
+        });
+    }
+
+    const genreSelect = document.getElementById('genre-select');
+    if (genreSelect) {
+        genreSelect.addEventListener('change', () => {
+            currentFilters.genre = genreSelect.value || '';
+            applyAllFiltersAndSort();
+        });
+    }
+
+    const bpmRangeSelect = document.getElementById('bpm-range-select');
+    if (bpmRangeSelect) {
+        bpmRangeSelect.addEventListener('change', () => {
+            currentFilters.bpmRange = bpmRangeSelect.value || '';
+            applyAllFiltersAndSort();
+        });
+    }
+
+    const accLevelSelect = document.getElementById('acc-level-select');
+    if (accLevelSelect) {
+        accLevelSelect.addEventListener('change', () => {
+            currentFilters.accLevel = accLevelSelect.value || '';
+            applyAllFiltersAndSort();
+        });
+    }
+
+    const soloLevelSelect = document.getElementById('solo-level-select');
+    if (soloLevelSelect) {
+        soloLevelSelect.addEventListener('change', () => {
+            currentFilters.soloLevel = soloLevelSelect.value || '';
+            applyAllFiltersAndSort();
+        });
+    }
+
     // Sort functionality
     const sortSelect = document.getElementById('sort-select');
     if (sortSelect) {
@@ -56,40 +106,72 @@ function setupEventListeners() {
 
     // Add smooth animations to song cards
     animateCards();
+
+    // Album image upload (creator/admin only buttons exist)
+    document.body.addEventListener('change', (e) => {
+        const input = e.target && e.target.classList && e.target.classList.contains('js-album-image-input') ? e.target : null;
+        if (!input) return;
+        const songId = input.dataset.songId;
+        const file = input.files && input.files[0];
+        if (!songId || !file) return;
+        uploadAlbumImage(songId, file, input);
+    });
 }
 
 function handleSearch(event) {
-    const searchTerm = event.target.value.toLowerCase().trim();
-
-    if (!searchTerm) {
-        filteredSongs = [...allSongs];
-    } else {
-        filteredSongs = allSongs.filter(song => {
-            return song.title.includes(searchTerm) ||
-                   song.artist.includes(searchTerm) ||
-                   song.genres.toLowerCase().includes(searchTerm);
-        });
-    }
-
-    displayFilteredSongs();
+    currentFilters.search = (event.target.value || '').toLowerCase().trim();
+    applyAllFiltersAndSort();
 }
 
 function handleSort(event) {
     currentSort = event.target.value;
+    applyAllFiltersAndSort();
+}
 
-    // Get fresh filtered songs (in case search is active)
-    const searchInput = document.getElementById('search-input');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    
-    if (!searchTerm) {
-        filteredSongs = [...allSongs];
-    } else {
-        filteredSongs = allSongs.filter(song => {
-            return song.title.includes(searchTerm) ||
-                   song.artist.includes(searchTerm) ||
-                   song.genres.toLowerCase().includes(searchTerm);
-        });
-    }
+function applyAllFiltersAndSort() {
+    filteredSongs = allSongs.filter(song => {
+        // search
+        if (currentFilters.search) {
+            const term = currentFilters.search;
+            const genresText = (song.genres || '').toLowerCase();
+            if (!(song.title.includes(term) || song.artist.includes(term) || genresText.includes(term))) {
+                return false;
+            }
+        }
+
+        // language
+        if (currentFilters.language) {
+            if ((song.language || '') !== currentFilters.language) return false;
+        }
+
+        // genre (match within comma list)
+        if (currentFilters.genre) {
+            const parts = (song.genres || '').split(',').map(s => s.trim());
+            if (!parts.includes(currentFilters.genre)) return false;
+        }
+
+        // BPM range
+        if (currentFilters.bpmRange) {
+            const m = currentFilters.bpmRange.match(/^(\d+)\-(\d+)$/);
+            if (m) {
+                const min = parseInt(m[1], 10);
+                const max = parseInt(m[2], 10);
+                if (!(song.bpm >= min && song.bpm <= max)) return false;
+            }
+        }
+
+        // exact levels
+        if (currentFilters.accLevel !== '') {
+            const n = parseInt(currentFilters.accLevel, 10);
+            if (!Number.isNaN(n) && song.accompanimentLevel !== n) return false;
+        }
+        if (currentFilters.soloLevel !== '') {
+            const n = parseInt(currentFilters.soloLevel, 10);
+            if (!Number.isNaN(n) && song.leadLevel !== n) return false;
+        }
+
+        return true;
+    });
 
     filteredSongs.sort((a, b) => {
         switch(currentSort) {
@@ -147,6 +229,46 @@ function displayFilteredSongs() {
     });
     
     updateSongCount();
+}
+
+async function uploadAlbumImage(songId, file, inputEl) {
+    try {
+        inputEl.disabled = true;
+        const fd = new FormData();
+        fd.append('image_file', file);
+
+        const resp = await fetch(`/api/songs/${songId}/album-image`, { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (!data || !data.success) {
+            throw new Error((data && data.error) || 'שגיאה בהעלאת תמונה');
+        }
+
+        const card = document.getElementById(`song-${songId}`);
+        if (card) {
+            const img = card.querySelector('.song-cover img');
+            const ph = card.querySelector('.song-cover-placeholder');
+            if (img) {
+                img.src = data.album_image_url;
+            } else {
+                if (ph) ph.remove();
+                const newImg = document.createElement('img');
+                newImg.src = data.album_image_url;
+                newImg.alt = 'תמונת אלבום';
+                newImg.loading = 'lazy';
+                const cover = card.querySelector('.song-cover');
+                if (cover) cover.prepend(newImg);
+            }
+            card.dataset.albumImageUrl = data.album_image_url;
+        }
+
+        showNotification('התמונה עודכנה בהצלחה', 'success');
+    } catch (e) {
+        console.error(e);
+        showNotification('שגיאה בהעלאת תמונה', 'error');
+    } finally {
+        inputEl.disabled = false;
+        inputEl.value = '';
+    }
 }
 
 function updateSongCount() {

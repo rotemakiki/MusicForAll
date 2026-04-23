@@ -73,9 +73,23 @@ app.register_blueprint(chords_system_bp)  # הוספת המערכת החדשה
 
 @app.context_processor
 def inject_accompaniment_levels_help():
-    from utils.song_levels import ACCOMPANIMENT_LEVELS
-
-    return {"accompaniment_levels_help": ACCOMPANIMENT_LEVELS}
+    from utils.song_levels import ACCOMPANIMENT_LEVELS, SOLO_LEVELS
+    try:
+        from firebase_admin import firestore
+        db = firestore.client()
+        doc = db.collection("site_config").document("song_levels").get()
+        if doc.exists:
+            data = doc.to_dict() or {}
+            acc = data.get("accompaniment_levels") or ACCOMPANIMENT_LEVELS
+            solo = data.get("solo_levels") or SOLO_LEVELS
+            if not isinstance(acc, list) or len(acc) < 11:
+                acc = ACCOMPANIMENT_LEVELS
+            if not isinstance(solo, list) or len(solo) < 11:
+                solo = SOLO_LEVELS
+            return {"accompaniment_levels_help": acc, "solo_levels_help": solo}
+    except Exception:
+        pass
+    return {"accompaniment_levels_help": ACCOMPANIMENT_LEVELS, "solo_levels_help": SOLO_LEVELS}
 
 
 @app.context_processor

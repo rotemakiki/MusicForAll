@@ -137,6 +137,57 @@
                 <input type="text" id="search-input" placeholder="חפש שיר או אמן...">
             </div>
 
+            <select id="language-select" class="sort-dropdown" aria-label="סינון לפי שפה">
+                <option value="">כל השפות</option>
+                <option value="he">עברית</option>
+                <option value="en">אנגלית</option>
+                <option value="es">ספרדית</option>
+                <option value="ru">רוסית</option>
+                <option value="fr">צרפתית</option>
+            </select>
+
+            <select id="genre-select" class="sort-dropdown" aria-label="סינון לפי ז'אנר">
+                <option value="">כל הז'אנרים</option>
+                {# Build unique genres list from songs (display_genres is always list) #}
+                {% set ns = namespace(genres=[]) %}
+                {% for s in songs %}
+                    {% for g in (s.display_genres or []) %}
+                        {% if g and g not in ns.genres and g != 'לא צוין' %}
+                            {% set ns.genres = ns.genres + [g] %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                {% for g in ns.genres|sort %}
+                    <option value="{{ g }}">{{ g }}</option>
+                {% endfor %}
+            </select>
+
+            <select id="bpm-range-select" class="sort-dropdown" aria-label="סינון לפי טווח BPM">
+                <option value="">כל ה-BPM</option>
+                <option value="40-60">40–60</option>
+                <option value="61-80">61–80</option>
+                <option value="81-100">81–100</option>
+                <option value="101-120">101–120</option>
+                <option value="121-140">121–140</option>
+                <option value="141-160">141–160</option>
+                <option value="161-180">161–180</option>
+                <option value="181-200">181–200</option>
+            </select>
+
+            <select id="acc-level-select" class="sort-dropdown" aria-label="סינון לפי רמת ליווי">
+                <option value="">כל רמות הליווי</option>
+                {% for n in range(11) %}
+                    <option value="{{ n }}">ליווי {{ n }}</option>
+                {% endfor %}
+            </select>
+
+            <select id="solo-level-select" class="sort-dropdown" aria-label="סינון לפי רמת סולו">
+                <option value="">כל רמות הסולו</option>
+                {% for n in range(11) %}
+                    <option value="{{ n }}">סולו {{ n }}</option>
+                {% endfor %}
+            </select>
+
             <select id="sort-select" class="sort-dropdown">
                 <option value="alphabetical">אלפביתי (שם שיר)</option>
                 <option value="recent" selected>הועלה לאחרונה</option>
@@ -147,11 +198,14 @@
                 <option value="title">מיון לפי שם השיר</option>
                 <option value="artist">מיון לפי אמן</option>
                 <option value="accompaniment">מיון לפי רמת ליווי</option>
-                <option value="lead">מיון לפי רמת הובלה</option>
+                <option value="lead">מיון לפי רמת סולו</option>
                 <option value="bpm">מיון לפי BPM</option>
                 <option value="genres">מיון לפי ז'אנרים</option>
             </select>
             <button type="button" class="levels-help-inline-btn js-open-accompaniment-levels-help" title="הסבר על רמות הליווי">רמות ליווי — מה זה אומר?</button>
+            {% if 'admin' in (session.get('roles') or []) %}
+                <a href="{{ url_for('songs.admin_song_levels') }}" class="levels-help-inline-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" title="עריכת טבלאות הרמות (אדמין)">עריכת טבלאות רמות</a>
+            {% endif %}
         </div>
     </div>
 
@@ -166,6 +220,8 @@
                      data-key="{{ song.key }}"
                      data-time-signature="{{ song.time_signature }}"
                      data-genres="{{ song.display_genres | join(',') }}"
+                     data-language="{{ song.get('language','') }}"
+                     data-album-image-url="{{ song.get('album_image_url','') }}"
                      data-created-at="{{ song.created_at_iso }}"
                      data-in-my-list="{{ 'true' if song.in_my_list else 'false' }}"
                      data-watched="{{ 'true' if song.watched else 'false' }}"
@@ -173,43 +229,26 @@
                      data-song-version="{{ song.get('song_version', '') }}">
 
                     <div class="song-row-content">
-                        <div class="song-main-info">
-                            <div class="song-title-artist">
-                                <h3 class="song-title">{{ song.title }}</h3>
-                                <p class="song-artist">{{ song.artist }}
-                                    {% if song.get('song_version') == 'cover' and song.get('original_artist') %}
-                                        <span class="song-version-cover-hint">(קאבר של {{ song.original_artist }})</span>
-                                    {% endif %}
-                                </p>
-                                {% if song.get('song_version') %}
-                                <span class="song-version-badge version-{{ song.song_version }}" title="גרסת השיר">
-                                    {% if song.song_version == 'cover' %}קאבר
-                                    {% elif song.song_version == 'original' %}גרסת אלבום
-                                    {% elif song.song_version == 'live' %}הופעה חיה
-                                    {% else %}{{ song.song_version }}{% endif %}
-                                </span>
+                        <div class="song-compact">
+                            <div class="song-cover">
+                                {% if song.get('album_image_url') %}
+                                    <img src="{{ song.album_image_url }}" alt="תמונת אלבום" loading="lazy">
+                                {% else %}
+                                    <div class="song-cover-placeholder" aria-hidden="true">🎵</div>
+                                {% endif %}
+                                {% if session.get('user_id') == song.created_by or 'admin' in (session.get('roles') or []) %}
+                                    <label class="song-cover-upload" title="העלה תמונת אלבום">
+                                        📷
+                                        <input type="file" class="js-album-image-input" data-song-id="{{ song.id }}" accept="image/png,image/jpeg,image/webp" hidden>
+                                    </label>
                                 {% endif %}
                             </div>
-                            
-                            <div class="song-meta-info">
-                                <div class="song-details-row">
-                                    <span class="detail-badge">
-                                        🎼 {{ song.key }} {{ song.key_type }}{% if song.get('secondary_key') and song.get('secondary_key_type') %} / {{ song.secondary_key }} {{ song.secondary_key_type }}{% endif %}
-                                    </span>
-                                    <span class="detail-badge">
-                                        🎵 {{ song.time_signature }}
-                                    </span>
-                                    <span class="detail-badge">
-                                        ⚡ {{ song.bpm }} BPM
-                                    </span>
-                                    <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">
-                                        🎸 ליווי {{ song.accompaniment_level }}
-                                    </span>
-                                    <span class="detail-badge level-badge-lead" title="רמת הובלה (סולו/מלודיה): {{ song.lead_level }} מתוך 10. מדריך מפורט יתווסף בהמשך.">
-                                        🎶 הובלה {{ song.lead_level }}
-                                    </span>
+
+                            <div class="song-compact-meta">
+                                <div class="song-levels-line">
+                                    <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">🎸 ליווי {{ song.accompaniment_level }}</span>
+                                    <span class="detail-badge level-badge-lead" title="רמת סולו: {{ song.lead_level }} מתוך 10. מדריך מפורט יתווסף בהמשך.">🎶 סולו {{ song.lead_level }}</span>
                                 </div>
-                                
                                 <div class="genres-container">
                                     {% if song.display_genres and song.display_genres|length > 0 %}
                                         {% for genre in song.display_genres %}
@@ -219,6 +258,31 @@
                                         <span class="genre-tag">לא צוין</span>
                                     {% endif %}
                                 </div>
+                            </div>
+
+                            <div class="song-hover-details">
+                                <h3 class="song-title">{{ song.title }}</h3>
+                                <p class="song-artist">{{ song.artist }}
+                                    {% if song.get('song_version') == 'cover' and song.get('original_artist') %}
+                                        <span class="song-version-cover-hint">(קאבר של {{ song.original_artist }})</span>
+                                    {% endif %}
+                                </p>
+                                <div class="song-details-row">
+                                    <span class="detail-badge">🎼 {{ song.key }} {{ song.key_type }}{% if song.get('secondary_key') and song.get('secondary_key_type') %} / {{ song.secondary_key }} {{ song.secondary_key_type }}{% endif %}</span>
+                                    <span class="detail-badge">🎵 {{ song.time_signature }}</span>
+                                    <span class="detail-badge">⚡ {{ song.bpm }} BPM</span>
+                                    {% if song.get('language') %}
+                                        <span class="detail-badge">🗣️ {{ song.language }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if song.get('song_version') %}
+                                <span class="song-version-badge version-{{ song.song_version }}" title="גרסת השיר">
+                                    {% if song.song_version == 'cover' %}קאבר
+                                    {% elif song.song_version == 'original' %}גרסת אלבום
+                                    {% elif song.song_version == 'live' %}הופעה חיה
+                                    {% else %}{{ song.song_version }}{% endif %}
+                                </span>
+                                {% endif %}
                             </div>
                         </div>
 
