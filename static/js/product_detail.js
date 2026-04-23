@@ -66,25 +66,29 @@ function displayProduct(product) {
     }
 
     // Price
-    let priceILS = product.price_ils;
-    let priceUSD = product.price_usd;
+    const rate = (typeof window.ILS_TO_USD_RATE === 'number' && window.ILS_TO_USD_RATE > 0) ? window.ILS_TO_USD_RATE : 0.27;
+    const priceIls = Number(product?.price_ils);
+    const priceUsd = Number(product?.price_usd);
+    const legacyUsd = Number(product?.price);
 
-    if (!priceILS && product.price_usd) {
-        priceILS = (product.price_usd / 0.27).toFixed(2);
-    } else if (!priceUSD && product.price_ils) {
-        priceUSD = (product.price_ils * 0.27).toFixed(2);
-    } else if (product.price) {
-        // Legacy support
-        priceILS = (product.price / 0.27).toFixed(2);
-        priceUSD = product.price.toFixed(2);
+    let finalIls = null;
+    let finalUsd = null;
+
+    if (Number.isFinite(priceIls) && priceIls >= 0) {
+        finalIls = priceIls;
+        finalUsd = Number.isFinite(priceUsd) && priceUsd >= 0 ? priceUsd : (priceIls * rate);
+    } else if (Number.isFinite(priceUsd) && priceUsd >= 0) {
+        finalUsd = priceUsd;
+        finalIls = priceUsd / rate;
+    } else if (Number.isFinite(legacyUsd) && legacyUsd >= 0) {
+        finalUsd = legacyUsd;
+        finalIls = legacyUsd / rate;
     }
 
-    if (priceILS) {
-        document.getElementById('productPriceILS').textContent = `${parseFloat(priceILS).toFixed(2)} ₪`;
-    }
-    if (priceUSD) {
-        document.getElementById('productPriceUSD').textContent = `(~${parseFloat(priceUSD).toFixed(2)} USD)`;
-    }
+    const priceIlsEl = document.getElementById('productPriceILS');
+    const priceUsdEl = document.getElementById('productPriceUSD');
+    if (priceIlsEl) priceIlsEl.textContent = Number.isFinite(finalIls) ? `${finalIls.toFixed(2)} ₪` : '';
+    if (priceUsdEl) priceUsdEl.textContent = Number.isFinite(finalUsd) ? `(~${finalUsd.toFixed(2)} USD)` : '';
 
     // Shipping info
     const shippingInfo = document.getElementById('shippingInfo');
@@ -411,6 +415,10 @@ async function editProductFromDetail() {
         
         const product = await response.json();
         
+        // Reset form first to avoid stale values from previous edits
+        const form = document.getElementById('addProductForm');
+        if (form) form.reset();
+
         // Populate form with product data
         document.getElementById('productName').value = product.name || '';
         document.getElementById('productDescription').value = product.description || '';
@@ -427,10 +435,14 @@ async function editProductFromDetail() {
             document.getElementById('productRating').value = product.rating || '';
         }
         
-        if (product.price_ils && document.getElementById('productPriceILS')) {
-            document.getElementById('productPriceILS').value = product.price_ils;
-        } else if (product.price_usd && document.getElementById('productPriceUSD')) {
-            document.getElementById('productPriceUSD').value = product.price_usd;
+        const priceIlsEl = document.getElementById('productPriceILS');
+        const priceUsdEl = document.getElementById('productPriceUSD');
+        if (priceIlsEl) priceIlsEl.value = '';
+        if (priceUsdEl) priceUsdEl.value = '';
+        if (Number.isFinite(Number(product.price_ils)) && priceIlsEl) {
+            priceIlsEl.value = product.price_ils;
+        } else if (Number.isFinite(Number(product.price_usd)) && priceUsdEl) {
+            priceUsdEl.value = product.price_usd;
         }
         
         if (document.getElementById('productShippingType')) {
@@ -453,9 +465,10 @@ async function editProductFromDetail() {
         }
         
         // Store product ID for update
-        const form = document.getElementById('addProductForm');
-        form.dataset.productId = window.productId;
-        form.dataset.isEdit = 'true';
+        if (form) {
+            form.dataset.productId = window.productId;
+            form.dataset.isEdit = 'true';
+        }
         
         // Change submit button text and modal title
         const submitBtn = form.querySelector('.submit-btn');

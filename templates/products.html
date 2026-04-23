@@ -25,6 +25,32 @@
             <i class="fas fa-search"></i>
         </div>
 
+        <div class="advanced-filters" id="advancedFilters" style="width: 100%; max-width: 900px;">
+            <div class="price-filter-card">
+                <div class="price-filter-header">
+                    <span class="price-filter-title">סינון לפי מחיר (₪)</span>
+                    <span class="price-filter-values">
+                        <span id="priceMinLabel">0</span>
+                        <span> - </span>
+                        <span id="priceMaxLabel">0</span>
+                    </span>
+                </div>
+                <div class="price-filter-sliders">
+                    <input type="range" id="priceMinRange" min="0" max="0" step="1" value="0" aria-label="מחיר מינימלי">
+                    <input type="range" id="priceMaxRange" min="0" max="0" step="1" value="0" aria-label="מחיר מקסימלי">
+                </div>
+                <div class="price-filter-hints">
+                    <span>מינ׳</span>
+                    <span>מקס׳</span>
+                </div>
+            </div>
+
+            <label class="free-shipping-toggle">
+                <input type="checkbox" id="freeShippingOnly">
+                <span>הצג רק מוצרים עם שילוח חינם</span>
+            </label>
+        </div>
+
         <div class="filter-buttons">
             <button class="filter-btn active" onclick="filterByCategory('all')">הכל</button>
             <button class="filter-btn" onclick="filterByCategory('תופים')">תופים</button>
@@ -145,6 +171,8 @@
 <script>
     // Pass user roles to JavaScript
     window.userRoles = {{ session.get('roles', []) | tojson }};
+    // Keep price conversion consistent across pages
+    window.ILS_TO_USD_RATE = 0.27;
 </script>
 {% endblock %}
 

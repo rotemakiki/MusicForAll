@@ -1,6 +1,7 @@
 // Products Page JavaScript
 let allProducts = [];
 let filteredProducts = [];
+let currentCategory = 'all';
 
 document.addEventListener('DOMContentLoaded', function() {
     loadProducts();
@@ -15,6 +16,34 @@ function setupEventListeners() {
             closeAddProductModal();
         }
     }
+
+    const priceMinRange = document.getElementById('priceMinRange');
+    const priceMaxRange = document.getElementById('priceMaxRange');
+    const freeShippingOnly = document.getElementById('freeShippingOnly');
+
+    if (priceMinRange && priceMaxRange) {
+        const onPriceInput = () => {
+            // Keep min <= max
+            const minVal = parseInt(priceMinRange.value || '0', 10);
+            const maxVal = parseInt(priceMaxRange.value || '0', 10);
+            if (minVal > maxVal) {
+                // If user moved min above max, push max up; if user moved max below min, pull min down
+                if (document.activeElement === priceMinRange) {
+                    priceMaxRange.value = String(minVal);
+                } else {
+                    priceMinRange.value = String(maxVal);
+                }
+            }
+            updatePriceLabels();
+            applyAllFilters();
+        };
+        priceMinRange.addEventListener('input', onPriceInput);
+        priceMaxRange.addEventListener('input', onPriceInput);
+    }
+
+    if (freeShippingOnly) {
+        freeShippingOnly.addEventListener('change', () => applyAllFilters());
+    }
 }
 
 async function loadProducts() {
@@ -28,11 +57,126 @@ async function loadProducts() {
 
         allProducts = await response.json();
         filteredProducts = [...allProducts];
-        displayProducts(filteredProducts);
+        initializePriceFilter(allProducts);
+        applyAllFilters();
     } catch (error) {
         console.error('Error loading products:', error);
         showError('שגיאה בטעינת המוצרים');
     }
+}
+
+function getRate() {
+    const r = typeof window.ILS_TO_USD_RATE === 'number' ? window.ILS_TO_USD_RATE : 0.27;
+    return r > 0 ? r : 0.27;
+}
+
+function getPriceILS(product) {
+    const rate = getRate();
+    const priceIls = Number(product?.price_ils);
+    if (Number.isFinite(priceIls) && priceIls >= 0) return priceIls;
+
+    const priceUsd = Number(product?.price_usd);
+    if (Number.isFinite(priceUsd) && priceUsd >= 0) return priceUsd / rate;
+
+    // Legacy support: product.price is treated as USD
+    const legacyUsd = Number(product?.price);
+    if (Number.isFinite(legacyUsd) && legacyUsd >= 0) return legacyUsd / rate;
+
+    return null;
+}
+
+function hasFreeShipping(product) {
+    const t = product?.shipping_type;
+    if (t === 'free') return true;
+    if (t === 'free_above_amount') {
+        const threshold = Number(product?.free_shipping_above);
+        const priceIls = getPriceILS(product);
+        return Number.isFinite(threshold) && threshold >= 0 && Number.isFinite(priceIls) && priceIls >= threshold;
+    }
+    return false;
+}
+
+function initializePriceFilter(products) {
+    const prices = (products || [])
+        .map(p => getPriceILS(p))
+        .filter(v => Number.isFinite(v));
+
+    const minEl = document.getElementById('priceMinRange');
+    const maxEl = document.getElementById('priceMaxRange');
+
+    if (!minEl || !maxEl) return;
+
+    if (prices.length === 0) {
+        minEl.min = '0'; minEl.max = '0'; minEl.value = '0';
+        maxEl.min = '0'; maxEl.max = '0'; maxEl.value = '0';
+        updatePriceLabels();
+        return;
+    }
+
+    const minPrice = Math.floor(Math.min(...prices));
+    const maxPrice = Math.ceil(Math.max(...prices));
+    const spanMax = Math.max(minPrice, maxPrice);
+
+    minEl.min = String(minPrice);
+    minEl.max = String(spanMax);
+    maxEl.min = String(minPrice);
+    maxEl.max = String(spanMax);
+
+    // Default: full range
+    minEl.value = String(minPrice);
+    maxEl.value = String(spanMax);
+    updatePriceLabels();
+}
+
+function updatePriceLabels() {
+    const minEl = document.getElementById('priceMinRange');
+    const maxEl = document.getElementById('priceMaxRange');
+    const minLabel = document.getElementById('priceMinLabel');
+    const maxLabel = document.getElementById('priceMaxLabel');
+    if (!minEl || !maxEl || !minLabel || !maxLabel) return;
+
+    minLabel.textContent = String(parseInt(minEl.value || '0', 10));
+    maxLabel.textContent = String(parseInt(maxEl.value || '0', 10));
+}
+
+function applyAllFilters() {
+    const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+    const freeOnly = !!document.getElementById('freeShippingOnly')?.checked;
+    const minVal = parseInt(document.getElementById('priceMinRange')?.value || '0', 10);
+    const maxVal = parseInt(document.getElementById('priceMaxRange')?.value || '0', 10);
+
+    filteredProducts = allProducts.filter(product => {
+        // Category filter
+        if (currentCategory !== 'all') {
+            const cat = product.main_category || product.category;
+            if (cat !== currentCategory) return false;
+        }
+
+        // Search filter
+        if (searchTerm) {
+            const hay = [
+                product.name,
+                product.description,
+                product.main_category,
+                product.sub_category,
+                product.category
+            ].filter(Boolean).join(' ').toLowerCase();
+            if (!hay.includes(searchTerm)) return false;
+        }
+
+        // Price filter (only apply when there is a price)
+        const priceIls = getPriceILS(product);
+        if (Number.isFinite(priceIls)) {
+            if (priceIls < minVal || priceIls > maxVal) return false;
+        }
+
+        // Free shipping filter
+        if (freeOnly && !hasFreeShipping(product)) return false;
+
+        return true;
+    });
+
+    displayProducts(filteredProducts);
 }
 
 function displayProducts(products) {
@@ -68,15 +212,9 @@ function createProductCard(product) {
 
     // Price display - show ILS, convert to USD if needed
     let priceDisplay = '';
-    if (product.price_ils) {
-        priceDisplay = `<span class="product-price">${product.price_ils.toFixed(2)} ₪</span>`;
-    } else if (product.price_usd) {
-        const ilsPrice = (product.price_usd / 0.27).toFixed(2);
-        priceDisplay = `<span class="product-price">${ilsPrice} ₪</span>`;
-    } else if (product.price) {
-        // Legacy support
-        const ilsPrice = (product.price / 0.27).toFixed(2);
-        priceDisplay = `<span class="product-price">${ilsPrice} ₪</span>`;
+    const ilsPrice = getPriceILS(product);
+    if (Number.isFinite(ilsPrice)) {
+        priceDisplay = `<span class="product-price">${ilsPrice.toFixed(2)} ₪</span>`;
     }
 
     // Shipping info
@@ -168,42 +306,16 @@ function generateStars(rating) {
 }
 
 function filterProducts() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-
-    filteredProducts = allProducts.filter(product =>
-        product.name.toLowerCase().includes(searchTerm) ||
-        product.description.toLowerCase().includes(searchTerm)
-    );
-
-    displayProducts(filteredProducts);
+    applyAllFilters();
 }
 
 function filterByCategory(category) {
     // Update active filter button
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
+    currentCategory = category;
 
-    if (category === 'all') {
-        filteredProducts = [...allProducts];
-    } else {
-        filteredProducts = allProducts.filter(product => 
-            (product.main_category && product.main_category === category) ||
-            (product.category && product.category === category)
-        );
-    }
-
-    // Apply search filter if exists
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    if (searchTerm) {
-        filteredProducts = filteredProducts.filter(product =>
-            product.name.toLowerCase().includes(searchTerm) ||
-            product.description.toLowerCase().includes(searchTerm) ||
-            (product.main_category && product.main_category.toLowerCase().includes(searchTerm)) ||
-            (product.sub_category && product.sub_category.toLowerCase().includes(searchTerm))
-        );
-    }
-
-    displayProducts(filteredProducts);
+    applyAllFilters();
 }
 
 function openAddProductModal() {
@@ -320,6 +432,12 @@ async function editProduct(productId) {
         if (!response.ok) throw new Error('Failed to load product');
         
         const product = await response.json();
+
+        // Reset form first to avoid stale values from previous edits
+        const form = document.getElementById('addProductForm');
+        if (form) {
+            form.reset();
+        }
         
         // Populate form with product data
         document.getElementById('productName').value = product.name || '';
@@ -337,10 +455,14 @@ async function editProduct(productId) {
             document.getElementById('productRating').value = product.rating || '';
         }
         
-        if (product.price_ils && document.getElementById('productPriceILS')) {
-            document.getElementById('productPriceILS').value = product.price_ils;
-        } else if (product.price_usd && document.getElementById('productPriceUSD')) {
-            document.getElementById('productPriceUSD').value = product.price_usd;
+        const priceIlsEl = document.getElementById('productPriceILS');
+        const priceUsdEl = document.getElementById('productPriceUSD');
+        if (priceIlsEl) priceIlsEl.value = '';
+        if (priceUsdEl) priceUsdEl.value = '';
+        if (Number.isFinite(Number(product.price_ils)) && priceIlsEl) {
+            priceIlsEl.value = product.price_ils;
+        } else if (Number.isFinite(Number(product.price_usd)) && priceUsdEl) {
+            priceUsdEl.value = product.price_usd;
         }
         
         if (document.getElementById('productShippingType')) {
@@ -363,12 +485,13 @@ async function editProduct(productId) {
         }
         
         // Store product ID for update
-        const form = document.getElementById('addProductForm');
-        form.dataset.productId = productId;
-        form.dataset.isEdit = 'true';
+        if (form) {
+            form.dataset.productId = productId;
+            form.dataset.isEdit = 'true';
+        }
         
         // Change submit button text
-        const submitBtn = form.querySelector('.submit-btn');
+        const submitBtn = form ? form.querySelector('.submit-btn') : null;
         if (submitBtn) submitBtn.textContent = 'עדכן מוצר';
         
         openAddProductModal();

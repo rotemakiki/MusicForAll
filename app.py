@@ -48,7 +48,8 @@ if not secret_key:
         raise ValueError(error_msg)
     
     # רק לפיתוח מקומי - לא בפרודקשן!
-    print("⚠️  WARNING: Using default SECRET_KEY (NOT SECURE FOR PRODUCTION!)")
+    # Keep ASCII-only to avoid Windows console encoding crashes (cp1255/cp1252).
+    print("WARNING: Using default SECRET_KEY (NOT SECURE FOR PRODUCTION!)")
     secret_key = 'dev-secret-key-change-in-production'
 
 app.secret_key = secret_key
@@ -171,6 +172,18 @@ def tool_hebrew_english_notes():
 def tool_ear_keyboard():
     """Tool page: ear training keyboard (random note identification)."""
     return render_template("tools/ear_keyboard.html")
+
+
+@app.route("/tools/metronome")
+def tool_metronome():
+    """Tool page: standalone metronome for practice."""
+    return render_template("tools/metronome.html")
+
+
+@app.route("/tools/tuner")
+def tool_tuner():
+    """Tool page: standalone guitar tuner."""
+    return render_template("tools/tuner.html")
 
 
 # =============================================================================

@@ -265,7 +265,7 @@
             </div>
 
             <div class="ear-footer" id="ear-correct-hint" style="margin-top: 10px;">
-                בעת סיבוב פעיל, התו המנוגן מסומן.
+                בעת סיבוב פעיל, האתר מנגן תו רנדומלי — עליך לזהות אותו בלי “רמז” ויזואלי.
             </div>
         </aside>
     </div>
@@ -441,8 +441,8 @@
     function playTarget() {
         stopAll();
         playTone(round.targetPc, round.targetOctave, 0.95, 0);
-        // Mark active key
-        renderKeyboard(round.config.pitchClasses, round.targetPc);
+        // Do NOT reveal the answer visually before guessing
+        renderKeyboard(round.config.pitchClasses, null);
     }
 
     function selectAnswer(pc) {
@@ -453,7 +453,9 @@
         const scoreText = `${round.correct} / ${round.total}`;
         if (isCorrect) {
             round.correct += 1;
-            setStatus("נכון!", `אנס/ת בדיוק: ${round.targetPc}`, scoreText);
+            setStatus("נכון!", `ענית בדיוק: ${round.targetPc}`, scoreText);
+            // Reveal after answering
+            renderKeyboard(round.config.pitchClasses, round.targetPc);
 
             if (document.getElementById("ear-auto").value === "on") {
                 setTimeout(() => {
@@ -464,6 +466,8 @@
             }
         } else {
             setStatus("כמעט...", `התשובה הנכונה: ${round.targetPc}. נסה/י שוב או Next.`, scoreText);
+            // Reveal after answering
+            renderKeyboard(round.config.pitchClasses, round.targetPc);
             if (document.getElementById("ear-auto").value === "on") {
                 setTimeout(() => {
                     startRound();

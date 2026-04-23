@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}כלי 6 - טיונר{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tuner.css') }}">
+<style>
+  .musician-tool-page--tuner{
+    padding-top:105px;
+    width:100%;
+    max-width:900px;
+    margin:0 auto;
+    padding-left:20px;
+    padding-right:20px;
+  }
+  .tuner-page-card{
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(102,126,234,0.22);
+    border-radius: 18px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.06);
+    padding: 16px;
+  }
+  .tuner-page-card h2{
+    margin:0 0 12px 0;
+    font-weight: 950;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    text-align: right;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="musician-tool-page musician-tool-page--tuner">
+  <h1>כלי 6 - טיונר</h1>
+
+  <section class="tuner-page-card">
+    <h2>טיונר גיטרה</h2>
+    <div id="tuner-global-anchor" class="tuner-global-anchor"></div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/tuner.js') }}" defer></script>
+{% endblock %}
+

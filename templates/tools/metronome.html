@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}כלי 5 - מטרונום{% endblock %}
+
+{% block head %}
+<style>
+  .musician-tool-page--metronome{
+    padding-top:105px;
+    width:100%;
+    max-width:900px;
+    margin:0 auto;
+    padding-left:20px;
+    padding-right:20px;
+  }
+  .metro-card{
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(102,126,234,0.22);
+    border-radius: 18px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.06);
+    padding: 16px;
+  }
+  .metro-title{
+    margin: 0 0 12px 0;
+    font-weight: 950;
+    color: #2c3e50;
+  }
+  .metro-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items:end;
+  }
+  @media (max-width: 720px){ .metro-row{ grid-template-columns: 1fr; } }
+  .metro-field{ display:flex; flex-direction:column; gap:6px; text-align:right; }
+  .metro-field label{ font-weight: 900; color:#2c3e50; font-size:0.92rem; }
+  .metro-field input, .metro-field button{
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(102,126,234,0.25);
+    background: #f8f9ff;
+    font-weight: 900;
+    outline:none;
+  }
+  .metro-actions{ display:flex; gap:10px; justify-content:flex-start; flex-wrap:wrap; }
+  .metro-btn{
+    cursor:pointer;
+    background: linear-gradient(135deg, #667eea, #764ba2) !important;
+    color:#fff !important;
+    border:none !important;
+    box-shadow: 0 6px 20px rgba(102,126,234,0.25) !important;
+  }
+  .metro-btn.secondary{
+    background: linear-gradient(135deg, #17a2b8, #20c997) !important;
+    box-shadow: 0 6px 20px rgba(23,162,184,0.25) !important;
+  }
+  .metro-status{
+    margin-top: 12px;
+    background: rgba(102,126,234,0.10);
+    border: 1px solid rgba(102,126,234,0.25);
+    border-radius: 14px;
+    padding: 12px 14px;
+    color:#2c3e50;
+    font-weight: 950;
+    text-align:right;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .metro-sub{ opacity:0.85; font-weight:800; font-size:0.9rem; }
+  .metro-foot{
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 800;
+    text-align: right;
+    opacity: 0.9;
+    line-height: 1.4;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="musician-tool-page musician-tool-page--metronome">
+  <h1>כלי 5 - מטרונום</h1>
+
+  <section class="metro-card">
+    <h2 class="metro-title">תרגול עם מטרונום</h2>
+
+    <div class="metro-row">
+      <div class="metro-field">
+        <label for="metro-bpm">BPM</label>
+        <input id="metro-bpm" type="number" min="40" max="240" value="100" />
+      </div>
+
+      <div class="metro-field">
+        <label for="metro-bpm-slider">BPM (Slider)</label>
+        <input id="metro-bpm-slider" type="range" min="40" max="240" value="100" />
+      </div>
+
+      <div class="metro-field">
+        <label for="metro-volume">עוצמה</label>
+        <input id="metro-volume" type="range" min="0" max="1" step="0.01" value="1" />
+      </div>
+
+      <div class="metro-field">
+        <label>&nbsp;</label>
+        <div class="metro-actions">
+          <button id="metro-start" class="metro-btn" type="button">התחל</button>
+          <button id="metro-stop" class="metro-btn secondary" type="button" disabled>עצור</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="metro-status" id="metro-status">
+      <div>
+        <div id="metro-status-main">מוכן.</div>
+        <div class="metro-sub" id="metro-status-sub">לחץ/י “התחל” כדי להתחיל לתרגל.</div>
+      </div>
+      <div style="text-align:left; min-width: 160px;">
+        <div>נקישות</div>
+        <div style="font-weight:1000;" id="metro-count">0</div>
+      </div>
+    </div>
+
+    <div class="metro-foot">
+      טיפ: התחל/י לאט, ועלה/י BPM רק כשזה מרגיש יציב ונקי.
+    </div>
+  </section>
+</div>
+
+<audio id="metronome-sound" preload="auto" src="{{ url_for('static', filename='sounds/metronome.mp3') }}"></audio>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/metronome_tool.js') }}"></script>
+{% endblock %}
+

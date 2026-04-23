@@ -6,6 +6,7 @@ class GuitarTuner {
         this.audioContext = null;
         this.analyser = null;
         this.microphone = null;
+        this.stream = null;
         this.dataArray = null;
         this.isListening = false;
         this.animationFrame = null;
@@ -129,6 +130,7 @@ class GuitarTuner {
                     autoGainControl: false
                 }
             });
+            this.stream = stream;
             
             // Create audio context (must be after user gesture)
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -143,8 +145,8 @@ class GuitarTuner {
             // Configure analyser
             this.analyser.fftSize = 8192; // Higher FFT size for better frequency resolution
             this.analyser.smoothingTimeConstant = 0.3;
-            const bufferLength = this.analyser.frequencyBinCount;
-            this.dataArray = new Float32Array(bufferLength);
+            // Time-domain data needs fftSize samples (NOT frequencyBinCount).
+            this.dataArray = new Float32Array(this.analyser.fftSize);
             
             // Connect microphone to analyser
             this.microphone.connect(this.analyser);
@@ -162,6 +164,12 @@ class GuitarTuner {
     stopListening() {
         if (this.microphone) {
             this.microphone.disconnect();
+        }
+        if (this.stream) {
+            try {
+                this.stream.getTracks().forEach((t) => t.stop());
+            } catch (e) { /* ignore */ }
+            this.stream = null;
         }
         if (this.audioContext) {
             this.audioContext.close();

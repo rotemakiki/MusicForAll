@@ -240,6 +240,8 @@
     window.productId = '{{ product_id }}';
     window.userId = {{ session.get('user_id') | tojson or 'null' }};
     window.userRoles = {{ session.get('roles', []) | tojson }};
+    // Keep price conversion consistent across pages
+    window.ILS_TO_USD_RATE = 0.27;
 </script>
 {% endblock %}
 
