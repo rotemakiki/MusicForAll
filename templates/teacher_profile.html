@@ -58,6 +58,22 @@
 
             <div class="detail-card">
                 <div class="detail-header">
+                    <span>🗣️</span>
+                    <span>שפה</span>
+                </div>
+                <div class="detail-value">{{ teacher.language or "לא צויין" }}</div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>📍</span>
+                    <span>מיקום בארץ</span>
+                </div>
+                <div class="detail-value">{{ teacher.location or "לא צויין" }}</div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
                     <span>📅</span>
                     <span>ותק באתר</span>
                 </div>
@@ -143,6 +159,10 @@
                     <span>✏️</span>
                     <span>ערוך פרופיל</span>
                 </a>
+                <a href="{{ url_for('teachers.teacher_payments', teacher_id=teacher.id) }}" class="action-btn tertiary">
+                    <span>💳</span>
+                    <span>דאשבורד תשלומים</span>
+                </a>
             {% endif %}
         </div>
     </div>
@@ -152,7 +172,7 @@
     <div class="content-section">
         <h2 class="section-header">
             <span>📤</span>
-            <span>העלאת סרטון חדש</span>
+            <span>סרטוני תדמית</span>
         </h2>
 
         <form action="{{ url_for('teachers.upload_video') }}" method="POST" enctype="multipart/form-data" class="upload-video-form" id="video-upload-form">
@@ -183,6 +203,7 @@
             </div>
 
             <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+            <input type="hidden" name="kind" value="promo">
 
             <button type="submit" class="submit-btn">
                 <span>⬆️</span>
@@ -191,6 +212,42 @@
         </form>
     </div>
     {% endif %}
+
+    <!-- Promo Videos Section -->
+    <div class="content-section">
+        <h2 class="section-header">
+            <span>🎥</span>
+            <span>סרטוני תדמית</span>
+        </h2>
+
+        {% if promo_videos %}
+            <div class="videos-grid">
+                {% for video in promo_videos %}
+                    <div class="video-card">
+                        <video controls preload="metadata">
+                            <source src="{{ video.url }}" type="video/mp4">
+                            הדפדפן שלך לא תומך בניגון וידאו.
+                        </video>
+                        <div class="video-info">
+                            <h3 class="video-title">{{ video.title }}</h3>
+                            <p class="video-description">{{ video.description }}</p>
+                            <div class="video-meta">
+                                <span>📅 {{ video.uploaded_at.strftime('%d/%m/%Y') if video.uploaded_at else 'תאריך לא ידוע' }}</span>
+                                <span>👁️ {{ video.views or 0 }} צפיות</span>
+                                <span>⏱️ {{ ((video.watch_seconds or 0) // 60) }} דק׳ צפייה</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🎥</div>
+                <h3>אין סרטוני תדמית עדיין</h3>
+                <p>כאן המורה יכול להציג את עצמו ואת שיטת הלימוד שלו (עד 3 סרטונים).</p>
+            </div>
+        {% endif %}
+    </div>
 
     <!-- Videos Section -->
     <div class="content-section">
@@ -211,9 +268,9 @@
                             <h3 class="video-title">{{ video.title }}</h3>
                             <p class="video-description">{{ video.description }}</p>
                             <div class="video-meta">
-                                <span>📅 {{ video.created_at.strftime('%d/%m/%Y') if video.created_at else 'תאריך לא ידוע' }}</span>
+                                <span>📅 {{ video.uploaded_at.strftime('%d/%m/%Y') if video.uploaded_at else 'תאריך לא ידוע' }}</span>
                                 <span>👁️ {{ video.views or 0 }} צפיות</span>
-                                <span>⏱️ 12:34</span>
+                                <span>⏱️ {{ ((video.watch_seconds or 0) // 60) }} דק׳ צפייה</span>
                             </div>
                             <div class="video-actions">
                                 <a href="{{ url_for('videos.videos') }}" class="video-btn">
@@ -256,6 +313,32 @@
         </h2>
 
         <div class="testimonials-section">
+            {% if session.get('user_id') and session.get('user_id') != teacher.id %}
+                <div style="margin-bottom: 18px;">
+                    <form action="{{ url_for('teachers.confirm_teacher', teacher_id=teacher.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="action-btn secondary" style="padding: 10px 14px;">
+                            <span>✅</span>
+                            <span>אשר את המורה</span>
+                        </button>
+                    </form>
+                </div>
+
+                <form action="{{ url_for('teachers.add_testimonial', teacher_id=teacher.id) }}" method="POST">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>✍️</span>
+                            <span>כתוב המלצה (זמין רק לתלמיד שאישר את המורה)</span>
+                        </label>
+                        <input type="text" name="text" class="form-input" placeholder="איך היה ללמוד עם המורה? מה אהבת בשיעורים?" required>
+                    </div>
+                    <button type="submit" class="submit-btn" style="margin-top: 10px;">
+                        <span>📨</span>
+                        <span>שלח המלצה</span>
+                    </button>
+                </form>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e1e8ed;">
+            {% endif %}
+
             <div class="testimonials-grid">
                 <div class="testimonial-card">
                     <p class="testimonial-text">"מורה הכי טוב! מסביר בצורה ברורה וסבלנית. ממליץ בחום לכל מי שרוצה ללמוד נגינה ברמה גבוהה."</p>

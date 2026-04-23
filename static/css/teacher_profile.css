@@ -190,6 +190,13 @@ body {
     border-radius: 20px;
     font-weight: 600;
     font-size: 0.9rem;
+    /* Prevent collision with global navbar `.status-indicator` (absolute green dot) */
+    position: static;
+    width: auto;
+    height: auto;
+    background: none;
+    border: none;
+    box-shadow: none;
 }
 
 .status-available {

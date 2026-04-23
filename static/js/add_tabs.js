@@ -1,5 +1,15 @@
 (() => {
-  const STORAGE_KEY_TEXT = "play_method_tabs_text_new";
+  function getStorageKeyText() {
+    try {
+      const editingSongId = localStorage.getItem("editingSongId");
+      if (editingSongId) return `play_method_tabs_text_edit_${editingSongId}`;
+    } catch (e) {
+      // ignore
+    }
+    return "play_method_tabs_text_new";
+  }
+
+  const STORAGE_KEY_TEXT = getStorageKeyText();
   const STORAGE_KEY_RETURN = "play_methods_return_to";
 
   const editor = document.getElementById("tabs-editor");

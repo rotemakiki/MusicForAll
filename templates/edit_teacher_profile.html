@@ -14,6 +14,18 @@
         <div id="styles-container"></div>
         <button type="button" onclick="addStyleField()" class="btn">➕ הוסף סגנון לימוד</button>
 
+        <br><br>
+
+        <label>שפה:</label><br>
+        <input type="text" name="language" class="form-control" value="{{ teacher.language or '' }}" placeholder="למשל: עברית, אנגלית">
+
+        <br><br>
+
+        <label>מיקום בארץ:</label><br>
+        <input type="text" name="location" class="form-control" value="{{ teacher.location or '' }}" placeholder="למשל: תל אביב, חיפה, באר שבע">
+
+        <br><br>
+
         <!-- Hidden inputs to collect joined values -->
         <input type="hidden" id="instruments" name="instruments">
         <input type="hidden" id="styles" name="styles">

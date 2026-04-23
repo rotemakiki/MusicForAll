@@ -206,7 +206,6 @@ function previewVideo(file) {
 }
 
 function handleVideoUpload(e) {
-    e.preventDefault();
     const formData = new FormData(e.target);
     const submitBtn = e.target.querySelector('.submit-btn');
 
@@ -217,53 +216,14 @@ function handleVideoUpload(e) {
 
     if (!title || !description || !videoFile || videoFile.size === 0) {
         showNotification('נא למלא את כל השדות הנדרשים', 'error');
+        e.preventDefault();
         return;
     }
 
     // Show loading state
     submitBtn.innerHTML = '<span>⏳</span><span>מעלה וידאו...</span>';
     submitBtn.disabled = true;
-
-    // Simulate upload progress (in real implementation, use XMLHttpRequest for progress)
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) {
-            clearInterval(progressInterval);
-            progress = 90;
-        }
-        submitBtn.innerHTML = `<span>⏳</span><span>מעלה... ${Math.round(progress)}%</span>`;
-    }, 500);
-
-    // Submit form (you may want to use fetch for better control)
-    fetch(e.target.action, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        clearInterval(progressInterval);
-        if (data.success) {
-            showNotification('הוידאו הועלה בהצלחה!', 'success');
-            e.target.reset();
-            removeVideoPreview();
-            // Refresh videos section
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-        } else {
-            throw new Error(data.error || 'שגיאה בהעלאת הוידאו');
-        }
-    })
-    .catch(error => {
-        clearInterval(progressInterval);
-        console.error('Upload error:', error);
-        showNotification('שגיאה בהעלאת הוידאו: ' + error.message, 'error');
-    })
-    .finally(() => {
-        submitBtn.innerHTML = '<span>⬆️</span><span>העלה סרטון</span>';
-        submitBtn.disabled = false;
-    });
+    // Let the browser submit the form normally (server responds with redirect+flash).
 }
 
 function removeVideoPreview() {

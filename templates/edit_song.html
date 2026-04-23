@@ -366,13 +366,73 @@
                         </div>
                     </div>
 
-                    <button type="button" class="chords-btn" id="chords-btn" onclick="editChords()">
-                        <span>🎸</span>
-                        <span>ערוך אקורדים</span>
-                    </button>
+                    <div class="play-methods-bar" role="tablist" aria-label="דרכי נגינה">
+                        <div class="play-methods-title">דרכי נגינה</div>
+                        <div class="play-methods-buttons">
+                            <button type="button" class="play-method-btn active" data-play-method="boxes" role="tab" aria-selected="true">
+                                אקורדים בתיבות
+                            </button>
+                            <button type="button" class="play-method-btn" data-play-method="tabs" role="tab" aria-selected="false">
+                                טאבים
+                            </button>
+                            <button type="button" class="play-method-btn" data-play-method="chords_lyrics" role="tab" aria-selected="false">
+                                אקורדים ומילים
+                            </button>
+                            <button type="button" class="play-method-btn" data-play-method="lyrics" role="tab" aria-selected="false">
+                                מילים
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-boxes" data-play-method-panel="boxes" role="tabpanel">
+                        <button type="button" class="chords-btn" id="chords-btn">
+                            <span>🎸</span>
+                            <span>ערוך אקורדים</span>
+                        </button>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-tabs" data-play-method-panel="tabs" role="tabpanel" hidden>
+                        <div class="input-hint play-method-hint">
+                            6 שורות שמייצגות מיתרי גיטרה (e, B, G, D, A, E). בשלב הזה זה עורך טקסט נוח.
+                        </div>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 8px 0 12px;">
+                            <a class="chords-btn" href="/add-tabs?return=/edit_song/{{ song.id }}" style="min-width: 240px; text-decoration:none;">
+                                <span>🎼</span>
+                                <span>ערוך טאבים</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-chords-lyrics" data-play-method-panel="chords_lyrics" role="tabpanel" hidden>
+                        <div class="input-hint play-method-hint">
+                            לכל שורת מילים אפשר להוסיף שורת אקורדים מעליה לפי התזמון ביחס למילים.
+                        </div>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 8px 0 12px;">
+                            <a class="chords-btn" href="/add-chords-lyrics?return=/edit_song/{{ song.id }}" style="min-width: 240px; text-decoration:none;">
+                                <span>📝</span>
+                                <span>ערוך אקורדים+טקסט</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="play-method-content" id="play-method-lyrics" data-play-method-panel="lyrics" role="tabpanel" hidden>
+                        <div class="input-hint play-method-hint">
+                            מילים בלבד (בשלב הזה כטקסט).
+                        </div>
+                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 8px 0 12px;">
+                            <a class="chords-btn" href="/add-lyrics?return=/edit_song/{{ song.id }}" style="min-width: 240px; text-decoration:none;">
+                                <span>📄</span>
+                                <span>ערוך מילים</span>
+                            </a>
+                        </div>
+                    </div>
 
                     <input type="hidden" id="chords" name="chords" required>
                     <input type="hidden" id="loops" name="loops">
+                    <input type="hidden" id="play_method" name="play_method" value="{{ song.get('play_method', 'boxes') }}">
+                    <textarea id="tabs_text" name="tabs_text" style="display:none;">{{ song.get('tabs_text', '') }}</textarea>
+                    <textarea id="chords_lyrics_text" name="chords_lyrics_text" style="display:none;">{{ song.get('chords_lyrics_text', '') }}</textarea>
+                    <textarea id="lyrics_text" name="lyrics_text" style="display:none;">{{ song.get('lyrics_text', '') }}</textarea>
                 </div>
 
                 <!-- Notes Section -->
@@ -477,6 +537,16 @@
     localStorage.setItem("editingSongId", songId);
     localStorage.setItem("chords", JSON.stringify(existingChords));
     localStorage.setItem("loops", JSON.stringify(existingLoops));
+
+    // Play methods: hydrate per-song storage keys (so editors load existing content)
+    try {
+        localStorage.setItem(`play_method_edit_${songId}`, {{ song.get('play_method', 'boxes') | tojson }});
+        localStorage.setItem(`play_method_tabs_text_edit_${songId}`, {{ song.get('tabs_text', '') | tojson }});
+        localStorage.setItem(`play_method_chords_lyrics_text_edit_${songId}`, {{ song.get('chords_lyrics_text', '') | tojson }});
+        localStorage.setItem(`play_method_lyrics_text_edit_${songId}`, {{ song.get('lyrics_text', '') | tojson }});
+    } catch (e) {
+        // ignore
+    }
 
     // Clear any conflicting new song data
     localStorage.removeItem("addingNewSong");
