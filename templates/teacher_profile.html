@@ -297,9 +297,9 @@
             <div class="empty-state">
                 <div class="empty-icon">🎬</div>
                 <h3>אין סרטונים להצגה</h3>
-                <p>המורה עדיין לא העלה סרטונים</p>
+                <p>כאן יוצגו רק סרטוני לימוד שירים של המורה (לא סרטוני קורסים).</p>
                 {% if session.get('user_id') == teacher.id %}
-                    <p>השתמש בטופס למעלה כדי להעלות את הסרטון הראשון שלך!</p>
+                    <p>כדי שסרטון יופיע כאן הוא חייב להיות משויך לשיר (song_id) שנוצר על ידך.</p>
                 {% endif %}
             </div>
         {% endif %}
@@ -323,52 +323,90 @@
                     </form>
                 </div>
 
-                <form action="{{ url_for('teachers.add_testimonial', teacher_id=teacher.id) }}" method="POST">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span>✍️</span>
-                            <span>כתוב המלצה (זמין רק לתלמיד שאישר את המורה)</span>
-                        </label>
-                        <input type="text" name="text" class="form-input" placeholder="איך היה ללמוד עם המורה? מה אהבת בשיעורים?" required>
+                {% if can_add_testimonial %}
+                    <form action="{{ url_for('teachers.add_testimonial', teacher_id=teacher.id) }}" method="POST">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <span>✍️</span>
+                                <span>כתוב המלצה</span>
+                            </label>
+                            <input type="text" name="text" class="form-input" placeholder="איך היה ללמוד עם המורה? מה אהבת בשיעורים?" required>
+                        </div>
+                        <button type="submit" class="submit-btn" style="margin-top: 10px;">
+                            <span>📨</span>
+                            <span>שלח המלצה</span>
+                        </button>
+                    </form>
+
+                    <div style="margin-top: 14px;">
+                        <form action="{{ url_for('teachers.add_testimonial_video', teacher_id=teacher.id) }}" method="POST" enctype="multipart/form-data">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <span>🎥</span>
+                                        <span>כותרת לסרטון המלצה</span>
+                                    </label>
+                                    <input type="text" name="title" class="form-input" placeholder="למשל: איך השיעורים עם {{ teacher.username }}?" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <span>📝</span>
+                                        <span>טקסט קצר (אופציונלי)</span>
+                                    </label>
+                                    <input type="text" name="text" class="form-input" placeholder="שורה-שתיים על החוויה...">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <span>📎</span>
+                                        <span>קובץ וידאו</span>
+                                    </label>
+                                    <input type="file" name="video_file" class="form-input" accept="video/*" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="submit-btn" style="margin-top: 10px;">
+                                <span>⬆️</span>
+                                <span>העלה סרטון המלצה</span>
+                            </button>
+                        </form>
                     </div>
-                    <button type="submit" class="submit-btn" style="margin-top: 10px;">
-                        <span>📨</span>
-                        <span>שלח המלצה</span>
-                    </button>
-                </form>
+                {% else %}
+                    <div class="empty-state" style="margin: 10px 0 0;">
+                        <div class="empty-icon">🔒</div>
+                        <h3>כדי לכתוב המלצה צריך לאשר את המורה</h3>
+                        <p>לחץ על “אשר את המורה” ואז תוכל להוסיף המלצה או סרטון המלצה.</p>
+                    </div>
+                {% endif %}
                 <hr style="margin: 20px 0; border: none; border-top: 1px solid #e1e8ed;">
             {% endif %}
 
             <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"מורה הכי טוב! מסביר בצורה ברורה וסבלנית. ממליץ בחום לכל מי שרוצה ללמוד נגינה ברמה גבוהה."</p>
-                    <div class="testimonial-author">- דני כהן</div>
-                </div>
-
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"תודות למורה הזה למדתי לנגן יותר טוב ממה שחלמתי. השיעורים מעניינים והתקדמתי מהר."</p>
-                    <div class="testimonial-author">- שרה לוי</div>
-                </div>
-
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"מורה מקצועי עם ניסיון רב. השיעורים האונליין נוחים מאוד והאיכות מעולה."</p>
-                    <div class="testimonial-author">- מיכאל דוד</div>
-                </div>
-
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"נהניתי מכל רגע בשיעורים. המורה יודע להתאים את השיעורים לרמה של כל תלמיד."</p>
-                    <div class="testimonial-author">- רותי אברהם</div>
-                </div>
-
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"ממליץ בחום! מורה עם סבלנות אינסופית וידע עצום. השקעתי זמן וכסף בצורה הכי טובה שיש."</p>
-                    <div class="testimonial-author">- יוסי ברק</div>
-                </div>
-
-                <div class="testimonial-card">
-                    <p class="testimonial-text">"תודה על הסבלנות והמקצועיות. היום אני יכול לנגן שירים שחלמתי עליהם בעבר."</p>
-                    <div class="testimonial-author">- ליאת גולד</div>
-                </div>
+                {% if testimonials %}
+                    {% for t in testimonials %}
+                        <div class="testimonial-card">
+                            {% if t.video_url %}
+                                <video controls preload="metadata" style="width:100%; border-radius: 12px; margin-bottom: 10px;">
+                                    <source src="{{ t.video_url }}" type="video/mp4">
+                                    הדפדפן שלך לא תומך בניגון וידאו.
+                                </video>
+                                <div class="testimonial-author" style="font-weight: 800;">
+                                    {{ t.title or "סרטון המלצה" }}
+                                </div>
+                                {% if t.text %}
+                                    <p class="testimonial-text">"{{ t.text }}"</p>
+                                {% endif %}
+                            {% else %}
+                                <p class="testimonial-text">"{{ t.text }}"</p>
+                            {% endif %}
+                            <div class="testimonial-author">- {{ t.student_name or "תלמיד" }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-icon">💬</div>
+                        <h3>עדיין אין המלצות</h3>
+                        <p>רק תלמיד שאישר את המורה יכול להוסיף המלצה או סרטון המלצה.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

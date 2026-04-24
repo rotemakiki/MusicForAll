@@ -9,6 +9,16 @@ def _has_teacher_confirmation(teacher_id: str, student_id: str) -> bool:
     doc = firestore.client().collection("teacher_confirmations").document(doc_id).get()
     return bool(doc.exists)
 
+def _teacher_song_ids(db, teacher_id: str, limit: int = 200) -> set:
+    """Song IDs created by this teacher (best-effort; limited)."""
+    ids = set()
+    try:
+        for doc in db.collection("songs").where("created_by", "==", teacher_id).limit(limit).stream():
+            ids.add(doc.id)
+    except Exception:
+        return set()
+    return ids
+
 @teachers_bp.route('/teachers')
 def list_teachers():
     users_ref = firestore.client().collection("users").stream()
@@ -31,7 +41,9 @@ def teacher_profile(teacher_id):
     teacher = doc.to_dict()
     teacher["id"] = doc.id
 
-    videos_ref = firestore.client().collection("videos").where("uploaded_by", "==", teacher_id).stream()
+    db = firestore.client()
+
+    videos_ref = db.collection("videos").where("uploaded_by", "==", teacher_id).stream()
     videos = []
     for v in videos_ref:
         vid = v.to_dict()
@@ -40,7 +52,19 @@ def teacher_profile(teacher_id):
 
     # Partition by kind: promo videos vs lesson videos
     promo_videos = [v for v in videos if v.get("kind") == "promo"]
-    lesson_videos = [v for v in videos if v.get("kind") in (None, "", "lesson")]
+    lesson_videos_all = [v for v in videos if v.get("kind") in (None, "", "lesson")]
+
+    # Only "song lesson" videos are allowed in popular section:
+    # must be linked to a song created by this teacher.
+    teacher_song_ids = _teacher_song_ids(db, teacher_id=teacher_id, limit=300)
+    lesson_videos = []
+    for v in lesson_videos_all:
+        sid = v.get("song_id")
+        if not sid:
+            continue
+        if teacher_song_ids and sid not in teacher_song_ids:
+            continue
+        lesson_videos.append(v)
 
     # Sort lesson videos by views desc (fallback 0), then by upload time desc
     def _video_sort_key(v):
@@ -50,6 +74,27 @@ def teacher_profile(teacher_id):
 
     lesson_videos.sort(key=_video_sort_key, reverse=True)
     most_viewed = lesson_videos[:3]
+
+    # Testimonials (only confirmed students can add)
+    viewer_id = session.get("user_id")
+    viewer_roles = session.get("roles") or []
+    is_confirmed_student = False
+    if viewer_id and viewer_id != teacher_id:
+        if "admin" in viewer_roles:
+            is_confirmed_student = True
+        else:
+            is_confirmed_student = _has_teacher_confirmation(teacher_id, viewer_id)
+
+    testimonials = []
+    try:
+        tdocs = list(db.collection("teacher_testimonials").where("teacher_id", "==", teacher_id).stream())
+        for tdoc in tdocs:
+            t = tdoc.to_dict() or {}
+            t["id"] = tdoc.id
+            testimonials.append(t)
+        testimonials.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+    except Exception:
+        testimonials = []
 
     created_at = teacher.get("created_at")
     if isinstance(created_at, str):
@@ -64,6 +109,9 @@ def teacher_profile(teacher_id):
         teacher=teacher,
         promo_videos=promo_videos[:3],
         videos=most_viewed,
+        testimonials=testimonials[:20],
+        can_add_testimonial=bool(is_confirmed_student),
+        is_confirmed_student=bool(is_confirmed_student),
         days_on_site=days_on_site,
     )
 
@@ -279,6 +327,76 @@ def add_testimonial(teacher_id):
     })
 
     flash("תודה! ההמלצה נוספה.", "success")
+    return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+
+@teachers_bp.route('/teacher/<string:teacher_id>/testimonial-video', methods=['POST'])
+def add_testimonial_video(teacher_id):
+    """Upload a testimonial video (confirmed students only)."""
+    if 'user_id' not in session:
+        flash("יש להתחבר כדי להעלות סרטון המלצה", "error")
+        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+
+    roles = session.get("roles") or []
+    if "student" not in roles and "admin" not in roles:
+        flash("רק תלמיד יכול להעלות סרטון המלצה", "error")
+        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+
+    student_id = session.get('user_id')
+    if not _has_teacher_confirmation(teacher_id, student_id) and "admin" not in roles:
+        flash("רק תלמיד שאישר את המורה יכול להעלות סרטון המלצה", "error")
+        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+
+    if 'video_file' not in request.files:
+        flash("לא נבחר קובץ וידאו", "error")
+        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+
+    file = request.files['video_file']
+    if not file or not file.filename:
+        flash("לא נבחר קובץ", "error")
+        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+
+    title = (request.form.get('title') or "").strip()
+    text = (request.form.get('text') or "").strip()
+    if len(title) < 2:
+        flash("חסרה כותרת לסרטון ההמלצה", "error")
+        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+
+    import os
+    import uuid
+    from firebase_config import get_gcs_storage_client
+    from werkzeug.utils import secure_filename
+
+    filename = secure_filename(file.filename)
+    temp_dir = TEMP_UPLOAD_FOLDER
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_path = os.path.join(temp_dir, f"{uuid.uuid4()}_{filename}")
+    file.save(temp_path)
+
+    try:
+        storage_client = get_gcs_storage_client()
+        bucket = storage_client.bucket("music-for-all-f5d9c.firebasestorage.app")
+        blob_name = f"testimonials/{teacher_id}/{uuid.uuid4()}_{filename}"
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(temp_path)
+        blob.make_public()
+        public_url = blob.public_url
+    finally:
+        try:
+            os.remove(temp_path)
+        except Exception:
+            pass
+
+    firestore.client().collection("teacher_testimonials").add({
+        "teacher_id": teacher_id,
+        "student_id": student_id,
+        "student_name": session.get("username"),
+        "title": title,
+        "text": text,
+        "video_url": public_url,
+        "created_at": datetime.utcnow(),
+    })
+
+    flash("🎥 סרטון ההמלצה עלה בהצלחה!", "success")
     return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
 
 
