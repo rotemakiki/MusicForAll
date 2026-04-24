@@ -55,6 +55,226 @@ body {
     margin-bottom: 40px;
 }
 
+.tutorials-toolbar {
+    margin: 10px 0 30px 0;
+}
+
+.toolbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 260px;
+    max-width: 520px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 10px 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.search-box i {
+    color: #667eea;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 1rem;
+    background: transparent;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter {
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 600;
+    background: #fff;
+    color: #2c3e50;
+    cursor: pointer;
+}
+
+.filter-input {
+    cursor: text;
+    font-weight: 700;
+}
+
+.teacher-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.manage-btn,
+.create-btn {
+    color: white;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.manage-btn {
+    background: #0f172a;
+}
+
+.manage-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+}
+
+.create-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.create-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.25);
+}
+
+.guest-banner {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 2px solid #f4a261;
+    background: linear-gradient(135deg, #fef7f0, #fff5eb);
+}
+
+.guest-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #92400e;
+}
+
+.guest-banner-btn {
+    background: linear-gradient(135deg, #f4a261, #e76f51);
+    color: white;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.guest-banner-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(244, 162, 97, 0.35);
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+    text-align: center;
+    padding: 35px 10px;
+    color: #64748b;
+}
+
+.loading-state i,
+.error-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #667eea;
+}
+
+.error-state i {
+    color: #ef4444;
+}
+
+.empty-state .empty-icon i {
+    font-size: 2.2rem;
+    color: #667eea;
+}
+
+.tutorial-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.tutorial-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.badge-video {
+    background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
+    color: #0066cc;
+}
+
+.badge-written {
+    background: linear-gradient(135deg, #e8f5e8, #f0fff0);
+    color: #28a745;
+}
+
+.teacher-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: #334155;
+    text-decoration: none;
+}
+
+.teacher-chip img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(102, 126, 234, 0.35);
+}
+
+.open-tutorial-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.open-tutorial-btn:hover {
+    filter: brightness(1.05);
+}
+
 .tutorial-card {
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border-radius: 20px;
@@ -238,6 +458,20 @@ body {
 
     .page-title {
         font-size: 2rem;
+    }
+
+    .toolbar-row {
+        align-items: stretch;
+    }
+
+    .filters,
+    .teacher-actions {
+        width: 100%;
+    }
+
+    .filter {
+        flex: 1;
+        min-width: 160px;
     }
 }
 

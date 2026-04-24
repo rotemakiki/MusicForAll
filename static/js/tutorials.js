@@ -1,253 +1,223 @@
-// Tutorials Page - Interactive Features
-document.addEventListener('DOMContentLoaded', function() {
-    initTutorials();
-    initVideoPlayers();
-    initAnalytics();
-    initKeyboardShortcuts();
+// Tutorials Page - dynamic list + search/filters
+document.addEventListener("DOMContentLoaded", () => {
+  const searchEl = document.getElementById("tutorialSearch");
+  const subjectEl = document.getElementById("subjectFilter");
+  const teacherEl = document.getElementById("teacherFilter");
+  const typeEl = document.getElementById("typeFilter");
+  const sortEl = document.getElementById("sortFilter");
+  const minRatingEl = document.getElementById("minRatingFilter");
+
+  const state = {
+    q: "",
+    subject: "",
+    teacherId: "",
+    type: "all",
+    sort: "new",
+    minRating: "0",
+    debounceTimer: null,
+  };
+
+  const load = () => loadTutorials(state);
+
+  if (searchEl) {
+    searchEl.addEventListener("input", () => {
+      state.q = searchEl.value || "";
+      clearTimeout(state.debounceTimer);
+      state.debounceTimer = setTimeout(load, 250);
+    });
+  }
+  if (typeEl) typeEl.addEventListener("change", () => ((state.type = typeEl.value), load()));
+  if (sortEl) sortEl.addEventListener("change", () => ((state.sort = sortEl.value), load()));
+  if (minRatingEl) minRatingEl.addEventListener("change", () => ((state.minRating = minRatingEl.value), load()));
+  if (teacherEl) teacherEl.addEventListener("change", () => ((state.teacherId = teacherEl.value), load()));
+  if (subjectEl) {
+    subjectEl.addEventListener("input", () => {
+      state.subject = subjectEl.value || "";
+      clearTimeout(state.debounceTimer);
+      state.debounceTimer = setTimeout(load, 250);
+    });
+  }
+
+  load();
 });
 
-function initTutorials() {
-    const tutorialCards = document.querySelectorAll('.tutorial-card');
-
-    tutorialCards.forEach(card => {
-        // Add click animation
-        card.addEventListener('click', function() {
-            this.style.transform = 'scale(0.98)';
-            setTimeout(() => {
-                this.style.transform = '';
-            }, 150);
-        });
-
-        // Add hover effects
-        card.addEventListener('mouseenter', function() {
-            this.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.2)';
-        });
-
-        card.addEventListener('mouseleave', function() {
-            this.style.boxShadow = '';
-        });
-    });
+function setVisible(id, visible) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = visible ? "" : "none";
 }
 
-function initVideoPlayers() {
-    const videos = document.querySelectorAll('video');
-
-    videos.forEach(video => {
-        // Add loading state
-        video.addEventListener('loadstart', function() {
-            this.parentElement.classList.add('loading');
-        });
-
-        video.addEventListener('loadeddata', function() {
-            this.parentElement.classList.remove('loading');
-        });
-
-        // Add play/pause analytics
-        video.addEventListener('play', function() {
-            const tutorialType = this.closest('.tutorial-card').dataset.tutorial;
-            trackVideoEvent('play', tutorialType);
-        });
-
-        video.addEventListener('pause', function() {
-            const tutorialType = this.closest('.tutorial-card').dataset.tutorial;
-            trackVideoEvent('pause', tutorialType);
-        });
-
-        video.addEventListener('ended', function() {
-            const tutorialType = this.closest('.tutorial-card').dataset.tutorial;
-            trackVideoEvent('completed', tutorialType);
-            showCompletionMessage(tutorialType);
-        });
-
-        // Add keyboard controls
-        video.addEventListener('keydown', function(e) {
-            switch(e.key) {
-                case ' ':
-                    e.preventDefault();
-                    this.paused ? this.play() : this.pause();
-                    break;
-                case 'ArrowLeft':
-                    this.currentTime -= 10;
-                    break;
-                case 'ArrowRight':
-                    this.currentTime += 10;
-                    break;
-                case 'f':
-                    this.requestFullscreen();
-                    break;
-            }
-        });
-    });
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-function trackVideoEvent(action, tutorialType) {
-    console.log(`📹 Video ${action}: ${tutorialType}`);
+function buildQuery(params) {
+  const sp = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v === undefined || v === null) return;
+    const s = String(v).trim();
+    if (!s) return;
+    sp.set(k, s);
+  });
+  return sp.toString();
+}
 
-    // Send to analytics if available
-    if (typeof gtag !== 'undefined') {
-        gtag('event', action, {
-            event_category: 'tutorial_video',
-            event_label: tutorialType,
-            value: 1
-        });
+async function loadTutorials(state) {
+  setVisible("errorState", false);
+  setVisible("emptyState", false);
+  setVisible("tutorialsGrid", false);
+  setVisible("loadingState", true);
+
+  try {
+    const qs = buildQuery({
+      q: state.q,
+      type: state.type,
+      sort: state.sort,
+      min_rating: state.minRating,
+      teacher_id: state.teacherId,
+      subject: state.subject,
+    });
+    const res = await fetch(`/api/tutorials?${qs}`);
+    const data = await res.json();
+
+    setVisible("loadingState", false);
+
+    if (!data || !data.success) {
+      setVisible("errorState", true);
+      return;
     }
+
+    const list = data.tutorials || [];
+    if (!list.length) {
+      setVisible("emptyState", true);
+      return;
+    }
+
+    hydrateTeacherFilter(list);
+    renderTutorials(list);
+    setVisible("tutorialsGrid", true);
+  } catch (e) {
+    console.error("Error loading tutorials:", e);
+    setVisible("loadingState", false);
+    setVisible("errorState", true);
+  }
 }
 
-function showCompletionMessage(tutorialType) {
-    const message = document.createElement('div');
-    message.className = 'completion-message';
-    message.innerHTML = `
-        <div class="completion-content">
-            <div class="completion-icon">🎉</div>
-            <h3>כל הכבוד!</h3>
-            <p>סיימת לצפות בהדרכה "${getTutorialTitle(tutorialType)}"</p>
-            <button onclick="this.parentElement.parentElement.remove()">סגור</button>
+function hydrateTeacherFilter(list) {
+  const teacherEl = document.getElementById("teacherFilter");
+  if (!teacherEl) return;
+
+  const current = teacherEl.value || "";
+  const options = new Map();
+  list.forEach((t) => {
+    if (!t.teacher_id) return;
+    options.set(t.teacher_id, t.teacher_name || "לא ידוע");
+  });
+
+  // Only repopulate if empty (first load) to avoid jumping around.
+  if (teacherEl.dataset.hydrated === "1") return;
+  teacherEl.dataset.hydrated = "1";
+
+  const sorted = Array.from(options.entries()).sort((a, b) => String(a[1]).localeCompare(String(b[1]), "he"));
+  sorted.forEach(([id, name]) => {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = name;
+    teacherEl.appendChild(opt);
+  });
+  teacherEl.value = current;
+}
+
+function renderTutorials(tutorials) {
+  const grid = document.getElementById("tutorialsGrid");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+  tutorials.forEach((t) => {
+    const card = document.createElement("div");
+    card.className = "tutorial-card";
+    card.tabIndex = 0;
+
+    const isVideo = (t.content_type || "video") === "video";
+    const icon = isVideo ? "🎬" : "📝";
+    const badgeClass = isVideo ? "badge badge-video" : "badge badge-written";
+    const badgeLabel = isVideo ? "סרטון" : "כתוב";
+    const teacherName = t.teacher_name || "לא ידוע";
+    const subject = t.subject || "כללי";
+
+    const ratingText =
+      t.avg_rating && t.reviews_count
+        ? `⭐ ${t.avg_rating} (${t.reviews_count})`
+        : "⭐ אין דירוגים";
+
+    const durationText = t.duration_minutes ? `⏱️ ${t.duration_minutes} דק׳` : "⏱️ —";
+    const viewsText = `👁️ ${Number(t.views || 0).toLocaleString("he-IL")} צפיות`;
+
+    const teacherImg = t.teacher_profile_image
+      ? `<img src="${escapeHtml(t.teacher_profile_image)}" alt="תמונת פרופיל">`
+      : `<img src="data:image/svg+xml,${encodeURIComponent(
+          `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='#e2e8f0'/><text x='50%' y='55%' text-anchor='middle' font-size='34' fill='#64748b'>👤</text></svg>`
+        )}" alt="תמונת פרופיל">`;
+
+    card.innerHTML = `
+      <div class="tutorial-header">
+        <div class="tutorial-icon">${icon}</div>
+        <h3>${escapeHtml(t.title || "ללא כותרת")}</h3>
+      </div>
+      <div class="tutorial-content">
+        <div class="tutorial-meta-row">
+          <div class="tutorial-badges">
+            <span class="${badgeClass}">${badgeLabel}</span>
+            <span class="badge">${escapeHtml(subject)}</span>
+          </div>
+          <a class="teacher-chip" href="/teacher/${encodeURIComponent(t.teacher_id || "")}">
+            ${teacherImg}
+            <span>${escapeHtml(teacherName)}</span>
+          </a>
         </div>
+
+        <p>${escapeHtml(t.description || "").slice(0, 160)}${(t.description || "").length > 160 ? "..." : ""}</p>
+
+        <div class="tutorial-stats">
+          <span class="duration">${durationText}</span>
+          <span class="views">${viewsText}</span>
+        </div>
+
+        <div class="tutorial-stats" style="border-top: none; margin-top: 0; padding-top: 0;">
+          <span class="duration" style="background: #f8fafc !important; color:#334155 !important;">${ratingText}</span>
+          <span class="views" style="background: #f8fafc !important; color:#334155 !important;">#${escapeHtml(t.id || "")}</span>
+        </div>
+
+        <button class="open-tutorial-btn" type="button">
+          פתח הדרכה
+        </button>
+      </div>
     `;
 
-    document.body.appendChild(message);
-
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (message.parentElement) {
-            message.remove();
-        }
-    }, 5000);
-}
-
-function getTutorialTitle(tutorialType) {
-    const titles = {
-        'add-song': 'הוספת שיר חדש',
-        'listen-song': 'האזנה לשיר',
-        'login-register': 'התחברות והרשמה',
-        'chords-editing': 'עריכת אקורדים'
+    const open = () => {
+      if (!t.id) return;
+      window.location.href = `/tutorial/${encodeURIComponent(t.id)}`;
     };
-    return titles[tutorialType] || 'הדרכה';
-}
-
-function initAnalytics() {
-    // Track page view
-    console.log('📊 Tutorials page viewed');
-
-    // Track time spent on page
-    const startTime = Date.now();
-
-    window.addEventListener('beforeunload', function() {
-        const timeSpent = Date.now() - startTime;
-        console.log(`⏱️ Time spent on tutorials: ${Math.round(timeSpent / 1000)}s`);
+    card.addEventListener("click", (e) => {
+      if (e.target && e.target.closest && e.target.closest("a")) return;
+      open();
     });
-}
-
-function initKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey || e.metaKey) {
-            switch(e.key) {
-                case '1':
-                    e.preventDefault();
-                    focusOnTutorial('add-song');
-                    break;
-                case '2':
-                    e.preventDefault();
-                    focusOnTutorial('listen-song');
-                    break;
-                case '3':
-                    e.preventDefault();
-                    focusOnTutorial('login-register');
-                    break;
-                case '4':
-                    e.preventDefault();
-                    focusOnTutorial('chords-editing');
-                    break;
-            }
-        }
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        open();
+      }
     });
+    card.querySelector(".open-tutorial-btn")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      open();
+    });
+
+    grid.appendChild(card);
+  });
 }
-
-function focusOnTutorial(tutorialType) {
-    const tutorial = document.querySelector(`[data-tutorial="${tutorialType}"]`);
-    if (tutorial) {
-        tutorial.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        tutorial.style.transform = 'scale(1.02)';
-        setTimeout(() => {
-            tutorial.style.transform = '';
-        }, 300);
-    }
-}
-
-// Add CSS for completion message
-const completionCSS = `
-    .completion-message {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-        animation: fadeIn 0.3s ease;
-    }
-
-    .completion-content {
-        background: white;
-        padding: 40px;
-        border-radius: 16px;
-        text-align: center;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        max-width: 400px;
-        width: 90%;
-    }
-
-    .completion-icon {
-        font-size: 3rem;
-        margin-bottom: 20px;
-    }
-
-    .completion-content h3 {
-        color: #28a745;
-        margin: 0 0 15px 0;
-        font-size: 1.5rem;
-    }
-
-    .completion-content p {
-        color: #64748b;
-        margin: 0 0 25px 0;
-    }
-
-    .completion-content button {
-        background: #28a745;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background 0.3s ease;
-    }
-
-    .completion-content button:hover {
-        background: #218838;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
-    }
-`;
-
-// Add styles to document
-const styleElement = document.createElement('style');
-styleElement.textContent = completionCSS;
-document.head.appendChild(styleElement);
-
-// Console helper
-console.log(`
-📚 Tutorials Page Features:
-- Interactive video players with analytics
-- Keyboard shortcuts (Ctrl+1-4 for tutorials)
-- Video controls (Space, ←/→, F for fullscreen)
-- Completion tracking and messages
-- Responsive design for all screen sizes
-`);

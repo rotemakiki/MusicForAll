@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}ניהול הדרכות{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tutorials.css') }}">
+<style>
+  .manage-header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px; gap: 12px; flex-wrap: wrap; }
+  .create-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+  .create-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102, 126, 234, 0.25); }
+  .actions { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .action-btn {
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 800;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .edit { background:#667eea; color:white; }
+  .edit:hover { background:#5568d3; }
+  .view { background:#0f172a; color:white; }
+  .view:hover { filter: brightness(1.1); }
+  .del { background:#ef4444; color:white; }
+  .del:hover { background:#dc2626; }
+  .status { padding: 6px 10px; border-radius: 999px; font-weight: 900; font-size: 0.85rem; }
+  .published { background:#10b981; color:white; }
+  .unpublished { background:#f59e0b; color:white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tutorials-container">
+  <div class="tutorials-card">
+    <div class="manage-header">
+      <div>
+        <h1 class="page-title">📚 ניהול הדרכות</h1>
+        <p class="page-subtitle">הדרכות קצרות, חומרים ושאלונים — הכל במקום אחד</p>
+      </div>
+      <a href="{{ url_for('tutorials.create_edit_tutorial') }}" class="create-btn">
+        <i class="fas fa-plus"></i>
+        הוסף הדרכה
+      </a>
+    </div>
+
+    <div id="loadingState" class="loading-state">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>טוען...</p>
+    </div>
+    <div id="errorState" class="error-state" style="display:none;">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>שגיאה בטעינת ההדרכות</p>
+    </div>
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <div class="empty-icon"><i class="fas fa-book"></i></div>
+      <h3>אין הדרכות</h3>
+      <p>צור הדרכה חדשה כדי להתחיל.</p>
+      <a href="{{ url_for('tutorials.create_edit_tutorial') }}" class="create-btn" style="margin-top: 15px;">
+        <i class="fas fa-plus"></i>
+        הוסף הדרכה
+      </a>
+    </div>
+
+    <div id="tutorialsGrid" class="tutorials-grid" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => loadTutorials());
+
+function setVisible(id, visible) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = visible ? "" : "none";
+}
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function loadTutorials() {
+  setVisible("errorState", false);
+  setVisible("emptyState", false);
+  setVisible("tutorialsGrid", false);
+  setVisible("loadingState", true);
+
+  try {
+    const res = await fetch("/api/manage/tutorials");
+    const data = await res.json();
+    setVisible("loadingState", false);
+
+    if (!data || !data.success) {
+      setVisible("errorState", true);
+      return;
+    }
+    const list = data.tutorials || [];
+    if (!list.length) {
+      setVisible("emptyState", true);
+      return;
+    }
+    render(list);
+    setVisible("tutorialsGrid", true);
+  } catch (e) {
+    console.error(e);
+    setVisible("loadingState", false);
+    setVisible("errorState", true);
+  }
+}
+
+function render(list) {
+  const grid = document.getElementById("tutorialsGrid");
+  grid.innerHTML = "";
+
+  list.forEach(t => {
+    const card = document.createElement("div");
+    card.className = "tutorial-card";
+    const isVideo = (t.content_type || "video") === "video";
+    const status = t.is_published
+      ? '<span class="status published">פורסם</span>'
+      : '<span class="status unpublished">טיוטה</span>';
+    card.innerHTML = `
+      <div class="tutorial-header">
+        <div class="tutorial-icon">${isVideo ? "🎬" : "📝"}</div>
+        <h3>${escapeHtml(t.title || "ללא כותרת")}</h3>
+      </div>
+      <div class="tutorial-content">
+        <div class="tutorial-meta-row">
+          <div class="tutorial-badges">
+            <span class="${isVideo ? "badge badge-video" : "badge badge-written"}">${isVideo ? "סרטון" : "כתוב"}</span>
+            <span class="badge">${escapeHtml(t.subject || "כללי")}</span>
+            ${status}
+          </div>
+          <div class="badge">👁️ ${Number(t.views || 0).toLocaleString("he-IL")}</div>
+        </div>
+        <p>${escapeHtml(t.description || "").slice(0, 140)}${(t.description || "").length > 140 ? "..." : ""}</p>
+        <div class="tutorial-stats">
+          <span class="duration">${t.avg_rating && t.reviews_count ? `⭐ ${t.avg_rating} (${t.reviews_count})` : "⭐ אין דירוגים"}</span>
+          <span class="views">#${escapeHtml(t.id)}</span>
+        </div>
+        <div class="actions">
+          <a class="action-btn view" href="/tutorial/${encodeURIComponent(t.id)}"><i class="fas fa-eye"></i> תצוגה</a>
+          <a class="action-btn edit" href="/manage/tutorials/edit/${encodeURIComponent(t.id)}"><i class="fas fa-edit"></i> עריכה</a>
+          <button class="action-btn del" type="button" onclick="deleteTutorial('${escapeHtml(t.id)}', '${escapeHtml(t.title || '')}')">
+            <i class="fas fa-trash"></i> מחיקה
+          </button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function deleteTutorial(id, title) {
+  if (!confirm(`האם למחוק את ההדרכה "${title}"? פעולה זו אינה הפיכה.`)) return;
+  try {
+    const res = await fetch(`/api/tutorials/${encodeURIComponent(id)}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data && data.success) {
+      alert("הדרכה נמחקה בהצלחה");
+      loadTutorials();
+    } else {
+      alert((data && data.error) || "שגיאה במחיקה");
+    }
+  } catch (e) {
+    console.error(e);
+    alert("שגיאה במחיקה");
+  }
+}
+</script>
+{% endblock %}
+

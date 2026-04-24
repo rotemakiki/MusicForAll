@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'עריכת הדרכה' if tutorial else 'יצירת הדרכה חדשה' }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tutorials.css') }}">
+<style>
+  .form-container { max-width: 95vw; width: 95vw; margin: 20px auto; padding: 0 20px; }
+  .form-card {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .back-link { display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:#334155; font-weight:700; margin-bottom: 15px; }
+  .form-group { margin-bottom: 20px; }
+  label { display:block; margin-bottom: 8px; font-weight: 800; color:#0f172a; }
+  input, textarea, select {
+    width:100%; padding: 12px; border: 2px solid #e1e8ed; border-radius: 12px;
+    font-size: 1rem; font-family: inherit; transition: all .2s ease;
+  }
+  input:focus, textarea:focus, select:focus { outline:none; border-color:#667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.12); }
+  textarea { min-height: 120px; resize: vertical; }
+  .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hint { color:#64748b; font-weight: 600; margin-top: 6px; font-size: .92rem; }
+  .checkbox { display:flex; align-items:center; gap: 10px; }
+  .checkbox input { width:auto; }
+  .list { display:flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+  .item { display:flex; gap: 10px; align-items: center; }
+  .item input { flex: 1; }
+  .btn {
+    padding: 12px 18px; border-radius: 12px; border:none;
+    font-weight: 900; cursor:pointer; transition: all .2s ease;
+    display:inline-flex; align-items:center; gap: 8px; text-decoration:none; justify-content:center;
+  }
+  .btn.primary { background: linear-gradient(135deg, #667eea, #764ba2); color:white; }
+  .btn.secondary { background: #e2e8f0; color:#0f172a; }
+  .btn.danger { background:#ef4444; color:white; }
+  .btn.small { padding: 10px 12px; border-radius: 10px; font-weight: 900; }
+  .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,.25); }
+  .btn.secondary:hover { background:#cbd5e1; }
+  .btn.danger:hover { background:#dc2626; }
+  .actions { display:flex; gap: 12px; flex-wrap: wrap; padding-top: 18px; border-top: 2px solid #e1e8ed; margin-top: 18px; }
+  .section-title { margin-top: 26px; margin-bottom: 8px; font-size: 1.1rem; font-weight: 900; color:#0f172a; }
+  .chip { background:#f1f5f9; border:2px solid #e1e8ed; border-radius: 12px; padding: 12px; }
+  .chip h4 { margin:0 0 10px 0; }
+  @media (max-width: 900px) { .form-card { padding: 22px; } .row { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div class="form-card">
+    <a href="{{ url_for('tutorials.manage_tutorials') }}" class="back-link"><i class="fas fa-arrow-right"></i> חזרה לניהול הדרכות</a>
+    <h1 class="page-title">{{ 'עריכת הדרכה' if tutorial else 'יצירת הדרכה חדשה' }}</h1>
+
+    <form id="tutorialForm" onsubmit="saveTutorial(event)">
+      <div class="form-group">
+        <label for="title">כותרת *</label>
+        <input id="title" name="title" type="text" required value="{{ tutorial.title if tutorial else '' }}">
+      </div>
+
+      <div class="form-group">
+        <label for="description">תיאור קצר</label>
+        <textarea id="description" name="description" placeholder="על מה ההדרכה? למי היא מתאימה?">{{ tutorial.description if tutorial else '' }}</textarea>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label for="content_type">סוג תוכן *</label>
+          <select id="content_type" name="content_type" required>
+            {% set ct = (tutorial.content_type if tutorial else 'video') %}
+            <option value="video" {{ 'selected' if ct == 'video' else '' }}>סרטון</option>
+            <option value="written" {{ 'selected' if ct == 'written' else '' }}>הדרכה כתובה</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="subject">חומר לימודי / נושא</label>
+          <input id="subject" name="subject" type="text" placeholder="למשל: סולמות, אקורדים, קצב..." value="{{ tutorial.subject if tutorial else '' }}">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="form-group">
+          <label for="duration_minutes">משך (דקות)</label>
+          <input id="duration_minutes" name="duration_minutes" type="number" min="0" step="1" value="{{ tutorial.duration_minutes if tutorial else 0 }}">
+        </div>
+        <div class="form-group">
+          <label for="cover_image">תמונת קאבר (URL)</label>
+          <input id="cover_image" name="cover_image" type="url" placeholder="https://..." value="{{ tutorial.cover_image if tutorial else '' }}">
+          <div class="hint">כרגע כ-URL. אפשר לחבר בהמשך העלאת קבצים ל-Storage.</div>
+        </div>
+      </div>
+
+      <div class="form-group" id="videoUrlGroup">
+        <label for="video_url">קישור וידאו (URL)</label>
+        <input id="video_url" name="video_url" type="url" placeholder="YouTube / קובץ וידאו" value="{{ tutorial.video_url if tutorial else '' }}">
+        <div class="hint">תומך ביוטיוב (מומלץ) או קישור ישיר לוידאו.</div>
+      </div>
+
+      <div class="form-group" id="writtenGroup">
+        <label for="written_content">תוכן כתוב</label>
+        <textarea id="written_content" name="written_content" placeholder="הדבק כאן את ההדרכה הכתובה...">{{ tutorial.written_content if tutorial else '' }}</textarea>
+        <div class="hint">מוצג כרגע כטקסט פשוט (מאובטח). אפשר לשדרג בהמשך ל-Markdown.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="tags">תגיות (מופרדות בפסיקים)</label>
+        <input id="tags" name="tags" type="text" placeholder="למשל: מתחילים, גיטרה, תיאוריה" value="{{ (tutorial.tags | join(', ')) if tutorial and tutorial.tags else '' }}">
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <input type="checkbox" id="is_published" name="is_published" {{ 'checked' if tutorial and tutorial.is_published else '' }}>
+          <label for="is_published" style="margin:0;">פרסם (גלוי לתלמידים)</label>
+        </div>
+      </div>
+
+      <div class="section-title">חומרים מצורפים (מצגות / קבצים / דפי עבודה)</div>
+      <div class="hint">בשלב זה: הוספה באמצעות כותרת + URL. בהמשך אפשר לחבר העלאה ל-Storage.</div>
+      <div id="attachmentsList" class="list"></div>
+      <button type="button" class="btn secondary small" onclick="addAttachment()"><i class="fas fa-paperclip"></i> הוסף קובץ</button>
+
+      <div class="section-title">שאלון אמריקאי (בדיקת הבנה)</div>
+      <div class="hint">ניתן להוסיף שאלות (בהמשך נוכל לתמוך בשיוך לזמן בתוך הוידאו).</div>
+      <div id="quizList" class="list"></div>
+      <button type="button" class="btn secondary small" onclick="addQuizQuestion()"><i class="fas fa-question-circle"></i> הוסף שאלה</button>
+
+      <div class="actions">
+        <button type="submit" class="btn primary"><i class="fas fa-save"></i> {{ 'עדכן הדרכה' if tutorial else 'צור הדרכה' }}</button>
+        <a href="{{ url_for('tutorials.manage_tutorials') }}" class="btn secondary"><i class="fas fa-times"></i> ביטול</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.TUTORIAL_ID = {{ tutorial.id | tojson if tutorial else 'null' }};
+window.INIT_ATTACHMENTS = {{ (tutorial.attachments if tutorial and tutorial.attachments else []) | tojson }};
+window.INIT_QUIZ = {{ (tutorial.quiz if tutorial and tutorial.quiz else []) | tojson }};
+</script>
+<script>
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  syncContentTypeVisibility();
+  document.getElementById("content_type")?.addEventListener("change", syncContentTypeVisibility);
+
+  (window.INIT_ATTACHMENTS || []).forEach(a => addAttachment(a));
+  (window.INIT_QUIZ || []).forEach(q => addQuizQuestion(q));
+});
+
+function syncContentTypeVisibility() {
+  const type = document.getElementById("content_type")?.value || "video";
+  const videoGroup = document.getElementById("videoUrlGroup");
+  const writtenGroup = document.getElementById("writtenGroup");
+  if (!videoGroup || !writtenGroup) return;
+  videoGroup.style.display = (type === "video") ? "" : "none";
+  writtenGroup.style.display = (type === "written") ? "" : "none";
+}
+
+function addAttachment(init) {
+  const list = document.getElementById("attachmentsList");
+  const row = document.createElement("div");
+  row.className = "item chip";
+  row.innerHTML = `
+    <div style="flex:1;">
+      <h4 style="margin:0 0 10px 0;">📎 קובץ</h4>
+      <div class="row">
+        <div>
+          <label>כותרת</label>
+          <input type="text" name="att_title" value="${escapeHtml((init && init.title) || "")}" placeholder="למשל: מצגת שיעור">
+        </div>
+        <div>
+          <label>URL</label>
+          <input type="url" name="att_url" value="${escapeHtml((init && init.url) || "")}" placeholder="https://...">
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn danger small" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+  `;
+  list.appendChild(row);
+}
+
+function addQuizQuestion(init) {
+  const list = document.getElementById("quizList");
+  const card = document.createElement("div");
+  card.className = "chip";
+  const options = (init && Array.isArray(init.options) && init.options.length) ? init.options : ["", "", "", ""];
+  const correctIndex = Number.isFinite(init?.correct_index) ? init.correct_index : (Number.isFinite(init?.correctIndex) ? init.correctIndex : 0);
+
+  card.innerHTML = `
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+      <div style="flex:1;">
+        <h4 style="margin:0 0 10px 0;">❓ שאלה</h4>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>טקסט שאלה</label>
+          <input type="text" name="q_text" value="${escapeHtml((init && init.question) || "")}" placeholder="כתוב את השאלה...">
+        </div>
+        <div class="row">
+          ${options.map((v, i) => `
+            <div>
+              <label>תשובה ${i+1}</label>
+              <input type="text" name="q_opt" value="${escapeHtml(v || "")}" placeholder="אפשרות תשובה">
+            </div>
+          `).join("")}
+        </div>
+        <div class="form-group" style="margin-top: 12px;">
+          <label>תשובה נכונה</label>
+          <select name="q_correct">
+            <option value="0" ${correctIndex === 0 ? "selected" : ""}>תשובה 1</option>
+            <option value="1" ${correctIndex === 1 ? "selected" : ""}>תשובה 2</option>
+            <option value="2" ${correctIndex === 2 ? "selected" : ""}>תשובה 3</option>
+            <option value="3" ${correctIndex === 3 ? "selected" : ""}>תשובה 4</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" class="btn danger small" onclick="this.closest('.chip').remove()"><i class="fas fa-trash"></i></button>
+    </div>
+  `;
+  list.appendChild(card);
+}
+
+function collectAttachments() {
+  const rows = Array.from(document.querySelectorAll("#attachmentsList .item"));
+  const items = [];
+  rows.forEach(r => {
+    const title = r.querySelector('input[name="att_title"]')?.value?.trim() || "";
+    const url = r.querySelector('input[name="att_url"]')?.value?.trim() || "";
+    if (!title && !url) return;
+    if (!url) return;
+    items.push({ title, url });
+  });
+  return items;
+}
+
+function collectQuiz() {
+  const cards = Array.from(document.querySelectorAll("#quizList .chip"));
+  const items = [];
+  cards.forEach(c => {
+    const question = c.querySelector('input[name="q_text"]')?.value?.trim() || "";
+    const options = Array.from(c.querySelectorAll('input[name="q_opt"]')).map(i => (i.value || "").trim()).filter(v => v.length);
+    const correctIndex = parseInt(c.querySelector('select[name="q_correct"]')?.value || "0", 10);
+    if (!question) return;
+    if (options.length < 2) return;
+    items.push({ question, options, correct_index: correctIndex });
+  });
+  return items;
+}
+
+async function saveTutorial(e) {
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
+
+  const tagsRaw = (fd.get("tags") || "").toString();
+  const tags = tagsRaw.split(",").map(s => s.trim()).filter(Boolean);
+
+  const payload = {
+    title: (fd.get("title") || "").toString(),
+    description: (fd.get("description") || "").toString(),
+    content_type: (fd.get("content_type") || "video").toString(),
+    subject: (fd.get("subject") || "").toString(),
+    duration_minutes: parseInt((fd.get("duration_minutes") || "0").toString(), 10) || 0,
+    cover_image: (fd.get("cover_image") || "").toString(),
+    video_url: (fd.get("video_url") || "").toString(),
+    written_content: (fd.get("written_content") || "").toString(),
+    tags,
+    is_published: fd.get("is_published") === "on",
+    attachments: collectAttachments(),
+    quiz: collectQuiz(),
+    blocks: []
+  };
+
+  const url = window.TUTORIAL_ID ? `/api/tutorials/${encodeURIComponent(window.TUTORIAL_ID)}` : "/api/tutorials/create";
+  const method = window.TUTORIAL_ID ? "PUT" : "POST";
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data && data.success) {
+      alert(window.TUTORIAL_ID ? "הדרכה עודכנה בהצלחה!" : "הדרכה נוצרה בהצלחה!");
+      window.location.href = "/manage/tutorials";
+    } else {
+      alert((data && data.error) || "שגיאה בשמירה");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("שגיאה בשמירה");
+  }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}הדרכה{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tutorials.css') }}">
+<style>
+  .detail-container { max-width: 95vw; width: 95vw; margin: 20px auto; padding: 0 20px; }
+  .detail-card {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .back-link { display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:#334155; font-weight:700; margin-bottom: 15px; }
+  .detail-header { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; flex-wrap: wrap; }
+  .detail-title { margin:0; font-size: 2rem; font-weight: 900; color:#0f172a; }
+  .detail-sub { margin: 8px 0 0 0; color:#64748b; font-weight: 600; }
+  .detail-actions { display:flex; gap:10px; flex-wrap: wrap; }
+  .action-link { text-decoration:none; font-weight:800; padding: 10px 14px; border-radius: 12px; }
+  .action-link.primary { background: linear-gradient(135deg, #667eea, #764ba2); color:white; }
+  .action-link.dark { background:#0f172a; color:white; }
+  .section { margin-top: 26px; }
+  .section h3 { margin:0 0 12px 0; color:#0f172a; }
+  .video-box video, .video-box iframe { width:100%; height: 420px; border-radius: 16px; border: 0; background:#0b1220; }
+  .meta-row { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+  .pill { background:#f1f5f9; color:#334155; border-radius: 999px; padding: 8px 12px; font-weight:800; }
+  .pill.orange { background: linear-gradient(135deg, #fef7f0, #fff5eb); color:#92400e; border:1px solid #f4a261; }
+  .attachments { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .attachment { border:2px solid #e1e8ed; border-radius: 16px; padding: 14px; background: #fff; }
+  .attachment a { text-decoration:none; font-weight:800; color:#334155; }
+  .quiz { display:flex; flex-direction: column; gap: 14px; }
+  .quiz-card { border:2px solid #e1e8ed; border-radius: 16px; padding: 14px; background: #fff; }
+  .quiz-q { font-weight: 900; color:#0f172a; margin-bottom: 10px; }
+  .quiz-opt { display:flex; align-items:center; gap:10px; padding: 10px; border-radius: 12px; border: 2px solid #e1e8ed; cursor: pointer; }
+  .quiz-opt input { cursor: pointer; }
+  .quiz-opt.correct { border-color:#10b981; background: #ecfdf5; }
+  .quiz-opt.wrong { border-color:#ef4444; background:#fef2f2; }
+  .quiz-result { margin-top: 10px; font-weight: 900; }
+  @media (max-width: 900px) { .detail-card { padding: 22px; } .video-box video, .video-box iframe { height: 240px; } .detail-title { font-size: 1.6rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+  <div class="detail-card">
+    <a href="{{ url_for('tutorials.tutorials') }}" class="back-link"><i class="fas fa-arrow-right"></i> חזרה למרכז ההדרכות</a>
+
+    <div id="loadingState" class="loading-state">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>טוען הדרכה...</p>
+    </div>
+    <div id="errorState" class="error-state" style="display:none;">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>שגיאה בטעינת ההדרכה</p>
+    </div>
+
+    <div id="detailBody" style="display:none;">
+      <div class="detail-header">
+        <div>
+          <h1 id="title" class="detail-title"></h1>
+          <p id="desc" class="detail-sub"></p>
+          <div class="meta-row" id="metaRow"></div>
+        </div>
+
+        <div class="detail-actions">
+          {% if can_manage_tutorials %}
+            <a class="action-link dark" href="{{ url_for('tutorials.manage_tutorials') }}"><i class="fas fa-cog"></i> ניהול</a>
+            <a id="editLink" class="action-link primary" href="#"><i class="fas fa-edit"></i> עריכה</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="section" id="videoSection" style="display:none;">
+        <h3>סרטון</h3>
+        <div class="video-box" id="videoBox"></div>
+      </div>
+
+      <div class="section" id="writtenSection" style="display:none;">
+        <h3>חומר כתוב</h3>
+        <div id="writtenContent" style="line-height:1.8; color:#0f172a;"></div>
+      </div>
+
+      <div class="section" id="attachmentsSection" style="display:none;">
+        <h3>חומרים מצורפים</h3>
+        <div class="attachments" id="attachments"></div>
+      </div>
+
+      <div class="section" id="quizSection" style="display:none;">
+        <h3>שאלון קצר</h3>
+        <div class="quiz" id="quiz"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.TUTORIAL_ID = {{ tutorial_id | tojson }};
+</script>
+<script>
+function setVisible(id, visible) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = visible ? "" : "none";
+}
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  setVisible("errorState", false);
+  setVisible("detailBody", false);
+  setVisible("loadingState", true);
+
+  try {
+    const res = await fetch(`/api/tutorials/${encodeURIComponent(window.TUTORIAL_ID)}`);
+    const data = await res.json();
+    setVisible("loadingState", false);
+
+    if (!data || !data.success) {
+      setVisible("errorState", true);
+      return;
+    }
+
+    const t = data.tutorial || {};
+
+    document.getElementById("title").textContent = t.title || "הדרכה";
+    document.getElementById("desc").textContent = t.description || "";
+
+    const meta = document.getElementById("metaRow");
+    const isVideo = (t.content_type || "video") === "video";
+    meta.innerHTML = `
+      <span class="pill">${isVideo ? "🎬 סרטון" : "📝 כתוב"}</span>
+      <span class="pill">${escapeHtml(t.subject || "כללי")}</span>
+      <span class="pill">${t.avg_rating && t.reviews_count ? `⭐ ${t.avg_rating} (${t.reviews_count})` : "⭐ אין דירוגים"}</span>
+      <span class="pill">${t.duration_minutes ? `⏱️ ${t.duration_minutes} דק׳` : "⏱️ —"}</span>
+      <span class="pill orange">👨‍🏫 ${escapeHtml(t.teacher_name || "לא ידוע")}</span>
+    `;
+
+    const editLink = document.getElementById("editLink");
+    if (editLink && t.id) editLink.href = `/manage/tutorials/edit/${encodeURIComponent(t.id)}`;
+
+    // Video
+    const vUrl = (t.video_url || "").trim();
+    if (vUrl) {
+      setVisible("videoSection", true);
+      const box = document.getElementById("videoBox");
+      const isYouTube = /youtube\.com|youtu\.be/.test(vUrl);
+      if (isYouTube) {
+        const embedUrl = toYouTubeEmbedUrl(vUrl);
+        box.innerHTML = `<iframe src="${escapeHtml(embedUrl)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      } else {
+        box.innerHTML = `
+          <video controls preload="metadata">
+            <source src="${escapeHtml(vUrl)}">
+            הדפדפן שלך לא תומך בווידאו
+          </video>
+        `;
+      }
+    }
+
+    // Written content (render as plain text for safety; upgrade later if needed)
+    const w = (t.written_content || "").trim();
+    if (w) {
+      setVisible("writtenSection", true);
+      document.getElementById("writtenContent").textContent = w;
+    }
+
+    // Attachments
+    const att = Array.isArray(t.attachments) ? t.attachments : [];
+    if (att.length) {
+      setVisible("attachmentsSection", true);
+      const wrap = document.getElementById("attachments");
+      wrap.innerHTML = "";
+      att.forEach((a) => {
+        const title = a.title || "קובץ";
+        const url = a.url || "";
+        if (!url) return;
+        const el = document.createElement("div");
+        el.className = "attachment";
+        el.innerHTML = `
+          <div style="font-weight:900; margin-bottom:6px;">📎 ${escapeHtml(title)}</div>
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">פתח / הורד</a>
+        `;
+        wrap.appendChild(el);
+      });
+    }
+
+    // Quiz (MCQ)
+    const quiz = Array.isArray(t.quiz) ? t.quiz : [];
+    if (quiz.length) {
+      setVisible("quizSection", true);
+      const wrap = document.getElementById("quiz");
+      wrap.innerHTML = "";
+      quiz.forEach((q, idx) => {
+        const card = document.createElement("div");
+        card.className = "quiz-card";
+        const options = Array.isArray(q.options) ? q.options : [];
+        const correctIndex = Number.isFinite(q.correct_index) ? q.correct_index : (q.correctIndex ?? -1);
+
+        card.innerHTML = `
+          <div class="quiz-q">${idx + 1}. ${escapeHtml(q.question || "שאלה")}</div>
+          <div class="quiz-opts"></div>
+          <div class="quiz-result" style="display:none;"></div>
+        `;
+        const optsWrap = card.querySelector(".quiz-opts");
+        const resultEl = card.querySelector(".quiz-result");
+
+        options.forEach((opt, oi) => {
+          const row = document.createElement("label");
+          row.className = "quiz-opt";
+          row.innerHTML = `<input type="radio" name="q_${idx}" value="${oi}"> <span>${escapeHtml(opt)}</span>`;
+          row.addEventListener("change", () => {
+            const isCorrect = oi === correctIndex;
+            Array.from(optsWrap.querySelectorAll(".quiz-opt")).forEach((el) => el.classList.remove("correct", "wrong"));
+            row.classList.add(isCorrect ? "correct" : "wrong");
+            resultEl.style.display = "";
+            resultEl.textContent = isCorrect ? "נכון!" : "לא מדויק — נסו שוב";
+            resultEl.style.color = isCorrect ? "#059669" : "#dc2626";
+          });
+          optsWrap.appendChild(row);
+        });
+
+        wrap.appendChild(card);
+      });
+    }
+
+    setVisible("detailBody", true);
+  } catch (e) {
+    console.error(e);
+    setVisible("loadingState", false);
+    setVisible("errorState", true);
+  }
+});
+
+function toYouTubeEmbedUrl(url) {
+  try {
+    const u = new URL(url);
+    let id = "";
+    if (u.hostname.includes("youtu.be")) {
+      id = u.pathname.replace("/", "");
+    } else {
+      id = u.searchParams.get("v") || "";
+    }
+    if (!id) return url;
+    return `https://www.youtube-nocookie.com/embed/${id}`;
+  } catch (e) {
+    return url;
+  }
+}
+</script>
+{% endblock %}
+
