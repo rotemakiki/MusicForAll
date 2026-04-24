@@ -216,6 +216,10 @@ body {
 
 .song-compact { display: flex; flex-direction: column; gap: 10px; }
 
+.song-basic { margin-top: 10px; }
+.song-basic .song-title { font-size: 1.1rem; margin: 0; }
+.song-basic .song-artist { font-size: 0.95rem; margin: 4px 0 0 0; }
+
 .song-cover {
     position: relative;
     width: 100%;

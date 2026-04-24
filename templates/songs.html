@@ -244,6 +244,23 @@
                                 {% endif %}
                             </div>
 
+                            <div class="song-basic">
+                                <h3 class="song-title">{{ song.title }}</h3>
+                                <p class="song-artist">{{ song.artist }}
+                                    {% if song.get('song_version') == 'cover' and song.get('original_artist') %}
+                                        <span class="song-version-cover-hint">(קאבר של {{ song.original_artist }})</span>
+                                    {% endif %}
+                                </p>
+                                {% if song.get('song_version') %}
+                                <span class="song-version-badge version-{{ song.song_version }}" title="גרסת השיר">
+                                    {% if song.song_version == 'cover' %}קאבר
+                                    {% elif song.song_version == 'original' %}גרסת אלבום
+                                    {% elif song.song_version == 'live' %}הופעה חיה
+                                    {% else %}{{ song.song_version }}{% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+
                             <div class="song-compact-meta">
                                 <div class="song-levels-line">
                                     <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">🎸 ליווי {{ song.accompaniment_level }}</span>
@@ -261,12 +278,6 @@
                             </div>
 
                             <div class="song-hover-details">
-                                <h3 class="song-title">{{ song.title }}</h3>
-                                <p class="song-artist">{{ song.artist }}
-                                    {% if song.get('song_version') == 'cover' and song.get('original_artist') %}
-                                        <span class="song-version-cover-hint">(קאבר של {{ song.original_artist }})</span>
-                                    {% endif %}
-                                </p>
                                 <div class="song-details-row">
                                     <span class="detail-badge">🎼 {{ song.key }} {{ song.key_type }}{% if song.get('secondary_key') and song.get('secondary_key_type') %} / {{ song.secondary_key }} {{ song.secondary_key_type }}{% endif %}</span>
                                     <span class="detail-badge">🎵 {{ song.time_signature }}</span>
@@ -275,14 +286,6 @@
                                         <span class="detail-badge">🗣️ {{ song.language }}</span>
                                     {% endif %}
                                 </div>
-                                {% if song.get('song_version') %}
-                                <span class="song-version-badge version-{{ song.song_version }}" title="גרסת השיר">
-                                    {% if song.song_version == 'cover' %}קאבר
-                                    {% elif song.song_version == 'original' %}גרסת אלבום
-                                    {% elif song.song_version == 'live' %}הופעה חיה
-                                    {% else %}{{ song.song_version }}{% endif %}
-                                </span>
-                                {% endif %}
                             </div>
                         </div>
 
