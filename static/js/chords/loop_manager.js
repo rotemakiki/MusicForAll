@@ -163,13 +163,22 @@ class LoopManager {
             const response = await fetch(`/api/songs/${editingSongId}/loops`);
             if (response.ok) {
                 const loopsData = await response.json();
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H1',location:'static/js/chords/loop_manager.js:loadExistingSongLoops',message:'Loaded loops payload from backend',data:{editingSongId,ok:true,topKeys:Object.keys(loopsData||{}),loopsType:typeof (loopsData&&loopsData.loops),loopsIsArray:Array.isArray(loopsData&&loopsData.loops),loopsLen:Array.isArray(loopsData&&loopsData.loops)?loopsData.loops.length:null,firstLoopKeys:(Array.isArray(loopsData&&loopsData.loops)&&loopsData.loops[0])?Object.keys(loopsData.loops[0]):null,firstLoopName:(Array.isArray(loopsData&&loopsData.loops)&&loopsData.loops[0])?{name:loopsData.loops[0]?.name,customName:loopsData.loops[0]?.customName,loopName:loopsData.loops[0]?.loopName,title:loopsData.loops[0]?.title}:null},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion agent log
                 this.restoreLoopsFromData(loopsData.loops || []);
             } else {
                 // Fallback to localStorage for now
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H2',location:'static/js/chords/loop_manager.js:loadExistingSongLoops',message:'Backend loops request not ok; using localStorage fallback',data:{editingSongId,status:response.status,statusText:response.statusText},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion agent log
                 this.loadFromLocalStorageBackup();
             }
         } catch (error) {
             console.error("Error loading loops from backend:", error);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H2',location:'static/js/chords/loop_manager.js:loadExistingSongLoops',message:'Error loading loops from backend; using localStorage fallback',data:{err:String(error&&error.message||error)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion agent log
             this.loadFromLocalStorageBackup();
         }
     }
@@ -221,12 +230,19 @@ class LoopManager {
         this.savedLoops.length = 0;
 
         loopsData.forEach((loopData, index) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H1',location:'static/js/chords/loop_manager.js:restoreLoopsFromData',message:'Restoring loop item',data:{index,loopKeys:loopData?Object.keys(loopData):null,name:loopData?.name,customName:loopData?.customName,loopName:loopData?.loopName,title:loopData?.title,hasMeasures:Array.isArray(loopData?.measures),measuresLen:Array.isArray(loopData?.measures)?loopData.measures.length:null},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion agent log
+            const derivedNameRaw = (loopData?.customName || loopData?.name || "").toString().trim();
+            const derivedName = derivedNameRaw || `חלק ${index + 1}`;
             const restoredLoop = {
                 id: Date.now() + index,
-                customName: loopData.name || loopData.customName,
-                measures: loopData.measures || [],
-                measureCount: loopData.measureCount || loopData.measures?.length || 0,
-                repeatCount: loopData.repeatCount || 1
+                customName: derivedName,
+                // keep legacy `name` too so other parts can fallback safely
+                name: loopData?.name || derivedName,
+                measures: loopData?.measures || [],
+                measureCount: loopData?.measureCount || loopData?.measures?.length || 0,
+                repeatCount: loopData?.repeatCount || 1
             };
             this.savedLoops.push(restoredLoop);
         });
@@ -325,10 +341,16 @@ class LoopManager {
             if (existingLoop) {
                 // Update existing loop
                 existingLoop.customName = loopName;
+                existingLoop.name = existingLoop.name || loopName;
                 existingLoop.measures = [...this.currentLoop];
                 existingLoop.measureCount = this.currentLoop.length;
                 
                 console.log("לופ קיים עודכן:", existingLoop);
+
+                // Sync song structure items derived from this loop
+                if (window.songStructureManager && typeof window.songStructureManager.syncFromLoopUpdate === 'function') {
+                    window.songStructureManager.syncFromLoopUpdate(existingLoop);
+                }
                 
                 // Clear current loop
                 this.currentLoop = [];
@@ -349,6 +371,9 @@ class LoopManager {
                 console.log("✅ לופ עודכן בהצלחה:", existingLoop);
                 return true;
             }
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H3',location:'static/js/chords/loop_manager.js:saveCurrentLoop',message:'editingLoopId set but loop not found in savedLoops',data:{editingLoopId:this.editingLoopId,savedLoopsLen:this.savedLoops.length,savedLoopIds:this.savedLoops.slice(0,10).map(l=>l&&l.id)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion agent log
         }
 
         // Create new loop

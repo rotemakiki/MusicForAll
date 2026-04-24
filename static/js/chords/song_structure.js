@@ -12,6 +12,83 @@ class SongStructureManager {
         this.appModes = window.ChordCore.APP_MODES;
     }
 
+    isGenericPartName(name) {
+        const s = (name || '').toString().trim();
+        return /^חלק\s+\d+$/i.test(s);
+    }
+
+    measuresSignature(measures) {
+        try {
+            return JSON.stringify(measures || []);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Attempt to map structure items to saved loops by measure equality,
+     * then replace generic part names ("חלק X") with the real loop names.
+     */
+    syncNamesAndLinksFromSavedLoops() {
+        if (!window.loopManager) return;
+
+        const savedLoops = window.loopManager.getAllSavedLoops();
+        if (!Array.isArray(savedLoops) || savedLoops.length === 0) return;
+
+        const loopBySig = new Map();
+        savedLoops.forEach((l) => {
+            const sig = this.measuresSignature(l?.measures);
+            if (sig) loopBySig.set(sig, l);
+        });
+
+        let changed = false;
+        this.songStructure.forEach((item) => {
+            const currentName = item?.customName || item?.name;
+            if (!this.isGenericPartName(currentName)) return;
+
+            const sig = this.measuresSignature(item?.measures);
+            const match = sig ? loopBySig.get(sig) : null;
+            if (!match) return;
+
+            const betterName = (match.customName || match.name || '').toString().trim();
+            if (!betterName) return;
+
+            item.customName = betterName;
+            item.name = item.name || betterName;
+            item.sourceLoopId = match.id;
+            changed = true;
+        });
+
+        if (changed) {
+            this.renderSongStructure();
+        }
+    }
+
+    /**
+     * When a saved loop is edited, update any structure items derived from it.
+     */
+    syncFromLoopUpdate(updatedLoop) {
+        if (!updatedLoop) return;
+        const loopId = updatedLoop.id;
+        let changed = false;
+
+        this.songStructure.forEach((item) => {
+            if (item?.sourceLoopId !== loopId) return;
+            item.customName = updatedLoop.customName || updatedLoop.name || item.customName;
+            item.name = item.name || item.customName;
+            item.measures = Array.isArray(updatedLoop.measures) ? updatedLoop.measures : item.measures;
+            item.measureCount =
+                typeof updatedLoop.measureCount === 'number'
+                    ? updatedLoop.measureCount
+                    : (Array.isArray(updatedLoop.measures) ? updatedLoop.measures.length : item.measureCount);
+            changed = true;
+        });
+
+        if (changed) {
+            this.renderSongStructure();
+        }
+    }
+
     /**
      * Initialize song structure manager
      */
@@ -60,13 +137,22 @@ class SongStructureManager {
             const response = await fetch(`/api/songs/${editingSongId}/structure`);
             if (response.ok) {
                 const data = await response.json();
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H4',location:'static/js/chords/song_structure.js:loadSongStructureFromBackend',message:'Loaded structure payload from backend',data:{editingSongId,ok:true,topKeys:Object.keys(data||{}),structureType:typeof (data&&data.structure),structureIsArray:Array.isArray(data&&data.structure),structureLen:Array.isArray(data&&data.structure)?data.structure.length:null,firstItemKeys:(Array.isArray(data&&data.structure)&&data.structure[0])?Object.keys(data.structure[0]):null,firstItemName:(Array.isArray(data&&data.structure)&&data.structure[0])?{name:data.structure[0]?.name,customName:data.structure[0]?.customName,loopName:data.structure[0]?.loopName,title:data.structure[0]?.title}:null},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion agent log
                 this.restoreSongStructure(data.structure || []);
             } else {
                 // Fallback to current loop manager data
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H5',location:'static/js/chords/song_structure.js:loadSongStructureFromBackend',message:'Backend structure request not ok; building from loops',data:{editingSongId,status:response.status,statusText:response.statusText},timestamp:Date.now()})}).catch(()=>{});
+                // #endregion agent log
                 this.buildStructureFromLoops();
             }
         } catch (error) {
             console.error("Error loading song structure from backend:", error);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H5',location:'static/js/chords/song_structure.js:loadSongStructureFromBackend',message:'Error loading structure from backend; building from loops',data:{err:String(error&&error.message||error)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion agent log
             this.buildStructureFromLoops();
         }
     }
@@ -98,12 +184,35 @@ class SongStructureManager {
      * Restore song structure from data
      */
     restoreSongStructure(structureData) {
-        this.songStructure = structureData.map((item, index) => ({
-            ...item,
-            id: item.id || (Date.now() + index),
-            repeatCount: item.repeatCount || 1
-        }));
+        // Normalize legacy/new shapes:
+        // - saved structure items use `name`, while in-memory loops use `customName`
+        // - keep both so older UI code keeps working
+        this.songStructure = (structureData || []).map((item, index) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H4',location:'static/js/chords/song_structure.js:restoreSongStructure',message:'Restoring structure item',data:{index,itemKeys:item?Object.keys(item):null,name:item?.name,customName:item?.customName,loopName:item?.loopName,title:item?.title,hasMeasures:Array.isArray(item?.measures),measuresLen:Array.isArray(item?.measures)?item.measures.length:null,measureCount:item?.measureCount,repeatCount:item?.repeatCount},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion agent log
+            const customNameRaw = (item?.customName || item?.name || '').toString().trim();
+            const customName = customNameRaw || `חלק ${index + 1}`;
+            const measures = Array.isArray(item?.measures) ? item.measures : [];
+            const measureCount =
+                typeof item?.measureCount === 'number'
+                    ? item.measureCount
+                    : (measures?.length || 0);
+
+            return {
+                ...item,
+                id: item?.id || (Date.now() + index),
+                customName,
+                name: item?.name || customName,
+                measures,
+                measureCount,
+                repeatCount: item?.repeatCount || 1,
+                sourceLoopId: item?.sourceLoopId || null
+            };
+        });
         this.renderSongStructure();
+        // Try to upgrade generic names (חלק X) based on saved loops
+        this.syncNamesAndLinksFromSavedLoops();
     }
 
     /**
@@ -120,10 +229,21 @@ class SongStructureManager {
 
         console.log("🎵 מוסיף לופ למבנה השיר:", loop);
 
+        const customNameRaw = (loop.customName || loop.name || '').toString().trim();
+        const customName = customNameRaw || `חלק ${this.songStructure.length + 1}`;
+        const measures = Array.isArray(loop.measures) ? loop.measures : [];
+        const measureCount =
+            typeof loop.measureCount === 'number' ? loop.measureCount : (measures?.length || 0);
+
         const loopCopy = {
             ...loop,
             id: Date.now() + Math.random(),
-            repeatCount: loop.repeatCount || 1
+            customName,
+            name: loop.name || customName,
+            measures,
+            measureCount,
+            repeatCount: loop.repeatCount || 1,
+            sourceLoopId: loop.id || null
         };
 
         this.songStructure.push(loopCopy);
@@ -454,7 +574,8 @@ class SongStructureManager {
             name: loop.customName,
             measures: loop.measures,
             measureCount: loop.measureCount,
-            repeatCount: loop.repeatCount || 1
+            repeatCount: loop.repeatCount || 1,
+            sourceLoopId: loop.sourceLoopId || null
         }));
     }
 

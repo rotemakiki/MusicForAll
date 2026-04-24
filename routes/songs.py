@@ -1012,6 +1012,32 @@ def update_song_chords_loops(song_id):
         # עדכן מבנה שיר אם קיים
         if "structure" in data:
             updated_fields["song_structure"] = json.dumps(data["structure"])
+            # #region agent log
+            try:
+                import time as _time
+                structure = data.get("structure")
+                first = structure[0] if isinstance(structure, list) and len(structure) > 0 else None
+                with open(r"c:\Users\rotem\Desktop\MusicForAll\.cursor\debug.log", "a", encoding="utf-8") as _f:
+                    _f.write(json.dumps({
+                        "runId": "post-fix",
+                        "hypothesisId": "H6",
+                        "location": "routes/songs.py:update_song_chords_loops",
+                        "message": "Saving chords-loops payload (structure name sample)",
+                        "data": {
+                            "song_id": song_id,
+                            "structure_count": (len(structure) if isinstance(structure, list) else None),
+                            "first_item_name": (first.get("name") if isinstance(first, dict) else None),
+                            "first_item_sourceLoopId": (first.get("sourceLoopId") if isinstance(first, dict) else None),
+                            "generic_name_count": (
+                                sum(1 for x in structure if isinstance(x, dict) and isinstance(x.get("name"), str) and __import__("re").match(r"^חלק\s+\d+$", x.get("name").strip()))
+                                if isinstance(structure, list) else None
+                            )
+                        },
+                        "timestamp": int(_time.time() * 1000)
+                    }, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
+            # #endregion agent log
 
         # שמור בדטאבייס
         firestore.client().collection("songs").document(song_id).update(updated_fields)
@@ -1112,6 +1138,27 @@ def get_song_loops(song_id):
         loops_data = []
         try:
             loops_str = song.get("loops", "[]")
+            # #region agent log
+            try:
+                import time as _time
+                with open(r"c:\Users\rotem\Desktop\MusicForAll\.cursor\debug.log", "a", encoding="utf-8") as _f:
+                    _f.write(json.dumps({
+                        "runId": "pre-fix",
+                        "hypothesisId": "H1",
+                        "location": "routes/songs.py:get_song_loops:raw",
+                        "message": "Fetched raw loops field from Firestore",
+                        "data": {
+                            "song_id": song_id,
+                            "loops_field_type": type(loops_str).__name__,
+                            "loops_field_preview": (loops_str[:200] if isinstance(loops_str, str) else None),
+                            "loops_field_is_list": isinstance(loops_str, list),
+                            "loops_field_len": (len(loops_str) if isinstance(loops_str, list) else None)
+                        },
+                        "timestamp": int(_time.time() * 1000)
+                    }, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
+            # #endregion agent log
             if isinstance(loops_str, str):
                 loops_data = json.loads(loops_str)
             else:
@@ -1119,6 +1166,34 @@ def get_song_loops(song_id):
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Error parsing loops for song {song_id}: {e}")
             loops_data = []
+
+        # #region agent log
+        try:
+            import time as _time
+            first = loops_data[0] if isinstance(loops_data, list) and len(loops_data) > 0 else None
+            with open(r"c:\Users\rotem\Desktop\MusicForAll\.cursor\debug.log", "a", encoding="utf-8") as _f:
+                _f.write(json.dumps({
+                    "runId": "pre-fix",
+                    "hypothesisId": "H1",
+                    "location": "routes/songs.py:get_song_loops:parsed",
+                    "message": "Parsed loops payload (names/keys sample)",
+                    "data": {
+                        "song_id": song_id,
+                        "loops_count": (len(loops_data) if isinstance(loops_data, list) else None),
+                        "first_item_type": (type(first).__name__ if first is not None else None),
+                        "first_item_keys": (list(first.keys()) if isinstance(first, dict) else None),
+                        "first_item_name_fields": ({
+                            "name": first.get("name"),
+                            "customName": first.get("customName"),
+                            "loopName": first.get("loopName"),
+                            "title": first.get("title")
+                        } if isinstance(first, dict) else None)
+                    },
+                    "timestamp": int(_time.time() * 1000)
+                }, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+        # #endregion agent log
 
         return jsonify({
             "song_id": song_id,
@@ -1153,6 +1228,27 @@ def get_song_structure(song_id):
         structure_data = []
         try:
             structure_str = song.get("song_structure", "[]")
+            # #region agent log
+            try:
+                import time as _time
+                with open(r"c:\Users\rotem\Desktop\MusicForAll\.cursor\debug.log", "a", encoding="utf-8") as _f:
+                    _f.write(json.dumps({
+                        "runId": "pre-fix",
+                        "hypothesisId": "H4",
+                        "location": "routes/songs.py:get_song_structure:raw",
+                        "message": "Fetched raw song_structure field from Firestore",
+                        "data": {
+                            "song_id": song_id,
+                            "structure_field_type": type(structure_str).__name__,
+                            "structure_field_preview": (structure_str[:200] if isinstance(structure_str, str) else None),
+                            "structure_field_is_list": isinstance(structure_str, list),
+                            "structure_field_len": (len(structure_str) if isinstance(structure_str, list) else None)
+                        },
+                        "timestamp": int(_time.time() * 1000)
+                    }, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
+            # #endregion agent log
             if isinstance(structure_str, str):
                 structure_data = json.loads(structure_str)
             else:
@@ -1160,6 +1256,36 @@ def get_song_structure(song_id):
         except (json.JSONDecodeError, TypeError) as e:
             print(f"Error parsing song structure for song {song_id}: {e}")
             structure_data = []
+
+        # #region agent log
+        try:
+            import time as _time
+            first = structure_data[0] if isinstance(structure_data, list) and len(structure_data) > 0 else None
+            with open(r"c:\Users\rotem\Desktop\MusicForAll\.cursor\debug.log", "a", encoding="utf-8") as _f:
+                _f.write(json.dumps({
+                    "runId": "pre-fix",
+                    "hypothesisId": "H4",
+                    "location": "routes/songs.py:get_song_structure:parsed",
+                    "message": "Parsed structure payload (names/keys sample)",
+                    "data": {
+                        "song_id": song_id,
+                        "structure_count": (len(structure_data) if isinstance(structure_data, list) else None),
+                        "first_item_type": (type(first).__name__ if first is not None else None),
+                        "first_item_keys": (list(first.keys()) if isinstance(first, dict) else None),
+                        "first_item_name_fields": ({
+                            "name": first.get("name"),
+                            "customName": first.get("customName"),
+                            "loopName": first.get("loopName"),
+                            "title": first.get("title")
+                        } if isinstance(first, dict) else None),
+                        "first_item_measureCount": (first.get("measureCount") if isinstance(first, dict) else None),
+                        "first_item_measures_len": (len(first.get("measures", [])) if isinstance(first, dict) and isinstance(first.get("measures"), list) else None),
+                    },
+                    "timestamp": int(_time.time() * 1000)
+                }, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+        # #endregion agent log
 
         return jsonify({
             "song_id": song_id,

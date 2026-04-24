@@ -647,7 +647,7 @@ function renderMeasuresByLoops(wrapper, measures) {
         const loopHeader = document.createElement("div");
         loopHeader.className = "loop-header";
 
-        let titleText = section.loop.name;
+        let titleText = section.loop.name || section.loop.customName || "חלק ללא שם";
         const totalRepeats = section.loop.repeatCount || 1;
         if (totalRepeats > 1) {
             titleText += ` - חזרה ${section.repeatNumber}/${totalRepeats}`;
@@ -899,7 +899,7 @@ function initializeSongPartsControls() {
             <label class="song-part-checkbox">
                 <input type="checkbox" ${enabledLoops.has(index) ? 'checked' : ''}
                        onchange="toggleLoopFromControls(${index})">
-                <span class="song-part-name">${loop.name}</span>
+                <span class="song-part-name">${loop.name || loop.customName || "חלק ללא שם"}</span>
             </label>
         `;
         container.appendChild(controlDiv);
