@@ -137,22 +137,13 @@ class SongStructureManager {
             const response = await fetch(`/api/songs/${editingSongId}/structure`);
             if (response.ok) {
                 const data = await response.json();
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H4',location:'static/js/chords/song_structure.js:loadSongStructureFromBackend',message:'Loaded structure payload from backend',data:{editingSongId,ok:true,topKeys:Object.keys(data||{}),structureType:typeof (data&&data.structure),structureIsArray:Array.isArray(data&&data.structure),structureLen:Array.isArray(data&&data.structure)?data.structure.length:null,firstItemKeys:(Array.isArray(data&&data.structure)&&data.structure[0])?Object.keys(data.structure[0]):null,firstItemName:(Array.isArray(data&&data.structure)&&data.structure[0])?{name:data.structure[0]?.name,customName:data.structure[0]?.customName,loopName:data.structure[0]?.loopName,title:data.structure[0]?.title}:null},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion agent log
                 this.restoreSongStructure(data.structure || []);
             } else {
                 // Fallback to current loop manager data
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H5',location:'static/js/chords/song_structure.js:loadSongStructureFromBackend',message:'Backend structure request not ok; building from loops',data:{editingSongId,status:response.status,statusText:response.statusText},timestamp:Date.now()})}).catch(()=>{});
-                // #endregion agent log
                 this.buildStructureFromLoops();
             }
         } catch (error) {
             console.error("Error loading song structure from backend:", error);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H5',location:'static/js/chords/song_structure.js:loadSongStructureFromBackend',message:'Error loading structure from backend; building from loops',data:{err:String(error&&error.message||error)},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion agent log
             this.buildStructureFromLoops();
         }
     }
@@ -188,9 +179,6 @@ class SongStructureManager {
         // - saved structure items use `name`, while in-memory loops use `customName`
         // - keep both so older UI code keeps working
         this.songStructure = (structureData || []).map((item, index) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/6e8885fe-717e-42ab-ad74-d6aff79ab431',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({runId:'pre-fix',hypothesisId:'H4',location:'static/js/chords/song_structure.js:restoreSongStructure',message:'Restoring structure item',data:{index,itemKeys:item?Object.keys(item):null,name:item?.name,customName:item?.customName,loopName:item?.loopName,title:item?.title,hasMeasures:Array.isArray(item?.measures),measuresLen:Array.isArray(item?.measures)?item.measures.length:null,measureCount:item?.measureCount,repeatCount:item?.repeatCount},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion agent log
             const customNameRaw = (item?.customName || item?.name || '').toString().trim();
             const customName = customNameRaw || `חלק ${index + 1}`;
             const measures = Array.isArray(item?.measures) ? item.measures : [];
