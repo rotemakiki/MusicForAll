@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}ניהול ז'אנרים{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 30px auto; padding: 0 16px;" dir="rtl">
+  <div style="background: rgba(255,255,255,0.95); border-radius: 18px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+    <h1 style="margin: 0 0 10px 0;">ניהול ז'אנרים</h1>
+    <p style="margin: 0 0 18px 0; color: #475569;">
+      העמוד הזה פתוח ל-Admin בלבד. הרשימה נשמרת ב-Firestore ומשפיעה על בחירת ז'אנרים בטפסי הוספה/עריכת שיר.
+    </p>
+
+    <form method="post">
+      <div style="display:grid; grid-template-columns: 1fr; gap: 18px;">
+        <div style="border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px;">
+          <h2 style="margin: 0 0 12px 0; font-size: 1.1rem;">הוספת ז'אנר חדש</h2>
+          <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items:end;">
+            <div>
+              <label for="new-genre-label" style="display:block; font-weight:700; margin-bottom: 6px; color:#0f172a;">שם לתצוגה</label>
+              <input id="new-genre-label" type="text" placeholder="למשל: קייפופ - K‑Pop" style="width:100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 12px;">
+              <div style="margin-top:6px; color:#64748b; font-size:0.85rem;">זה מה שיופיע בטופס הוספת/עריכת שיר.</div>
+            </div>
+            <div>
+              <label for="new-genre-value" style="display:block; font-weight:700; margin-bottom: 6px; color:#0f172a;">ערך פנימי</label>
+              <input id="new-genre-value" type="text" placeholder="למשל: kpop (אפשר גם בעברית)" style="width:100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 12px;">
+              <div style="margin-top:6px; color:#64748b; font-size:0.85rem;">נשמר בתוך השיר. מומלץ לא לשנות ערכים קיימים.</div>
+            </div>
+            <div style="display:flex; gap: 10px; align-items:center;">
+              <button type="button" id="add-genre-row" style="background: #0ea5e9; color:#fff; border:none; padding: 10px 14px; border-radius: 12px; font-weight: 800; cursor: pointer; white-space:nowrap;">הוסף</button>
+            </div>
+          </div>
+          <div id="genre-ui-message" style="margin-top: 10px; color:#b91c1c; font-weight:700; display:none;"></div>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px;">
+          <h2 style="margin: 0 0 12px 0; font-size: 1.1rem;">רשימת ז'אנרים</h2>
+          <div style="overflow:auto;">
+            <table style="width:100%; border-collapse: collapse; min-width: 720px;">
+              <thead>
+                <tr style="text-align:right; background: #f8fafc;">
+                  <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">שם לתצוגה</th>
+                  <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">ערך פנימי</th>
+                  <th style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 1%;">פעולות</th>
+                </tr>
+              </thead>
+              <tbody id="genres-tbody">
+                {% for g in genres %}
+                <tr class="genre-row">
+                  <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">
+                    <input class="js-genre-label" type="text" value="{{ g.label }}" style="width:100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px 10px;">
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">
+                    <input class="js-genre-value" type="text" value="{{ g.value }}" style="width:100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px 10px;">
+                  </td>
+                  <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">
+                    <button type="button" class="js-remove-genre" style="background:#ef4444; color:#fff; border:none; padding: 8px 12px; border-radius: 12px; font-weight:800; cursor:pointer; white-space:nowrap;">מחק</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <p style="margin: 12px 0 0 0; color:#64748b; font-size:0.9rem;">
+            טיפ: אפשר לערוך שורות קיימות ישירות בטבלה. אם משנים <code>value</code> של ז'אנר קיים — שירים ישנים יישארו עם הערך הישן.
+          </p>
+        </div>
+
+        <!-- Hidden JSON payload for backend -->
+        <textarea name="genres_json" id="genres_json" style="display:none;">{{ genres_json }}</textarea>
+
+        <details style="border: 1px dashed #cbd5e1; border-radius: 16px; padding: 12px;">
+          <summary style="cursor:pointer; font-weight:800; color:#0f172a;">אפשרות מתקדמת (למפתחים): צפייה/עריכת JSON</summary>
+          <div style="margin-top: 10px;">
+            <textarea id="genres_json_preview" rows="14" style="width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; direction:ltr; border-radius: 12px; padding: 12px; border: 1px solid #cbd5e1;"></textarea>
+            <div style="margin-top: 6px; color:#64748b; font-size:0.85rem;">הטופס ישמור לפי הטבלה. אם תשנה פה, זה יחליף את הטבלה בשמירה.</div>
+          </div>
+        </details>
+      </div>
+
+      <div style="display:flex; gap: 12px; margin-top: 18px; flex-wrap: wrap;">
+        <button type="submit" style="background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; border:none; padding: 12px 18px; border-radius: 12px; font-weight: 700; cursor: pointer;">שמור</button>
+        <a href="{{ url_for('songs.songs') }}" style="display:inline-flex; align-items:center; justify-content:center; padding: 12px 18px; border-radius: 12px; border:1px solid #cbd5e1; text-decoration:none; color:#0f172a; font-weight:700;">חזרה לשירים</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const tbody = document.getElementById("genres-tbody");
+    const addBtn = document.getElementById("add-genre-row");
+    const msg = document.getElementById("genre-ui-message");
+    const newLabel = document.getElementById("new-genre-label");
+    const newValue = document.getElementById("new-genre-value");
+    const hidden = document.getElementById("genres_json");
+    const preview = document.getElementById("genres_json_preview");
+
+    function showError(text) {
+      if (!msg) return;
+      msg.textContent = text;
+      msg.style.display = "block";
+    }
+    function clearError() {
+      if (!msg) return;
+      msg.textContent = "";
+      msg.style.display = "none";
+    }
+
+    function getRows() {
+      return Array.from(tbody.querySelectorAll("tr.genre-row"));
+    }
+
+    function collectFromTable() {
+      const rows = getRows();
+      const out = [];
+      const seen = new Set();
+      for (const r of rows) {
+        const labelEl = r.querySelector(".js-genre-label");
+        const valueEl = r.querySelector(".js-genre-value");
+        const label = (labelEl && labelEl.value || "").trim();
+        const value = (valueEl && valueEl.value || "").trim();
+        if (!label || !value) continue;
+        if (seen.has(value)) continue;
+        seen.add(value);
+        out.push({ value, label });
+      }
+      return out;
+    }
+
+    function syncHiddenAndPreview(from) {
+      const data = from || collectFromTable();
+      const json = JSON.stringify(data, null, 2);
+      hidden.value = json;
+      if (preview) preview.value = json;
+    }
+
+    function addRow(label, value) {
+      const tr = document.createElement("tr");
+      tr.className = "genre-row";
+      tr.innerHTML = `
+        <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">
+          <input class="js-genre-label" type="text" style="width:100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px 10px;">
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">
+          <input class="js-genre-value" type="text" style="width:100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px 10px;">
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">
+          <button type="button" class="js-remove-genre" style="background:#ef4444; color:#fff; border:none; padding: 8px 12px; border-radius: 12px; font-weight:800; cursor:pointer; white-space:nowrap;">מחק</button>
+        </td>
+      `;
+      tr.querySelector(".js-genre-label").value = label;
+      tr.querySelector(".js-genre-value").value = value;
+      tbody.appendChild(tr);
+    }
+
+    function valueExists(v) {
+      const value = (v || "").trim();
+      if (!value) return false;
+      return collectFromTable().some((g) => g.value === value);
+    }
+
+    // Initial sync
+    syncHiddenAndPreview();
+
+    // Table live updates
+    tbody.addEventListener("input", function(e) {
+      const t = e.target;
+      if (t && (t.classList.contains("js-genre-label") || t.classList.contains("js-genre-value"))) {
+        clearError();
+        syncHiddenAndPreview();
+      }
+    });
+
+    // Remove row
+    tbody.addEventListener("click", function(e) {
+      const btn = e.target && e.target.closest(".js-remove-genre");
+      if (!btn) return;
+      const row = btn.closest("tr.genre-row");
+      if (row) row.remove();
+      clearError();
+      syncHiddenAndPreview();
+    });
+
+    // Add row button
+    addBtn.addEventListener("click", function() {
+      clearError();
+      const label = (newLabel.value || "").trim();
+      const value = (newValue.value || "").trim();
+      if (!label) return showError("חסר 'שם לתצוגה'.");
+      if (!value) return showError("חסר 'ערך פנימי'. (אפשר גם בעברית)");
+      if (valueExists(value)) return showError("הערך הפנימי כבר קיים. בחר ערך אחר.");
+      addRow(label, value);
+      newLabel.value = "";
+      newValue.value = "";
+      syncHiddenAndPreview();
+      // Focus for quick entry
+      newLabel.focus();
+    });
+
+    // Allow Enter to add quickly
+    [newLabel, newValue].forEach((el) => {
+      el.addEventListener("keydown", function(ev) {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          addBtn.click();
+        }
+      });
+    });
+
+    // Advanced JSON editing: if user changes preview, use that as source of truth
+    if (preview) {
+      preview.addEventListener("change", function() {
+        clearError();
+        const raw = (preview.value || "").trim();
+        if (!raw) return;
+        try {
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("JSON חייב להיות מערך לא ריק");
+          // Rebuild table
+          tbody.innerHTML = "";
+          const seen = new Set();
+          parsed.forEach((g) => {
+            if (!g || !g.value || !g.label) return;
+            const v = String(g.value).trim();
+            const l = String(g.label).trim();
+            if (!v || !l || seen.has(v)) return;
+            seen.add(v);
+            addRow(l, v);
+          });
+          syncHiddenAndPreview();
+        } catch (err) {
+          showError("JSON לא תקין: " + (err && err.message ? err.message : "שגיאה"));
+        }
+      });
+    }
+
+    // On submit: final validation to avoid empty list
+    document.querySelector("form").addEventListener("submit", function(ev) {
+      clearError();
+      const data = collectFromTable();
+      if (!Array.isArray(data) || data.length === 0) {
+        ev.preventDefault();
+        return showError("הרשימה ריקה. הוסף לפחות ז'אנר אחד לפני שמירה.");
+      }
+      syncHiddenAndPreview(data);
+    });
+  })();
+</script>
+{% endblock %}
+

@@ -31,6 +31,77 @@ def _get_song_levels_config():
 
 songs_bp = Blueprint('songs', __name__)
 
+# =============================================================================
+# GENRES (Admin-managed catalog)
+# =============================================================================
+
+# Keep values stable: existing songs store these strings in `genres`.
+DEFAULT_GENRES = [
+    {"value": "pop", "label": "פופ - Pop"},
+    {"value": "rock", "label": "רוק - Rock"},
+    {"value": "jazz", "label": "ג'אז - Jazz"},
+    {"value": "blues", "label": "בלוז - Blues"},
+    {"value": "classical", "label": "קלאסי - Classical"},
+    {"value": "folk", "label": "פולק - Folk"},
+    {"value": "country", "label": "קאנטרי - Country"},
+    {"value": "reggae", "label": "רגיי - Reggae"},
+    {"value": "electronic", "label": "אלקטרוני - Electronic"},
+    {"value": "hip_hop", "label": "היפ הופ - Hip Hop"},
+    {"value": "r_and_b", "label": "R&B - ריתם אנד בלוז"},
+    {"value": "soul", "label": "סול - Soul"},
+    {"value": "funk", "label": "פאנק - Funk"},
+    {"value": "metal", "label": "מטאל - Metal"},
+    {"value": "punk", "label": "פאנק - Punk"},
+    {"value": "alternative", "label": "אלטרנטיב - Alternative"},
+    {"value": "indie", "label": "אינדי - Indie"},
+    {"value": "world", "label": "מוזיקת עולם - World Musica"},
+    {"value": "mizrahi", "label": "מזרחי"},
+    {"value": "israeli", "label": "ישראלי"},
+    {"value": "bossa_nova", "label": "בוסה נובה - Bossa Nova"},
+    {"value": "latin", "label": "לטיני - Latin"},
+    {"value": "other", "label": "אחר"},
+]
+
+
+def _normalize_genres_list(genres):
+    """Ensure list of {value,label} with unique values."""
+    if not isinstance(genres, list):
+        return None
+    out = []
+    seen = set()
+    for g in genres:
+        if not isinstance(g, dict):
+            return None
+        v = (g.get("value") or "").strip()
+        label = (g.get("label") or "").strip()
+        if not v or not label:
+            return None
+        if v in seen:
+            continue
+        seen.add(v)
+        out.append({"value": v, "label": label})
+    return out if out else None
+
+
+def _get_genres_config():
+    """Load genres catalog from Firestore, fallback to DEFAULT_GENRES."""
+    try:
+        db = firestore.client()
+        doc = db.collection("site_config").document("genres").get()
+        if not doc.exists:
+            return DEFAULT_GENRES
+        data = doc.to_dict() or {}
+        normalized = _normalize_genres_list(data.get("genres"))
+        return normalized or DEFAULT_GENRES
+    except Exception:
+        return DEFAULT_GENRES
+
+
+@songs_bp.route("/api/genres", methods=["GET"])
+def api_genres():
+    """Public catalog of selectable genres for song forms."""
+    return jsonify({"genres": _get_genres_config()}), 200
+
 
 def youtube_video_id(url):
     """מחלץ מזהה סרטון יוטיוב (11 תווים) מכל פורמט קישור."""
@@ -337,6 +408,45 @@ def play_song(song_id):
         "chords_lyrics_text": song.get("chords_lyrics_text", ""),
         "lyrics_text": song.get("lyrics_text", ""),
     }, can_watch_videos=can_watch_videos, can_see_teacher_notes=can_see_teacher_notes, is_localhost=request.host.startswith("localhost") or "127.0.0.1" in request.host)
+
+@songs_bp.route('/admin/genres', methods=['GET', 'POST'])
+def admin_genres():
+    """ניהול קטלוג ז'אנרים (לרשימות בחירה בטפסים) — לאדמין בלבד."""
+    if 'user_id' not in session:
+        flash("יש להתחבר כדי לגשת לעמוד זה", "error")
+        return redirect(url_for('auth.login'))
+
+    roles = get_roles(session)
+    if "admin" not in (roles or []):
+        flash("אין לך הרשאה לגשת לעמוד זה", "error")
+        return redirect(url_for('songs.songs'))
+
+    db = firestore.client()
+    genres = _get_genres_config()
+
+    if request.method == 'POST':
+        raw = (request.form.get("genres_json") or "").strip()
+        try:
+            parsed = json.loads(raw)
+            normalized = _normalize_genres_list(parsed)
+            if not normalized:
+                raise ValueError("חייב להיות מערך JSON לא ריק של אובייקטים {value,label}.")
+            db.collection("site_config").document("genres").set({
+                "genres": normalized,
+                "updated_at": datetime.utcnow(),
+                "updated_by": session.get("user_id"),
+            }, merge=True)
+            flash("קטלוג הז'אנרים עודכן בהצלחה", "success")
+            return redirect(url_for('songs.admin_genres'))
+        except Exception as e:
+            flash(f"שגיאה בשמירת הז'אנרים: {e}", "error")
+            genres = DEFAULT_GENRES
+
+    return render_template(
+        "admin_genres.html",
+        genres=genres,
+        genres_json=json.dumps(genres, ensure_ascii=False, indent=2),
+    )
 
 
 @songs_bp.route('/admin/song-levels', methods=['GET', 'POST'])

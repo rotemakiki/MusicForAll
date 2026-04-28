@@ -205,6 +205,7 @@
             <button type="button" class="levels-help-inline-btn js-open-accompaniment-levels-help" title="הסבר על רמות הליווי">רמות ליווי — מה זה אומר?</button>
             {% if 'admin' in (session.get('roles') or []) %}
                 <a href="{{ url_for('songs.admin_song_levels') }}" class="levels-help-inline-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" title="עריכת טבלאות הרמות (אדמין)">עריכת טבלאות רמות</a>
+                <a href="{{ url_for('songs.admin_genres') }}" class="levels-help-inline-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" title="ניהול ז'אנרים (אדמין)">ניהול ז'אנרים</a>
             {% endif %}
         </div>
     </div>

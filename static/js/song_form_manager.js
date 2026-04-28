@@ -124,6 +124,77 @@ function initializeNewSong() {
 
 let selectedGenres = [];
 
+const FALLBACK_GENRES_CATALOG = [
+    { value: "pop", label: "פופ - Pop" },
+    { value: "rock", label: "רוק - Rock" },
+    { value: "jazz", label: "ג'אז - Jazz" },
+    { value: "blues", label: "בלוז - Blues" },
+    { value: "classical", label: "קלאסי - Classical" },
+    { value: "folk", label: "פולק - Folk" },
+    { value: "country", label: "קאנטרי - Country" },
+    { value: "reggae", label: "רגיי - Reggae" },
+    { value: "electronic", label: "אלקטרוני - Electronic" },
+    { value: "hip_hop", label: "היפ הופ - Hip Hop" },
+    { value: "r_and_b", label: "R&B - ריתם אנד בלוז" },
+    { value: "soul", label: "סול - Soul" },
+    { value: "funk", label: "פאנק - Funk" },
+    { value: "metal", label: "מטאל - Metal" },
+    { value: "punk", label: "פאנק - Punk" },
+    { value: "alternative", label: "אלטרנטיב - Alternative" },
+    { value: "indie", label: "אינדי - Indie" },
+    { value: "world", label: "מוזיקת עולם - World Musica" },
+    { value: "mizrahi", label: "מזרחי" },
+    { value: "israeli", label: "ישראלי" },
+    { value: "bossa_nova", label: "בוסה נובה - Bossa Nova" },
+    { value: "latin", label: "לטיני - Latin" },
+    { value: "other", label: "אחר" },
+];
+
+function setGenreOptions(genreSelect, genresCatalog) {
+    if (!genreSelect) return;
+    // Keep first placeholder option only, replace the rest.
+    const first = genreSelect.querySelector("option[value='']") || genreSelect.options[0];
+    genreSelect.innerHTML = "";
+    if (first) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = first.textContent || "בחר ז'אנר";
+        genreSelect.appendChild(opt);
+    } else {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "בחר ז'אנר";
+        genreSelect.appendChild(opt);
+    }
+
+    (genresCatalog || []).forEach((g) => {
+        if (!g || !g.value || !g.label) return;
+        const opt = document.createElement("option");
+        opt.value = g.value;
+        opt.textContent = g.label;
+        genreSelect.appendChild(opt);
+    });
+}
+
+async function loadGenresCatalogAndPopulate(genreSelect) {
+    if (!genreSelect) return;
+    try {
+        const resp = await fetch("/api/genres", { method: "GET" });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (!data || !Array.isArray(data.genres) || data.genres.length === 0) {
+            throw new Error("Invalid genres payload");
+        }
+        setGenreOptions(genreSelect, data.genres);
+    } catch (e) {
+        console.warn("⚠️ לא הצלחתי לטעון קטלוג ז'אנרים מהשרת, משתמש בברירת מחדל.", e);
+        // Populate with fallback if the page template no longer contains hardcoded options.
+        if ((genreSelect.options || []).length <= 1) {
+            setGenreOptions(genreSelect, FALLBACK_GENRES_CATALOG);
+        }
+    }
+}
+
 // אינציאליזציה של מערכת ריבוי ז'אנרים
 function initializeMultiGenre() {
     const genreSelect = document.getElementById("genre");
@@ -132,6 +203,9 @@ function initializeMultiGenre() {
     const genresListInput = document.getElementById("genres-list");
 
     if (!genreSelect || !addGenreBtn) return;
+
+    // Load dynamic catalog (admin-managed) into the select.
+    loadGenresCatalogAndPopulate(genreSelect);
 
     // אירוע הוספת ז'אנר
     addGenreBtn.addEventListener("click", function() {
