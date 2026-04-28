@@ -684,14 +684,36 @@ const PLAY_METHODS = {
     LYRICS: "lyrics",
 };
 
+function syncPlayMethodHiddenTextareasFromLocalStorage() {
+    // When returning from /add-tabs, /add-chords-lyrics, /add-lyrics we persist content in localStorage.
+    // In edit/add song forms we also keep hidden <textarea> fields. If those exist, they can override
+    // localStorage values during submit, causing users to "save" old content.
+    const types = ["tabs_text", "chords_lyrics_text", "lyrics_text"];
+    types.forEach((type) => {
+        const el = document.getElementById(type);
+        if (!el) return;
+        try {
+            const fromLS = localStorage.getItem(getPlayMethodTextsStorageKey(type));
+            if (typeof fromLS === "string") {
+                el.value = fromLS;
+            }
+        } catch (e) {
+            // ignore
+        }
+    });
+}
+
 function getPlayMethodTextValue(type) {
     const el = document.getElementById(type);
-    if (el) return el.value || "";
     try {
-        return localStorage.getItem(getPlayMethodTextsStorageKey(type)) || "";
+        const v = localStorage.getItem(getPlayMethodTextsStorageKey(type));
+        // Prefer localStorage: it reflects the latest state of the dedicated editors.
+        if (v !== null && v !== undefined) return v;
     } catch (e) {
-        return "";
+        // ignore
     }
+    if (el) return el.value || "";
+    return "";
 }
 
 function getPlayMethodStorageKey() {
@@ -763,6 +785,9 @@ function handleFormSubmission(event) {
     console.log("📝 שליחת טופס:", { mode: mode.isEditMode ? "edit" : "add", songId: mode.songId });
 
     addButtonLoading(submitBtn);
+
+    // Ensure play-method textareas reflect latest editor data.
+    syncPlayMethodHiddenTextareasFromLocalStorage();
 
     // אימות כל השדות
     const fields = ['title', 'artist', 'key', 'key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url'];
@@ -1018,6 +1043,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // אתחול סרגל "דרכי נגינה" (שימוש בסיסי: החלפת תצוגה ושמירה מקומית)
     bindPlayMethodsUI();
+
+    // Hydrate hidden fields from localStorage for play methods (important after returning from editors).
+    syncPlayMethodHiddenTextareasFromLocalStorage();
 
     // בדיקה נוספת - אם יש ז'אנרים שמורים אבל לא נטענו, ננסה לטעון אותם שוב
     setTimeout(() => {

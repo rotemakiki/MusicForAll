@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
@@ -91,11 +95,14 @@ body {
 
 .lyrics-editor {
   width: 100%;
+  max-width: 100%;
+  display: block;
   border: 2px solid #e1e8ed;
   border-radius: 14px;
   padding: 12px 14px;
   font-size: 1rem;
   font-weight: 650;
+  box-sizing: border-box;
   direction: rtl;
   text-align: right;
   white-space: pre-wrap;

@@ -297,14 +297,6 @@ def play_song(song_id):
     # כתובת הטמעה לנגן באתר (youtube-nocookie.com – מגדילה סיכוי שהסרטון ינוגן)
     video_embed_url = youtube_embed_url(video_url) if video_url else ""
     tutorial_embed_url = youtube_embed_url(tutorial_url) if tutorial_url else ""
-    # #region agent log
-    try:
-        vid = youtube_video_id(video_url) if video_url else None
-        log_line = json.dumps({"id": "log_play_song_embed", "timestamp": int(datetime.now().timestamp() * 1000), "location": "songs.py:play_song", "message": "video embed url built", "data": {"video_url": video_url[:80] if video_url else "", "vid": vid, "video_embed_url": (video_embed_url[:80] if video_embed_url else "")}, "hypothesisId": "A"}) + "\n"
-        open(r"c:\Users\rotem\Desktop\MusicForAll\.cursor\debug.log", "a", encoding="utf-8").write(log_line)
-    except Exception:
-        pass
-    # #endregion
     # העברת כל הנתונים הנדרשים לטמפלייט המעודכן
     return render_template("play_song.html", song={
         "id": song_id,

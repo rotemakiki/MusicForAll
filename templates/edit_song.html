@@ -539,11 +539,29 @@
     localStorage.setItem("loops", JSON.stringify(existingLoops));
 
     // Play methods: hydrate per-song storage keys (so editors load existing content)
+    // IMPORTANT: do NOT overwrite localStorage if user just edited in dedicated editor.
     try {
-        localStorage.setItem(`play_method_edit_${songId}`, {{ song.get('play_method', 'boxes') | tojson }});
-        localStorage.setItem(`play_method_tabs_text_edit_${songId}`, {{ song.get('tabs_text', '') | tojson }});
-        localStorage.setItem(`play_method_chords_lyrics_text_edit_${songId}`, {{ song.get('chords_lyrics_text', '') | tojson }});
-        localStorage.setItem(`play_method_lyrics_text_edit_${songId}`, {{ song.get('lyrics_text', '') | tojson }});
+        const safeSet = (key, value) => {
+            try {
+                const cur = localStorage.getItem(key);
+                const curLen = (cur || "").length;
+                const nextLen = (value || "").length;
+                // Only write when there's no meaningful local value yet.
+                if (cur === null || cur === undefined || curLen === 0) {
+                    // But avoid overwriting empty with empty unnecessarily.
+                    if (nextLen > 0 || cur === null || cur === undefined) {
+                        localStorage.setItem(key, value);
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+        };
+
+        safeSet(`play_method_edit_${songId}`, {{ song.get('play_method', 'boxes') | tojson }});
+        safeSet(`play_method_tabs_text_edit_${songId}`, {{ song.get('tabs_text', '') | tojson }});
+        safeSet(`play_method_chords_lyrics_text_edit_${songId}`, {{ song.get('chords_lyrics_text', '') | tojson }});
+        safeSet(`play_method_lyrics_text_edit_${songId}`, {{ song.get('lyrics_text', '') | tojson }});
     } catch (e) {
         // ignore
     }
