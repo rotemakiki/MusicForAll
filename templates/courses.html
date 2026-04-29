@@ -21,6 +21,50 @@
             {% endif %}
         </div>
 
+        <!-- Filters -->
+        <div style="margin: 0 auto 18px; max-width: 1100px;">
+            <div style="display:flex; flex-wrap:wrap; gap: 10px; justify-content:center;">
+                <input id="courseSearch" type="text" placeholder="חיפוש לפי שם/תיאור..." style="min-width: 260px; padding: 12px 14px; border-radius: 12px; border: 2px solid #e1e8ed; font-family: inherit;">
+                <select id="instrumentFilter" style="padding: 12px 14px; border-radius: 12px; border: 2px solid #e1e8ed; font-family: inherit;">
+                    <option value="">כל כלי הנגינה</option>
+                </select>
+                <select id="accLevelFilter" style="padding: 12px 14px; border-radius: 12px; border: 2px solid #e1e8ed; font-family: inherit;">
+                    <option value="">כל רמות הליווי</option>
+                    {% for n in range(11) %}
+                        <option value="{{ n }}">ליווי {{ n }}</option>
+                    {% endfor %}
+                </select>
+                <select id="soloLevelFilter" style="padding: 12px 14px; border-radius: 12px; border: 2px solid #e1e8ed; font-family: inherit;">
+                    <option value="">כל רמות הסולו</option>
+                    {% for n in range(11) %}
+                        <option value="{{ n }}">סולו {{ n }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-top: 12px; display:flex; gap: 16px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                <div style="min-width: 320px; max-width: 520px; width: 60vw;">
+                    <div style="display:flex; justify-content:space-between; color:#334155; font-weight:800; margin-bottom: 6px;">
+                        <span>מחיר (₪)</span>
+                        <span id="priceLabel">0–0</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input id="minPrice" type="range" min="0" max="0" value="0">
+                        <input id="maxPrice" type="range" min="0" max="0" value="0">
+                    </div>
+                </div>
+                <select id="sortFilter" style="padding: 12px 14px; border-radius: 12px; border: 2px solid #e1e8ed; font-family: inherit;">
+                    <option value="new">חדשים/עודכנו לאחרונה</option>
+                    <option value="price_asc">מחיר: נמוך לגבוה</option>
+                    <option value="price_desc">מחיר: גבוה לנמוך</option>
+                    <option value="rating">דירוג</option>
+                    <option value="lessons">כמות שיעורים</option>
+                    <option value="title">שם הקורס</option>
+                </select>
+                <button id="clearFilters" type="button" style="padding: 12px 14px; border-radius: 12px; border: 2px solid #e1e8ed; background:#f8fafc; cursor:pointer; font-weight:800;">נקה סינונים</button>
+            </div>
+        </div>
+
         <div id="loadingState" class="loading-state">
             <i class="fas fa-spinner fa-spin"></i>
             <p>טוען קורסים...</p>
@@ -52,6 +96,19 @@ document.addEventListener("DOMContentLoaded", function() {
     const coursesGrid = document.getElementById("coursesGrid");
     const emptyState = document.getElementById("emptyState");
 
+    const searchEl = document.getElementById('courseSearch');
+    const instrumentEl = document.getElementById('instrumentFilter');
+    const accEl = document.getElementById('accLevelFilter');
+    const soloEl = document.getElementById('soloLevelFilter');
+    const minPriceEl = document.getElementById('minPrice');
+    const maxPriceEl = document.getElementById('maxPrice');
+    const priceLabel = document.getElementById('priceLabel');
+    const sortEl = document.getElementById('sortFilter');
+    const clearBtn = document.getElementById('clearFilters');
+
+    let allCourses = [];
+    let debounceTimer = null;
+
     fetch("/api/courses")
         .then(response => response.json())
         .then(data => {
@@ -59,7 +116,10 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if (data.success && data.courses && data.courses.length > 0) {
                 coursesGrid.style.display = "grid";
-                displayCourses(data.courses);
+                allCourses = data.courses || [];
+                hydrateInstrumentFilter(allCourses);
+                hydratePriceRange(allCourses);
+                render();
             } else {
                 emptyState.style.display = "block";
             }
@@ -70,6 +130,115 @@ document.addEventListener("DOMContentLoaded", function() {
             errorState.style.display = "block";
         });
 
+    function hydrateInstrumentFilter(courses) {
+        if (!instrumentEl) return;
+        const values = new Set();
+        courses.forEach(c => {
+            const v = (c.musical_field || '').trim();
+            if (v) values.add(v);
+        });
+        Array.from(values).sort((a,b) => String(a).localeCompare(String(b), 'he')).forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v;
+            opt.textContent = v;
+            instrumentEl.appendChild(opt);
+        });
+    }
+
+    function hydratePriceRange(courses) {
+        const prices = courses.map(c => Number(c.effective_price ?? c.price ?? 0)).filter(n => !Number.isNaN(n) && n >= 0);
+        const maxP = prices.length ? Math.max(...prices) : 0;
+        const maxRounded = Math.ceil(maxP / 10) * 10;
+        minPriceEl.max = String(maxRounded);
+        maxPriceEl.max = String(maxRounded);
+        minPriceEl.value = "0";
+        maxPriceEl.value = String(maxRounded);
+        updatePriceLabel();
+    }
+
+    function updatePriceLabel() {
+        const minV = Number(minPriceEl.value || 0);
+        const maxV = Number(maxPriceEl.value || 0);
+        priceLabel.textContent = `${Math.min(minV, maxV)}–${Math.max(minV, maxV)}`;
+    }
+
+    function normalizedSearch(s) {
+        return String(s || '').toLowerCase().trim();
+    }
+
+    function applyFilters(list) {
+        const q = normalizedSearch(searchEl.value);
+        const instrument = (instrumentEl.value || '').trim();
+        const acc = accEl.value === '' ? null : Number(accEl.value);
+        const solo = soloEl.value === '' ? null : Number(soloEl.value);
+        const minP = Math.min(Number(minPriceEl.value || 0), Number(maxPriceEl.value || 0));
+        const maxP = Math.max(Number(minPriceEl.value || 0), Number(maxPriceEl.value || 0));
+
+        return (list || []).filter(c => {
+            const title = normalizedSearch(c.title);
+            const desc = normalizedSearch(c.description);
+            const field = String(c.musical_field || '').trim();
+            const price = Number(c.effective_price ?? c.price ?? 0) || 0;
+            const tAcc = Number(c.target_accompaniment_level ?? 0);
+            const tSolo = Number(c.target_solo_level ?? 0);
+
+            if (q && !(title.includes(q) || desc.includes(q) || field.toLowerCase().includes(q))) return false;
+            if (instrument && field !== instrument) return false;
+            if (acc !== null && tAcc !== acc) return false;
+            if (solo !== null && tSolo !== solo) return false;
+            if (price < minP || price > maxP) return false;
+            return true;
+        });
+    }
+
+    function applySort(list) {
+        const sort = sortEl.value || 'new';
+        const copy = [...(list || [])];
+        if (sort === 'price_asc') copy.sort((a,b) => (Number(a.effective_price ?? a.price ?? 0) - Number(b.effective_price ?? b.price ?? 0)));
+        else if (sort === 'price_desc') copy.sort((a,b) => (Number(b.effective_price ?? b.price ?? 0) - Number(a.effective_price ?? a.price ?? 0)));
+        else if (sort === 'rating') copy.sort((a,b) => (Number(b.avg_rating || 0) - Number(a.avg_rating || 0)));
+        else if (sort === 'lessons') copy.sort((a,b) => (Number(b.lessons_count || 0) - Number(a.lessons_count || 0)));
+        else if (sort === 'title') copy.sort((a,b) => String(a.title||'').localeCompare(String(b.title||''), 'he'));
+        else copy.sort((a,b) => (String(b.updated_at || b.created_at || '')).localeCompare(String(a.updated_at || a.created_at || '')));
+        return copy;
+    }
+
+    function render() {
+        const filtered = applySort(applyFilters(allCourses));
+        coursesGrid.innerHTML = '';
+        if (!filtered.length) {
+            emptyState.style.display = 'block';
+            coursesGrid.style.display = 'none';
+            return;
+        }
+        emptyState.style.display = 'none';
+        coursesGrid.style.display = 'grid';
+        displayCourses(filtered);
+    }
+
+    function onInputDebounced() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(render, 120);
+    }
+
+    [searchEl, instrumentEl, accEl, soloEl, sortEl].forEach(el => el && el.addEventListener('input', onInputDebounced));
+    ;[instrumentEl, accEl, soloEl, sortEl].forEach(el => el && el.addEventListener('change', render));
+    ;[minPriceEl, maxPriceEl].forEach(el => el && el.addEventListener('input', () => { updatePriceLabel(); render(); }));
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (searchEl) searchEl.value = '';
+            if (instrumentEl) instrumentEl.value = '';
+            if (accEl) accEl.value = '';
+            if (soloEl) soloEl.value = '';
+            if (sortEl) sortEl.value = 'new';
+            minPriceEl.value = minPriceEl.min || '0';
+            maxPriceEl.value = maxPriceEl.max || '0';
+            updatePriceLabel();
+            render();
+        });
+    }
+
     function displayCourses(courses) {
         coursesGrid.innerHTML = "";
         
@@ -78,9 +247,15 @@ document.addEventListener("DOMContentLoaded", function() {
             courseCard.className = "course-card";
             courseCard.onclick = () => window.location.href = `/course/${course.id}`;
             
-            const priceDisplay = course.price === 0 ? 
-                '<span class="price-badge free">חינם</span>' : 
-                `<span class="price-badge paid">₪${course.price}</span>`;
+            const basePrice = Number(course.price || 0);
+            const effective = Number(course.effective_price ?? basePrice);
+            const saleActive = course.sale_state && course.sale_state.active && effective < basePrice;
+
+            const priceDisplay = (basePrice === 0) ?
+                '<span class="price-badge free">חינם</span>' :
+                (saleActive
+                    ? `<span class="price-badge paid">₪${effective} <span style="opacity:.75; text-decoration:line-through; font-weight:700; margin-right:6px;">₪${basePrice}</span></span>`
+                    : `<span class="price-badge paid">₪${basePrice}</span>`);
             
             const ratingDisplay = course.avg_rating > 0 ? 
                 `<div class="course-rating">

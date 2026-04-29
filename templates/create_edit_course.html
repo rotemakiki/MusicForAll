@@ -176,6 +176,29 @@
             </div>
 
             <div class="form-group">
+                <label>רמת הקורס לתלמידים (לסינון בעמוד הקורסים)</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                        <label for="target_accompaniment_level" style="font-weight:800; margin-bottom:6px;">רמת ליווי (0–10)</label>
+                        <select id="target_accompaniment_level" name="target_accompaniment_level">
+                            {% for n in range(11) %}
+                                <option value="{{ n }}" {{ 'selected' if course and (course.target_accompaniment_level|int) == n else '' }}>ליווי {{ n }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="target_solo_level" style="font-weight:800; margin-bottom:6px;">רמת סולו (0–10)</label>
+                        <select id="target_solo_level" name="target_solo_level">
+                            {% for n in range(11) %}
+                                <option value="{{ n }}" {{ 'selected' if course and (course.target_solo_level|int) == n else '' }}>סולו {{ n }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <small style="color: #64748b; font-size: 0.9rem;">נשתמש בזה לסינון לפי רמה בעמוד הקורסים.</small>
+            </div>
+
+            <div class="form-group">
                 <label for="description">הסבר על הקורס *</label>
                 <textarea id="description" name="description" required
                           placeholder="תאר את הקורס, מה נלמד בו, למי הוא מתאים...">{{ course.description if course else '' }}</textarea>
@@ -275,6 +298,8 @@ function saveCourse(event) {
     const courseData = {
         title: formData.get('title'),
         musical_field: formData.get('musical_field'),
+        target_accompaniment_level: parseInt(formData.get('target_accompaniment_level') || '0', 10) || 0,
+        target_solo_level: parseInt(formData.get('target_solo_level') || '0', 10) || 0,
         description: formData.get('description'),
         requirements: formData.get('requirements') || '',
         prerequisites: prerequisites,
@@ -299,7 +324,11 @@ function saveCourse(event) {
     .then(data => {
         if (data.success) {
             alert(window.courseId ? 'קורס עודכן בהצלחה!' : 'קורס נוצר בהצלחה!');
-            window.location.href = '/manage/courses';
+            if (!window.courseId && data.course_id) {
+                window.location.href = `/manage/courses/${encodeURIComponent(data.course_id)}/lessons`;
+            } else {
+                window.location.href = '/manage/courses';
+            }
         } else {
             alert(data.error || 'שגיאה בשמירת הקורס');
         }

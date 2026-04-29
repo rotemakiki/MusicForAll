@@ -128,8 +128,17 @@
                 </div>
                 {% else %}
                 <div class="price-display paid">
-                    <span class="price-amount">₪{{ course.price }}</span>
-                    <span class="price-label">לכל החיים</span>
+                    {% if course.sale_state and course.sale_state.active and course.effective_price is not none and course.effective_price < course.price %}
+                        <span class="price-amount">₪{{ course.effective_price }}</span>
+                        <span class="price-label" style="font-weight:900; color:#f59e0b;">מבצע {{ course.sale_state.discount_percent }}% לזמן מוגבל</span>
+                        <div style="margin-top:8px; color:#64748b; font-weight:800; text-decoration:line-through;">₪{{ course.price }}</div>
+                        {% if course.sale_state.ends_at_iso %}
+                            <div style="margin-top:6px; color:#334155; font-weight:800; font-size:0.95rem;">עד {{ course.sale_state.ends_at_iso[:16].replace('T',' ') }}</div>
+                        {% endif %}
+                    {% else %}
+                        <span class="price-amount">₪{{ course.price }}</span>
+                        <span class="price-label">לכל החיים</span>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
@@ -158,7 +167,7 @@
                 </a>
                 <button onclick="purchaseCourse()" class="purchase-course-btn">
                     <i class="fas fa-shopping-cart"></i>
-                    רכוש קורס (₪{{ course.price }})
+                    רכוש קורס (₪{{ course.effective_price if (course.effective_price is not none) else course.price }})
                 </button>
                 {% endif %}
                 {% endif %}
@@ -194,7 +203,7 @@
 <script>
 window.courseId = '{{ course.id }}';
 window.userId = {{ user_id | tojson or 'null' }};
-window.coursePrice = {{ course.price }};
+window.coursePrice = {{ course.effective_price if (course.effective_price is not none) else course.price }};
 
 // Star rating
 let selectedRating = 0;

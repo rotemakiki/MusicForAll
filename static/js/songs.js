@@ -375,6 +375,64 @@ async function toggleMySong(songId, element) {
     }
 }
 
+// Shared song lists picker (for teachers/students collaboration lists)
+let accessibleSongLists = null;
+
+async function initializeSongListsPickers() {
+    const selects = document.querySelectorAll('.song-list-select');
+    if (!selects || selects.length === 0) return;
+
+    try {
+        const resp = await fetch('/api/song-lists/accessible');
+        const data = await resp.json();
+        if (!data || !data.success) throw new Error((data && data.error) || 'failed');
+        accessibleSongLists = Array.isArray(data.lists) ? data.lists : [];
+    } catch (e) {
+        accessibleSongLists = [];
+    }
+
+    selects.forEach((sel) => {
+        sel.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = accessibleSongLists.length ? 'בחר רשימה…' : 'אין רשימות זמינות';
+        sel.appendChild(placeholder);
+        sel.disabled = accessibleSongLists.length === 0;
+
+        accessibleSongLists.forEach((l) => {
+            const opt = document.createElement('option');
+            opt.value = l.id;
+            opt.textContent = l.name || 'רשימה';
+            sel.appendChild(opt);
+        });
+    });
+}
+
+async function addSongToSelectedList(songId, btnEl) {
+    const root = btnEl ? btnEl.closest('.song-row') : document.getElementById(`song-${songId}`);
+    const sel = root ? root.querySelector('.song-list-select') : null;
+    const listId = sel ? (sel.value || '') : '';
+    if (!listId) {
+        showNotification('בחר רשימה לפני הוספה', 'error');
+        return;
+    }
+
+    if (btnEl) btnEl.classList.add('loading');
+    try {
+        const resp = await fetch(`/api/song-lists/${encodeURIComponent(listId)}/items/add/${encodeURIComponent(songId)}`, { method: 'POST' });
+        const data = await resp.json();
+        if (data && data.success) {
+            showNotification('השיר נוסף לרשימה', 'success');
+        } else {
+            showNotification((data && data.error) || 'שגיאה בהוספה', 'error');
+        }
+    } catch (e) {
+        showNotification('שגיאה בחיבור לשרת', 'error');
+    } finally {
+        if (btnEl) btnEl.classList.remove('loading');
+    }
+}
+
 function updateMySongButton(button, isInMyList) {
     const icon = button.querySelector('.icon');
     const text = button.querySelector('.text');
@@ -607,4 +665,5 @@ document.head.appendChild(styleSheet);
 // Initialize My Songs status when page loads
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initializeMySongsStatus, 500);
+    setTimeout(initializeSongListsPickers, 550);
 });

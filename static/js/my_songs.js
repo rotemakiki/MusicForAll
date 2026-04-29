@@ -15,7 +15,75 @@ let currentFilters = {
 document.addEventListener('DOMContentLoaded', () => {
     initializeCards();
     bindFilters();
+    initializeSongListsPickers();
 });
+
+let accessibleSongLists = null;
+
+async function initializeSongListsPickers() {
+    const selects = document.querySelectorAll('.song-list-select');
+    if (!selects || selects.length === 0) return;
+
+    try {
+        const resp = await fetch('/api/song-lists/accessible');
+        const data = await resp.json();
+        if (!data || !data.success) {
+            throw new Error((data && data.error) || 'failed');
+        }
+        accessibleSongLists = Array.isArray(data.lists) ? data.lists : [];
+    } catch (e) {
+        accessibleSongLists = [];
+    }
+
+    // Populate all selects
+    selects.forEach((sel) => {
+        const first = sel.querySelector('option[value=""]');
+        sel.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = accessibleSongLists.length ? 'בחר רשימה…' : 'אין רשימות זמינות';
+        sel.appendChild(placeholder);
+        sel.disabled = accessibleSongLists.length === 0;
+
+        accessibleSongLists.forEach((l) => {
+            const opt = document.createElement('option');
+            opt.value = l.id;
+            opt.textContent = l.name || 'רשימה';
+            sel.appendChild(opt);
+        });
+
+        // Restore placeholder if it existed
+        if (first && first.selected) sel.value = '';
+    });
+}
+
+async function addSongToListFromCard(songId, btnEl) {
+    const card = btnEl ? btnEl.closest('.song-card') : document.querySelector(`.song-card[data-song-id="${songId}"]`);
+    const sel = card ? card.querySelector('.song-list-select') : null;
+    const listId = sel ? (sel.value || '') : '';
+    if (!listId) {
+        showMessage('בחר רשימה לפני הוספה', 'error');
+        return;
+    }
+
+    if (btnEl) btnEl.classList.add('loading');
+    try {
+        const resp = await fetch(`/api/song-lists/${encodeURIComponent(listId)}/items/add/${encodeURIComponent(songId)}`, {
+            method: 'POST'
+        });
+        const data = await resp.json();
+        if (data && data.success) {
+            showMessage('השיר נוסף לרשימה', 'success');
+        } else {
+            const err = (data && data.error) || 'שגיאה בהוספה';
+            showMessage(err, 'error');
+        }
+    } catch (e) {
+        showMessage('שגיאה בחיבור לשרת', 'error');
+    } finally {
+        if (btnEl) btnEl.classList.remove('loading');
+    }
+}
 
 function initializeCards() {
     const cards = document.querySelectorAll('.song-card');

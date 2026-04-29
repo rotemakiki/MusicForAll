@@ -231,6 +231,43 @@ def song_list_detail_page(list_id):
     )
 
 
+@my_songs_bp.route('/api/song-lists/accessible', methods=['GET'])
+def api_accessible_song_lists():
+    """Lists the song lists the current user can access (owned + collaborator)."""
+    if 'user_id' not in session:
+        return jsonify({"success": False, "error": "Not logged in"}), 401
+
+    user_id = session["user_id"]
+    db = firestore.client()
+
+    lists = []
+    seen = set()
+
+    try:
+        for doc in db.collection("song_lists").where("owner_id", "==", user_id).stream():
+            d = doc.to_dict() or {}
+            if doc.id in seen:
+                continue
+            seen.add(doc.id)
+            lists.append({"id": doc.id, "name": d.get("name") or "רשימה", "role": "owner"})
+    except Exception:
+        pass
+
+    try:
+        for doc in db.collection("song_lists").where("collaborator_ids", "array_contains", user_id).stream():
+            if doc.id in seen:
+                continue
+            d = doc.to_dict() or {}
+            seen.add(doc.id)
+            lists.append({"id": doc.id, "name": d.get("name") or "רשימה", "role": "collaborator"})
+    except Exception:
+        pass
+
+    # Sort by name for usability
+    lists.sort(key=lambda x: (x.get("name") or "").strip())
+    return jsonify({"success": True, "lists": lists}), 200
+
+
 @my_songs_bp.route('/api/song-lists', methods=['POST'])
 def api_create_song_list():
     if 'user_id' not in session:

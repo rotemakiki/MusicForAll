@@ -144,6 +144,18 @@
                             <span>פתח שיר</span>
                         </a>
                     </div>
+
+                    <div class="song-actions" style="margin-top: 10px;">
+                        <div class="song-list-picker" data-song-id="{{ song.id }}">
+                            <select class="song-list-select" aria-label="בחר רשימה">
+                                <option value="">בחר רשימה…</option>
+                            </select>
+                            <button type="button" class="action-btn chords-btn song-list-add-btn" onclick="addSongToListFromCard('{{ song.id }}', this)">
+                                <span>➕</span>
+                                <span>הוסף לרשימה</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             {% endfor %}
         </div>

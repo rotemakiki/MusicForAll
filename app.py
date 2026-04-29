@@ -11,6 +11,7 @@ from routes.videos import videos_bp
 from routes.courses import courses_bp
 from routes.my_songs import my_songs_bp
 from routes.tutorials import tutorials_bp
+from routes.lessons import lessons_bp
 from routes.general import general_bp
 from routes.chords_system import chords_system_bp  # קובץ חדש
 from routes.professionals import professionals_bp
@@ -66,6 +67,7 @@ app.register_blueprint(info_bp)
 app.register_blueprint(videos_bp)
 app.register_blueprint(courses_bp)
 app.register_blueprint(tutorials_bp)
+app.register_blueprint(lessons_bp)
 app.register_blueprint(general_bp)
 app.register_blueprint(my_songs_bp)
 app.register_blueprint(products_bp)

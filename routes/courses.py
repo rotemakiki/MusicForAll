@@ -6,6 +6,55 @@ from utils.permissions import get_roles, can_manage_courses, is_admin
 
 courses_bp = Blueprint('courses', __name__)
 
+def _now_utc() -> datetime:
+    return datetime.utcnow()
+
+
+def _course_sale_state(course: dict) -> dict:
+    sale = (course or {}).get("sale") or {}
+    discount = sale.get("discount_percent")
+    end_at = sale.get("end_at")
+
+    end_dt = None
+    if isinstance(end_at, datetime):
+        end_dt = end_at
+    elif isinstance(end_at, str) and end_at.strip():
+        try:
+            s = end_at.strip()
+            if len(s) == 10:
+                end_dt = datetime.fromisoformat(s + "T00:00:00")
+            else:
+                end_dt = datetime.fromisoformat(s.replace("Z", "+00:00")).replace(tzinfo=None)
+        except Exception:
+            end_dt = None
+
+    active = False
+    if isinstance(discount, (int, float)) and discount:
+        if 1 <= int(discount) <= 90:
+            active = (end_dt is None) or (end_dt > _now_utc())
+
+    return {
+        "active": bool(active),
+        "discount_percent": int(discount) if isinstance(discount, (int, float)) else None,
+        "end_at": end_at,
+        "ends_at_iso": end_dt.isoformat() if end_dt else None,
+    }
+
+
+def _effective_course_price(course: dict) -> float:
+    price = float((course or {}).get("price") or 0)
+    if price <= 0:
+        return 0.0
+    sale_state = _course_sale_state(course)
+    if not sale_state["active"]:
+        return float(price)
+    discount = sale_state.get("discount_percent") or 0
+    try:
+        discounted = price * (1.0 - (float(discount) / 100.0))
+        return max(0.0, round(discounted, 2))
+    except Exception:
+        return float(price)
+
 # =============================================================================
 # רשימת קורסים
 # =============================================================================
@@ -26,6 +75,10 @@ def api_courses():
         for doc in courses_ref:
             course_data = doc.to_dict()
             course_data['id'] = doc.id
+
+            # Sale / effective price (for filtering + UI)
+            course_data["sale_state"] = _course_sale_state(course_data)
+            course_data["effective_price"] = _effective_course_price(course_data)
             
             # חישוב דירוג ממוצע
             ratings = course_data.get('ratings', [])
@@ -66,6 +119,10 @@ def course_detail(course_id):
         
         course = course_doc.to_dict()
         course['id'] = course_id
+
+        # Sale / effective price
+        course["sale_state"] = _course_sale_state(course)
+        course["effective_price"] = _effective_course_price(course)
         
         # בדיקת גישה למשתמש
         user_id = session.get('user_id')
@@ -239,6 +296,94 @@ def mark_lesson_watched(course_id, lesson_number):
         print(f"Error marking lesson as watched: {e}")
         return jsonify({"error": "שגיאה בסימון השיעור", "success": False}), 500
 
+
+# =============================================================================
+# API: Lesson quiz submit (MCQ)
+# =============================================================================
+
+@courses_bp.route('/api/courses/<string:course_id>/lesson/<int:lesson_number>/questions/submit', methods=['POST'])
+def submit_lesson_questions(course_id, lesson_number):
+    """Validate MCQ answers for a lesson (best-effort, minimal persistence)."""
+    if 'user_id' not in session:
+        return jsonify({"error": "נדרש התחברות", "success": False}), 401
+
+    try:
+        user_id = session['user_id']
+        data = request.get_json() or {}
+        answers = data.get("answers")
+        if not isinstance(answers, dict):
+            return jsonify({"error": "תשובות לא תקינות", "success": False}), 400
+
+        db = firestore.client()
+        course_doc = db.collection("courses").document(course_id).get()
+        if not course_doc.exists:
+            return jsonify({"error": "קורס לא נמצא", "success": False}), 404
+
+        course = course_doc.to_dict() or {}
+        lessons = course.get("lessons", []) or []
+        lesson = next((l for l in lessons if int(l.get("lesson_number") or 0) == int(lesson_number)), None)
+        if not lesson:
+            return jsonify({"error": "שיעור לא נמצא", "success": False}), 404
+
+        questions = lesson.get("questions", []) or []
+        if not questions:
+            return jsonify({"error": "אין שאלות לשיעור זה", "success": False}), 400
+
+        results = []
+        correct_count = 0
+        for qi, q in enumerate(questions):
+            try:
+                correct_idx = int(q.get("correct_answer", 0))
+            except Exception:
+                correct_idx = 0
+            raw = answers.get(f"question_{qi}")
+            try:
+                chosen = int(raw)
+            except Exception:
+                chosen = None
+            is_correct = (chosen is not None) and (chosen == correct_idx)
+            if is_correct:
+                correct_count += 1
+            results.append({
+                "question_index": qi,
+                "chosen": chosen,
+                "correct": correct_idx,
+                "is_correct": bool(is_correct),
+            })
+
+        total = len(questions)
+        score = round((correct_count / total) * 100) if total else 0
+
+        # Persist minimal attempt summary (non-blocking best-effort)
+        try:
+            user_ref = db.collection("users").document(user_id)
+            user_doc = user_ref.get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict() or {}
+                quizzes = user_data.get("course_quizzes", {}) or {}
+                cslot = quizzes.get(course_id, {}) or {}
+                cslot[str(lesson_number)] = {
+                    "score": score,
+                    "correct_count": correct_count,
+                    "total": total,
+                    "submitted_at": _now_utc(),
+                }
+                quizzes[course_id] = cslot
+                user_ref.update({"course_quizzes": quizzes})
+        except Exception:
+            pass
+
+        return jsonify({
+            "success": True,
+            "score": score,
+            "correct_count": correct_count,
+            "total": total,
+            "results": results,
+        }), 200
+    except Exception as e:
+        print(f"Error submitting lesson questions: {e}")
+        return jsonify({"error": "שגיאה בשליחת תשובות", "success": False}), 500
+
 # =============================================================================
 # API לרכישת קורס
 # =============================================================================
@@ -259,7 +404,8 @@ def purchase_course(course_id):
             return jsonify({"error": "קורס לא נמצא", "success": False}), 404
         
         course = course_doc.to_dict()
-        price = course.get('price', 0)
+        # Purchase uses effective price (supports limited-time sale)
+        price = _effective_course_price(course)
         
         if price == 0:
             return jsonify({"error": "קורס זה חינמי", "success": False}), 400
@@ -381,6 +527,9 @@ def create_course():
         course_data = {
             'title': data.get('title'),
             'musical_field': data.get('musical_field'),
+            # Target levels for students (0..10) — used for filtering
+            'target_accompaniment_level': int(data.get('target_accompaniment_level', 0) or 0),
+            'target_solo_level': int(data.get('target_solo_level', 0) or 0),
             'requirements': data.get('requirements', ''),
             'prerequisites': data.get('prerequisites', []),
             'description': data.get('description', ''),
@@ -390,6 +539,7 @@ def create_course():
             'lessons': [],
             'ratings': [],
             'is_published': data.get('is_published', False),
+            'sale': data.get('sale') if isinstance(data.get('sale'), dict) else {},
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow()
         }
@@ -431,9 +581,16 @@ def add_lesson(course_id):
         
         data = request.get_json()
         lessons = course.get('lessons', [])
-        
+
+        # If lesson_number missing/invalid, append as next.
+        try:
+            requested_num = data.get('lesson_number')
+            lesson_number = int(requested_num) if requested_num is not None else (len(lessons) + 1)
+        except Exception:
+            lesson_number = len(lessons) + 1
+
         lesson_data = {
-            'lesson_number': data.get('lesson_number'),
+            'lesson_number': lesson_number,
             'title': data.get('title'),
             'video_url': data.get('video_url'),
             'notes': data.get('notes', ''),
@@ -502,6 +659,8 @@ def api_manage_courses():
         for doc in courses_ref:
             course_data = doc.to_dict()
             course_data['id'] = doc.id
+            course_data["sale_state"] = _course_sale_state(course_data)
+            course_data["effective_price"] = _effective_course_price(course_data)
             courses.append(course_data)
         
         # מיון לפי תאריך עדכון
@@ -575,12 +734,15 @@ def update_course(course_id):
         update_data = {
             'title': data.get('title'),
             'musical_field': data.get('musical_field'),
+            'target_accompaniment_level': int(data.get('target_accompaniment_level', 0) or 0),
+            'target_solo_level': int(data.get('target_solo_level', 0) or 0),
             'requirements': data.get('requirements', ''),
             'prerequisites': data.get('prerequisites', []),
             'description': data.get('description', ''),
             'publication_date': data.get('publication_date'),
             'price': float(data.get('price', 0)),
             'is_published': data.get('is_published', False),
+            'sale': data.get('sale') if isinstance(data.get('sale'), dict) else course.get('sale', {}),
             'updated_at': datetime.utcnow()
         }
         
@@ -765,4 +927,132 @@ def delete_lesson(course_id, lesson_number):
     except Exception as e:
         print(f"Error deleting lesson: {e}")
         return jsonify({"error": "שגיאה במחיקת שיעור", "success": False}), 500
+
+
+# =============================================================================
+# API: Reorder lessons (drag & drop)
+# =============================================================================
+
+@courses_bp.route('/api/courses/<string:course_id>/lessons/reorder', methods=['POST'])
+def reorder_lessons(course_id):
+    """Reorder lessons by providing an ordered list of lesson_number values."""
+    if 'user_id' not in session:
+        return jsonify({"error": "נדרש התחברות", "success": False}), 401
+
+    user_id = session['user_id']
+    roles = get_roles(session)
+
+    try:
+        data = request.get_json() or {}
+        ordered_numbers = data.get("ordered_lesson_numbers") or []
+        if not isinstance(ordered_numbers, list) or not ordered_numbers:
+            return jsonify({"error": "סדר שיעורים לא תקין", "success": False}), 400
+
+        ordered_numbers_int = []
+        for n in ordered_numbers:
+            try:
+                ordered_numbers_int.append(int(n))
+            except Exception:
+                return jsonify({"error": "סדר שיעורים לא תקין", "success": False}), 400
+
+        db = firestore.client()
+        course_ref = db.collection("courses").document(course_id)
+        course_doc = course_ref.get()
+        if not course_doc.exists:
+            return jsonify({"error": "קורס לא נמצא", "success": False}), 404
+
+        course = course_doc.to_dict() or {}
+        if course.get('teacher_id') != user_id and not is_admin(roles):
+            return jsonify({"error": "אין הרשאה לנהל קורס זה", "success": False}), 403
+
+        lessons = course.get("lessons", []) or []
+        if not lessons:
+            return jsonify({"error": "אין שיעורים לסידור", "success": False}), 400
+
+        by_num = {}
+        for l in lessons:
+            try:
+                by_num[int(l.get("lesson_number"))] = l
+            except Exception:
+                continue
+
+        existing = sorted(by_num.keys())
+        submitted = sorted(set(ordered_numbers_int))
+        if existing != submitted:
+            return jsonify({"error": "סדר השיעורים לא תואם לקורס", "success": False}), 400
+
+        new_lessons = []
+        for idx, old_num in enumerate(ordered_numbers_int):
+            l = by_num.get(old_num) or {}
+            l["lesson_number"] = idx + 1
+            l["updated_at"] = _now_utc()
+            new_lessons.append(l)
+
+        course_ref.update({
+            "lessons": new_lessons,
+            "updated_at": _now_utc(),
+        })
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        print(f"Error reordering lessons: {e}")
+        return jsonify({"error": "שגיאה בסידור השיעורים", "success": False}), 500
+
+
+# =============================================================================
+# API: Course sale / promotion (teacher/admin)
+# =============================================================================
+
+@courses_bp.route('/api/courses/<string:course_id>/sale', methods=['PUT', 'DELETE'])
+def set_course_sale(course_id):
+    """Set or clear limited-time sale for a course."""
+    if 'user_id' not in session:
+        return jsonify({"error": "נדרש התחברות", "success": False}), 401
+
+    user_id = session['user_id']
+    roles = get_roles(session)
+
+    try:
+        db = firestore.client()
+        course_ref = db.collection("courses").document(course_id)
+        course_doc = course_ref.get()
+        if not course_doc.exists:
+            return jsonify({"error": "קורס לא נמצא", "success": False}), 404
+
+        course = course_doc.to_dict() or {}
+        if course.get('teacher_id') != user_id and not is_admin(roles):
+            return jsonify({"error": "אין הרשאה לערוך קורס", "success": False}), 403
+
+        if request.method == "DELETE":
+            course_ref.update({"sale": {}, "updated_at": _now_utc()})
+            return jsonify({"success": True, "sale_state": {"active": False}}), 200
+
+        data = request.get_json() or {}
+        try:
+            discount_percent = int(data.get("discount_percent", 0) or 0)
+        except Exception:
+            discount_percent = 0
+        end_at = (data.get("end_at") or "").strip()
+
+        if discount_percent < 1 or discount_percent > 90:
+            return jsonify({"error": "אחוז הנחה לא תקין (1–90)", "success": False}), 400
+        if not end_at:
+            return jsonify({"error": "נדרש תאריך/שעה לסיום מבצע", "success": False}), 400
+
+        sale = {
+            "discount_percent": discount_percent,
+            "end_at": end_at,
+            "updated_at": _now_utc(),
+            "created_at": (course.get("sale") or {}).get("created_at") or _now_utc(),
+        }
+        course_ref.update({"sale": sale, "updated_at": _now_utc()})
+
+        updated = {**course, "sale": sale}
+        return jsonify({
+            "success": True,
+            "sale_state": _course_sale_state(updated),
+            "effective_price": _effective_course_price(updated),
+        }), 200
+    except Exception as e:
+        print(f"Error setting sale: {e}")
+        return jsonify({"error": "שגיאה בעדכון מבצע", "success": False}), 500
 

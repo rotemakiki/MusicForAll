@@ -269,6 +269,35 @@ body {
     margin-top: 12px;
 }
 
+.song-list-picker {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+}
+
+.song-list-select {
+    flex: 1;
+    background: white;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.song-list-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.12);
+}
+
+.song-list-add-btn {
+    flex: none;
+    min-width: 140px;
+}
+
 .action-btn {
     flex: 1;
     display: flex;
@@ -496,6 +525,16 @@ body {
 
     .song-actions {
         flex-direction: column;
+    }
+
+    .song-list-picker {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .song-list-add-btn {
+        width: 100%;
+        min-width: auto;
     }
 
     .action-btn {

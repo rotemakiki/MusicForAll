@@ -193,8 +193,24 @@ function submitAnswers(event) {
         answers[key] = value;
     }
     
-    // Here you would send answers to server for validation
-    alert('תשובות נשלחו! (פונקציונליות זו תתווסף בהמשך)');
+    fetch(`/api/courses/{{ course.id }}/lesson/{{ lesson.lesson_number }}/questions/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data || !data.success) {
+            alert((data && data.error) || 'שגיאה בשליחת תשובות');
+            return;
+        }
+        const msg = `ציון: ${data.score}% (${data.correct_count}/${data.total})`;
+        alert(msg);
+    })
+    .catch(err => {
+        console.error(err);
+        alert('שגיאה בשליחת תשובות');
+    });
 }
 
 window.userId = {{ user_id | tojson or 'null' }};

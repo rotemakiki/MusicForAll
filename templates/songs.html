@@ -303,6 +303,16 @@
                                     <span class="icon">❤️</span>
                                     <span class="text">הוסף לשירים שלי</span>
                                 </button>
+
+                                <div class="song-list-picker" data-song-id="{{ song.id }}">
+                                    <select class="song-list-select" aria-label="בחר רשימה">
+                                        <option value="">בחר רשימה…</option>
+                                    </select>
+                                    <button type="button" class="action-btn song-list-add-btn" onclick="addSongToSelectedList('{{ song.id }}', this)">
+                                        <span>➕</span>
+                                        <span>הוסף לרשימה</span>
+                                    </button>
+                                </div>
                             {% else %}
                                 <a href="{{ url_for('auth.login') }}" class="action-btn my-songs-btn guest-add-my-songs" title="התחבר עם משתמש רשום כדי להוסיף שירים לרשימה שלך">
                                     <span class="icon">❤️</span>

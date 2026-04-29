@@ -111,7 +111,13 @@
                         <li class="menu-item">
                             <a href="{{ url_for('tutorials.tutorials') }}" class="menu-link">
                                 <i class="fas fa-book"></i>
-                                <span>שיעורים בודדים</span>
+                                <span>הדרכות</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('lessons.lessons_list') }}" class="menu-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>שיעורים</span>
                             </a>
                         </li>
                         {% if 'admin' in roles or 'teacher' in roles or 'musician' in roles %}
@@ -228,7 +234,13 @@
                         <li class="menu-item">
                             <a href="{{ url_for('tutorials.tutorials') }}" class="menu-link">
                                 <i class="fas fa-book"></i>
-                                <span>שיעורים בודדים</span>
+                                <span>הדרכות</span>
+                            </a>
+                        </li>
+                        <li class="menu-item">
+                            <a href="{{ url_for('lessons.lessons_list') }}" class="menu-link">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span>שיעורים</span>
                             </a>
                         </li>
                         {% if 'admin' in roles or 'teacher' in roles or 'musician' in roles %}

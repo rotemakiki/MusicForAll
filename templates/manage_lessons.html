@@ -45,6 +45,64 @@
     transition: all 0.3s ease;
 }
 
+.lesson-item-manage[draggable="true"] {
+    cursor: grab;
+}
+.lesson-item-manage.dragging {
+    opacity: 0.55;
+    transform: scale(0.99);
+}
+.lesson-item-manage.drop-target {
+    outline: 3px dashed #667eea;
+    outline-offset: 6px;
+}
+.reorder-toolbar {
+    display: none;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    background: #f8f9ff;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+.reorder-toolbar .hint {
+    color: #475569;
+    font-weight: 700;
+}
+.reorder-toolbar .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.reorder-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.reorder-btn.secondary {
+    background: #e1e8ed;
+    color: #0f172a;
+}
+.drag-handle {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: #e2e8f0;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
 .lesson-item-manage:hover {
     border-color: #667eea;
     transform: translateX(-5px);
@@ -167,11 +225,20 @@
             </button>
         </div>
 
+            <div id="reorderToolbar" class="reorder-toolbar">
+                <div class="hint">סידור שיעורים: גרור/י שיעור למעלה/למטה ואז שמור.</div>
+                <div class="actions">
+                    <button type="button" class="reorder-btn secondary" onclick="discardReorder()">בטל שינוי סדר</button>
+                    <button type="button" class="reorder-btn" onclick="saveReorder()">שמור סדר</button>
+                </div>
+            </div>
+
         <div id="lessonsList" class="lessons-list-manage">
             {% if course.lessons and course.lessons|length > 0 %}
                 {% for lesson in course.lessons %}
-                <div class="lesson-item-manage">
+                <div class="lesson-item-manage" draggable="true" data-lesson-number="{{ lesson.lesson_number }}">
                     <div class="lesson-info-manage" style="display: flex; align-items: center;">
+                        <span class="drag-handle" title="גרירה לסידור">≡</span>
                         <span class="lesson-number-manage">{{ lesson.lesson_number }}</span>
                         <div>
                             <div class="lesson-title-manage">{{ lesson.title }}</div>
@@ -403,26 +470,17 @@ function saveLesson(event) {
     // איסוף שאלות
     const questions = [];
     const questionTexts = formData.getAll('question_text[]');
-    const questionIndices = [];
-    questionTexts.forEach((_, index) => {
-        questionIndices.push(index);
-    });
-    
-    questionIndices.forEach((qIndex) => {
-        const questionText = questionTexts[qIndex];
-        if (!questionText) return;
+    questionTexts.forEach((questionText, qIndex) => {
+        const qt = (questionText || '').trim();
+        if (!qt) return;
         
-        const answers = [];
-        for (let i = 0; i < 4; i++) {
-            const answer = formData.get(`answer_${qIndex}[]`);
-            if (answer) answers.push(answer);
-        }
+        const answers = formData.getAll(`answer_${qIndex}[]`).map(a => (a || '').trim()).filter(Boolean);
         
         const correctAnswer = parseInt(formData.get(`correct_answer_${qIndex}`) || '0');
         
         if (answers.length > 0) {
             questions.push({
-                question: questionText,
+                question: qt,
                 answers: answers,
                 correct_answer: correctAnswer
             });
@@ -499,6 +557,115 @@ window.onclick = function(event) {
         closeLessonModal();
     }
 }
+
+// =============================================================================
+// Drag & drop reorder (lessons)
+// =============================================================================
+let reorderDirty = false;
+let originalOrder = null;
+
+function snapshotOrder() {
+    const items = Array.from(document.querySelectorAll('.lesson-item-manage[data-lesson-number]'));
+    return items.map(el => parseInt(el.dataset.lessonNumber, 10)).filter(n => !Number.isNaN(n));
+}
+
+function showReorderToolbar(show) {
+    const tb = document.getElementById('reorderToolbar');
+    if (!tb) return;
+    tb.style.display = show ? 'flex' : 'none';
+}
+
+function markReorderDirty() {
+    if (!originalOrder) originalOrder = snapshotOrder();
+    reorderDirty = true;
+    showReorderToolbar(true);
+}
+
+function discardReorder() {
+    if (!originalOrder) return;
+    const list = document.getElementById('lessonsList');
+    if (!list) return;
+    const byNum = new Map();
+    Array.from(list.querySelectorAll('.lesson-item-manage[data-lesson-number]')).forEach(el => {
+        byNum.set(parseInt(el.dataset.lessonNumber, 10), el);
+    });
+    originalOrder.forEach(n => {
+        const el = byNum.get(n);
+        if (el) list.appendChild(el);
+    });
+    reorderDirty = false;
+    showReorderToolbar(false);
+}
+
+async function saveReorder() {
+    const ordered = snapshotOrder();
+    if (!ordered.length) return;
+    try {
+        const res = await fetch(`/api/courses/${encodeURIComponent(window.courseId)}/lessons/reorder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ordered_lesson_numbers: ordered }),
+        });
+        const data = await res.json();
+        if (!data || !data.success) {
+            alert((data && data.error) || 'שגיאה בשמירת סדר השיעורים');
+            return;
+        }
+        alert('סדר השיעורים נשמר בהצלחה');
+        location.reload();
+    } catch (e) {
+        console.error(e);
+        alert('שגיאה בשמירת סדר השיעורים');
+    }
+}
+
+function initReorderDnD() {
+    const list = document.getElementById('lessonsList');
+    if (!list) return;
+
+    let dragged = null;
+
+    const items = Array.from(list.querySelectorAll('.lesson-item-manage[draggable="true"]'));
+    items.forEach(el => {
+        el.addEventListener('dragstart', (e) => {
+            dragged = el;
+            el.classList.add('dragging');
+            if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', el.dataset.lessonNumber || '');
+            }
+        });
+        el.addEventListener('dragend', () => {
+            el.classList.remove('dragging');
+            Array.from(list.querySelectorAll('.lesson-item-manage.drop-target')).forEach(x => x.classList.remove('drop-target'));
+        });
+        el.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!dragged || dragged === el) return;
+            el.classList.add('drop-target');
+        });
+        el.addEventListener('dragleave', () => el.classList.remove('drop-target'));
+        el.addEventListener('drop', (e) => {
+            e.preventDefault();
+            el.classList.remove('drop-target');
+            if (!dragged || dragged === el) return;
+
+            const rect = el.getBoundingClientRect();
+            const before = (e.clientY - rect.top) < (rect.height / 2);
+            if (before) {
+                list.insertBefore(dragged, el);
+            } else {
+                list.insertBefore(dragged, el.nextSibling);
+            }
+            markReorderDirty();
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    originalOrder = snapshotOrder();
+    initReorderDnD();
+});
 </script>
 {% endblock %}
 
