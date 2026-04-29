@@ -21,15 +21,8 @@ def _teacher_song_ids(db, teacher_id: str, limit: int = 200) -> set:
 
 @teachers_bp.route('/teachers')
 def list_teachers():
-    users_ref = firestore.client().collection("users").stream()
-    teachers = []
-    for doc in users_ref:
-        user = doc.to_dict()
-        user["id"] = doc.id
-        roles = user.get("roles", [])
-        if "teacher" in roles:
-            teachers.append(user)
-    return render_template('teachers.html', teachers=teachers)
+    # Backward-compatible: keep old URL working, but route users to the unified directory.
+    return redirect(url_for("professionals.list_professionals", type="teacher"), code=302)
 
 @teachers_bp.route('/teacher/<string:teacher_id>')
 def teacher_profile(teacher_id):

@@ -163,12 +163,12 @@
 
             <div class="feature-card">
                 <span class="feature-icon">👨‍🏫</span>
-                <h3 class="feature-title">מצא מורה</h3>
-                <p class="feature-description">חפש מורה מקצועי שמתמחה בסגנון שאתה אוהב ותתחיל ללמוד עם המיטב שיש.</p>
+                <h3 class="feature-title">מצא אנשי מקצוע</h3>
+                <p class="feature-description">חפש מורה, אולפן, נגן (סשניסט) ועוד — ותתחיל להתקדם עם המיטב שיש.</p>
                 <div style="margin-top: 20px;">
-                    <a href="{{ url_for('teachers.list_teachers') }}" class="hero-btn">
+                    <a href="{{ url_for('professionals.list_professionals') }}" class="hero-btn">
                         <span>🔍</span>
-                        <span>מורים</span>
+                        <span>אנשי מקצוע</span>
                     </a>
                 </div>
             </div>
@@ -184,6 +184,27 @@
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Songs (Guest) -->
+<section class="features-section" id="recent-songs-guest-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">שירים שנוספו לאחרונה</h2>
+            <p class="section-subtitle">כמה שירים חדשים שכדאי לגלות</p>
+        </div>
+
+        <div class="recent-songs-guest-grid" id="recent-songs-guest-grid">
+            <div class="recent-songs-guest-loading" id="recent-songs-guest-loading">טוען שירים…</div>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+            <a href="{{ url_for('songs.songs') }}" class="hero-btn">
+                <span>🎵</span>
+                <span>לעמוד השירים</span>
+            </a>
         </div>
     </div>
 </section>

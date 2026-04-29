@@ -42,11 +42,13 @@ function buildSongCardHTML(song) {
     const bpm = song.bpm != null ? Number(song.bpm) : 0;
     const genre = escapeHtml(song.genre || 'ללא ז\'אנר');
     const keyType = escapeHtml(song.key_type || '');
+    const albumImageUrl = escapeHtml(song.album_image_url || '');
+    const coverHtml = albumImageUrl
+        ? `<img class="song-cover-img" src="${albumImageUrl}" alt="תמונת אלבום של ${title}" loading="lazy">`
+        : `<div class="song-cover-placeholder" aria-hidden="true">🎵</div>`;
     return `
             <div class="video-card">
-                <div style="height: 200px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; border-radius: 15px 15px 0 0;">
-                    🎵
-                </div>
+                <div class="song-cover">${coverHtml}</div>
                 <div class="video-info">
                     <h3 class="video-title">${title}</h3>
                     <div class="video-meta">

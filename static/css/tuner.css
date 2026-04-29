@@ -1,34 +1,28 @@
 /* Guitar Tuner Styles */
 
-/* טיונר - צד שמאלי עליון בכל הדפים - קומפקטי כשסגור */
-.tuner-global-anchor {
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    z-index: 1000;
+/* טיונר - ממורכז בתוך עמוד הכלי */
+.tuner-page-anchor{
+    width: 100%;
+    display: flex;
+    justify-content: center;
     direction: rtl;
 }
 
-.tuner-global-anchor .tuner-container {
-    margin-bottom: 0;
-}
-
-/* מצב סגור - מינימלי כדי שלא יסתיר BPM וכפתור נגינה */
+/* כרטיס טיונר בתוך עמוד הכלי */
 .tuner-container {
     background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
     border: 1px solid #4a90e2;
     border-radius: 8px;
-    padding: 4px 6px;
-    margin-bottom: 0;
+    padding: 12px;
+    margin: 0;
     box-shadow: 0 2px 6px rgba(74, 144, 226, 0.2);
-    max-width: 140px;
+    width: min(720px, 100%);
 }
 
 .tuner-container.tuner-open {
-    padding: 12px;
     border-width: 2px;
     border-radius: 12px;
-    max-width: none;
+    padding: 12px;
     box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
 }
 
@@ -47,7 +41,7 @@
 .tuner-header h3 {
     margin: 0;
     color: #2c3e50;
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -64,8 +58,8 @@
     color: white;
     border: none;
     border-radius: 6px;
-    padding: 3px 6px;
-    font-size: 9px;
+    padding: 6px 12px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;

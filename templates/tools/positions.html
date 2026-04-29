@@ -198,6 +198,18 @@
         background: rgba(102, 126, 234, 0.10);
     }
 
+    /* Root note on the neck should stand out (independent of highlight mode). */
+    .guitar-neck td.note-root {
+        background: rgba(67, 56, 202, 0.22);
+        outline: 2px solid rgba(67, 56, 202, 0.78);
+        outline-offset: -3px;
+    }
+
+    .guitar-neck td.note-root .note-text {
+        color: #1e1b4b;
+        font-weight: 950;
+    }
+
     /* Scale-only cells when an chord is selected: stay in the scale but visually step back */
     .guitar-neck td.note-scale-muted {
         background: rgba(102, 126, 234, 0.045);
@@ -226,6 +238,12 @@
         color: #022c22;
         font-weight: 950;
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    /* Keep root note visible even when chord highlighting is active */
+    .guitar-neck td.note-highlight-chord.note-root {
+        outline: 2px solid rgba(67, 56, 202, 0.82);
+        outline-offset: -3px;
     }
 
     .note-text {
@@ -335,11 +353,11 @@
     const STANDARD_TUNING = [TUNING_SEMITONES["E"], TUNING_SEMITONES["A"], TUNING_SEMITONES["D"], TUNING_SEMITONES["G"], TUNING_SEMITONES["B"], TUNING_SEMITONES["E"]];
     const STANDARD_TUNING_LABELS = ["E", "A", "D", "G", "B", "E"];
 
-    /** Row 0 = low E (shown as "e"), row 5 = high E (shown as "E") for clear distinction. */
+    /** Use `e` for the high E (top string) and `E` for the low E (bottom string). */
     function guitarStringLabel(stringIndex) {
-        if (stringIndex === 0) return "e string";
-        if (stringIndex === 5) return "E string";
-        return STANDARD_TUNING_LABELS[stringIndex] + " string";
+        if (stringIndex === 5) return "e";
+        if (stringIndex === 0) return "E";
+        return STANDARD_TUNING_LABELS[stringIndex];
     }
 
     function mod12(n) {
@@ -586,14 +604,17 @@
 
                 const inScale = scaleSet.has(noteName);
                 const inHighlight = highlightSet.has(noteName);
+                const isRoot = noteName === rootNote;
 
                 if (inScale) td.classList.add("note-scale");
                 if (chordHighlight) {
                     if (inHighlight) td.classList.add("note-highlight-chord");
-                    else if (inScale) td.classList.add("note-scale-muted");
+                    else if (inScale && !isRoot) td.classList.add("note-scale-muted");
                 } else if (inHighlight) {
                     td.classList.add("note-highlight");
                 }
+
+                if (isRoot) td.classList.add("note-root");
 
                 const inner = document.createElement("span");
                 inner.className = "note-text";

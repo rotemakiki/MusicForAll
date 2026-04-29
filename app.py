@@ -13,6 +13,7 @@ from routes.my_songs import my_songs_bp
 from routes.tutorials import tutorials_bp
 from routes.general import general_bp
 from routes.chords_system import chords_system_bp  # קובץ חדש
+from routes.professionals import professionals_bp
 from datetime import datetime, timezone
 import os
 
@@ -69,6 +70,7 @@ app.register_blueprint(general_bp)
 app.register_blueprint(my_songs_bp)
 app.register_blueprint(products_bp)
 app.register_blueprint(chords_system_bp)  # הוספת המערכת החדשה
+app.register_blueprint(professionals_bp)
 
 
 @app.context_processor
@@ -286,6 +288,8 @@ def after_request(response):
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
         "img-src 'self' data: https: blob:; "
         "font-src 'self' https://cdnjs.cloudflare.com; "
+        # Allow <video>/<audio> sources from Firebase/GCS (and same-origin).
+        "media-src 'self' https: blob:; "
         "frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://youtube-nocookie.com https://*.youtube.com https://*.youtube-nocookie.com; "
         "connect-src 'self' https://*.googleapis.com; "
     )

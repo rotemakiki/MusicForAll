@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}אנשי מקצוע{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/professionals.css') }}">
+
+<div class="professionals-container">
+    <div class="professionals-card">
+        <div class="page-header">
+            <h1 class="page-title">🎵 אנשי מקצוע</h1>
+            <p class="page-subtitle">מצא מורים, אולפנים, נגנים ועוד — לפי תחום, אזור, שפה ודירוג</p>
+        </div>
+
+        <div class="filters-and-results">
+            <aside class="filters-panel" aria-label="פילטרים">
+                <div class="filters-title">
+                    <i class="fas fa-filter"></i>
+                    <span>סינון</span>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filter-type">תחום</label>
+                    <select id="filter-type" class="filter-select">
+                        <option value="">הכל</option>
+                        {% for t in type_options %}
+                            <option value="{{ t.id }}" {% if initial_type == t.id %}selected{% endif %}>{{ t.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filter-area">אזור בארץ</label>
+                    <select id="filter-area" class="filter-select">
+                        <option value="">הכל</option>
+                        {% for a in area_options %}
+                            <option value="{{ a }}">{{ a }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filter-language">שפה</label>
+                    <select id="filter-language" class="filter-select">
+                        <option value="">הכל</option>
+                        {% for lang in language_options %}
+                            <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filter-rating">דירוג</label>
+                    <select id="filter-rating" class="filter-select">
+                        <option value="">הכל</option>
+                        <option value="4">4+ כוכבים</option>
+                        <option value="3">3+ כוכבים</option>
+                        <option value="2">2+ כוכבים</option>
+                    </select>
+                </div>
+
+                <div class="filters-divider"></div>
+
+                <div class="teacher-filters" id="teacher-filters">
+                    <div class="filters-subtitle">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>סינון נוסף למורים</span>
+                    </div>
+
+                    <label class="toggle-row">
+                        <input type="checkbox" id="filter-teacher-available">
+                        <span>זמין לקבלת תלמידים</span>
+                    </label>
+
+                    <label class="toggle-row">
+                        <input type="checkbox" id="filter-teacher-online">
+                        <span>מלמד מרחוק (זום)</span>
+                    </label>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="filter-teacher-genre">מומחה בז׳אנר</label>
+                        <input id="filter-teacher-genre" class="filter-input" placeholder="לדוגמה: בלוז">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="filter-teacher-lesson-type">סוג שיעור</label>
+                        <select id="filter-teacher-lesson-type" class="filter-select">
+                            <option value="">הכל</option>
+                            <option value="private">פרטי</option>
+                            <option value="group">קבוצתי</option>
+                            <option value="both">גם וגם</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="reset-btn" id="filters-reset" type="button">
+                    <i class="fas fa-rotate-left"></i>
+                    <span>איפוס פילטרים</span>
+                </button>
+            </aside>
+
+            <section class="results-panel" aria-label="תוצאות">
+                <div class="results-header">
+                    <div class="results-count" id="results-count"></div>
+                </div>
+
+                {% if professionals %}
+                    <div class="professionals-grid" id="professionals-grid">
+                        {% for p in professionals %}
+                            <div
+                                class="pro-card"
+                                data-types="{{ (p.professional_types or []) | join(',') }}"
+                                data-areas="{{ (p.areas or []) | join(',') }}"
+                                data-languages="{{ (p.languages or []) | join(',') }}"
+                                data-location="{{ p.location }}"
+                                data-rating="{{ p.rating_avg if p.rating_avg is not none else '' }}"
+                                data-teacher-available="{{ '1' if p.teacher_is_available else '0' }}"
+                                data-teacher-online="{{ '1' if p.teacher_teaches_online else '0' }}"
+                                data-teacher-genres="{{ (p.teacher_genres or []) | join(',') }}"
+                                data-teacher-lesson-type="{{ p.teacher_lesson_type }}"
+                                onclick="window.location.href='{{ url_for('teachers.teacher_profile', teacher_id=p.id) if 'teacher' in (p.professional_types or []) else url_for('teachers.musician_profile', musician_id=p.id) }}'"
+                            >
+                                <div class="pro-avatar">
+                                    {% if p.profile_image %}
+                                        <img src="{{ p.profile_image }}" alt="{{ p.username }}" class="avatar-img">
+                                    {% else %}
+                                        <div class="avatar-placeholder">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="pro-info">
+                                    <h3 class="pro-name">{{ p.username }}</h3>
+
+                                    <div class="pro-tags">
+                                        {% for t in p.professional_types %}
+                                            <span class="tag">{{ type_labels.get(t, t) }}</span>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="pro-meta">
+                                        {% if p.location %}
+                                            <div class="meta-row">
+                                                <i class="fas fa-location-dot"></i>
+                                                <span>{{ p.location }}</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if p.languages %}
+                                            <div class="meta-row">
+                                                <i class="fas fa-language"></i>
+                                                <span>{{ p.languages | join(' • ') }}</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if p.rating_avg is not none %}
+                                            <div class="meta-row">
+                                                <i class="fas fa-star"></i>
+                                                <span>{{ "%.1f"|format(p.rating_avg) }} / 5</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="pro-actions">
+                                    <button class="view-profile-btn" type="button">
+                                        <i class="fas fa-eye"></i>
+                                        <span>צפה בפרופיל</span>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>אין אנשי מקצוע להצגה</h3>
+                        <p>ברגע שיהיו מורים/אנשי מקצוע נוספים, הם יופיעו כאן.</p>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/professionals.js') }}"></script>
+{% endblock %}
+

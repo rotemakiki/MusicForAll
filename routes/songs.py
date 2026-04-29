@@ -824,6 +824,7 @@ def _song_card_payload(song, doc_id):
         "key_type": song.get("key_type") or "",
         "bpm": song.get("bpm") or 0,
         "genre": _genre_display_line(song),
+        "album_image_url": song.get("album_image_url") or "",
     }
     return out
 

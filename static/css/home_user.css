@@ -223,6 +223,34 @@ body {
     background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
 }
 
+.video-card .song-cover {
+    width: 100%;
+    height: 200px;
+    border-radius: 15px 15px 0 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-card .song-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.video-card .song-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #667eea;
+}
+
 .video-info {
     padding: 20px;
     direction: rtl;
@@ -519,6 +547,10 @@ body {
     }
 
     .video-card video {
+        height: 160px;
+    }
+
+    .video-card .song-cover {
         height: 160px;
     }
 

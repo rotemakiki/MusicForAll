@@ -7,9 +7,62 @@ document.addEventListener('DOMContentLoaded', function() {
     initStatsCounter();
     initParallax();
     initVideoModal();
+    loadRecentSongsGuest();
 
     console.log('🎵 Home Guest page loaded with enhanced features');
 });
+
+function escapeHtml(str) {
+    if (str == null || str === '') return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function buildGuestSongCard(song) {
+    const id = escapeHtml(song.id);
+    const title = escapeHtml(song.title);
+    const artist = escapeHtml(song.artist);
+    const albumImageUrl = escapeHtml(song.album_image_url || '');
+
+    const cover = albumImageUrl
+        ? `<img src="${albumImageUrl}" alt="תמונת אלבום של ${title}" loading="lazy">`
+        : `<div class="song-cover-placeholder" aria-hidden="true">🎵</div>`;
+
+    return `
+        <a class="guest-song-card" href="/play/${id}">
+            <div class="guest-song-cover">${cover}</div>
+            <div class="guest-song-meta">
+                <div class="guest-song-title">${title}</div>
+                <div class="guest-song-artist">${artist}</div>
+            </div>
+        </a>
+    `;
+}
+
+function loadRecentSongsGuest() {
+    const grid = document.getElementById('recent-songs-guest-grid');
+    const loading = document.getElementById('recent-songs-guest-loading');
+    if (!grid) return;
+
+    fetch('/api/recent_songs')
+        .then((r) => r.json())
+        .then((data) => {
+            const songs = (data && data.success && Array.isArray(data.songs)) ? data.songs : [];
+            if (loading) loading.remove();
+            if (songs.length === 0) {
+                grid.innerHTML = `<div class="recent-songs-guest-empty">אין שירים להצגה כרגע.</div>`;
+                return;
+            }
+            grid.innerHTML = songs.slice(0, 12).map(buildGuestSongCard).join('');
+        })
+        .catch(() => {
+            if (loading) loading.remove();
+            grid.innerHTML = `<div class="recent-songs-guest-empty">לא הצלחתי לטעון שירים כרגע.</div>`;
+        });
+}
 
 // Floating musical notes animation
 function initFloatingNotes() {

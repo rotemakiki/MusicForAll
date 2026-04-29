@@ -79,17 +79,10 @@ class GuitarTuner {
                 </div>
             `;
             
-            // Insert into global top-left anchor (all pages) - צד שמאלי עליון
-            const globalAnchor = document.getElementById('tuner-global-anchor');
-            if (globalAnchor) {
-                globalAnchor.appendChild(container);
-            } else {
-                // Fallback: insert into controls panel (e.g. old play_song layout)
-                const controlsPanel = document.querySelector('.controls-panel');
-                if (controlsPanel) {
-                    controlsPanel.insertBefore(container, controlsPanel.firstChild);
-                }
-            }
+            // Insert into tool page anchor (centered within the white card)
+            const pageAnchor = document.getElementById('tuner-page-anchor');
+            if (!pageAnchor) return;
+            pageAnchor.appendChild(container);
         }
     }
     
@@ -120,6 +113,17 @@ class GuitarTuner {
     
     async startListening() {
         try {
+            // getUserMedia requires a secure context (HTTPS) except for localhost.
+            // If the app is opened via LAN IP / non-secure origin, the mic will be blocked.
+            if (!window.isSecureContext) {
+                const host = window.location.hostname;
+                const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+                if (!isLocalhost) {
+                    alert('הדפדפן חוסם מיקרופון על HTTP. פתח את האתר ב-HTTPS או דרך localhost (127.0.0.1).');
+                    return;
+                }
+            }
+
             // Request microphone access with RAW audio - no voice processing.
             // Browsers default to echoCancellation + noiseSuppression + autoGainControl
             // which filter out guitar and favor speech; we need the actual guitar sound.
@@ -157,7 +161,8 @@ class GuitarTuner {
             
         } catch (error) {
             console.error('Error accessing microphone:', error);
-            alert('לא ניתן לגשת למיקרופון. אנא ודא שהרשאת גישה למיקרופון ניתנה.');
+            const msg = (error && error.name) ? ` (${error.name})` : '';
+            alert(`לא ניתן לגשת למיקרופון${msg}. אנא ודא שהרשאת גישה למיקרופון ניתנה (וגם שלא פתוח בטאב אחר).`);
         }
     }
     
@@ -218,39 +223,74 @@ class GuitarTuner {
     }
     
     detectPitch() {
-        // Autocorrelation method for pitch detection
+        // Robust autocorrelation pitch detection (ACF2+ style)
+        // Works better for guitar than naive max-correlation scanning.
         const sampleRate = this.audioContext.sampleRate;
-        const bufferLength = this.dataArray.length;
-        
-        // Find the period using autocorrelation
-        let maxCorrelation = 0;
-        let bestPeriod = 0;
-        
-        const minPeriod = Math.floor(sampleRate / 1000); // 1000 Hz max
-        const maxPeriod = Math.floor(sampleRate / 50);   // 50 Hz min
-        
-        for (let period = minPeriod; period < maxPeriod && period < bufferLength / 2; period++) {
-            let correlation = 0;
-            for (let i = 0; i < bufferLength - period; i++) {
-                correlation += this.dataArray[i] * this.dataArray[i + period];
+        const buf = this.dataArray;
+        const size = buf.length;
+
+        // RMS gate (ignore silence / noise)
+        let rms = 0;
+        let mean = 0;
+        for (let i = 0; i < size; i++) mean += buf[i];
+        mean /= size;
+        for (let i = 0; i < size; i++) {
+            const v = buf[i] - mean;
+            rms += v * v;
+        }
+        rms = Math.sqrt(rms / size);
+        if (rms < 0.008) return 0;
+
+        // Trim leading/trailing silence (improves correlation)
+        let r1 = 0;
+        let r2 = size - 1;
+        const thresh = 0.02;
+        while (r1 < size / 2 && Math.abs(buf[r1] - mean) < thresh) r1++;
+        while (r2 > size / 2 && Math.abs(buf[r2] - mean) < thresh) r2--;
+        if (r2 - r1 < 128) return 0;
+
+        const trimmed = buf.slice(r1, r2);
+        const n = trimmed.length;
+
+        // Autocorrelation
+        const c = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+            let sum = 0;
+            for (let j = 0; j < n - i; j++) {
+                const a = trimmed[j] - mean;
+                const b = trimmed[j + i] - mean;
+                sum += a * b;
             }
-            
-            // Normalize by period length
-            correlation /= (bufferLength - period);
-            
-            if (correlation > maxCorrelation) {
-                maxCorrelation = correlation;
-                bestPeriod = period;
+            c[i] = sum;
+        }
+
+        // Find the first dip then the next peak
+        let d = 0;
+        while (d < n - 1 && c[d] > c[d + 1]) d++;
+
+        let maxval = -Infinity;
+        let maxpos = -1;
+        for (let i = d; i < n; i++) {
+            if (c[i] > maxval) {
+                maxval = c[i];
+                maxpos = i;
             }
         }
-        
-        // Return frequency if we have a plausible period (lower threshold for quiet/strings)
-        if (bestPeriod > 0 && maxCorrelation > 0.02) {
-            const freq = sampleRate / bestPeriod;
-            // Guitar range roughly 82–330 Hz
-            if (freq >= 55 && freq <= 450) return freq;
+        if (maxpos <= 0) return 0;
+
+        // Parabolic interpolation around the peak for better precision
+        let t0 = maxpos;
+        if (maxpos > 0 && maxpos < n - 1) {
+            const x1 = c[maxpos - 1];
+            const x2 = c[maxpos];
+            const x3 = c[maxpos + 1];
+            const a = (x1 + x3 - 2 * x2) / 2;
+            const b = (x3 - x1) / 2;
+            if (a) t0 = maxpos - b / (2 * a);
         }
-        
+
+        const freq = sampleRate / t0;
+        if (freq >= 55 && freq <= 450) return freq;
         return 0;
     }
     
