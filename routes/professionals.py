@@ -5,6 +5,12 @@ from firebase_admin import firestore
 
 professionals_bp = Blueprint("professionals", __name__)
 
+try:
+    # Reuse the same catalog used by songs.
+    from routes.songs import _get_genres_config  # type: ignore
+except Exception:  # pragma: no cover
+    _get_genres_config = None
+
 
 # Canonical set (can expand anytime; UI derives from this).
 PROFESSIONAL_TYPES: list[dict[str, str]] = [
@@ -100,6 +106,7 @@ def list_professionals():
     area_options = sorted({a for p in professionals for a in (p.get("areas") or []) if a})
     type_options = PROFESSIONAL_TYPES
     type_labels = {t["id"]: t["label"] for t in PROFESSIONAL_TYPES}
+    genres_catalog = _get_genres_config() if _get_genres_config else []
 
     return render_template(
         "professionals.html",
@@ -108,6 +115,7 @@ def list_professionals():
         type_labels=type_labels,
         language_options=language_options,
         area_options=area_options,
+        genres_catalog=genres_catalog,
         initial_type=initial_type,
     )
 

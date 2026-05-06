@@ -190,7 +190,8 @@ class GuitarTuner {
         document.getElementById('frequency-value').textContent = '-- Hz';
         document.getElementById('current-note').textContent = '--';
         document.getElementById('cents-display').textContent = '0 סנט';
-        document.getElementById('gauge-needle').style.transform = 'translateX(0)';
+        // Keep the needle centered (matches CSS base transform)
+        document.getElementById('gauge-needle').style.transform = 'translate(-50%, -50%) translateX(0px)';
     }
     
     startAnalysis() {
@@ -360,8 +361,14 @@ class GuitarTuner {
         // Update gauge needle position (-50 to +50 cents, centered at 0)
         const maxCents = 50;
         const clampedCents = Math.max(-maxCents, Math.min(maxCents, cents));
-        const percentage = (clampedCents / maxCents) * 100;
-        document.getElementById('gauge-needle').style.transform = `translateX(${percentage}%)`;
+        const gauge = document.querySelector('.tuner-gauge');
+        const needle = document.getElementById('gauge-needle');
+        if (gauge && needle) {
+            // Move needle relative to gauge width; keep it visually centered with CSS base transform.
+            const halfWidth = gauge.clientWidth / 2;
+            const offsetPx = (clampedCents / maxCents) * halfWidth;
+            needle.style.transform = `translate(-50%, -50%) translateX(${offsetPx}px)`;
+        }
         
         // Update current note display
         const closestNote = this.findClosestNote(this.currentFrequency);

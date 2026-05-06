@@ -6,8 +6,8 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: var(--font-body);
+    background: var(--g-primary);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -67,7 +67,7 @@ body::before {
 /* Left panel - Branding */
 .login-brand-panel {
     flex: 1;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-primary);
     display: flex;
     flex-direction: column;
     justify-content: center;

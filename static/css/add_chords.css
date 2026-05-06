@@ -5,8 +5,8 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: var(--font-body);
+    background: var(--c-bg);
     direction: rtl;
     user-select: none;
     height: 100vh;
@@ -24,20 +24,20 @@ body {
 /* Enhanced Chord Sidebar - Left */
 .chord-sidebar {
     width: 320px;
-    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    background: color-mix(in srgb, var(--c-surface) 22%, white);
     height: 100vh;
     overflow: hidden;
     position: sticky;
     top: 0;
     flex-shrink: 0;
     box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-    border-right: 1px solid #e1e8ed;
+    border-right: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
     display: flex;
     flex-direction: column;
 }
 
 .chord-sidebar h3 {
-    color: #2c3e50;
+    color: var(--c-text);
     margin: 0;
     text-align: center;
     font-size: 18px;
@@ -565,7 +565,7 @@ body {
 }
 
 .loop-header-in-song {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--c-text);
     color: white;
     padding: 12px 15px;
     border-radius: 10px 10px 0 0;
@@ -1004,8 +1004,8 @@ input:checked + .half-beats-slider:before {
 }
 
 .chord-in-measure {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
+    background: color-mix(in srgb, var(--c-surface) 35%, white);
+    color: var(--c-chord);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -1014,9 +1014,9 @@ input:checked + .half-beats-slider:before {
     font-weight: 700;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid transparent;
+    border: 2px solid color-mix(in srgb, var(--c-chord) 45%, transparent);
     min-width: 50px;
-    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--c-chord) 18%, transparent);
     padding: 8px 4px;
     flex: 1;
     margin-bottom: 8px;
@@ -1024,26 +1024,26 @@ input:checked + .half-beats-slider:before {
 
 /* Empty chord styling */
 .chord-in-measure.empty-chord {
-    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-    border: 2px dashed #bdc3c7;
+    background: color-mix(in srgb, var(--c-surface) 25%, white);
+    border: 2px dashed color-mix(in srgb, var(--c-text) 18%, transparent);
 }
 
 .chord-in-measure:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--c-chord) 24%, transparent);
 }
 
 .chord-name {
     font-size: 16px;
     line-height: 1;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    text-shadow: none;
     margin-bottom: 4px;
 }
 
 .chord-beats {
     font-size: 10px;
     opacity: 0.9;
-    background: rgba(255,255,255,0.2);
+    background: color-mix(in srgb, var(--c-chord) 12%, transparent);
     padding: 2px 6px;
     border-radius: 6px;
 }

@@ -79,7 +79,12 @@
 
                     <div class="filter-group">
                         <label class="filter-label" for="filter-teacher-genre">מומחה בז׳אנר</label>
-                        <input id="filter-teacher-genre" class="filter-input" placeholder="לדוגמה: בלוז">
+                        <select id="filter-teacher-genre" class="filter-select">
+                            <option value="">הכל</option>
+                            {% for g in (genres_catalog or []) %}
+                                <option value="{{ g.value }}">{{ g.label }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="filter-group">

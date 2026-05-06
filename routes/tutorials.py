@@ -194,6 +194,34 @@ def api_tutorial_detail(tutorial_id: str):
         if not t.get("is_published") and not can_manage_courses(get_roles(session)):
             return jsonify({"success": False, "error": "אין הרשאה לצפות בהדרכה"}), 403
 
+        # Count views only for video tutorials and only for logged-in users.
+        # One view per user per tutorial (best-effort).
+        try:
+            if can_watch_videos(session):
+                is_video = ((t.get("content_type") or "video").strip().lower() == "video")
+                has_video = bool((t.get("video_url") or "").strip())
+                if is_video and has_video:
+                    user_id = session.get("user_id")
+                    if user_id:
+                        view_doc_id = f"{tutorial_id}_{user_id}"
+                        view_ref = db.collection("tutorial_views").document(view_doc_id)
+                        if not view_ref.get().exists:
+                            view_ref.set({
+                                "tutorial_id": tutorial_id,
+                                "user_id": user_id,
+                                "teacher_id": (t.get("teacher_id") or "").strip(),
+                                "viewed_at": datetime.utcnow(),
+                            }, merge=True)
+                            # Increment tutorial aggregated views counter
+                            current_views = int(t.get("views") or 0)
+                            db.collection("tutorials").document(tutorial_id).update({
+                                "views": current_views + 1,
+                            })
+                            # Update local copy for response payload
+                            t["views"] = current_views + 1
+        except Exception as e:
+            print(f"Error counting tutorial view: {e}")
+
         ratings = t.get("ratings") or []
         avg_rating, reviews_count = _compute_rating_stats(ratings if isinstance(ratings, list) else [])
 

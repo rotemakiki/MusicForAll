@@ -4,9 +4,9 @@
 }
 
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--c-bg);
     min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-body);
 }
 
 /* Container - supports both add and edit modes */
@@ -34,7 +34,7 @@ body {
 }
 
 .page-title {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -45,7 +45,7 @@ body {
 }
 
 .page-subtitle {
-    color: #64748b;
+    color: color-mix(in srgb, var(--c-text) 70%, transparent);
     font-size: 1.1rem;
     margin: 0;
     font-weight: 500;
@@ -53,8 +53,8 @@ body {
 
 /* Song info display for edit mode */
 .song-info {
-    background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
-    border: 2px solid #4a90e2;
+    background: color-mix(in srgb, var(--c-surface) 30%, white);
+    border: 2px solid color-mix(in srgb, var(--c-chord) 55%, transparent);
     border-radius: 16px;
     padding: 20px;
     margin-bottom: 30px;

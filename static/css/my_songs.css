@@ -4,8 +4,9 @@
 }
 
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--c-bg);
     min-height: 100vh;
+    font-family: var(--font-body);
 }
 
 .my-songs-container {
@@ -26,7 +27,7 @@ body {
 }
 
 .page-title {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -36,7 +37,7 @@ body {
 }
 
 .page-subtitle {
-    color: #64748b;
+    color: color-mix(in srgb, var(--c-text) 70%, transparent);
     font-size: 1.1rem;
     margin: 0 0 20px 0;
 }
@@ -45,8 +46,8 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
-    border: 2px solid #4a90e2;
+    background: color-mix(in srgb, var(--c-surface) 30%, white);
+    border: 2px solid color-mix(in srgb, var(--c-chord) 55%, transparent);
     border-radius: 12px;
     padding: 12px 20px;
 }

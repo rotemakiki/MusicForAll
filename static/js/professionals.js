@@ -76,8 +76,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const genreNeedle = lc(filterTeacherGenre?.value);
       if (genreNeedle) {
-        const ok = tGenres.some((g) => g.includes(genreNeedle));
-        if (!ok) return false;
+        // teacher_genres stores canonical values (e.g. "blues")
+        if (!tGenres.includes(genreNeedle)) return false;
       }
 
       const lessonNeedle = lc(filterTeacherLessonType?.value);

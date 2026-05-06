@@ -14,7 +14,7 @@
 
 .loading-state i {
     font-size: 3rem;
-    color: #667eea;
+    color: var(--c-chord);
     margin-bottom: 20px;
 }
 
@@ -28,7 +28,7 @@
     display: inline-block;
     margin-top: 20px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-accent);
     color: white;
     text-decoration: none;
     border-radius: 8px;
@@ -37,7 +37,7 @@
 
 .back-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--c-chord) 22%, transparent);
 }
 
 .product-header {
@@ -48,7 +48,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #667eea;
+    color: var(--c-accent);
     text-decoration: none;
     margin-bottom: 20px;
     font-weight: 600;
@@ -56,7 +56,7 @@
 }
 
 .back-link:hover {
-    color: #764ba2;
+    color: var(--c-chord);
 }
 
 .product-header h1 {

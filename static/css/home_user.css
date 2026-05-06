@@ -4,9 +4,9 @@
 }
 
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--c-bg);
     min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-body);
 }
 
 .home-user-container {
@@ -28,7 +28,7 @@ body {
 }
 
 .welcome-title {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -39,7 +39,7 @@ body {
 }
 
 .welcome-subtitle {
-    color: #64748b;
+    color: color-mix(in srgb, var(--c-text) 70%, transparent);
     font-size: 1.2rem;
     margin: 0 0 30px 0;
     font-weight: 500;
@@ -57,8 +57,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
-    border: 2px solid #4a90e2;
+    background: color-mix(in srgb, var(--c-surface) 30%, white);
+    border: 2px solid color-mix(in srgb, var(--c-chord) 55%, transparent);
     border-radius: 15px;
     padding: 20px;
     min-width: 140px;
@@ -67,7 +67,7 @@ body {
 .stat-number {
     font-size: 2rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: var(--c-text);
     margin-bottom: 5px;
 }
 
@@ -89,7 +89,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-accent);
     color: white;
     padding: 12px 20px;
     border-radius: 12px;
@@ -97,25 +97,25 @@ body {
     font-weight: 600;
     font-size: 1rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--c-chord) 24%, transparent);
     border: none;
     cursor: pointer;
 }
 
 .action-btn:hover {
     transform: translateY(-3px);
-    background: linear-gradient(135deg, #764ba2, #667eea);
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    background: var(--g-accent);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--c-chord) 30%, transparent);
 }
 
 .action-btn.secondary {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+    background: var(--g-accent);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--c-accent) 30%, transparent);
 }
 
 .action-btn.secondary:hover {
-    background: linear-gradient(135deg, #20c997, #17a2b8);
-    box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4);
+    background: var(--g-accent);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--c-accent) 35%, transparent);
 }
 
 .video-section {
@@ -141,21 +141,21 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #2c3e50;
+    color: var(--c-text);
     font-size: 1.8rem;
     font-weight: 700;
     margin: 0;
 }
 
 .section-subtitle {
-    color: #64748b;
+    color: color-mix(in srgb, var(--c-text) 70%, transparent);
     font-size: 1rem;
     font-style: italic;
     margin: 5px 0 0 0;
 }
 
 .view-all-btn {
-    background: linear-gradient(135deg, #17a2b8, #20c997);
+    background: var(--g-accent);
     color: white;
     padding: 10px 18px;
     border-radius: 10px;
@@ -163,7 +163,7 @@ body {
     font-weight: 600;
     font-size: 0.9rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--c-accent) 26%, transparent);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -171,8 +171,8 @@ body {
 
 .view-all-btn:hover {
     transform: translateY(-2px);
-    background: linear-gradient(135deg, #20c997, #17a2b8);
-    box-shadow: 0 8px 25px rgba(23, 162, 184, 0.4);
+    background: var(--g-accent);
+    box-shadow: 0 8px 25px color-mix(in srgb, var(--c-accent) 32%, transparent);
 }
 
 .video-scroll-wrapper {

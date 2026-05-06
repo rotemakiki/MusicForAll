@@ -97,6 +97,36 @@ def teacher_profile(teacher_id):
     from datetime import timezone
     days_on_site = (datetime.now(timezone.utc) - created_at).days if created_at else "לא ידוע"
 
+    # Aggregate views (only teaching content):
+    # - Song lesson videos (by song views on songs created by this teacher)
+    # - Tutorials (views field in tutorials authored by teacher)
+    # - Course lessons (premium-only views stored in course_lesson_stats)
+    total_views = 0
+    try:
+        # Song lesson views (unique per user+song)
+        if teacher_song_ids:
+            sv_docs = list(db.collection("song_views").stream())
+            for d in sv_docs:
+                data = d.to_dict() or {}
+                if data.get("song_id") in teacher_song_ids:
+                    total_views += 1
+    except Exception:
+        pass
+
+    try:
+        for tdoc in db.collection("tutorials").where("teacher_id", "==", teacher_id).stream():
+            t = tdoc.to_dict() or {}
+            total_views += int(t.get("views") or 0)
+    except Exception:
+        pass
+
+    try:
+        for sdoc in db.collection("course_lesson_stats").where("teacher_id", "==", teacher_id).stream():
+            s = sdoc.to_dict() or {}
+            total_views += int(s.get("views") or 0)
+    except Exception:
+        pass
+
     return render_template(
         "teacher_profile.html",
         teacher=teacher,
@@ -106,6 +136,7 @@ def teacher_profile(teacher_id):
         can_add_testimonial=bool(is_confirmed_student),
         is_confirmed_student=bool(is_confirmed_student),
         days_on_site=days_on_site,
+        total_views=total_views,
     )
 
 
@@ -405,24 +436,77 @@ def teacher_payments(teacher_id):
         flash("אין לך הרשאה לצפות בדאשבורד זה", "error")
         return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
 
-    videos_ref = firestore.client().collection("videos").where("uploaded_by", "==", teacher_id).stream()
-    videos = []
+    db = firestore.client()
+
+    # Views are counted only for: songs (song lesson videos), tutorials, and courses (premium-only).
     total_views = 0
-    total_watch_seconds = 0
-    for v in videos_ref:
-        data = v.to_dict()
-        if data.get("kind") == "promo":
-            continue
-        views = int(data.get("views") or 0)
-        watch_seconds = int(data.get("watch_seconds") or 0)
-        total_views += views
-        total_watch_seconds += watch_seconds
-        videos.append({**data, "id": v.id, "views": views, "watch_seconds": watch_seconds})
+    total_watch_seconds = 0  # (not yet tracked for tutorials/courses; kept for scoring compatibility)
+
+    # Song lesson views: unique per user+song (song_views collection)
+    try:
+        teacher_song_ids = _teacher_song_ids(db, teacher_id=teacher_id, limit=500)
+        if teacher_song_ids:
+            for doc in db.collection("song_views").stream():
+                d = doc.to_dict() or {}
+                if d.get("song_id") in teacher_song_ids:
+                    total_views += 1
+    except Exception:
+        pass
+
+    # Tutorial views: aggregate from tutorials docs
+    try:
+        for tdoc in db.collection("tutorials").where("teacher_id", "==", teacher_id).stream():
+            t = tdoc.to_dict() or {}
+            total_views += int(t.get("views") or 0)
+    except Exception:
+        pass
+
+    # Course lesson views: aggregate from course_lesson_stats (premium-only already)
+    try:
+        for sdoc in db.collection("course_lesson_stats").where("teacher_id", "==", teacher_id).stream():
+            s = sdoc.to_dict() or {}
+            total_views += int(s.get("views") or 0)
+    except Exception:
+        pass
+
+    videos = []
 
     watch_minutes = total_watch_seconds / 60.0
     views_score = total_views
     quality_score = watch_minutes
     total_score = 0.5 * views_score + 0.5 * quality_score
+
+    # Course purchases analytics (teacher earnings by sales, not by views)
+    selected_year = request.args.get("year")
+    selected_month = request.args.get("month")
+    purchases_count = 0
+    purchases_revenue = 0.0
+    try:
+        # Avoid composite-index requirements: fetch teacher purchases and filter in-memory.
+        docs = list(db.collection("course_purchases").where("teacher_id", "==", teacher_id).stream())
+        for doc in docs:
+            p = doc.to_dict() or {}
+            dt = p.get("purchased_at")
+            price = float(p.get("price") or 0)
+
+            y_ok = True
+            m_ok = True
+            if selected_year:
+                try:
+                    y_ok = bool(dt) and int(getattr(dt, "year", -1)) == int(selected_year)
+                except Exception:
+                    y_ok = False
+            if selected_month:
+                try:
+                    m_ok = bool(dt) and int(getattr(dt, "month", -1)) == int(selected_month)
+                except Exception:
+                    m_ok = False
+
+            if y_ok and m_ok:
+                purchases_count += 1
+                purchases_revenue += price
+    except Exception:
+        pass
 
     return render_template(
         "teacher_payments.html",
@@ -432,5 +516,9 @@ def teacher_payments(teacher_id):
         views_score=round(views_score, 1),
         quality_score=round(quality_score, 1),
         total_score=round(total_score, 1),
-        videos=sorted(videos, key=lambda x: (x.get("views", 0), x.get("watch_seconds", 0)), reverse=True)[:20],
+        videos=videos,
+        purchases_count=purchases_count,
+        purchases_revenue=round(purchases_revenue, 2),
+        selected_year=selected_year or "",
+        selected_month=selected_month or "",
     )

@@ -283,6 +283,9 @@ def mark_lesson_watched(course_id, lesson_number):
         
         user_data = user_doc.to_dict()
         watched_lessons = user_data.get('watched_lessons', {})
+        is_premium = bool(user_data.get("is_premium", False))
+        purchased_courses = user_data.get("purchased_courses", []) or []
+        has_purchased_course = course_id in purchased_courses
         
         if course_id not in watched_lessons:
             watched_lessons[course_id] = []
@@ -290,6 +293,53 @@ def mark_lesson_watched(course_id, lesson_number):
         if lesson_number not in watched_lessons[course_id]:
             watched_lessons[course_id].append(lesson_number)
             user_ref.update({'watched_lessons': watched_lessons})
+
+        # View-count rules (for teacher royalties/analytics):
+        # - Count views only for course lessons watched by PREMIUM users
+        # - Do NOT count if the user purchased this course specifically (paid in full)
+        # - One view per user per lesson
+        try:
+            if is_premium and (not has_purchased_course):
+                course_doc = db.collection("courses").document(course_id).get()
+                course = course_doc.to_dict() if course_doc.exists else {}
+                teacher_id = (course or {}).get("teacher_id") or ""
+
+                view_doc_id = f"{course_id}_{lesson_number}_{user_id}"
+                view_ref = db.collection("course_lesson_views").document(view_doc_id)
+                if not view_ref.get().exists:
+                    view_ref.set({
+                        "course_id": course_id,
+                        "lesson_number": int(lesson_number),
+                        "user_id": user_id,
+                        "teacher_id": teacher_id,
+                        "viewed_at": datetime.utcnow(),
+                        "source": "premium_subscription",
+                    }, merge=True)
+
+                    # Aggregate stats per lesson (avoid editing nested lessons array)
+                    stats_doc_id = f"{course_id}_{lesson_number}"
+                    stats_ref = db.collection("course_lesson_stats").document(stats_doc_id)
+                    stats_snap = stats_ref.get()
+                    if not stats_snap.exists:
+                        stats_ref.set({
+                            "course_id": course_id,
+                            "lesson_number": int(lesson_number),
+                            "teacher_id": teacher_id,
+                            "views": 1,
+                            "updated_at": datetime.utcnow(),
+                        }, merge=True)
+                    else:
+                        cur = stats_snap.to_dict() or {}
+                        cur_views = int(cur.get("views") or 0)
+                        stats_ref.set({
+                            "course_id": course_id,
+                            "lesson_number": int(lesson_number),
+                            "teacher_id": teacher_id,
+                            "views": cur_views + 1,
+                            "updated_at": datetime.utcnow(),
+                        }, merge=True)
+        except Exception as e:
+            print(f"Error counting course lesson view: {e}")
         
         return jsonify({"success": True, "message": "שיעור סומן כנצפה"}), 200
     except Exception as e:
@@ -428,6 +478,19 @@ def purchase_course(course_id):
         # כרגע רק נוסיף לקורסים שנרכשו
         purchased_courses.append(course_id)
         user_ref.update({'purchased_courses': purchased_courses})
+
+        # Record purchase event for teacher dashboard analytics (best-effort)
+        try:
+            teacher_id = course.get('teacher_id')
+            db.collection("course_purchases").add({
+                "course_id": course_id,
+                "teacher_id": teacher_id,
+                "buyer_id": user_id,
+                "price": float(price),
+                "purchased_at": datetime.utcnow(),
+            })
+        except Exception as e:
+            print(f"Error recording course purchase: {e}")
         
         # עדכון רווח למורה (90% מהמחיר)
         teacher_id = course.get('teacher_id')

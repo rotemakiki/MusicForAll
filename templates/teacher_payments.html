@@ -51,6 +51,35 @@
         <p style="color:#666;">עדיין אין נתונים לסרטוני לימוד.</p>
     {% endif %}
 
+    <h2 style="margin-top: 34px;">רכישות קורסים</h2>
+    <form method="GET" style="display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-top: 10px;">
+        <div>
+            <div style="font-weight:700; color:#666; margin-bottom:6px;">שנה</div>
+            <input name="year" value="{{ selected_year }}" placeholder="למשל 2026" style="padding:10px 12px; border:1px solid #ddd; border-radius:10px; min-width:140px;">
+        </div>
+        <div>
+            <div style="font-weight:700; color:#666; margin-bottom:6px;">חודש</div>
+            <input name="month" value="{{ selected_month }}" placeholder="1-12" style="padding:10px 12px; border:1px solid #ddd; border-radius:10px; min-width:120px;">
+        </div>
+        <button type="submit" class="action-btn secondary" style="padding: 10px 14px;">
+            סנן
+        </button>
+        <a href="{{ url_for('teachers.teacher_payments', teacher_id=teacher_id) }}" class="action-btn tertiary" style="padding: 10px 14px; text-decoration:none;">
+            נקה סינון
+        </a>
+    </form>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin: 15px 0 0;">
+        <div style="background:#fff; border:1px solid #e6e6e6; border-radius:12px; padding:16px;">
+            <div style="color:#666; font-weight:700;">כמות רכישות</div>
+            <div style="font-size: 2rem; font-weight: 800;">{{ purchases_count or 0 }}</div>
+        </div>
+        <div style="background:#fff; border:1px solid #e6e6e6; border-radius:12px; padding:16px;">
+            <div style="color:#666; font-weight:700;">מחזור (ברוטו)</div>
+            <div style="font-size: 2rem; font-weight: 800;">{{ purchases_revenue or 0 }}</div>
+        </div>
+    </div>
+
     <div style="margin-top: 30px;">
         <a href="{{ url_for('teachers.teacher_profile', teacher_id=teacher_id) }}" class="action-btn" style="text-decoration:none;">
             חזרה לפרופיל

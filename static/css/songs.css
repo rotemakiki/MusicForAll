@@ -4,9 +4,9 @@
 }
 
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--c-bg);
     min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-body);
 }
 
 .songs-container {
@@ -28,7 +28,7 @@ body {
 }
 
 .page-title {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

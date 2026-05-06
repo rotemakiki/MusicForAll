@@ -13,7 +13,7 @@
 }
 
 .genre-tag {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--g-accent);
     color: white;
     padding: 2px 8px;
     border-radius: 12px;
@@ -71,9 +71,9 @@
     margin-inline-start: 10px;
     padding: 8px 12px;
     border-radius: 10px;
-    border: 1px solid #c7d2fe;
-    background: #f5f3ff;
-    color: #5b21b6;
+    border: 1px solid color-mix(in srgb, var(--c-text) 18%, transparent);
+    background: color-mix(in srgb, var(--c-surface) 22%, white);
+    color: var(--c-text);
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
@@ -81,7 +81,7 @@
     white-space: nowrap;
 }
 .levels-help-inline-btn:hover {
-    background: #ede9fe;
+    background: color-mix(in srgb, var(--c-surface) 32%, white);
 }
 @media (max-width: 768px) {
     .levels-help-inline-btn {
