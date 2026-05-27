@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}עריכת פרופיל מורה{% endblock %}
+{% block title %}עריכת פרופיל{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -26,10 +26,32 @@
 
         <br><br>
 
+        <fieldset class="services-fieldset">
+            <legend>שירותים נוספים</legend>
+            <p class="services-hint">בחר את כל השירותים שאתה מציע. הרשימה זהה לקטגוריות בדף &quot;אנשי מקצוע&quot;.</p>
+            {% if is_teacher %}
+                <p class="services-hint"><strong>מורה</strong> — נוסף אוטומטית לפי תפקיד החשבון.</p>
+            {% endif %}
+            <div class="services-checkboxes">
+                {% for opt in additional_type_options %}
+                    <label class="service-option">
+                        <input type="checkbox"
+                               name="additional_professional_types"
+                               value="{{ opt.id }}"
+                               {% if opt.id in selected_additional_types %}checked{% endif %}>
+                        <span>{{ opt.label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <br><br>
+
         <!-- Hidden inputs to collect joined values -->
         <input type="hidden" id="instruments" name="instruments">
         <input type="hidden" id="styles" name="styles">
 
+        {% if is_teacher %}
         <label>פנוי לקבלת תלמידים:</label><br>
         <input type="radio" id="available_yes" name="is_available" value="true"
                {% if teacher.is_available %}checked{% endif %}>
@@ -51,6 +73,7 @@
         <label for="zoom_no">לא</label>
 
         <br><br>
+        {% endif %}
         <button type="submit" class="btn">שמור</button>
     </form>
 </div>
@@ -99,4 +122,32 @@
         if (styles.length === 0 || styles[0] === "") addStyleField();
     });
 </script>
+<style>
+    .services-fieldset {
+        border: 1px solid #d3cbc6;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin: 0;
+    }
+    .services-fieldset legend {
+        font-weight: 700;
+        padding: 0 0.35rem;
+    }
+    .services-hint {
+        margin: 0 0 0.75rem;
+        font-size: 0.95rem;
+        color: #5a6a75;
+    }
+    .services-checkboxes {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 0.5rem 1rem;
+    }
+    .service-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+</style>
 {% endblock %}

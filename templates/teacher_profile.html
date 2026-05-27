@@ -38,6 +38,15 @@
         <!-- Teacher Info -->
         <h1 class="teacher-name">{{ teacher.username }}</h1>
 
+        {% set pro_types = teacher.professional_types or [] %}
+        {% if pro_types %}
+        <div class="profile-services" aria-label="שירותים">
+            {% for t in pro_types %}
+                <span class="profile-service-tag">{{ type_labels.get(t, t) if type_labels else t }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <!-- Teacher Details Grid -->
         <div class="teacher-details">
             <div class="detail-card">

@@ -58,14 +58,8 @@ function buildSongCardHTML(song) {
                     </div>
                     <p class="video-description">${genre} • ${keyType}</p>
                     <div class="video-actions">
-                        <a href="/play/${id}" class="video-btn">
-                            <span>🎵</span>
-                            <span>נגן שיר</span>
-                        </a>
-                        <a href="#" class="video-btn secondary" onclick="addToMyList('${id}'); return false;">
-                            <span>❤️</span>
-                            <span>הוסף לרשימה</span>
-                        </a>
+                        <a href="/play/${id}" class="video-btn">נגן שיר</a>
+                        <a href="#" class="video-btn secondary" onclick="addToMyList('${id}'); return false;">הוסף לרשימה</a>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,14 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from firebase_admin import firestore
 from datetime import datetime
 
+from utils.professional_catalog import (
+    TYPE_LABELS,
+    additional_type_options,
+    current_additional_types,
+    infer_professional_types,
+    merge_professional_types_for_save,
+)
+
 teachers_bp = Blueprint('teachers', __name__)
 
 def _has_teacher_confirmation(teacher_id: str, student_id: str) -> bool:
@@ -127,6 +135,8 @@ def teacher_profile(teacher_id):
     except Exception:
         pass
 
+    teacher["professional_types"] = infer_professional_types(teacher)
+
     return render_template(
         "teacher_profile.html",
         teacher=teacher,
@@ -137,6 +147,7 @@ def teacher_profile(teacher_id):
         is_confirmed_student=bool(is_confirmed_student),
         days_on_site=days_on_site,
         total_views=total_views,
+        type_labels=TYPE_LABELS,
     )
 
 
@@ -177,45 +188,79 @@ def musician_profile(musician_id):
     from datetime import timezone
     days_on_site = (datetime.now(timezone.utc) - created_at).days if created_at else 0
 
-    return render_template("musician_profile.html", musician=musician, songs=songs, days_on_site=days_on_site)
+    musician["professional_types"] = infer_professional_types(musician)
+
+    return render_template(
+        "musician_profile.html",
+        musician=musician,
+        songs=songs,
+        days_on_site=days_on_site,
+        type_labels=TYPE_LABELS,
+    )
 
 
 @teachers_bp.route('/edit_teacher_profile/<string:teacher_id>', methods=['GET', 'POST'])
 def edit_teacher_profile(teacher_id):
     if 'user_id' not in session or session['user_id'] != teacher_id:
         flash("אין לך הרשאה לגשת לעמוד זה", "error")
-        return redirect(url_for('home'))  # שים לב, ייתכן שתצטרך לעדכן ל-url נכון
+        return redirect(url_for('home'))
 
     doc = firestore.client().collection("users").document(teacher_id).get()
     if not doc.exists:
-        return "מורה לא נמצא", 404
+        return "משתמש לא נמצא", 404
 
     teacher = doc.to_dict()
+    roles = teacher.get("roles") or []
+    if "teacher" not in roles and "musician" not in roles:
+        flash("אין לך הרשאה לערוך פרופיל מקצועי", "error")
+        return redirect(url_for('home'))
+
+    is_teacher = "teacher" in roles
 
     if request.method == 'POST':
         instruments = request.form.get('instruments')
         styles = request.form.get('styles')
-        language = request.form.get('language')
-        location = request.form.get('location')
+        language = (request.form.get('language') or "").strip()
+        location = (request.form.get('location') or "").strip()
         is_available_str = request.form.get('is_available')
         is_available = True if is_available_str == 'true' else False
         teaches_online_str = request.form.get('teaches_online')
         teaches_online = True if teaches_online_str == 'true' else False
 
-        firestore.client().collection("users").document(teacher_id).update({
+        additional_selected = request.form.getlist("additional_professional_types")
+        professional_types = merge_professional_types_for_save(roles, additional_selected)
+
+        update_data = {
             "instruments": instruments,
             "styles": styles,
             "language": language,
             "location": location,
-            "is_available": is_available,
-            "teaches_online": teaches_online
-        })
+            "languages": [language] if language else [],
+            "areas": [location] if location else [],
+            "professional_types": professional_types,
+            "additional_services": [t for t in professional_types if t != "teacher"],
+        }
+        if is_teacher:
+            update_data["is_available"] = is_available
+            update_data["teaches_online"] = teaches_online
+
+        firestore.client().collection("users").document(teacher_id).update(update_data)
 
         flash("הפרופיל עודכן בהצלחה!", "success")
-        return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+        if is_teacher:
+            return redirect(url_for('teachers.teacher_profile', teacher_id=teacher_id))
+        return redirect(url_for('teachers.musician_profile', musician_id=teacher_id))
 
     teacher["id"] = teacher_id
-    return render_template("edit_teacher_profile.html", teacher=teacher)
+    teacher["professional_types"] = infer_professional_types(teacher)
+    return render_template(
+        "edit_teacher_profile.html",
+        teacher=teacher,
+        is_teacher=is_teacher,
+        additional_type_options=additional_type_options(),
+        selected_additional_types=current_additional_types(teacher),
+        type_labels=TYPE_LABELS,
+    )
 
 import os
 import uuid

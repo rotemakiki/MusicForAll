@@ -12,7 +12,7 @@
 <div class="home-user-container">
     <!-- Welcome Header -->
     <div class="welcome-header">
-        <h1 class="welcome-title">🎵 ברוך הבא, {{ session.get('username') }}! 🎶</h1>
+        <h1 class="welcome-title">ברוך הבא, {{ session.get('username') }}!</h1>
         <p class="welcome-subtitle">מוכן להמשיך את המסע המוזיקלי שלך? בואו נראה מה חדש</p>
 
         <!-- Quick Stats - מספרים אמיתיים -->
@@ -37,26 +37,14 @@
 
         <!-- Quick Actions -->
         <div class="quick-actions">
-            <a href="{{ url_for('songs.songs') }}" class="action-btn">
-                <span>🎵</span>
-                <span>עיין בשירים</span>
-            </a>
-            <a href="{{ url_for('my_songs.my_songs_page') }}" class="action-btn secondary">
-                <span>💝</span>
-                <span>השירים שלי</span>
-            </a>
-            <a href="{{ url_for('lessons.lessons_list') }}" class="action-btn">
-                <span>🎬</span>
-                <span>שיעורים</span>
-            </a>
+            <a href="{{ url_for('songs.songs') }}" class="action-btn">עיין בשירים</a>
+            <a href="{{ url_for('my_songs.my_songs_page') }}" class="action-btn">השירים שלי</a>
+            <a href="{{ url_for('lessons.lessons_list') }}" class="action-btn">שיעורים</a>
         </div>
 
         <!-- Progress - בהמשך יתווסף מעקב התקדמות -->
         <div class="progress-indicator">
-            <div class="progress-title">
-                <span>📊</span>
-                <span>סיכום מהיר</span>
-            </div>
+            <div class="progress-title">סיכום מהיר</div>
             <p style="margin: 0; opacity: 0.9;">יש לך {{ user_stats.get('my_songs_count', 0) }} שירים ברשימה. גלה שירים חדשים, הוסף לרשימה ותתרגל בנגן.</p>
         </div>
     </div>
@@ -65,16 +53,10 @@
     <div class="video-section">
         <div class="section-header">
             <div>
-                <h2 class="section-title">
-                    <span>🎬</span>
-                    <span>שיעורים</span>
-                </h2>
+                <h2 class="section-title">שיעורים</h2>
                 <p class="section-subtitle">שיעורים קצרים ממורים ומוסיקאים</p>
             </div>
-            <a href="{{ url_for('lessons.lessons_list') }}" class="view-all-btn">
-                <span>👁️</span>
-                <span>לעמוד השיעורים</span>
-            </a>
+            <a href="{{ url_for('lessons.lessons_list') }}" class="view-all-btn">לעמוד השיעורים</a>
         </div>
         <div class="video-scroll-wrapper">
             <div class="video-scroll-container" id="started-videos">
@@ -86,10 +68,7 @@
                         <div class="empty-icon" style="font-size: 3rem; margin-bottom: 1rem;">🎬</div>
                         <h3 style="margin: 0 0 0.5rem;">שיעורים יופיעו כאן בהמשך</h3>
                         <p style="margin: 0 0 1rem; opacity: 0.9;">בינתיים אפשר לגלות שירים, מורים וקורסים.</p>
-                        <a href="{{ url_for('courses.courses_list') }}" class="action-btn">
-                            <span>📚</span>
-                            <span>עיין בקורסים</span>
-                        </a>
+                        <a href="{{ url_for('courses.courses_list') }}" class="action-btn">עיין בקורסים</a>
                     </div>
                     {% endif %}
                 </div>
@@ -101,16 +80,10 @@
     <div class="video-section" id="recent-watched-section" style="display: none;">
         <div class="section-header">
             <div>
-                <h2 class="section-title">
-                    <span>▶️</span>
-                    <span>צפיתי לאחרונה</span>
-                </h2>
+                <h2 class="section-title">צפיתי לאחרונה</h2>
                 <p class="section-subtitle">המשך מאיפה שהפסקת — לפי סדר הצפייה האחרון</p>
             </div>
-            <a href="{{ url_for('songs.songs') }}" class="view-all-btn">
-                <span>🎶</span>
-                <span>כל השירים</span>
-            </a>
+            <a href="{{ url_for('songs.songs') }}" class="view-all-btn">כל השירים</a>
         </div>
         <div class="video-scroll-wrapper" id="recent-watched-wrapper">
             <button type="button" class="scroll-arrow scroll-right" onclick="scrollVideos('recent-watched-songs', -400)">
@@ -129,16 +102,10 @@
     <div class="video-section">
         <div class="section-header">
             <div>
-                <h2 class="section-title">
-                    <span>🎵</span>
-                    <span>שירים שנוספו לאחרונה</span>
-                </h2>
+                <h2 class="section-title">שירים שנוספו לאחרונה</h2>
                 <p class="section-subtitle">שירים חדשים שווה לגלות</p>
             </div>
-            <a href="{{ url_for('songs.songs') }}" class="view-all-btn">
-                <span>🎶</span>
-                <span>כל השירים</span>
-            </a>
+            <a href="{{ url_for('songs.songs') }}" class="view-all-btn">כל השירים</a>
         </div>
 
         <!-- Empty State - יוצג רק אם אין שירים -->
@@ -146,10 +113,7 @@
             <div class="empty-icon">🎵</div>
             <h3>אין שירים חדשים</h3>
             <p>עדיין לא נוספו שירים חדשים למערכת</p>
-            <a href="{{ url_for('songs.songs') }}" class="action-btn">
-                <span>🔍</span>
-                <span>עיין בשירים הקיימים</span>
-            </a>
+            <a href="{{ url_for('songs.songs') }}" class="action-btn">עיין בשירים הקיימים</a>
         </div>
 
         <!-- Video Scroll Wrapper - יימלא דינמית -->

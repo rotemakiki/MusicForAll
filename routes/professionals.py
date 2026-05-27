@@ -3,48 +3,19 @@ from __future__ import annotations
 from flask import Blueprint, render_template, request
 from firebase_admin import firestore
 
+from utils.professional_catalog import (
+    PROFESSIONAL_TYPES,
+    TYPE_LABELS,
+    infer_professional_types,
+    norm_list,
+)
+
 professionals_bp = Blueprint("professionals", __name__)
 
 try:
-    # Reuse the same catalog used by songs.
     from routes.songs import _get_genres_config  # type: ignore
 except Exception:  # pragma: no cover
     _get_genres_config = None
-
-
-# Canonical set (can expand anytime; UI derives from this).
-PROFESSIONAL_TYPES: list[dict[str, str]] = [
-    {"id": "teacher", "label": "מורה"},
-    {"id": "producer", "label": "מפיק מוסיקלי"},
-    {"id": "session_musician", "label": "נגן (סשניסט)"},
-    {"id": "studio", "label": "אולפן הקלטות"},
-    {"id": "rehearsal_room", "label": "חדר חזרות"},
-    {"id": "setup", "label": "סטאפיסט"},
-    {"id": "mix_engineer", "label": "טכנאי מיקס"},
-    {"id": "mastering_engineer", "label": "טכנאי מאסטר"},
-    {"id": "soundman", "label": "טכנאי סאונד (סאונדמן)"},
-]
-
-
-def _norm_list(value) -> list[str]:
-    if not value:
-        return []
-    if isinstance(value, list):
-        return [str(x).strip() for x in value if str(x).strip()]
-    if isinstance(value, str):
-        # Allow "a, b, c" in legacy fields.
-        parts = [p.strip() for p in value.split(",")]
-        return [p for p in parts if p]
-    return [str(value).strip()] if str(value).strip() else []
-
-
-def _infer_professional_types(user: dict) -> list[str]:
-    roles = user.get("roles") or []
-    types = set(_norm_list(user.get("professional_types")))
-    # Backward compatibility: teachers already exist as a role.
-    if "teacher" in roles:
-        types.add("teacher")
-    return sorted(types)
 
 
 @professionals_bp.route("/professionals")
@@ -63,13 +34,12 @@ def list_professionals():
         u = doc.to_dict() or {}
         u["id"] = doc.id
 
-        ptypes = _infer_professional_types(u)
+        ptypes = infer_professional_types(u)
         if not ptypes:
             continue
 
-        # Normalize fields used for filtering.
-        languages = _norm_list(u.get("languages") or u.get("language"))
-        areas = _norm_list(u.get("areas") or u.get("area"))
+        languages = norm_list(u.get("languages") or u.get("language"))
+        areas = norm_list(u.get("areas") or u.get("area") or u.get("location"))
         location = (u.get("location") or "").strip()
         rating_avg = u.get("rating_avg")
         try:
@@ -87,25 +57,21 @@ def list_professionals():
                 "areas": areas,
                 "location": location,
                 "rating_avg": rating_avg,
-                # Teacher-only fields (kept optional):
                 "teacher_is_available": bool(u.get("is_available")) if "teacher" in ptypes else None,
                 "teacher_teaches_online": bool(u.get("teaches_online")) if "teacher" in ptypes else None,
-                "teacher_genres": _norm_list(u.get("teacher_genres") or u.get("styles")) if "teacher" in ptypes else [],
+                "teacher_genres": norm_list(u.get("teacher_genres") or u.get("styles")) if "teacher" in ptypes else [],
                 "teacher_lesson_type": (u.get("teacher_lesson_type") or "").strip() if "teacher" in ptypes else "",
             }
         )
 
-    # Sort stable: rating desc then name
     professionals.sort(key=lambda x: ((x["rating_avg"] or 0), x["username"]), reverse=True)
 
-    # Initial filter from querystring (e.g. /teachers redirect)
     initial_type = (request.args.get("type") or "").strip()
 
-    # Build filter options from data (avoid empty dropdowns)
     language_options = sorted({lang for p in professionals for lang in (p.get("languages") or []) if lang})
     area_options = sorted({a for p in professionals for a in (p.get("areas") or []) if a})
     type_options = PROFESSIONAL_TYPES
-    type_labels = {t["id"]: t["label"] for t in PROFESSIONAL_TYPES}
+    type_labels = TYPE_LABELS
     genres_catalog = _get_genres_config() if _get_genres_config else []
 
     return render_template(
@@ -118,4 +84,3 @@ def list_professionals():
         genres_catalog=genres_catalog,
         initial_type=initial_type,
     )
-

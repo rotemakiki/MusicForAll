@@ -13,7 +13,7 @@
     <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/auto_logout.js') }}" defer></script>
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
 
     <!-- תפריט ניווט - רק אייקון -->
     <nav class="modern-navbar">
@@ -47,6 +47,7 @@
         <div class="navbar-menu" id="navbar-menu">
             <div class="menu-overlay" onclick="toggleMenu()"></div>
             <div class="menu-content">
+                <button type="button" class="menu-close-btn" onclick="toggleMenu()" aria-label="סגור תפריט" title="סגור">×</button>
                 <!-- כותרת תפריט -->
                 <div class="menu-header">
                     {% if session.get('user_id') %}
@@ -77,7 +78,7 @@
                         </a>
                     {% else %}
                         <div class="guest-info">
-                            <h3>🎵 מוזיקה לכולם</h3>
+                            <h3>מוזיקה לכולם</h3>
                             <p>ברוכים הבאים</p>
                         </div>
                     {% endif %}

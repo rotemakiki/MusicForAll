@@ -251,16 +251,41 @@ a:hover{
     flex-direction: column;
 }
 
+.menu-close-btn {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(245, 243, 238, 0.15);
+    color: #f5f3ee;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.menu-close-btn:hover {
+    background: rgba(245, 243, 238, 0.28);
+    transform: scale(1.05);
+}
+
 .navbar-menu.active .menu-content {
     transform: translateX(0);
 }
 
 /* Menu Header */
 .menu-header {
-    padding: 30px 25px;
+    padding: 30px 25px 30px 50px;
     background: linear-gradient(135deg, var(--c-text), var(--c-chord));
-    color: white;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: #f5f3ee;
+    border-bottom: 1px solid rgba(245, 243, 238, 0.2);
     flex-shrink: 0;
 }
 
@@ -297,27 +322,31 @@ a:hover{
     margin: 0 0 5px 0;
     font-size: 1.2rem;
     font-weight: 700;
+    color: #f5f3ee;
+    font-family: "Assistant", var(--font-body);
 }
 
 .user-details p, .guest-info p {
     margin: 0;
-    opacity: 0.8;
     font-size: 0.9rem;
+    color: #f5f3ee;
+    opacity: 0.9;
 }
 
 .user-info-link {
     text-decoration: none;
-    color: inherit;
+    color: #f5f3ee;
     display: block;
 }
 .user-info-link:hover {
-    color: inherit;
+    color: #f5f3ee;
 }
 .user-info-link .user-info {
     cursor: pointer;
 }
 .user-roles {
     font-size: 0.8rem !important;
+    color: #f5f3ee !important;
     opacity: 0.9 !important;
     margin-top: 4px !important;
 }

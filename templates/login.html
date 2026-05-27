@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}התחברות - Musica For All{% endblock %}
+{% block title %}התחברות - מוזיקה לכולם{% endblock %}
+
+{% block body_attrs %} class="login-page"{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
@@ -11,25 +13,20 @@
     <!-- Left Panel - Branding -->
     <div class="login-brand-panel">
         <div class="brand-content">
-            <div class="brand-logo">🎵</div>
-            <h1 class="brand-title">Musica For All</h1>
+            <h1 class="brand-title">מוזיקה לכולם</h1>
             <p class="brand-subtitle">הפלטפורמה המתקדמת ביותר ללימוד מוזיקה בישראל</p>
 
             <div class="brand-features">
                 <div class="brand-feature">
-                    <span class="feature-icon">🎸</span>
                     <span>שיעורים אינטראקטיביים</span>
                 </div>
                 <div class="brand-feature">
-                    <span class="feature-icon">👨‍🏫</span>
                     <span>מורים מקצועיים</span>
                 </div>
                 <div class="brand-feature">
-                    <span class="feature-icon">🎵</span>
                     <span>ספריית שירים ענקית</span>
                 </div>
                 <div class="brand-feature">
-                    <span class="feature-icon">🌟</span>
                     <span>למידה מותאמת אישית</span>
                 </div>
             </div>
@@ -44,14 +41,7 @@
         <div class="flash-messages">
             {% for category, message in messages %}
             <div class="flash-message {{ category }}">
-                <span>
-                    {% if category == 'success' %}✅
-                    {% elif category == 'error' %}⚠️
-                    {% elif category == 'warning' %}⚠️
-                    {% elif category == 'info' %}ℹ️
-                    {% endif %}
-                </span>
-                <span>{{ message }}</span>
+                {{ message }}
             </div>
             {% endfor %}
         </div>
@@ -59,9 +49,8 @@
         {% endwith %}
 
         {% if user_already_logged_in %}
-            <!-- Force Login Modal Content -->
             <div class="form-header">
-                <h2 class="form-title">⚠️ משתמש כבר מחובר</h2>
+                <h2 class="form-title">משתמש כבר מחובר</h2>
                 <p class="form-subtitle">נראה שאתה מחובר ממכשיר אחר או ששכחת להתנתק</p>
             </div>
 
@@ -71,38 +60,24 @@
                     <p class="modal-text">אתה יכול להתחבר בכל זאת ולנתק את החיבור מהמכשיר האחר, או לחזור ולנסות מאוחר יותר.</p>
                 </div>
 
-                <!-- Force Login Form -->
                 <form id="force-login-form" class="login-form" method="post">
                     <input type="hidden" name="email" value="{{ email }}">
                     <input type="hidden" name="force_login" value="true">
 
                     <div class="form-group">
-                        <label for="force-password" class="form-label">
-                            <span>🔒</span>
-                            <span>הכנס סיסמה לאישור</span>
-                        </label>
-                        <div class="input-with-icon">
-                            <input type="password" id="force-password" name="password" class="form-input" required
-                                   placeholder="הכנס את הסיסמה שלך...">
-                            <span class="input-icon">🔒</span>
-                        </div>
+                        <label for="force-password" class="form-label">הכנס סיסמה לאישור</label>
+                        <input type="password" id="force-password" name="password" class="form-input" required
+                               placeholder="הכנס את הסיסמה שלך...">
                     </div>
 
                     <div class="modal-actions">
-                        <button type="submit" class="force-login-btn">
-                            <span>🔐</span>
-                            <span>התחבר בכל זאת</span>
-                        </button>
-                        <a href="{{ url_for('auth.login') }}" class="cancel-btn">
-                            <span>❌</span>
-                            <span>ביטול</span>
-                        </a>
+                        <button type="submit" class="force-login-btn">התחבר בכל זאת</button>
+                        <a href="{{ url_for('auth.login') }}" class="cancel-btn">ביטול</a>
                     </div>
                 </form>
             </div>
 
         {% else %}
-            <!-- Regular Login Form -->
             <div class="form-header">
                 <h2 class="form-title">ברוך הבא חזרה!</h2>
                 <p class="form-subtitle">התחבר לחשבון שלך והמשך ללמוד מוזיקה</p>
@@ -110,49 +85,30 @@
 
             <form class="login-form" method="post">
                 <div class="form-group">
-                    <label for="email" class="form-label">
-                        <span>📧</span>
-                        <span>כתובת אימייל</span>
-                    </label>
-                    <div class="input-with-icon">
-                        <input type="email" id="email" name="email" class="form-input" required
-                               value="{{ email or '' }}" placeholder="הכנס את כתובת האימייל שלך..."
-                               autocomplete="email">
-                        <span class="input-icon">📧</span>
-                    </div>
+                    <label for="email" class="form-label">כתובת אימייל</label>
+                    <input type="email" id="email" name="email" class="form-input" required
+                           value="{{ email or '' }}" placeholder="הכנס את כתובת האימייל שלך..."
+                           autocomplete="email">
                     <div id="email-help" class="sr-only">הכנס כתובת אימייל תקפה</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="password" class="form-label">
-                        <span>🔒</span>
-                        <span>סיסמה</span>
-                    </label>
-                    <div class="input-with-icon">
-                        <input type="password" id="password" name="password" class="form-input" required
-                               placeholder="הכנס את הסיסמה שלך..." autocomplete="current-password">
-                        <span class="input-icon">🔒</span>
-                    </div>
+                    <label for="password" class="form-label">סיסמה</label>
+                    <input type="password" id="password" name="password" class="form-input" required
+                           placeholder="הכנס את הסיסמה שלך..." autocomplete="current-password">
                     <div id="password-help" class="sr-only">הכנס את הסיסמה שלך</div>
                 </div>
 
-                <button type="submit" class="submit-btn" disabled>
-                    <span>🚀</span>
-                    <span>התחבר</span>
-                </button>
+                <button type="submit" class="submit-btn" disabled>התחבר</button>
             </form>
 
             <div class="register-link">
                 <p>אין לך עדיין חשבון?</p>
-                <a href="{{ url_for('auth.register') }}" class="register-btn">
-                    <span>📝</span>
-                    <span>הירשם עכשיו</span>
-                </a>
+                <a href="{{ url_for('auth.register') }}" class="register-btn">הירשם עכשיו</a>
             </div>
         {% endif %}
 
-        <!-- Keyboard Shortcuts Info -->
-        <div style="position: absolute; bottom: 20px; left: 20px; font-size: 0.8rem; color: #64748b; opacity: 0.7;">
+        <div class="login-keyboard-hints">
             <div>קיצורי מקלדת:</div>
             <div>Alt+L: מעבר לשדה אימייל | Alt+P: מעבר לסיסמה</div>
             <div>Enter: התחברות | Esc: ניקוי טופס</div>
@@ -160,9 +116,8 @@
     </div>
 </div>
 
-<!-- Screen reader only content for accessibility -->
 <div class="sr-only">
-    <h1>עמוד התחברות למערכת Musica For All</h1>
+    <h1>עמוד התחברות למערכת מוזיקה לכולם</h1>
     <p>בעמוד זה תוכל להתחבר לחשבון שלך ולגשת לתכנים האישיים שלך</p>
 </div>
 

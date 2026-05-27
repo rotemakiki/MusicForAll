@@ -1,15 +1,32 @@
 // Login Page - Enhanced User Experience and Functionality
 
 document.addEventListener('DOMContentLoaded', function() {
+    initFloatingNotes();
     initFormValidation();
     initAnimations();
     initKeyboardShortcuts();
     initAutoFocus();
     initPasswordToggle();
     initFormSubmission();
-
-    console.log('🔐 Login page loaded with enhanced features');
 });
+
+function initFloatingNotes() {
+    if (!document.body.classList.contains('login-page')) return;
+
+    const container = document.createElement('div');
+    container.className = 'login-floating-notes';
+    document.body.insertBefore(container, document.body.firstChild);
+
+    const musicNotes = ['♪', '♫', '♬', '♩', '♭', '♯', '𝄞', '𝄢'];
+
+    for (let i = 0; i < 8; i++) {
+        const note = document.createElement('div');
+        note.className = 'login-floating-note';
+        note.textContent = musicNotes[Math.floor(Math.random() * musicNotes.length)];
+        note.style.fontSize = `${1.5 + Math.random() * 1.5}rem`;
+        container.appendChild(note);
+    }
+}
 
 // Real-time form validation
 function initFormValidation() {
@@ -262,38 +279,13 @@ function initPasswordToggle() {
     const toggleButton = document.createElement('button');
     toggleButton.type = 'button';
     toggleButton.className = 'password-toggle';
-    toggleButton.innerHTML = '👁️';
+    toggleButton.textContent = 'הצג';
     toggleButton.title = 'הצג/הסתר סיסמה';
 
-    // Style the toggle button
-    toggleButton.style.cssText = `
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1.2rem;
-        color: #64748b;
-        transition: color 0.3s ease;
-        z-index: 10;
-    `;
-
-    // Add hover effect
-    toggleButton.addEventListener('mouseenter', () => {
-        toggleButton.style.color = '#667eea';
-    });
-
-    toggleButton.addEventListener('mouseleave', () => {
-        toggleButton.style.color = '#64748b';
-    });
-
-    // Toggle functionality
     toggleButton.addEventListener('click', () => {
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
-        toggleButton.innerHTML = type === 'password' ? '👁️' : '🙈';
+        toggleButton.textContent = type === 'password' ? 'הצג' : 'הסתר';
     });
 
     // Add to password input container
@@ -432,10 +424,7 @@ function showError(message, duration = 5000) {
 
     const errorDiv = document.createElement('div');
     errorDiv.className = 'flash-message error dynamic-error';
-    errorDiv.innerHTML = `
-        <span>⚠️</span>
-        <span>${message}</span>
-    `;
+    errorDiv.textContent = message;
 
     const formPanel = document.querySelector('.login-form-panel');
     if (formPanel) {
@@ -452,10 +441,7 @@ function showError(message, duration = 5000) {
 function showSuccess(message, duration = 3000) {
     const successDiv = document.createElement('div');
     successDiv.className = 'flash-message success dynamic-success';
-    successDiv.innerHTML = `
-        <span>✅</span>
-        <span>${message}</span>
-    `;
+    successDiv.textContent = message;
 
     const formPanel = document.querySelector('.login-form-panel');
     if (formPanel) {
