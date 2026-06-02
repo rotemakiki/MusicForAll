@@ -311,6 +311,145 @@ body {
     font-size: 0.9rem;
 }
 
+/* Guitar tuning picker */
+.guitar-tuning-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    border: 2px solid #e1e8ed;
+    border-radius: 12px;
+    background: #fff;
+    color: #2c3e50;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+.guitar-tuning-toggle:hover,
+.guitar-tuning-toggle[aria-expanded="true"] {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.guitar-tuning-chevron {
+    font-size: 0.8rem;
+}
+
+.guitar-tuning-toggle[aria-expanded="true"] .guitar-tuning-chevron {
+    transform: rotate(180deg);
+}
+
+.guitar-tuning-panel {
+    margin-top: 12px;
+    padding: 14px;
+    border: 2px solid #e1e8ed;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.guitar-tuning-hint {
+    margin: 0 0 12px;
+}
+
+.guitar-tuning-strings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.guitar-tuning-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 0.8fr) minmax(220px, 1.4fr);
+    gap: 12px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.guitar-tuning-string-label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: #334155;
+}
+
+.guitar-tuning-string-label span {
+    color: #64748b;
+    font-size: 0.84rem;
+}
+
+.guitar-tuning-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.guitar-tuning-step {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.guitar-tuning-note {
+    min-width: 44px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    border: 2px solid #e2e8f0;
+    text-align: center;
+    font-weight: 800;
+}
+
+.guitar-tuning-select {
+    flex: 1 1 150px;
+    min-width: 150px;
+    padding: 8px 10px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    background: white;
+    color: #2c3e50;
+    font-family: inherit;
+    font-weight: 600;
+}
+
+.guitar-tuning-actions {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 12px;
+}
+
+.guitar-tuning-reset {
+    border: none;
+    border-radius: 10px;
+    background: #e2e8f0;
+    color: #334155;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+}
+
+.guitar-tuning-reset:hover {
+    background: #cbd5e1;
+}
+
 /* Chords section */
 .chords-section {
     background: linear-gradient(145deg, #fff7e6, #fffde7);
@@ -723,6 +862,10 @@ body {
         width: 100%;
         max-width: 200px;
     }
+
+    .guitar-tuning-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* רמות ליווי / הובלה — בחירה 0–10 */
@@ -777,3 +920,128 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
 }
+
+/* ===== Tutorial videos uploader ===== */
+.tutorial-videos-hint {
+    margin-bottom: 14px;
+    line-height: 1.6;
+}
+
+.tutorial-videos-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tutorial-video-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.tutorial-video-item.pending {
+    border-style: dashed;
+    border-color: #c7d2fe;
+    background: #f5f3ff;
+}
+
+.tutorial-video-item .tv-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 280px;
+}
+
+.tutorial-video-item .tv-title {
+    font-weight: 700;
+    color: #1e293b;
+    word-break: break-word;
+}
+
+.tutorial-video-item .tv-title em {
+    font-weight: 500;
+    color: #6366f1;
+    font-style: normal;
+    font-size: 0.85rem;
+}
+
+.tutorial-video-item .tv-file {
+    font-size: 0.85rem;
+    color: #64748b;
+    word-break: break-all;
+}
+
+.tutorial-video-item .tv-preview {
+    width: 100%;
+    max-width: 360px;
+    border-radius: 8px;
+    background: #000;
+}
+
+.tutorial-video-item .tv-delete-btn {
+    border: none;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.tutorial-video-item .tv-delete-btn:hover {
+    background: #fecaca;
+}
+
+.tutorial-video-uploader {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.tutorial-video-uploader .tutorial-video-title-input {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.tutorial-video-uploader .tutorial-video-file-input {
+    flex: 1 1 220px;
+    padding: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    font-family: inherit;
+}
+
+.tutorial-video-uploader .tutorial-video-add-btn {
+    flex: 0 0 auto;
+}
+
+.tutorial-video-uploader .tutorial-video-add-btn:disabled,
+.tutorial-video-uploader input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.tutorial-videos-status {
+    margin-top: 10px;
+    min-height: 20px;
+    font-weight: 600;
+}
+
+.tutorial-videos-status.error { color: #dc2626; }
+.tutorial-videos-status.success { color: #16a34a; }
+.tutorial-videos-status.info { color: #6366f1; }

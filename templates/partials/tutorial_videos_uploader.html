@@ -1,0 +1,33 @@
+{# Shared tutorial-videos uploader used by add_song.html and edit_song.html.
+   In edit mode `song.id` exists and uploads happen immediately.
+   In add mode videos are queued and uploaded right after the song is created. #}
+{% set tv_mode = 'edit' if (song is defined and song.id) else 'add' %}
+<div class="tutorial-videos-group"
+     id="tutorial-videos-group"
+     data-mode="{{ tv_mode }}"
+     data-song-id="{{ song.id if tv_mode == 'edit' else '' }}"
+     data-current-user="{{ current_user_id or '' }}"
+     data-max-per-song="{{ max_tutorial_videos_per_song or 6 }}"
+     data-max-per-teacher="{{ max_tutorial_videos_per_teacher or 2 }}">
+
+    <div class="input-hint tutorial-videos-hint">
+        סרטוני הדרכה מועלים ישירות לאתר (mp4 / webm / mov). אפשר להעלות עד
+        {{ max_tutorial_videos_per_teacher or 2 }} סרטונים לשיר זה, ולכל סרטון יש להזין כותרת
+        (למשל "בית ראשון" / "פזמון") כי לפעמים מלמדים רק חלק מהשיר.
+        {% if tv_mode == 'add' %}<br>הסרטונים יעלו אוטומטית מיד לאחר שמירת השיר.{% endif %}
+    </div>
+
+    <ul class="tutorial-videos-list" id="tutorial-videos-list"></ul>
+
+    <div class="tutorial-video-uploader" id="tutorial-video-uploader">
+        <input type="text" class="form-input tutorial-video-title-input" id="tutorial-video-title"
+               maxlength="120" placeholder="כותרת הסרטון (למשל: בית ראשון / פזמון)">
+        <input type="file" class="tutorial-video-file-input" id="tutorial-video-file" accept="video/*">
+        <button type="button" class="chords-btn tutorial-video-add-btn" id="tutorial-video-add-btn">
+            <span>⬆️</span>
+            <span>הוסף סרטון</span>
+        </button>
+    </div>
+
+    <div class="tutorial-videos-status" id="tutorial-videos-status" aria-live="polite"></div>
+</div>

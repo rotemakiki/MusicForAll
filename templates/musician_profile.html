@@ -45,6 +45,19 @@
         </div>
         {% endif %}
 
+        {% if musician.social_links_display %}
+        <div class="profile-social-links" aria-label="קישורי סושיאל ותיק עבודות">
+            {% for link in musician.social_links_display %}
+                <a class="profile-social-link"
+                   href="{{ link.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    {{ link.label }}
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="teacher-details">
             <div class="detail-card">
                 <div class="detail-header">
@@ -60,10 +73,35 @@
                 </div>
                 <div class="detail-value">{{ songs|length }}</div>
             </div>
+            {% if musician.instruments %}
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>🎸</span>
+                    <span>כלי נגינה</span>
+                </div>
+                <div class="detail-value">{{ musician.instruments }}</div>
+            </div>
+            {% endif %}
+            {% if musician.location %}
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>📍</span>
+                    <span>מיקום בארץ</span>
+                </div>
+                <div class="detail-value">{{ musician.location }}</div>
+            </div>
+            {% endif %}
         </div>
 
-        {% if session.get('user_id') == musician.id %}
+        {% if 'teacher' in pro_types or session.get('user_id') == musician.id %}
         <div class="action-buttons">
+            {% if 'teacher' in pro_types %}
+            <a href="{{ url_for('teachers.teacher_profile', teacher_id=musician.id) }}" class="action-btn tertiary">
+                <span>👨‍🏫</span>
+                <span>צפה בפרופיל מורה</span>
+            </a>
+            {% endif %}
+            {% if session.get('user_id') == musician.id %}
             <a href="{{ url_for('teachers.edit_teacher_profile', teacher_id=musician.id) }}" class="action-btn tertiary">
                 <span>✏️</span>
                 <span>ערוך פרופיל ושירותים</span>
@@ -72,6 +110,7 @@
                 <span>➕</span>
                 <span>הוסף שיר</span>
             </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

@@ -24,8 +24,10 @@ _TYPE_ALIASES: dict[str, str] = {
     "מפיק": "producer",
     "מפיק מוסיקלי": "producer",
     "music producer": "producer",
+    "music_producer": "producer",
     "producer": "producer",
     "סשניסט": "session_musician",
+    "סשניסט (נגן)": "session_musician",
     "נגן": "session_musician",
     "session musician": "session_musician",
     "session_musician": "session_musician",
@@ -44,10 +46,19 @@ _TYPE_ALIASES: dict[str, str] = {
 # Fields that may hold service selections (old or alternate names).
 _SERVICE_FIELDS = (
     "professional_types",
+    "professional_type",
+    "professional_category",
+    "professional_categories",
+    "profession",
+    "professions",
     "additional_services",
     "additional_professional_types",
+    "additional_professional_type",
     "offered_services",
     "services",
+    "service_categories",
+    "categories",
+    "category",
     "שירותים_נוספים",
 )
 

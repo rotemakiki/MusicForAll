@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}כלי 7 - מילון אקורדים{% endblock %}
+
+{% block head %}
+<style>
+    .chord-dictionary-page {
+        max-width: 1180px;
+        margin: 22px auto;
+        padding: 0 18px 42px;
+        direction: rtl;
+    }
+
+    .chord-dictionary-hero {
+        background:
+            radial-gradient(circle at 16% 18%, rgba(102, 126, 234, 0.25), transparent 28%),
+            linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 18px 42px rgba(102, 126, 234, 0.28);
+        margin-bottom: 22px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .chord-dictionary-hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        font-weight: 950;
+    }
+
+    .chord-dictionary-hero p {
+        margin: 0;
+        max-width: 720px;
+        font-size: 1.05rem;
+        line-height: 1.65;
+        opacity: 0.93;
+    }
+
+    .chord-dictionary-layout {
+        display: grid;
+        grid-template-columns: minmax(320px, 420px) 1fr;
+        gap: 18px;
+        align-items: start;
+    }
+
+    @media (max-width: 900px) {
+        .chord-dictionary-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chord-dictionary-panel {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(102, 126, 234, 0.18);
+        border-radius: 22px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.09);
+        padding: 18px;
+    }
+
+    .chord-dictionary-panel h2 {
+        margin: 0 0 14px;
+        color: #1e293b;
+        font-size: 1.25rem;
+        font-weight: 900;
+    }
+
+    .chord-control-group {
+        margin-bottom: 18px;
+    }
+
+    .chord-control-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #475569;
+        font-weight: 850;
+    }
+
+    .chord-pill-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+        gap: 8px;
+    }
+
+    .chord-pill {
+        border: 1px solid #dbe3ef;
+        background: #fff;
+        color: #334155;
+        border-radius: 13px;
+        padding: 10px 8px;
+        font: inherit;
+        font-weight: 850;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s;
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+    }
+
+    .chord-pill:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(102, 126, 234, 0.16);
+    }
+
+    .chord-pill.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff;
+        border-color: transparent;
+    }
+
+    .selected-chord-card {
+        min-height: 470px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .selected-chord-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .selected-chord-name {
+        font-size: clamp(2.1rem, 6vw, 4rem);
+        font-weight: 950;
+        line-height: 1;
+        color: #1e293b;
+        direction: ltr;
+    }
+
+    .selected-chord-note {
+        color: #64748b;
+        font-weight: 700;
+        text-align: left;
+    }
+
+    .main-chord-chart {
+        direction: ltr;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        min-height: 380px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .main-chord-chart svg {
+        max-width: 100%;
+        max-height: 350px;
+    }
+
+    .dictionary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .dictionary-card {
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #334155;
+        border-radius: 16px;
+        padding: 12px 10px;
+        cursor: pointer;
+        text-align: center;
+        font-weight: 900;
+        direction: ltr;
+        transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
+    }
+
+    .dictionary-card:hover,
+    .dictionary-card.active {
+        transform: translateY(-2px);
+        border-color: #667eea;
+        box-shadow: 0 10px 24px rgba(102, 126, 234, 0.18);
+    }
+
+    .dictionary-card.active {
+        background: #f3f0ff;
+        color: #5b21b6;
+    }
+
+    .chord-dictionary-empty {
+        color: #64748b;
+        font-weight: 800;
+        text-align: center;
+        direction: rtl;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chord-dictionary-page">
+    <section class="chord-dictionary-hero">
+        <h1>🎸 מילון אקורדים</h1>
+        <p>
+            כלי להצגת תרשימי אקורדים לגיטרה בעזרת SVGuitar. בחר תו יסוד וסוג אקורד,
+            או לחץ על אחד האקורדים ברשימה כדי לראות תרשים ברור ומדויק.
+        </p>
+    </section>
+
+    <div class="chord-dictionary-layout">
+        <aside class="chord-dictionary-panel">
+            <h2>בחירת אקורד</h2>
+
+            <div class="chord-control-group">
+                <span class="chord-control-label">תו יסוד</span>
+                <div class="chord-pill-grid" id="root-buttons"></div>
+            </div>
+
+            <div class="chord-control-group">
+                <span class="chord-control-label">סוג אקורד</span>
+                <div class="chord-pill-grid" id="type-buttons"></div>
+            </div>
+
+            <div class="chord-control-group">
+                <span class="chord-control-label">אקורדים זמינים</span>
+                <div class="dictionary-grid" id="chord-grid"></div>
+            </div>
+        </aside>
+
+        <section class="chord-dictionary-panel selected-chord-card">
+            <div class="selected-chord-header">
+                <div>
+                    <div class="selected-chord-name" id="selected-chord-name">A</div>
+                    <div class="selected-chord-note">תצוגת SVGuitar</div>
+                </div>
+            </div>
+            <div class="main-chord-chart" id="main-chord-chart"></div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/svguitar.umd.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chords/svguitar_chords.js') }}"></script>
+<script>
+(() => {
+    const roots = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
+    const types = [
+        { value: "", label: "Major" },
+        { value: "m", label: "Minor" },
+        { value: "7", label: "7" },
+        { value: "m7", label: "m7" },
+        { value: "sus4", label: "sus4" },
+    ];
+
+    let selectedRoot = "A";
+    let selectedType = "";
+
+    const rootButtons = document.getElementById("root-buttons");
+    const typeButtons = document.getElementById("type-buttons");
+    const chordGrid = document.getElementById("chord-grid");
+    const chartEl = document.getElementById("main-chord-chart");
+    const selectedNameEl = document.getElementById("selected-chord-name");
+
+    function chordName(root = selectedRoot, type = selectedType) {
+        return root + type;
+    }
+
+    function renderButton(container, text, active, onClick) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chord-pill" + (active ? " active" : "");
+        btn.textContent = text;
+        btn.addEventListener("click", onClick);
+        container.appendChild(btn);
+    }
+
+    function renderControls() {
+        rootButtons.innerHTML = "";
+        roots.forEach(root => {
+            renderButton(rootButtons, root, root === selectedRoot, () => {
+                selectedRoot = root;
+                renderAll();
+            });
+        });
+
+        typeButtons.innerHTML = "";
+        types.forEach(type => {
+            renderButton(typeButtons, type.label, type.value === selectedType, () => {
+                selectedType = type.value;
+                renderAll();
+            });
+        });
+    }
+
+    function renderGrid() {
+        chordGrid.innerHTML = "";
+        const current = chordName();
+        roots.forEach(root => {
+            types.forEach(type => {
+                const name = root + type.value;
+                if (!window.SVGuitarChordDictionary.chordShape(name)) return;
+                const card = document.createElement("button");
+                card.type = "button";
+                card.className = "dictionary-card" + (name === current ? " active" : "");
+                card.textContent = name;
+                card.addEventListener("click", () => {
+                    selectedRoot = root;
+                    selectedType = type.value;
+                    renderAll();
+                });
+                chordGrid.appendChild(card);
+            });
+        });
+    }
+
+    function renderChart() {
+        const name = chordName();
+        selectedNameEl.textContent = name;
+        chartEl.innerHTML = "";
+
+        const shape = window.SVGuitarChordDictionary.chordShape(name);
+        if (!shape || !window.svguitar || !window.svguitar.SVGuitarChord) {
+            chartEl.innerHTML = '<div class="chord-dictionary-empty">אין עדיין דיאגרמה לאקורד הזה</div>';
+            return;
+        }
+
+        new window.svguitar.SVGuitarChord(chartEl)
+            .configure({
+                strings: 6,
+                frets: 4,
+                position: shape.position || 1,
+                title: shape.title,
+                tuning: ["E", "A", "D", "G", "B", "E"],
+                fontFamily: "Arial, Helvetica, sans-serif",
+                titleFontSize: 42,
+                tuningsFontSize: 24,
+                fretLabelFontSize: 24,
+                fingerSize: 0.62,
+                fingerTextSize: 20,
+                sidePadding: 0.22,
+                fretSize: 1.3,
+                titleBottomMargin: 0,
+            })
+            .chord({
+                title: shape.title,
+                position: shape.position || 1,
+                fingers: shape.fingers || [],
+                barres: shape.barres || [],
+            })
+            .draw();
+    }
+
+    function renderAll() {
+        renderControls();
+        renderGrid();
+        renderChart();
+    }
+
+    renderAll();
+})();
+</script>
+{% endblock %}

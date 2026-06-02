@@ -6,6 +6,7 @@ from firebase_admin import firestore
 from utils.professional_catalog import (
     PROFESSIONAL_TYPES,
     TYPE_LABELS,
+    canonicalize_type,
     infer_professional_types,
     norm_list,
 )
@@ -66,7 +67,7 @@ def list_professionals():
 
     professionals.sort(key=lambda x: ((x["rating_avg"] or 0), x["username"]), reverse=True)
 
-    initial_type = (request.args.get("type") or "").strip()
+    initial_type = canonicalize_type(request.args.get("type") or "") or ""
 
     language_options = sorted({lang for p in professionals for lang in (p.get("languages") or []) if lang})
     area_options = sorted({a for p in professionals for a in (p.get("areas") or []) if a})

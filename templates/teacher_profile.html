@@ -47,6 +47,19 @@
         </div>
         {% endif %}
 
+        {% if teacher.social_links_display %}
+        <div class="profile-social-links" aria-label="קישורי סושיאל ותיק עבודות">
+            {% for link in teacher.social_links_display %}
+                <a class="profile-social-link"
+                   href="{{ link.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    {{ link.label }}
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <!-- Teacher Details Grid -->
         <div class="teacher-details">
             <div class="detail-card">
@@ -63,6 +76,38 @@
                     <span>סגנונות לימוד</span>
                 </div>
                 <div class="detail-value">{{ teacher.styles or "לא צויין" }}</div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>🎼</span>
+                    <span>ז׳אנרי מומחיות</span>
+                </div>
+                <div class="detail-value">
+                    {% if teacher.teacher_genre_labels %}
+                        {{ teacher.teacher_genre_labels | join(', ') }}
+                    {% else %}
+                        לא צויין
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <span>👥</span>
+                    <span>סוג שיעור</span>
+                </div>
+                <div class="detail-value">
+                    {% if teacher.teacher_lesson_type == "private" %}
+                        שיעור פרטי
+                    {% elif teacher.teacher_lesson_type == "group" %}
+                        שיעור קבוצתי
+                    {% elif teacher.teacher_lesson_type == "both" %}
+                        שיעור פרטי וקבוצתי
+                    {% else %}
+                        לא צויין
+                    {% endif %}
+                </div>
             </div>
 
             <div class="detail-card">
@@ -162,6 +207,12 @@
                 <span>📞</span>
                 <span>צור קשר עם המורה</span>
             </a>
+            {% endif %}
+            {% if pro_types | length > 1 or 'musician' in (teacher.roles or []) %}
+                <a href="{{ url_for('teachers.musician_profile', musician_id=teacher.id) }}" class="action-btn tertiary">
+                    <span>🎸</span>
+                    <span>צפה בפרופיל אמן</span>
+                </a>
             {% endif %}
             {% if session.get('user_id') == teacher.id %}
                 <a href="{{ url_for('teachers.edit_teacher_profile', teacher_id=teacher.id) }}" class="action-btn tertiary">

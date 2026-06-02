@@ -47,30 +47,86 @@
 
         <br><br>
 
+        <fieldset class="social-fieldset">
+            <legend>קישורי סושיאל ותיק עבודות</legend>
+            <p class="services-hint">הוסף קישורים שיופיעו בפרופיל המורה/אמן. בפייסבוק יש להזין דף עסקי בלבד.</p>
+            <div class="social-links-grid">
+                {% for opt in social_link_options %}
+                    <label class="social-link-field" for="social_links_{{ opt.id }}">
+                        <span class="social-link-label">{{ opt.label }}</span>
+                        <input type="url"
+                               id="social_links_{{ opt.id }}"
+                               name="social_links_{{ opt.id }}"
+                               class="form-control"
+                               value="{{ social_links.get(opt.id, '') }}"
+                               placeholder="{{ opt.placeholder }}">
+                        <small>{{ opt.hint }}</small>
+                    </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <br><br>
+
         <!-- Hidden inputs to collect joined values -->
         <input type="hidden" id="instruments" name="instruments">
         <input type="hidden" id="styles" name="styles">
 
         {% if is_teacher %}
-        <label>פנוי לקבלת תלמידים:</label><br>
-        <input type="radio" id="available_yes" name="is_available" value="true"
-               {% if teacher.is_available %}checked{% endif %}>
-        <label for="available_yes">כן</label>
+        <fieldset class="services-fieldset">
+            <legend>הגדרות הוראה</legend>
+            <p class="services-hint">המידע הזה משמש לסינון מורים בדף אנשי המקצוע.</p>
 
-        <input type="radio" id="available_no" name="is_available" value="false"
-               {% if teacher.is_available == False %}checked{% endif %}>
-        <label for="available_no">לא</label>
+            <div class="teacher-settings-grid">
+                <div>
+                    <label>פנוי לקבלת תלמידים:</label><br>
+                    <input type="radio" id="available_yes" name="is_available" value="true"
+                           {% if teacher.is_available %}checked{% endif %}>
+                    <label for="available_yes">כן</label>
 
-        <br><br>
+                    <input type="radio" id="available_no" name="is_available" value="false"
+                           {% if teacher.is_available == False %}checked{% endif %}>
+                    <label for="available_no">לא</label>
+                </div>
 
-        <label>מלמד דרך זום:</label><br>
-        <input type="radio" id="zoom_yes" name="teaches_online" value="true"
-               {% if teacher.teaches_online %}checked{% endif %}>
-        <label for="zoom_yes">כן</label>
+                <div>
+                    <label>מלמד דרך זום:</label><br>
+                    <input type="radio" id="zoom_yes" name="teaches_online" value="true"
+                           {% if teacher.teaches_online %}checked{% endif %}>
+                    <label for="zoom_yes">כן</label>
 
-        <input type="radio" id="zoom_no" name="teaches_online" value="false"
-               {% if teacher.teaches_online == False %}checked{% endif %}>
-        <label for="zoom_no">לא</label>
+                    <input type="radio" id="zoom_no" name="teaches_online" value="false"
+                           {% if teacher.teaches_online == False %}checked{% endif %}>
+                    <label for="zoom_no">לא</label>
+                </div>
+
+                <div>
+                    <label for="teacher_lesson_type">סוג שיעור:</label><br>
+                    <select id="teacher_lesson_type" name="teacher_lesson_type" class="form-control">
+                        <option value="">לא צוין</option>
+                        {% for opt in lesson_type_options %}
+                            <option value="{{ opt.id }}" {% if teacher.teacher_lesson_type == opt.id %}selected{% endif %}>{{ opt.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="teacher-genres-block">
+                <label>ז׳אנרים שאתה מומחה בהם:</label>
+                <p class="services-hint">בחר מתוך אותה רשימת ז׳אנרים שמופיעה בשירים.</p>
+                <div class="services-checkboxes">
+                    {% for genre in genres_catalog %}
+                        <label class="service-option">
+                            <input type="checkbox"
+                                   name="teacher_genres"
+                                   value="{{ genre.value }}"
+                                   {% if genre.value in selected_teacher_genres %}checked{% endif %}>
+                            <span>{{ genre.label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </fieldset>
 
         <br><br>
         {% endif %}
@@ -107,8 +163,8 @@
     });
 
     document.addEventListener("DOMContentLoaded", function () {
-        const instruments = "{{ teacher.instruments or '' }}".split(",");
-        const styles = "{{ teacher.styles or '' }}".split(",");
+        const instruments = {{ (teacher.instruments or '') | tojson }}.split(",");
+        const styles = {{ (teacher.styles or '') | tojson }}.split(",");
 
         instruments.forEach(inst => {
             if (inst.trim()) addInstrumentField(inst.trim());
@@ -148,6 +204,43 @@
         align-items: center;
         gap: 0.5rem;
         cursor: pointer;
+    }
+    .social-fieldset {
+        border: 1px solid #d3cbc6;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin: 0;
+    }
+    .social-fieldset legend {
+        font-weight: 700;
+        padding: 0 0.35rem;
+    }
+    .social-links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 0.9rem 1rem;
+    }
+    .social-link-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .social-link-label {
+        font-weight: 700;
+        color: #2f4550;
+    }
+    .social-link-field small {
+        color: #5a6a75;
+        line-height: 1.35;
+    }
+    .teacher-settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .teacher-genres-block {
+        margin-top: 1rem;
     }
 </style>
 {% endblock %}

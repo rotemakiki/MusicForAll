@@ -180,6 +180,12 @@ def tool_positions():
     return render_template("tools/positions.html")
 
 
+@app.route("/tools/chord-dictionary")
+def tool_chord_dictionary():
+    """Tool page: SVGuitar chord dictionary."""
+    return render_template("tools/chord_dictionary.html")
+
+
 @app.route("/tools/hebrew-english-notes")
 def tool_hebrew_english_notes():
     """Tool page: Convert Hebrew solfege (דו/רה/מי...) to English note letters (C/D/E...)."""

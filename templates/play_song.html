@@ -49,6 +49,18 @@
                         <span class="detail-label">סולם:</span>
                         <span class="detail-value">{{ song.key }} ({{ song.key_type }}){% if song.secondary_key and song.secondary_key_type %} / סולם משני: {{ song.secondary_key }} ({{ song.secondary_key_type }}){% endif %}</span>
                     </span>
+                    {% if song.guitar_tuning %}
+                    <span class="detail-item">
+                        <span class="detail-icon">🎸</span>
+                        <span class="detail-label">כיוון גיטרה:</span>
+                        <span class="detail-value">
+                            {{ song.guitar_tuning.label }}
+                            {% if song.guitar_tuning.strings %}
+                                ({% for string in song.guitar_tuning.strings %}{{ string.note }}{% if not loop.last %}, {% endif %}{% endfor %})
+                            {% endif %}
+                        </span>
+                    </span>
+                    {% endif %}
                     <span class="detail-item">
                         <span class="detail-icon">🎭</span>
                         <span class="detail-label">ז'אנרים:</span>
@@ -154,6 +166,20 @@
                     {% if song.tutorial_watch_url %}
                     <p class="youtube-fallback-hint">אם הסרטון לא מתנגן כאן, <a href="{{ song.tutorial_watch_url }}" target="_blank" rel="noopener noreferrer">לחץ לצפייה ב-YouTube</a>.</p>
                     {% endif %}
+                </div>
+                {% endif %}
+
+                {% if song.tutorial_videos %}
+                <div class="uploaded-tutorials-section">
+                    <h4 class="uploaded-tutorials-title">🎬 סרטוני הדרכה ({{ song.tutorial_videos|length }})</h4>
+                    <div class="uploaded-tutorials-grid">
+                        {% for tv in song.tutorial_videos %}
+                        <div class="uploaded-tutorial-card">
+                            <div class="uploaded-tutorial-name">{{ tv.title }}</div>
+                            <video class="uploaded-tutorial-video" src="{{ tv.url }}" controls preload="metadata"></video>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -587,6 +613,46 @@
         font-size: 0.75rem;
         padding: 2px 6px;
     }
+}
+
+/* Uploaded tutorial videos (stored on the site) */
+.uploaded-tutorials-section {
+    margin-top: 16px;
+    text-align: right;
+}
+
+.uploaded-tutorials-title {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.uploaded-tutorials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.uploaded-tutorial-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.uploaded-tutorial-name {
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.uploaded-tutorial-video {
+    width: 100%;
+    border-radius: 8px;
+    background: #000;
+    display: block;
 }
 </style>
 {% endblock %}

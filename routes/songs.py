@@ -129,6 +129,87 @@ def youtube_embed_url(url):
         return f"https://www.youtube-nocookie.com/embed/{vid}?rel=0"
     return url or ""
 
+
+STANDARD_GUITAR_TUNING = [
+    {"string": 1, "standard": "e", "note": "e", "semitones": 0},
+    {"string": 2, "standard": "B", "note": "B", "semitones": 0},
+    {"string": 3, "standard": "G", "note": "G", "semitones": 0},
+    {"string": 4, "standard": "D", "note": "D", "semitones": 0},
+    {"string": 5, "standard": "A", "note": "A", "semitones": 0},
+    {"string": 6, "standard": "E", "note": "E", "semitones": 0},
+]
+
+
+def _default_guitar_tuning():
+    return {"label": "כיוון סטנדרטי", "strings": [dict(s) for s in STANDARD_GUITAR_TUNING]}
+
+
+def _safe_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _normalize_guitar_tuning(value):
+    """Normalizes optional guitar tuning data to six strings, bottom to top."""
+    if not value:
+        return _default_guitar_tuning()
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            return _default_guitar_tuning()
+    if not isinstance(value, dict):
+        return _default_guitar_tuning()
+
+    incoming_strings = value.get("strings") if isinstance(value.get("strings"), list) else []
+    normalized = []
+    for standard in STANDARD_GUITAR_TUNING:
+        incoming = next(
+            (
+                item for item in incoming_strings
+                if isinstance(item, dict) and _safe_int(item.get("string"), 0) == standard["string"]
+            ),
+            {},
+        )
+        semitones = _safe_int(incoming.get("semitones"), 0)
+        semitones = max(-12, min(12, semitones))
+        note = str(incoming.get("note") or standard["note"]).strip()[:3] or standard["note"]
+        normalized.append({
+            "string": standard["string"],
+            "standard": standard["standard"],
+            "note": note,
+            "semitones": semitones,
+        })
+
+    label = str(value.get("label") or "").strip()
+    if not label or all(s["semitones"] == 0 for s in normalized):
+        label = "כיוון סטנדרטי"
+    return {"label": label, "strings": normalized}
+
+
+# =============================================================================
+# TUTORIAL VIDEOS (uploaded directly to the site)
+# =============================================================================
+
+# שם ה-bucket של Firebase Storage (זהה לזה של תמונות אלבום).
+TUTORIAL_VIDEO_BUCKET = "music-for-all-f5d9c.firebasestorage.app"
+# מגבלות: עד 6 סרטוני הדרכה לכל שיר; כל מורה מוגבל ל-2 (בהמשך נפתח יותר).
+MAX_TUTORIAL_VIDEOS_PER_SONG = 6
+MAX_TUTORIAL_VIDEOS_PER_TEACHER = 2
+ALLOWED_VIDEO_EXTS = (".mp4", ".webm", ".mov", ".m4v", ".ogg", ".ogv")
+MAX_TUTORIAL_VIDEO_BYTES = 200 * 1024 * 1024  # 200MB
+
+
+def _serialize_tutorial_video(v):
+    """ממיר אובייקט סרטון לפורמט JSON-ידידותי (datetime -> ISO)."""
+    out = dict(v or {})
+    ts = out.get("uploaded_at")
+    if hasattr(ts, "isoformat"):
+        out["uploaded_at"] = ts.isoformat()
+    return out
+
 # =============================================================================
 # MAIN SONGS ROUTES
 # =============================================================================
@@ -190,7 +271,12 @@ def songs():
 
 @songs_bp.route('/add_song')
 def add_song_page():
-    return render_template('add_song.html')
+    return render_template(
+        'add_song.html',
+        current_user_id=session.get("user_id"),
+        max_tutorial_videos_per_song=MAX_TUTORIAL_VIDEOS_PER_SONG,
+        max_tutorial_videos_per_teacher=MAX_TUTORIAL_VIDEOS_PER_TEACHER,
+    )
 
 # =============================================================================
 # SONG MANAGEMENT ROUTES
@@ -221,6 +307,7 @@ def edit_song(song_id):
             "key_type": data.get("key_type"),
             "secondary_key": data.get("secondary_key", ""),
             "secondary_key_type": data.get("secondary_key_type", ""),
+            "guitar_tuning": _normalize_guitar_tuning(data.get("guitar_tuning")),
             "time_signature": data.get("time_signature"),
             "bpm": int(data.get("bpm", 120)),
             "video_url": data.get("video_url"),
@@ -273,7 +360,13 @@ def edit_song(song_id):
     levels_cfg = _get_song_levels_config()
     attach_song_level_fields_with_tables(song, accompaniment_levels=levels_cfg["accompaniment_levels"])
 
-    return render_template("edit_song.html", song=song)
+    return render_template(
+        "edit_song.html",
+        song=song,
+        current_user_id=session.get("user_id"),
+        max_tutorial_videos_per_song=MAX_TUTORIAL_VIDEOS_PER_SONG,
+        max_tutorial_videos_per_teacher=MAX_TUTORIAL_VIDEOS_PER_TEACHER,
+    )
 
 @songs_bp.route('/play/<string:song_id>')
 def play_song(song_id):
@@ -380,6 +473,7 @@ def play_song(song_id):
         "key_type": song["key_type"],
         "secondary_key": song.get("secondary_key", ""),
         "secondary_key_type": song.get("secondary_key_type", ""),
+        "guitar_tuning": _normalize_guitar_tuning(song.get("guitar_tuning")),
         "accompaniment_level": song["accompaniment_level"],
         "lead_level": song["lead_level"],
         "accompaniment_level_title": song["accompaniment_level_title"],
@@ -393,6 +487,7 @@ def play_song(song_id):
         "tutorial_embed_url": tutorial_embed_url,
         "video_watch_url": video_watch_url,
         "tutorial_watch_url": tutorial_watch_url,
+        "tutorial_videos": [_serialize_tutorial_video(v) for v in (song.get("tutorial_videos") or [])],
         "song_version": song.get("song_version", ""),
         "original_artist": song.get("original_artist", ""),
         "chords": chords_list,
@@ -554,6 +649,162 @@ def upload_song_album_image(song_id):
 
     return jsonify({"success": True, "album_image_url": public_url})
 
+
+@songs_bp.route('/api/songs/<string:song_id>/tutorial-videos', methods=['GET'])
+def list_tutorial_videos(song_id):
+    """רשימת סרטוני ההדרכה שהועלו ישירות לאתר עבור שיר."""
+    db = firestore.client()
+    doc = db.collection("songs").document(song_id).get()
+    if not doc.exists:
+        return jsonify({"success": False, "error": "Song not found"}), 404
+    song = doc.to_dict() or {}
+    videos = song.get("tutorial_videos") or []
+    return jsonify({
+        "success": True,
+        "videos": [_serialize_tutorial_video(v) for v in videos],
+        "max_per_song": MAX_TUTORIAL_VIDEOS_PER_SONG,
+        "max_per_teacher": MAX_TUTORIAL_VIDEOS_PER_TEACHER,
+    })
+
+
+@songs_bp.route('/api/songs/<string:song_id>/tutorial-videos', methods=['POST'])
+def upload_tutorial_video(song_id):
+    """העלאת סרטון הדרכה (קובץ וידאו) לשיר, עם כותרת. נשמר ב-Firebase Storage."""
+    if 'user_id' not in session:
+        return jsonify({"success": False, "error": "יש להתחבר"}), 401
+
+    roles = get_roles(session)
+    if not can_upload_songs(roles):
+        return jsonify({"success": False, "error": "אין לך הרשאה להעלות סרטונים"}), 403
+
+    db = firestore.client()
+    doc_ref = db.collection("songs").document(song_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        return jsonify({"success": False, "error": "שיר לא נמצא"}), 404
+
+    song = doc.to_dict() or {}
+    videos = song.get("tutorial_videos") or []
+    user_id = session.get("user_id")
+    is_admin_user = "admin" in (roles or [])
+
+    if len(videos) >= MAX_TUTORIAL_VIDEOS_PER_SONG:
+        return jsonify({
+            "success": False,
+            "error": f"הגעת למקסימום {MAX_TUTORIAL_VIDEOS_PER_SONG} סרטוני הדרכה לשיר"
+        }), 400
+
+    my_count = sum(1 for v in videos if (v or {}).get("uploaded_by") == user_id)
+    if my_count >= MAX_TUTORIAL_VIDEOS_PER_TEACHER and not is_admin_user:
+        return jsonify({
+            "success": False,
+            "error": f"כל מורה יכול להעלות עד {MAX_TUTORIAL_VIDEOS_PER_TEACHER} סרטוני הדרכה לשיר"
+        }), 400
+
+    title = (request.form.get("title") or "").strip()
+    if not title:
+        return jsonify({"success": False, "error": "יש להזין כותרת לסרטון"}), 400
+    if len(title) > 120:
+        return jsonify({"success": False, "error": "הכותרת ארוכה מדי (עד 120 תווים)"}), 400
+
+    if 'video_file' not in request.files:
+        return jsonify({"success": False, "error": "לא נשלח קובץ וידאו"}), 400
+    f = request.files['video_file']
+    if not f or not f.filename:
+        return jsonify({"success": False, "error": "לא נבחר קובץ"}), 400
+
+    import os
+    import uuid
+    from werkzeug.utils import secure_filename
+    from firebase_config import get_gcs_storage_client
+
+    filename = secure_filename(f.filename)
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ALLOWED_VIDEO_EXTS:
+        return jsonify({"success": False, "error": "סוג קובץ לא נתמך (mp4/webm/mov/ogg)"}), 400
+
+    if request.content_length and request.content_length > MAX_TUTORIAL_VIDEO_BYTES:
+        return jsonify({"success": False, "error": "הקובץ גדול מדי (מקסימום 200MB)"}), 400
+
+    temp_dir = "temp_uploads"
+    os.makedirs(temp_dir, exist_ok=True)
+    video_id = str(uuid.uuid4())
+    temp_path = os.path.join(temp_dir, f"{video_id}_{filename}")
+    f.save(temp_path)
+
+    try:
+        if os.path.getsize(temp_path) > MAX_TUTORIAL_VIDEO_BYTES:
+            return jsonify({"success": False, "error": "הקובץ גדול מדי (מקסימום 200MB)"}), 400
+
+        storage_client = get_gcs_storage_client()
+        bucket = storage_client.bucket(TUTORIAL_VIDEO_BUCKET)
+        blob_name = f"song_tutorial_videos/{song_id}/{video_id}_{filename}"
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(temp_path)
+        blob.make_public()
+        public_url = blob.public_url
+    finally:
+        try:
+            os.remove(temp_path)
+        except Exception:
+            pass
+
+    video_obj = {
+        "id": video_id,
+        "title": title,
+        "url": public_url,
+        "blob_name": blob_name,
+        "filename": filename,
+        "uploaded_by": user_id,
+        "uploaded_at": datetime.utcnow(),
+    }
+    videos.append(video_obj)
+    doc_ref.update({"tutorial_videos": videos})
+
+    return jsonify({"success": True, "video": _serialize_tutorial_video(video_obj)})
+
+
+@songs_bp.route('/api/songs/<string:song_id>/tutorial-videos/<string:video_id>', methods=['DELETE'])
+def delete_tutorial_video(song_id, video_id):
+    """מחיקת סרטון הדרכה — מי שהעלה אותו או אדמין."""
+    if 'user_id' not in session:
+        return jsonify({"success": False, "error": "יש להתחבר"}), 401
+
+    roles = get_roles(session)
+    db = firestore.client()
+    doc_ref = db.collection("songs").document(song_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        return jsonify({"success": False, "error": "שיר לא נמצא"}), 404
+
+    song = doc.to_dict() or {}
+    videos = song.get("tutorial_videos") or []
+    target = next((v for v in videos if (v or {}).get("id") == video_id), None)
+    if not target:
+        return jsonify({"success": False, "error": "הסרטון לא נמצא"}), 404
+
+    user_id = session.get("user_id")
+    if target.get("uploaded_by") != user_id and "admin" not in (roles or []):
+        return jsonify({"success": False, "error": "אין לך הרשאה למחוק סרטון זה"}), 403
+
+    try:
+        from firebase_config import get_gcs_storage_client
+        storage_client = get_gcs_storage_client()
+        bucket = storage_client.bucket(TUTORIAL_VIDEO_BUCKET)
+        blob_name = target.get("blob_name")
+        if blob_name:
+            bucket.blob(blob_name).delete()
+    except Exception as e:
+        print(f"Error deleting tutorial video blob: {e}")
+
+    new_videos = [v for v in videos if (v or {}).get("id") != video_id]
+    doc_ref.update({"tutorial_videos": new_videos})
+
+    return jsonify({
+        "success": True,
+        "videos": [_serialize_tutorial_video(v) for v in new_videos],
+    })
+
 # Legacy chord route - redirect to player
 @songs_bp.route('/chords/<string:song_id>')
 def chords(song_id):
@@ -679,6 +930,7 @@ def add_song():
         "key_type": data["key_type"],
         "secondary_key": data.get("secondary_key", ""),  # Optional - for songs with multiple keys
         "secondary_key_type": data.get("secondary_key_type", ""),
+        "guitar_tuning": _normalize_guitar_tuning(data.get("guitar_tuning")),
         "accompaniment_level": acc,
         "lead_level": lead,
         "difficulty_approved": False,
@@ -760,6 +1012,7 @@ def edit_song_api(song_id):
         "key_type": data["key_type"],
         "secondary_key": data.get("secondary_key", ""),
         "secondary_key_type": data.get("secondary_key_type", ""),
+        "guitar_tuning": _normalize_guitar_tuning(data.get("guitar_tuning")),
         "accompaniment_level": acc,
         "lead_level": lead,
         "time_signature": data["time_signature"],
@@ -1167,6 +1420,7 @@ def create_song_with_chords_loops():
             "key_type": data.get("key_type", "major"),
             "secondary_key": data.get("secondary_key", ""),
             "secondary_key_type": data.get("secondary_key_type", ""),
+            "guitar_tuning": _normalize_guitar_tuning(data.get("guitar_tuning")),
             "accompaniment_level": acc,
             "lead_level": lead,
             "difficulty_approved": False,

@@ -249,6 +249,9 @@
                         </select>
                         <div class="field-validation" id="secondary_key_type-validation"></div>
                     </div>
+
+                    {% set guitar_tuning_value = '' %}
+                    {% include 'partials/guitar_tuning_picker.html' %}
                 </div>
 
                 <!-- Timing Section -->
@@ -327,12 +330,20 @@
                     <div class="form-group">
                         <label class="form-label" for="tutorial_video_url">
                             <span class="label-icon">📚</span>
-                            קישור לסרטון הדרכה
+                            קישור לסרטון הדרכה (יוטיוב)
                         </label>
                         <input type="text" id="tutorial_video_url" name="tutorial_video_url" class="form-input"
                                placeholder="https://www.youtube.com/watch?v=...">
                         <div class="input-hint">קישור יוטיוב לסרטון הדרכה (אופציונלי)</div>
                         <div class="field-validation" id="tutorial_video_url-validation"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="label-icon">🎬</span>
+                            העלאת סרטוני הדרכה לאתר
+                        </label>
+                        {% include 'partials/tutorial_videos_uploader.html' %}
                     </div>
                 </div>
 
@@ -489,6 +500,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/song_form_manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/tutorial_videos.js') }}"></script>
 <script>
     // Handle song version change to show/hide original artist field
     document.addEventListener('DOMContentLoaded', function() {

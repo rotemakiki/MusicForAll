@@ -9,8 +9,30 @@ from utils.professional_catalog import (
     infer_professional_types,
     merge_professional_types_for_save,
 )
+from utils.social_links import (
+    SOCIAL_LINK_OPTIONS,
+    sanitize_social_links,
+    social_links_for_display,
+    social_links_from_user,
+)
+from routes.songs import _get_genres_config
 
 teachers_bp = Blueprint('teachers', __name__)
+
+TEACHER_LESSON_TYPES = {"private", "group", "both"}
+
+
+def _genre_label_map() -> dict[str, str]:
+    return {
+        (g.get("value") or "").strip(): (g.get("label") or "").strip()
+        for g in _get_genres_config()
+        if (g.get("value") or "").strip() and (g.get("label") or "").strip()
+    }
+
+
+def _valid_teacher_genres(selected: list[str]) -> list[str]:
+    valid_values = set(_genre_label_map())
+    return sorted({g for g in selected if g in valid_values})
 
 def _has_teacher_confirmation(teacher_id: str, student_id: str) -> bool:
     doc_id = f"{teacher_id}_{student_id}"
@@ -136,6 +158,16 @@ def teacher_profile(teacher_id):
         pass
 
     teacher["professional_types"] = infer_professional_types(teacher)
+    teacher["social_links_display"] = social_links_for_display(teacher)
+    genre_labels = _genre_label_map()
+    teacher_genres = teacher.get("teacher_genres") or []
+    if isinstance(teacher_genres, str):
+        teacher_genres = [g.strip() for g in teacher_genres.split(",") if g.strip()]
+    teacher["teacher_genre_labels"] = [
+        genre_labels.get(g, g)
+        for g in teacher_genres
+        if g
+    ]
 
     return render_template(
         "teacher_profile.html",
@@ -189,6 +221,7 @@ def musician_profile(musician_id):
     days_on_site = (datetime.now(timezone.utc) - created_at).days if created_at else 0
 
     musician["professional_types"] = infer_professional_types(musician)
+    musician["social_links_display"] = social_links_for_display(musician)
 
     return render_template(
         "musician_profile.html",
@@ -226,9 +259,20 @@ def edit_teacher_profile(teacher_id):
         is_available = True if is_available_str == 'true' else False
         teaches_online_str = request.form.get('teaches_online')
         teaches_online = True if teaches_online_str == 'true' else False
+        teacher_genres = _valid_teacher_genres(request.form.getlist("teacher_genres"))
+        teacher_lesson_type = (request.form.get("teacher_lesson_type") or "").strip()
+        if teacher_lesson_type not in TEACHER_LESSON_TYPES:
+            teacher_lesson_type = ""
 
         additional_selected = request.form.getlist("additional_professional_types")
         professional_types = merge_professional_types_for_save(roles, additional_selected)
+        raw_social_links = {
+            opt["id"]: request.form.get(f"social_links_{opt['id']}", "")
+            for opt in SOCIAL_LINK_OPTIONS
+        }
+        social_links, social_link_errors = sanitize_social_links(raw_social_links)
+        if social_link_errors:
+            flash("חלק מקישורי הסושיאל לא נשמרו כי הם לא תואמים לפלטפורמה שנבחרה.", "warning")
 
         update_data = {
             "instruments": instruments,
@@ -239,10 +283,13 @@ def edit_teacher_profile(teacher_id):
             "areas": [location] if location else [],
             "professional_types": professional_types,
             "additional_services": [t for t in professional_types if t != "teacher"],
+            "social_links": social_links,
         }
         if is_teacher:
             update_data["is_available"] = is_available
             update_data["teaches_online"] = teaches_online
+            update_data["teacher_genres"] = teacher_genres
+            update_data["teacher_lesson_type"] = teacher_lesson_type
 
         firestore.client().collection("users").document(teacher_id).update(update_data)
 
@@ -253,13 +300,30 @@ def edit_teacher_profile(teacher_id):
 
     teacher["id"] = teacher_id
     teacher["professional_types"] = infer_professional_types(teacher)
+    genres_catalog = _get_genres_config()
+    selected_teacher_genres = teacher.get("teacher_genres") or []
+    if isinstance(selected_teacher_genres, str):
+        selected_teacher_genres = [
+            g.strip()
+            for g in selected_teacher_genres.split(",")
+            if g.strip()
+        ]
     return render_template(
         "edit_teacher_profile.html",
         teacher=teacher,
         is_teacher=is_teacher,
+        genres_catalog=genres_catalog,
+        selected_teacher_genres=selected_teacher_genres,
+        lesson_type_options=[
+            {"id": "private", "label": "שיעור פרטי"},
+            {"id": "group", "label": "שיעור קבוצתי"},
+            {"id": "both", "label": "גם פרטי וגם קבוצתי"},
+        ],
         additional_type_options=additional_type_options(),
         selected_additional_types=current_additional_types(teacher),
         type_labels=TYPE_LABELS,
+        social_link_options=SOCIAL_LINK_OPTIONS,
+        social_links=social_links_from_user(teacher),
     )
 
 import os

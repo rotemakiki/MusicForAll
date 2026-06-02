@@ -480,6 +480,195 @@ function checkForReturnedChords() {
     return false;
 }
 
+// ===== GUITAR TUNING PICKER =====
+
+const GUITAR_TUNING_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const STANDARD_GUITAR_TUNING = [
+    { string: 1, label: "מיתר 1 (תחתון)", standard: "e", noteIndex: 4, semitones: 0 },
+    { string: 2, label: "מיתר 2", standard: "B", noteIndex: 11, semitones: 0 },
+    { string: 3, label: "מיתר 3", standard: "G", noteIndex: 7, semitones: 0 },
+    { string: 4, label: "מיתר 4", standard: "D", noteIndex: 2, semitones: 0 },
+    { string: 5, label: "מיתר 5", standard: "A", noteIndex: 9, semitones: 0 },
+    { string: 6, label: "מיתר 6 (עליון)", standard: "E", noteIndex: 4, semitones: 0 },
+];
+
+let guitarTuningState = null;
+
+function mod(n, m) {
+    return ((n % m) + m) % m;
+}
+
+function noteNameForString(stringConfig, semitones) {
+    const noteName = GUITAR_TUNING_NOTES[mod(stringConfig.noteIndex + semitones, GUITAR_TUNING_NOTES.length)];
+    return stringConfig.standard === "e" && semitones === 0 ? "e" : noteName;
+}
+
+function semitoneText(semitones) {
+    if (semitones === 0) return "סטנדרטי";
+    const abs = Math.abs(semitones);
+    const direction = semitones > 0 ? "למעלה" : "למטה";
+    if (abs === 1) return `חצי טון ${direction}`;
+    if (abs === 2) return `טון ${direction}`;
+    if (abs === 3) return `טון וחצי ${direction}`;
+    return `${abs} חצאי טון ${direction}`;
+}
+
+function getStandardGuitarTuningState() {
+    return {
+        label: "כיוון סטנדרטי",
+        strings: STANDARD_GUITAR_TUNING.map((stringConfig) => ({
+            string: stringConfig.string,
+            standard: stringConfig.standard,
+            note: noteNameForString(stringConfig, 0),
+            semitones: 0,
+        })),
+    };
+}
+
+function normalizeGuitarTuning(raw) {
+    if (!raw) return getStandardGuitarTuningState();
+
+    let parsed = raw;
+    if (typeof raw === "string") {
+        try {
+            parsed = JSON.parse(raw);
+        } catch (e) {
+            return getStandardGuitarTuningState();
+        }
+    }
+
+    const incomingStrings = Array.isArray(parsed && parsed.strings) ? parsed.strings : [];
+    const strings = STANDARD_GUITAR_TUNING.map((stringConfig) => {
+        const incoming = incomingStrings.find((item) => Number(item && item.string) === stringConfig.string) || {};
+        const semitones = Math.max(-12, Math.min(12, parseInt(incoming.semitones, 10) || 0));
+        return {
+            string: stringConfig.string,
+            standard: stringConfig.standard,
+            note: noteNameForString(stringConfig, semitones),
+            semitones,
+        };
+    });
+
+    const isStandard = strings.every((item) => item.semitones === 0);
+    return {
+        label: isStandard ? "כיוון סטנדרטי" : strings.map((item) => item.note).join(" "),
+        strings,
+    };
+}
+
+function isStandardGuitarTuning(state) {
+    return !state || !Array.isArray(state.strings) || state.strings.every((item) => Number(item.semitones || 0) === 0);
+}
+
+function syncGuitarTuningHidden() {
+    const hidden = document.getElementById("guitar_tuning");
+    const toggleText = document.getElementById("guitar-tuning-toggle-text");
+    if (!hidden || !guitarTuningState) return;
+
+    guitarTuningState.label = isStandardGuitarTuning(guitarTuningState)
+        ? "כיוון סטנדרטי"
+        : guitarTuningState.strings.map((item) => item.note).join(" ");
+
+    hidden.value = JSON.stringify(guitarTuningState);
+    if (toggleText) toggleText.textContent = guitarTuningState.label;
+}
+
+function renderGuitarTuningStrings() {
+    const container = document.getElementById("guitar-tuning-strings");
+    if (!container || !guitarTuningState) return;
+
+    container.innerHTML = "";
+
+    guitarTuningState.strings.forEach((stringState, index) => {
+        const row = document.createElement("div");
+        row.className = "guitar-tuning-row";
+
+        const options = [];
+        for (let semitones = -12; semitones <= 12; semitones += 1) {
+            const selected = semitones === stringState.semitones ? "selected" : "";
+            options.push(`<option value="${semitones}" ${selected}>${noteNameForString(STANDARD_GUITAR_TUNING[index], semitones)} - ${semitoneText(semitones)}</option>`);
+        }
+
+        row.innerHTML = `
+            <div class="guitar-tuning-string-label">
+                <strong>${stringState.label || STANDARD_GUITAR_TUNING[index].label}</strong>
+                <span>סטנדרטי: ${stringState.standard}</span>
+            </div>
+            <div class="guitar-tuning-controls">
+                <button type="button" class="guitar-tuning-step" data-tuning-index="${index}" data-tuning-delta="-1" aria-label="הורד חצי טון">−</button>
+                <span class="guitar-tuning-note">${stringState.note}</span>
+                <button type="button" class="guitar-tuning-step" data-tuning-index="${index}" data-tuning-delta="1" aria-label="העלה חצי טון">+</button>
+                <select class="guitar-tuning-select" data-tuning-index="${index}" aria-label="בחר כיוון למיתר">
+                    ${options.join("")}
+                </select>
+            </div>
+        `;
+
+        container.appendChild(row);
+    });
+
+    container.querySelectorAll(".guitar-tuning-step").forEach((button) => {
+        button.addEventListener("click", () => {
+            const index = parseInt(button.getAttribute("data-tuning-index"), 10);
+            const delta = parseInt(button.getAttribute("data-tuning-delta"), 10);
+            const current = guitarTuningState.strings[index];
+            current.semitones = Math.max(-12, Math.min(12, current.semitones + delta));
+            current.note = noteNameForString(STANDARD_GUITAR_TUNING[index], current.semitones);
+            renderGuitarTuningStrings();
+            syncGuitarTuningHidden();
+            saveFormData();
+        });
+    });
+
+    container.querySelectorAll(".guitar-tuning-select").forEach((select) => {
+        select.addEventListener("change", () => {
+            const index = parseInt(select.getAttribute("data-tuning-index"), 10);
+            const current = guitarTuningState.strings[index];
+            current.semitones = parseInt(select.value, 10) || 0;
+            current.note = noteNameForString(STANDARD_GUITAR_TUNING[index], current.semitones);
+            renderGuitarTuningStrings();
+            syncGuitarTuningHidden();
+            saveFormData();
+        });
+    });
+}
+
+function setGuitarTuningValue(raw) {
+    guitarTuningState = normalizeGuitarTuning(raw);
+    renderGuitarTuningStrings();
+    syncGuitarTuningHidden();
+}
+
+function getGuitarTuningValue() {
+    if (!guitarTuningState) {
+        setGuitarTuningValue(document.getElementById("guitar_tuning") ? document.getElementById("guitar_tuning").value : "");
+    }
+    return guitarTuningState || getStandardGuitarTuningState();
+}
+
+function initializeGuitarTuningPicker() {
+    const hidden = document.getElementById("guitar_tuning");
+    const toggle = document.getElementById("guitar-tuning-toggle");
+    const panel = document.getElementById("guitar-tuning-panel");
+    const reset = document.getElementById("guitar-tuning-reset");
+    if (!hidden || !toggle || !panel) return;
+
+    setGuitarTuningValue(hidden.value);
+
+    toggle.addEventListener("click", () => {
+        const isOpen = !panel.hidden;
+        panel.hidden = isOpen;
+        toggle.setAttribute("aria-expanded", isOpen ? "false" : "true");
+    });
+
+    if (reset) {
+        reset.addEventListener("click", () => {
+            setGuitarTuningValue("");
+            saveFormData();
+        });
+    }
+}
+
 // ===== FORM DATA MANAGEMENT =====
 
 // שמירת נתוני הטופס
@@ -498,6 +687,7 @@ function saveFormData() {
         key_type: document.getElementById("key_type").value,
         secondary_key: document.getElementById("secondary_key") ? document.getElementById("secondary_key").value : "",
         secondary_key_type: document.getElementById("secondary_key_type") ? document.getElementById("secondary_key_type").value : "",
+        guitar_tuning: getGuitarTuningValue(),
         accompaniment_level: document.getElementById("accompaniment_level")
             ? document.getElementById("accompaniment_level").value
             : "",
@@ -583,6 +773,8 @@ function loadFormData() {
                         }
                     }
                 }
+            } else if (key === 'guitar_tuning') {
+                setGuitarTuningValue(savedData[key]);
             } else if (key === 'teacher_notes' || key === 'student_notes' || key === 'tabs_text' || key === 'chords_lyrics_text' || key === 'lyrics_text') {
                 // textarea fields
                 if (savedData[key] !== undefined && savedData[key] !== null) {
@@ -721,6 +913,7 @@ function resetForm() {
     document.getElementById("bpm").value = "100";
     document.getElementById("chords").value = "";
     document.getElementById("loops").value = "";
+    setGuitarTuningValue("");
 
     const accH = document.getElementById("accompaniment_level");
     const leadH = document.getElementById("lead_level");
@@ -894,6 +1087,7 @@ function handleFormSubmission(event) {
         key_type: document.getElementById("key_type").value,
         secondary_key: document.getElementById("secondary_key") ? document.getElementById("secondary_key").value : "",
         secondary_key_type: document.getElementById("secondary_key_type") ? document.getElementById("secondary_key_type").value : "",
+        guitar_tuning: getGuitarTuningValue(),
         accompaniment_level: parseInt(document.getElementById("accompaniment_level").value, 10),
         lead_level: parseInt(document.getElementById("lead_level").value, 10),
         time_signature: document.getElementById("time_signature").value,
@@ -1008,6 +1202,19 @@ function handleFormSubmission(event) {
 
             console.log(`🎉 שיר ${mode.isEditMode ? 'עודכן' : 'נוצר'} בהצלחה!`);
 
+            // שיר חדש: אם יש סרטוני הדרכה בתור, נעלה אותם לפני המעבר ונעבור לעמוד השיר
+            if (!mode.isEditMode && data.song_id && window.hasPendingTutorialVideos && window.hasPendingTutorialVideos()) {
+                showMessage("⬆️ מעלה את סרטוני ההדרכה...", "success");
+                window.uploadPendingTutorialVideos(data.song_id)
+                    .catch(err => console.error("שגיאה בהעלאת סרטוני הדרכה:", err))
+                    .finally(() => {
+                        setTimeout(() => {
+                            window.location.href = `/play/${data.song_id}`;
+                        }, 800);
+                    });
+                return;
+            }
+
             // מעבר לעמוד המתאים
             setTimeout(() => {
                 if (mode.isEditMode) {
@@ -1059,6 +1266,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // אתחול מערכת ריבוי ז'אנרים
     initializeMultiGenre();
+
+    // אתחול בחירת כיוון גיטרה
+    initializeGuitarTuningPicker();
 
     // בעריכת שיר: טעינת ז'אנרים מהשרת (מהטמפלייט) אחרי ש-loadGenres זמין
     if (mode.isEditMode && window.existingGenresForEdit) {
@@ -1148,7 +1358,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 500);
 
     // auto-save בשינוי שדות
-    const fields = ['title', 'artist', 'language', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'teacher_notes', 'student_notes', 'note_tags', 'easy_capo_fret'];
+    const fields = ['title', 'artist', 'language', 'key', 'key_type', 'secondary_key', 'secondary_key_type', 'guitar_tuning', 'accompaniment_level', 'lead_level', 'time_signature', 'bpm', 'video_url', 'tutorial_video_url', 'song_version', 'original_artist', 'teacher_notes', 'student_notes', 'note_tags', 'easy_capo_fret'];
     fields.forEach(field => {
         const el = document.getElementById(field);
         if (el) {

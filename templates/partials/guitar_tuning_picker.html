@@ -1,0 +1,25 @@
+<div class="form-group guitar-tuning-group">
+    <label class="form-label" for="guitar_tuning">
+        <span class="label-icon">🎸</span>
+        כיוון הגיטרה
+    </label>
+
+    <input type="hidden" id="guitar_tuning" name="guitar_tuning" value="{{ guitar_tuning_value | default('', true) | e }}">
+
+    <button type="button" class="guitar-tuning-toggle" id="guitar-tuning-toggle" aria-expanded="false" aria-controls="guitar-tuning-panel">
+        <span id="guitar-tuning-toggle-text">כיוון סטנדרטי</span>
+        <span class="guitar-tuning-chevron" aria-hidden="true">▼</span>
+    </button>
+
+    <div class="guitar-tuning-panel" id="guitar-tuning-panel" hidden>
+        <div class="input-hint guitar-tuning-hint">
+            הכיוון הסטנדרטי מלמטה למעלה הוא: e, B, G, D, A, E. ניתן להזיז כל מיתר בחצאי טון.
+        </div>
+        <div class="guitar-tuning-strings" id="guitar-tuning-strings"></div>
+        <div class="guitar-tuning-actions">
+            <button type="button" class="guitar-tuning-reset" id="guitar-tuning-reset">אפס לכיוון סטנדרטי</button>
+        </div>
+    </div>
+
+    <div class="field-validation" id="guitar_tuning-validation"></div>
+</div>
