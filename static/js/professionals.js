@@ -39,8 +39,18 @@ document.addEventListener("DOMContentLoaded", function () {
     return (filterType?.value || "") === "teacher";
   }
 
+  function hasActiveTeacherFilter() {
+    return Boolean(
+      filterTeacherAvailable?.checked ||
+        filterTeacherOnline?.checked ||
+        (filterTeacherGenre?.value || "").trim() ||
+        (filterTeacherLessonType?.value || "").trim()
+    );
+  }
+
   function setTeacherFiltersVisible() {
-    const show = isTeacherModeSelected();
+    const selectedType = (filterType?.value || "").trim();
+    const show = !selectedType || isTeacherModeSelected() || hasActiveTeacherFilter();
     if (teacherFiltersWrap) teacherFiltersWrap.style.display = show ? "block" : "none";
   }
 
@@ -64,8 +74,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (rating === null || Number.isNaN(rating) || rating < min) return false;
     }
 
-    // Teacher-only filters (only when teacher type explicitly selected)
-    if (selectedType === "teacher") {
+    // Teacher-specific filters also work from the general directory view.
+    if (selectedType === "teacher" || hasActiveTeacherFilter()) {
+      const isTeacher = types.includes("teacher");
+      if (!isTeacher) return false;
+
       const tAvailable = (card.getAttribute("data-teacher-available") || "0") === "1";
       const tOnline = (card.getAttribute("data-teacher-online") || "0") === "1";
       const tGenres = parseCsvAttr(card, "data-teacher-genres").map(lc);

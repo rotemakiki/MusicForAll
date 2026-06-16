@@ -45,16 +45,16 @@ function buildSongCardHTML(song) {
     const albumImageUrl = escapeHtml(song.album_image_url || '');
     const coverHtml = albumImageUrl
         ? `<img class="song-cover-img" src="${albumImageUrl}" alt="תמונת אלבום של ${title}" loading="lazy">`
-        : `<div class="song-cover-placeholder" aria-hidden="true">🎵</div>`;
+        : `<div class="song-cover-placeholder" aria-hidden="true">MFA</div>`;
     return `
             <div class="video-card">
                 <div class="song-cover">${coverHtml}</div>
                 <div class="video-info">
                     <h3 class="video-title">${title}</h3>
                     <div class="video-meta">
-                        <span>🎤 ${artist}</span>
-                        <span>🎼 ${key}</span>
-                        <span>⚡ ${bpm} BPM</span>
+                        <span>${artist}</span>
+                        <span>${key}</span>
+                        <span>${bpm} BPM</span>
                     </div>
                     <p class="video-description">${genre} • ${keyType}</p>
                     <div class="video-actions">
@@ -447,14 +447,14 @@ function addToMyList(songId) {
     .then(data => {
         if (data.success) {
             // הצג הודעת הצלחה
-            showNotification('✅ השיר נוסף לרשימה שלך!', 'success');
+            showNotification('השיר נוסף לרשימה שלך!', 'success');
         } else {
-            showNotification('❌ שגיאה בהוספת השיר', 'error');
+            showNotification('שגיאה בהוספת השיר', 'error');
         }
     })
     .catch(error => {
         console.error('Error adding song to list:', error);
-        showNotification('❌ שגיאה בהוספת השיר', 'error');
+        showNotification('שגיאה בהוספת השיר', 'error');
     });
 }
 

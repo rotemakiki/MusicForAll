@@ -16,8 +16,21 @@
 
         <br><br>
 
-        <label>שפה:</label><br>
-        <input type="text" name="language" class="form-control" value="{{ teacher.language or '' }}" placeholder="למשל: עברית, אנגלית">
+        <fieldset class="services-fieldset">
+            <legend>שפות</legend>
+            <p class="services-hint">בחר את כל השפות שבהן אפשר ללמוד או לעבוד איתך.</p>
+            <div class="services-checkboxes">
+                {% for lang in language_options %}
+                    <label class="service-option">
+                        <input type="checkbox"
+                               name="languages"
+                               value="{{ lang.id }}"
+                               {% if lang.label in selected_languages %}checked{% endif %}>
+                        <span>{{ lang.label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </fieldset>
 
         <br><br>
 

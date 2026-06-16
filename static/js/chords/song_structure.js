@@ -227,7 +227,7 @@ class SongStructureManager {
             ...loop,
             id: Date.now() + Math.random(),
             customName,
-            name: loop.name || customName,
+            name: customName,
             measures,
             measureCount,
             repeatCount: loop.repeatCount || 1,
@@ -559,7 +559,8 @@ class SongStructureManager {
      */
     getSongStructureForSaving() {
         return this.songStructure.map(loop => ({
-            name: loop.customName,
+            customName: loop.customName || loop.name,
+            name: loop.customName || loop.name,
             measures: loop.measures,
             measureCount: loop.measureCount,
             repeatCount: loop.repeatCount || 1,

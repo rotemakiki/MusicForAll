@@ -18,21 +18,23 @@
                 <div class="default-avatar">👨‍🏫</div>
             {% endif %}
 
-            <!-- Upload Form -->
-            <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" class="upload-form">
-                <div class="file-input-wrapper">
-                    <input type="file" name="profile_image" id="profile-image-input" class="file-input" accept="image/*" required>
-                    <label for="profile-image-input" class="file-input-label">
-                        <span>📷</span>
-                        <span>בחר תמונה</span>
-                    </label>
-                </div>
-                <input type="hidden" name="user_id" value="{{ teacher.id }}">
-                <button type="submit" class="action-btn secondary">
-                    <span>⬆️</span>
-                    <span>העלה תמונת פרופיל</span>
-                </button>
-            </form>
+            {% if session.get('user_id') == teacher.id %}
+                <!-- Upload Form -->
+                <form action="{{ url_for('general.upload_profile_image') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="profile_image" id="profile-image-input" class="file-input" accept="image/*" required>
+                        <label for="profile-image-input" class="file-input-label">
+                            <span>📷</span>
+                            <span>בחר תמונה</span>
+                        </label>
+                    </div>
+                    <input type="hidden" name="user_id" value="{{ teacher.id }}">
+                    <button type="submit" class="action-btn secondary">
+                        <span>⬆️</span>
+                        <span>העלה תמונת פרופיל</span>
+                    </button>
+                </form>
+            {% endif %}
         </div>
 
         <!-- Teacher Info -->
@@ -115,7 +117,13 @@
                     <span>🗣️</span>
                     <span>שפה</span>
                 </div>
-                <div class="detail-value">{{ teacher.language or "לא צויין" }}</div>
+                <div class="detail-value">
+                    {% if teacher.languages_display %}
+                        {{ teacher.languages_display | join(', ') }}
+                    {% else %}
+                        לא צויין
+                    {% endif %}
+                </div>
             </div>
 
             <div class="detail-card">
@@ -186,12 +194,12 @@
                 <div class="stat-label">צפיות</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">89</div>
-                <div class="stat-label">תלמידים</div>
+                <div class="stat-number">{{ confirmed_students_count or 0 }}</div>
+                <div class="stat-label">תלמידים מאושרים</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">4.8</div>
-                <div class="stat-label">דירוג ממוצע</div>
+                <div class="stat-number">{{ testimonials|length }}</div>
+                <div class="stat-label">המלצות</div>
             </div>
         </div>
 
@@ -292,7 +300,7 @@
                             <h3 class="video-title">{{ video.title }}</h3>
                             <p class="video-description">{{ video.description }}</p>
                             <div class="video-meta">
-                                <span>📅 {{ video.uploaded_at.strftime('%d/%m/%Y') if video.uploaded_at else 'תאריך לא ידוע' }}</span>
+                                <span>📅 {{ video.uploaded_date_label or 'תאריך לא ידוע' }}</span>
                                 <span>👁️ {{ video.views or 0 }} צפיות</span>
                                 <span>⏱️ {{ ((video.watch_seconds or 0) // 60) }} דק׳ צפייה</span>
                             </div>
@@ -328,7 +336,7 @@
                             <h3 class="video-title">{{ video.title }}</h3>
                             <p class="video-description">{{ video.description }}</p>
                             <div class="video-meta">
-                                <span>📅 {{ video.uploaded_at.strftime('%d/%m/%Y') if video.uploaded_at else 'תאריך לא ידוע' }}</span>
+                                <span>📅 {{ video.uploaded_date_label or 'תאריך לא ידוע' }}</span>
                                 <span>👁️ {{ video.views or 0 }} צפיות</span>
                                 <span>⏱️ {{ ((video.watch_seconds or 0) // 60) }} דק׳ צפייה</span>
                             </div>

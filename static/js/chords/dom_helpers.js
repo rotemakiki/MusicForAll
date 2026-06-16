@@ -547,6 +547,7 @@ class DOMHelpers {
 
             // יצירת loops data עם החזרות הנכונות
             const loopsData = finalSongStructure.map(loop => ({
+                customName: loop.customName || loop.name,
                 name: loop.customName || loop.name,
                 measures: loop.measures,
                 measureCount: loop.measureCount,

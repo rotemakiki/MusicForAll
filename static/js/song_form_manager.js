@@ -76,6 +76,12 @@ function cleanStartNewSong() {
     localStorage.removeItem("editSongData");
     localStorage.removeItem("songData");
     localStorage.removeItem("pending_sync");
+    localStorage.removeItem("returningFromPlayMethodEditor");
+    ["tabs_text", "chords_lyrics_text", "lyrics_text"].forEach((type) => {
+        localStorage.removeItem(`play_method_${type}_new`);
+        localStorage.removeItem(`play_method_${type}_new_dirty`);
+    });
+    localStorage.removeItem("play_method_new");
 
     // קבע מצב נקי לשיר חדש
     localStorage.setItem("addingNewSong", "true");
@@ -970,6 +976,24 @@ function syncPlayMethodHiddenTextareasFromLocalStorage() {
     });
 }
 
+function hydratePlayMethodDraftsFromPage() {
+    const types = ["tabs_text", "chords_lyrics_text", "lyrics_text"];
+    types.forEach((type) => {
+        const el = document.getElementById(type);
+        if (!el) return;
+        const key = getPlayMethodTextsStorageKey(type);
+        const dirtyKey = `${key}_dirty`;
+        try {
+            const isDirty = localStorage.getItem(dirtyKey) === "true";
+            if (!isDirty) {
+                localStorage.setItem(key, el.value || "");
+            }
+        } catch (e) {
+            // ignore
+        }
+    });
+}
+
 function getPlayMethodTextValue(type) {
     const el = document.getElementById(type);
     try {
@@ -1028,6 +1052,15 @@ function bindPlayMethodsUI() {
             e.preventDefault();
             const method = btn.getAttribute("data-play-method") || PLAY_METHODS.BOXES;
             setActivePlayMethod(method);
+            saveFormData();
+        });
+    });
+
+    document.querySelectorAll('a[href^="/add-tabs"], a[href^="/add-chords-lyrics"], a[href^="/add-lyrics"]').forEach((link) => {
+        link.addEventListener("click", () => {
+            try {
+                localStorage.setItem("returningFromPlayMethodEditor", "true");
+            } catch (e) { /* ignore */ }
             saveFormData();
         });
     });
@@ -1236,6 +1269,7 @@ function handleFormSubmission(event) {
 
 // ניקוי כל נתוני השיר
 function clearAllSongData() {
+    const mode = detectFormMode();
     localStorage.removeItem("chords");
     localStorage.removeItem("loops");
     localStorage.removeItem("songData");
@@ -1245,6 +1279,13 @@ function clearAllSongData() {
     localStorage.removeItem("editingSongId");
     localStorage.removeItem("song_structure");
     localStorage.removeItem("pending_sync");
+    localStorage.removeItem("returningFromPlayMethodEditor");
+    ["tabs_text", "chords_lyrics_text", "lyrics_text"].forEach((type) => {
+        const suffix = mode.isEditMode ? `edit_${mode.songId}` : "new";
+        localStorage.removeItem(`play_method_${type}_${suffix}`);
+        localStorage.removeItem(`play_method_${type}_${suffix}_dirty`);
+    });
+    localStorage.removeItem(mode.isEditMode ? `play_method_edit_${mode.songId}` : "play_method_new");
 }
 
 // ===== MAIN INITIALIZATION =====
@@ -1299,9 +1340,18 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
         // מצב הוספת שיר חדש
         const justReturned = localStorage.getItem("justReturnedFromChords");
-        if (!justReturned) {
+        const returningFromPlayMethodEditor = localStorage.getItem("returningFromPlayMethodEditor");
+        const hasNewSongDraft =
+            localStorage.getItem("songData") ||
+            localStorage.getItem("chords") ||
+            localStorage.getItem("loops") ||
+            localStorage.getItem("play_method_tabs_text_new") ||
+            localStorage.getItem("play_method_chords_lyrics_text_new") ||
+            localStorage.getItem("play_method_lyrics_text_new");
+        if (!justReturned && !returningFromPlayMethodEditor && !hasNewSongDraft) {
             cleanStartNewSong();
         }
+        localStorage.removeItem("returningFromPlayMethodEditor");
         initializeNewSong();
     }
 
@@ -1326,6 +1376,7 @@ document.addEventListener("DOMContentLoaded", function () {
     updateChordsButton();
 
     // אתחול סרגל "דרכי נגינה" (שימוש בסיסי: החלפת תצוגה ושמירה מקומית)
+    hydratePlayMethodDraftsFromPage();
     bindPlayMethodsUI();
 
     // Hydrate hidden fields from localStorage for play methods (important after returning from editors).

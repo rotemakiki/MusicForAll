@@ -1,7 +1,6 @@
 // Home Guest Page - Interactive Features and Animations
 
 document.addEventListener('DOMContentLoaded', function() {
-    initFloatingNotes();
     initScrollAnimations();
     initTypeWriter();
     initStatsCounter();
@@ -9,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initVideoModal();
     loadRecentSongsGuest();
 
-    console.log('🎵 Home Guest page loaded with enhanced features');
+    console.log('Home Guest page loaded with enhanced features');
 });
 
 function escapeHtml(str) {
@@ -29,7 +28,7 @@ function buildGuestSongCard(song) {
 
     const cover = albumImageUrl
         ? `<img src="${albumImageUrl}" alt="תמונת אלבום של ${title}" loading="lazy">`
-        : `<div class="song-cover-placeholder" aria-hidden="true">🎵</div>`;
+        : `<div class="song-cover-placeholder" aria-hidden="true">MFA</div>`;
 
     return `
         <a class="guest-song-card" href="/play/${id}">
@@ -381,7 +380,7 @@ document.addEventListener('keydown', function(e) {
 
 // Add console welcome message
 console.log(`
-🎵 ברוכים הבאים למוזיקה לכולם! 🎵
+ברוכים הבאים למוזיקה לכולם!
 Keyboard shortcuts:
 - L: Login
 - R: Register
@@ -392,7 +391,7 @@ Keyboard shortcuts:
 const perfObserver = new PerformanceObserver((list) => {
     list.getEntries().forEach((entry) => {
         if (entry.entryType === 'navigation') {
-            console.log(`⚡ Page loaded in ${Math.round(entry.loadEventEnd - entry.fetchStart)}ms`);
+            console.log(`Page loaded in ${Math.round(entry.loadEventEnd - entry.fetchStart)}ms`);
         }
     });
 });

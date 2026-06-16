@@ -86,12 +86,8 @@
             <a href="{{ url_for('songs.songs') }}" class="view-all-btn">כל השירים</a>
         </div>
         <div class="video-scroll-wrapper" id="recent-watched-wrapper">
-            <button type="button" class="scroll-arrow scroll-right" onclick="scrollVideos('recent-watched-songs', -400)">
-                ➡️
-            </button>
-            <button type="button" class="scroll-arrow scroll-left" onclick="scrollVideos('recent-watched-songs', 400)">
-                ⬅️
-            </button>
+            <button type="button" class="scroll-arrow scroll-right" onclick="scrollVideos('recent-watched-songs', -400)" aria-label="גלול ימינה"></button>
+            <button type="button" class="scroll-arrow scroll-left" onclick="scrollVideos('recent-watched-songs', 400)" aria-label="גלול שמאלה"></button>
             <div class="video-scroll-container" id="recent-watched-songs">
                 <div class="video-grid"></div>
             </div>
@@ -118,12 +114,8 @@
 
         <!-- Video Scroll Wrapper - יימלא דינמית -->
         <div class="video-scroll-wrapper" style="display: none;">
-            <button class="scroll-arrow scroll-right" onclick="scrollVideos('recent-songs', -400)">
-                ➡️
-            </button>
-            <button class="scroll-arrow scroll-left" onclick="scrollVideos('recent-songs', 400)">
-                ⬅️
-            </button>
+            <button type="button" class="scroll-arrow scroll-right" onclick="scrollVideos('recent-songs', -400)" aria-label="גלול ימינה"></button>
+            <button type="button" class="scroll-arrow scroll-left" onclick="scrollVideos('recent-songs', 400)" aria-label="גלול שמאלה"></button>
 
             <div class="video-scroll-container" id="recent-songs">
                 <div class="video-grid">

@@ -19,6 +19,36 @@ VALID_TYPE_IDS = {t["id"] for t in PROFESSIONAL_TYPES}
 TYPE_LABELS = {t["id"]: t["label"] for t in PROFESSIONAL_TYPES}
 LABEL_TO_ID = {t["label"]: t["id"] for t in PROFESSIONAL_TYPES}
 
+LANGUAGE_OPTIONS: list[dict[str, str]] = [
+    {"id": "hebrew", "label": "עברית"},
+    {"id": "english", "label": "אנגלית"},
+    {"id": "arabic", "label": "ערבית"},
+    {"id": "russian", "label": "רוסית"},
+    {"id": "french", "label": "צרפתית"},
+    {"id": "spanish", "label": "ספרדית"},
+]
+LANGUAGE_LABELS = {lang["id"]: lang["label"] for lang in LANGUAGE_OPTIONS}
+_LANGUAGE_ALIASES: dict[str, str] = {
+    "עברית": "hebrew",
+    "hebrew": "hebrew",
+    "he": "hebrew",
+    "אנגלית": "english",
+    "english": "english",
+    "en": "english",
+    "ערבית": "arabic",
+    "arabic": "arabic",
+    "ar": "arabic",
+    "רוסית": "russian",
+    "russian": "russian",
+    "ru": "russian",
+    "צרפתית": "french",
+    "french": "french",
+    "fr": "french",
+    "ספרדית": "spanish",
+    "spanish": "spanish",
+    "es": "spanish",
+}
+
 # Legacy / free-text values that may exist in Firestore.
 _TYPE_ALIASES: dict[str, str] = {
     "מפיק": "producer",
@@ -67,12 +97,36 @@ def norm_list(value) -> list[str]:
     if not value:
         return []
     if isinstance(value, list):
-        return [str(x).strip() for x in value if str(x).strip()]
+        out: list[str] = []
+        for item in value:
+            out.extend(norm_list(item))
+        return out
     if isinstance(value, str):
         parts = [p.strip() for p in value.split(",")]
         return [p for p in parts if p]
     s = str(value).strip()
     return [s] if s else []
+
+
+def normalize_languages(value) -> list[str]:
+    """Return display labels for known languages, splitting legacy comma strings."""
+    selected_ids: set[str] = set()
+    custom_labels: list[str] = []
+
+    for raw in norm_list(value):
+        key = raw.strip().lower().replace("_", " ").replace("-", " ")
+        lang_id = _LANGUAGE_ALIASES.get(raw.strip()) or _LANGUAGE_ALIASES.get(key)
+        if lang_id:
+            selected_ids.add(lang_id)
+        elif raw not in custom_labels:
+            custom_labels.append(raw)
+
+    ordered_labels = [
+        lang["label"]
+        for lang in LANGUAGE_OPTIONS
+        if lang["id"] in selected_ids
+    ]
+    return ordered_labels + custom_labels
 
 
 def canonicalize_type(raw: str) -> str | None:

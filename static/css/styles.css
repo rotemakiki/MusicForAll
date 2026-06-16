@@ -2,7 +2,7 @@
 :root{
     /* Fonts (Google Fonts) */
     --font-body: "Assistant", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-    --font-display: "Heebo", var(--font-body);
+    --font-display: "Assistant", var(--font-body);
 
     /* Palette from the provided image */
     --c-text: #2f4550;         /* צבע טקסט */
@@ -53,8 +53,6 @@ button, input, textarea, select{
   .hero-btn.primary,
   .manage-courses-btn,
   .action-link.primary,
-  .menu-item.special .menu-link,
-  .menu-item.special .menu-link:hover,
   button[type="submit"],
   input[type="submit"]
 ){
@@ -241,12 +239,12 @@ a:hover{
     right: 0;
     width: 380px;
     height: 100vh;
-    background: linear-gradient(145deg, var(--c-bg), color-mix(in srgb, var(--c-bg) 80%, white));
+    background: #2f4550;
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     overflow-y: auto;
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    border-left: 1px solid rgba(245, 243, 238, 0.2);
     display: flex;
     flex-direction: column;
 }
@@ -283,7 +281,7 @@ a:hover{
 /* Menu Header */
 .menu-header {
     padding: 30px 25px 30px 50px;
-    background: linear-gradient(135deg, var(--c-text), var(--c-chord));
+    background: #2f4550;
     color: #f5f3ee;
     border-bottom: 1px solid rgba(245, 243, 238, 0.2);
     flex-shrink: 0;
@@ -322,14 +320,14 @@ a:hover{
     margin: 0 0 5px 0;
     font-size: 1.2rem;
     font-weight: 700;
-    color: #f5f3ee;
+    color: #f5f3ee !important;
     font-family: "Assistant", var(--font-body);
 }
 
 .user-details p, .guest-info p {
     margin: 0;
     font-size: 0.9rem;
-    color: #f5f3ee;
+    color: #f5f3ee !important;
     opacity: 0.9;
 }
 
@@ -362,7 +360,7 @@ a:hover{
 }
 
 .menu-item {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(245, 243, 238, 0.14);
 }
 
 .menu-link {
@@ -370,7 +368,7 @@ a:hover{
     align-items: center;
     gap: 15px;
     padding: 18px 25px;
-    color: var(--c-text);
+    color: #f5f3ee;
     text-decoration: none;
     transition: all 0.3s ease;
     font-weight: 500;
@@ -379,15 +377,15 @@ a:hover{
 }
 
 .menu-link:hover {
-    background: color-mix(in srgb, var(--c-bg) 75%, white);
-    color: var(--c-chord);
+    background: rgba(245, 243, 238, 0.1);
+    color: #f5f3ee;
     transform: translateX(5px);
 }
 
 .menu-link i {
     width: 20px;
     text-align: center;
-    color: var(--c-chord);
+    color: #f5f3ee;
     transition: all 0.3s ease;
     order: -1;
 }
@@ -398,26 +396,27 @@ a:hover{
 
 /* Special menu items */
 .menu-item.special .menu-link {
-    background: linear-gradient(135deg, #e8f5e8, #f0fff0);
-    border-right: 4px solid #28a745;
+    background: rgba(245, 243, 238, 0.12);
+    border-right: 4px solid #f5f3ee;
+    color: #f5f3ee !important;
 }
 
 .menu-item.special .menu-link:hover {
-    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    background: rgba(245, 243, 238, 0.18);
 }
 
 .menu-item.logout .menu-link {
-    background: linear-gradient(135deg, #fdf2f2, #fef5f5);
-    border-right: 4px solid #dc3545;
-    color: #dc3545;
+    background: rgba(245, 243, 238, 0.08);
+    border-right: 4px solid #f5f3ee;
+    color: #f5f3ee;
 }
 
 .menu-item.logout .menu-link:hover {
-    background: linear-gradient(135deg, #f8d7da, #f1b0b7);
+    background: rgba(245, 243, 238, 0.16);
 }
 
 .menu-item.logout .menu-link i {
-    color: #dc3545;
+    color: #f5f3ee;
 }
 
 /* Musician Tools section (inside the main navbar) */
@@ -444,7 +443,7 @@ a:hover{
     justify-content: flex-start;
     gap: 15px;
     padding: 18px 25px;
-    color: var(--c-text);
+    color: #f5f3ee;
     text-decoration: none;
     font-weight: 500;
     cursor: pointer;
@@ -452,15 +451,15 @@ a:hover{
 }
 
 .tools-summary:hover {
-    background: color-mix(in srgb, var(--c-bg) 75%, white);
-    color: var(--c-chord);
+    background: rgba(245, 243, 238, 0.1);
+    color: #f5f3ee;
     transform: translateX(5px);
 }
 
 .tools-summary i {
     width: 20px;
     text-align: center;
-    color: var(--c-chord);
+    color: #f5f3ee;
 }
 
 .tools-submenu {
@@ -475,21 +474,21 @@ a:hover{
     gap: 10px;
     padding: 12px 25px;
     text-decoration: none;
-    color: var(--c-text);
+    color: #f5f3ee;
     direction: rtl;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(245, 243, 238, 0.12);
     transition: all 0.2s ease;
 }
 
 .tools-submenu-link i {
     width: 20px;
     text-align: center;
-    color: var(--c-chord);
+    color: #f5f3ee;
 }
 
 .tools-submenu-link:hover {
-    background: color-mix(in srgb, var(--c-bg) 75%, white);
-    color: var(--c-chord);
+    background: rgba(245, 243, 238, 0.1);
+    color: #f5f3ee;
 }
 
 .tools-submenu-link--disabled {

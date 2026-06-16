@@ -9,16 +9,16 @@
         margin: 22px auto;
         padding: 0 18px 42px;
         direction: rtl;
+        font-family: var(--font-body);
+        font-weight: 600;
     }
 
     .chord-dictionary-hero {
-        background:
-            radial-gradient(circle at 16% 18%, rgba(102, 126, 234, 0.25), transparent 28%),
-            linear-gradient(135deg, #667eea, #764ba2);
-        color: #fff;
+        background: #2f4550;
+        color: #f5f3ee;
         border-radius: 24px;
         padding: 28px;
-        box-shadow: 0 18px 42px rgba(102, 126, 234, 0.28);
+        box-shadow: 0 18px 42px rgba(47, 69, 80, 0.26);
         margin-bottom: 22px;
         overflow: hidden;
         position: relative;
@@ -27,7 +27,9 @@
     .chord-dictionary-hero h1 {
         margin: 0 0 8px;
         font-size: clamp(2rem, 4vw, 3.2rem);
-        font-weight: 950;
+        font-family: var(--font-body) !important;
+        font-weight: 800;
+        color: #f5f3ee;
     }
 
     .chord-dictionary-hero p {
@@ -36,6 +38,7 @@
         font-size: 1.05rem;
         line-height: 1.65;
         opacity: 0.93;
+        font-weight: 600;
     }
 
     .chord-dictionary-layout {
@@ -63,7 +66,8 @@
         margin: 0 0 14px;
         color: #1e293b;
         font-size: 1.25rem;
-        font-weight: 900;
+        font-family: var(--font-body) !important;
+        font-weight: 800;
     }
 
     .chord-control-group {
@@ -74,37 +78,99 @@
         display: block;
         margin-bottom: 8px;
         color: #475569;
-        font-weight: 850;
+        font-weight: 700;
     }
 
-    .chord-pill-grid {
+    .button-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+        margin-bottom: 15px;
     }
 
-    .chord-pill {
-        border: 1px solid #dbe3ef;
-        background: #fff;
+    .chord-types-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+
+    .chord-btn {
+        border: 2px solid #e1e8ed;
+        background: linear-gradient(145deg, #ffffff, #f0f2f5);
         color: #334155;
-        border-radius: 13px;
-        padding: 10px 8px;
+        border-radius: 8px;
+        padding: 10px 6px;
         font: inherit;
-        font-weight: 850;
+        font-weight: 700;
+        font-size: 13px;
         cursor: pointer;
-        transition: transform 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s;
-        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
     }
 
-    .chord-pill:hover {
+    .chord-btn:hover {
         transform: translateY(-1px);
-        box-shadow: 0 8px 18px rgba(102, 126, 234, 0.16);
+        border-color: #2f4550;
+        box-shadow: 0 4px 15px rgba(47, 69, 80, 0.15);
     }
 
-    .chord-pill.active {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: #fff;
-        border-color: transparent;
+    .chord-btn.selected {
+        background: linear-gradient(135deg, #2f4550, #263943);
+        color: #f5f3ee;
+        border-color: #2f4550;
+        box-shadow: 0 3px 12px rgba(47, 69, 80, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .accidental-buttons {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 15px;
+    }
+
+    .accidental-btn {
+        flex: 1;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #34495e, #2c3e50);
+        color: #f5f3ee;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        padding: 10px 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 3px 10px rgba(52, 73, 94, 0.28);
+    }
+
+    .accidental-btn:hover,
+    .accidental-btn.selected {
+        background: linear-gradient(135deg, #2f4550, #263943);
+        box-shadow: 0 3px 12px rgba(47, 69, 80, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .chord-category {
+        background: rgba(248, 250, 252, 0.86);
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .category-title {
+        margin: 0 0 8px;
+        color: #34495e;
+        font-family: var(--font-body) !important;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: right;
     }
 
     .selected-chord-card {
@@ -116,23 +182,19 @@
     .selected-chord-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
+        justify-content: center;
+        margin-bottom: 8px;
     }
 
     .selected-chord-name {
         font-size: clamp(2.1rem, 6vw, 4rem);
-        font-weight: 950;
+        font-family: var(--font-body) !important;
+        font-weight: 800;
         line-height: 1;
         color: #1e293b;
         direction: ltr;
-    }
-
-    .selected-chord-note {
-        color: #64748b;
-        font-weight: 700;
-        text-align: left;
+        text-align: center;
+        width: 100%;
     }
 
     .main-chord-chart {
@@ -141,16 +203,17 @@
         border: 1px solid #e2e8f0;
         border-radius: 20px;
         min-height: 380px;
-        padding: 18px;
+        padding: 34px 18px 22px;
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
+        overflow: visible;
     }
 
     .main-chord-chart svg {
         max-width: 100%;
-        max-height: 350px;
+        max-height: 330px;
+        overflow: visible;
     }
 
     .dictionary-grid {
@@ -158,6 +221,9 @@
         grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
         gap: 10px;
         margin-top: 10px;
+        max-height: min(330px, 42vh);
+        overflow-y: auto;
+        padding: 2px 4px 8px;
     }
 
     .dictionary-card {
@@ -168,7 +234,7 @@
         padding: 12px 10px;
         cursor: pointer;
         text-align: center;
-        font-weight: 900;
+        font-weight: 800;
         direction: ltr;
         transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
     }
@@ -176,13 +242,13 @@
     .dictionary-card:hover,
     .dictionary-card.active {
         transform: translateY(-2px);
-        border-color: #667eea;
-        box-shadow: 0 10px 24px rgba(102, 126, 234, 0.18);
+        border-color: #2f4550;
+        box-shadow: 0 10px 24px rgba(47, 69, 80, 0.18);
     }
 
     .dictionary-card.active {
-        background: #f3f0ff;
-        color: #5b21b6;
+        background: #2f4550;
+        color: #f5f3ee;
     }
 
     .chord-dictionary-empty {
@@ -197,9 +263,9 @@
 {% block content %}
 <div class="chord-dictionary-page">
     <section class="chord-dictionary-hero">
-        <h1>🎸 מילון אקורדים</h1>
+        <h1>מילון אקורדים</h1>
         <p>
-            כלי להצגת תרשימי אקורדים לגיטרה בעזרת SVGuitar. בחר תו יסוד וסוג אקורד,
+            כלי להצגת תרשימי אקורדים לגיטרה. בחר תו יסוד, סימן וסוג אקורד,
             או לחץ על אחד האקורדים ברשימה כדי לראות תרשים ברור ומדויק.
         </p>
     </section>
@@ -209,13 +275,29 @@
             <h2>בחירת אקורד</h2>
 
             <div class="chord-control-group">
-                <span class="chord-control-label">תו יסוד</span>
-                <div class="chord-pill-grid" id="root-buttons"></div>
+                <span class="chord-control-label">בחר תו יסוד:</span>
+                <div class="button-grid" id="root-buttons"></div>
             </div>
 
             <div class="chord-control-group">
-                <span class="chord-control-label">סוג אקורד</span>
-                <div class="chord-pill-grid" id="type-buttons"></div>
+                <span class="chord-control-label">בחר סימן:</span>
+                <div class="accidental-buttons" id="accidental-buttons"></div>
+            </div>
+
+            <div class="chord-control-group">
+                <span class="chord-control-label">בחר סוג אקורד:</span>
+                <div class="chord-category">
+                    <h5 class="category-title">אקורדים משולשים (3 תווים):</h5>
+                    <div class="chord-types-grid" id="triads-chord-types"></div>
+                </div>
+                <div class="chord-category">
+                    <h5 class="category-title">אקורדים מרובעים (4 תווים):</h5>
+                    <div class="chord-types-grid" id="seventh-chord-types"></div>
+                </div>
+                <div class="chord-category">
+                    <h5 class="category-title">אקורדים מחומשים (5+ תווים):</h5>
+                    <div class="chord-types-grid" id="extended-chord-types"></div>
+                </div>
             </div>
 
             <div class="chord-control-group">
@@ -226,10 +308,7 @@
 
         <section class="chord-dictionary-panel selected-chord-card">
             <div class="selected-chord-header">
-                <div>
-                    <div class="selected-chord-name" id="selected-chord-name">A</div>
-                    <div class="selected-chord-note">תצוגת SVGuitar</div>
-                </div>
+                <div class="selected-chord-name" id="selected-chord-name">A</div>
             </div>
             <div class="main-chord-chart" id="main-chord-chart"></div>
         </section>
@@ -242,32 +321,63 @@
 <script src="{{ url_for('static', filename='js/chords/svguitar_chords.js') }}"></script>
 <script>
 (() => {
-    const roots = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"];
-    const types = [
-        { value: "", label: "Major" },
-        { value: "m", label: "Minor" },
-        { value: "7", label: "7" },
-        { value: "m7", label: "m7" },
-        { value: "sus4", label: "sus4" },
+    const rootLetters = ["A", "B", "C", "D", "E", "F", "G"];
+    const accidentals = [
+        { value: "", label: "♮", name: "ללא סימן" },
+        { value: "#", label: "♯", name: "דיאז" },
+        { value: "b", label: "♭", name: "במול" },
+    ];
+    const typeCategories = [
+        {
+            containerId: "triads-chord-types",
+            types: [
+                { value: "", label: "Major" },
+                { value: "m", label: "Minor" },
+                { value: "dim", label: "Dim" },
+                { value: "aug", label: "Aug" },
+                { value: "sus2", label: "Sus2" },
+                { value: "sus4", label: "Sus4" },
+            ],
+        },
+        {
+            containerId: "seventh-chord-types",
+            types: [
+                { value: "7", label: "7" },
+                { value: "maj7", label: "Maj7" },
+                { value: "m7", label: "m7" },
+                { value: "6", label: "6" },
+                { value: "m6", label: "m6" },
+                { value: "7b5", label: "7♭5" },
+            ],
+        },
+        {
+            containerId: "extended-chord-types",
+            types: [
+                { value: "add9", label: "Add9" },
+                { value: "add11", label: "Add11" },
+                { value: "add13", label: "Add13" },
+            ],
+        },
     ];
 
-    let selectedRoot = "A";
+    let selectedLetter = "A";
+    let selectedAccidental = "";
     let selectedType = "";
 
     const rootButtons = document.getElementById("root-buttons");
-    const typeButtons = document.getElementById("type-buttons");
+    const accidentalButtons = document.getElementById("accidental-buttons");
     const chordGrid = document.getElementById("chord-grid");
     const chartEl = document.getElementById("main-chord-chart");
     const selectedNameEl = document.getElementById("selected-chord-name");
 
-    function chordName(root = selectedRoot, type = selectedType) {
+    function chordName(root = selectedLetter + selectedAccidental, type = selectedType) {
         return root + type;
     }
 
-    function renderButton(container, text, active, onClick) {
+    function renderButton(container, className, text, active, onClick) {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "chord-pill" + (active ? " active" : "");
+        btn.className = className + (active ? " selected" : "");
         btn.textContent = text;
         btn.addEventListener("click", onClick);
         container.appendChild(btn);
@@ -275,18 +385,36 @@
 
     function renderControls() {
         rootButtons.innerHTML = "";
-        roots.forEach(root => {
-            renderButton(rootButtons, root, root === selectedRoot, () => {
-                selectedRoot = root;
+        rootLetters.forEach(letter => {
+            renderButton(rootButtons, "chord-btn", letter + selectedAccidental, letter === selectedLetter, () => {
+                selectedLetter = letter;
                 renderAll();
             });
         });
 
-        typeButtons.innerHTML = "";
-        types.forEach(type => {
-            renderButton(typeButtons, type.label, type.value === selectedType, () => {
-                selectedType = type.value;
+        accidentalButtons.innerHTML = "";
+        accidentals.forEach(accidental => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "accidental-btn" + (accidental.value === selectedAccidental ? " selected" : "");
+            btn.innerHTML = `${accidental.label}<br><span style="font-size: 10px;">${accidental.name}</span>`;
+            btn.addEventListener("click", () => {
+                selectedAccidental = accidental.value;
                 renderAll();
+            });
+            accidentalButtons.appendChild(btn);
+        });
+
+        typeCategories.forEach(category => {
+            const container = document.getElementById(category.containerId);
+            if (!container) return;
+
+            container.innerHTML = "";
+            category.types.forEach(type => {
+                renderButton(container, "chord-btn", type.label, type.value === selectedType, () => {
+                    selectedType = type.value;
+                    renderAll();
+                });
             });
         });
     }
@@ -294,20 +422,25 @@
     function renderGrid() {
         chordGrid.innerHTML = "";
         const current = chordName();
-        roots.forEach(root => {
-            types.forEach(type => {
-                const name = root + type.value;
-                if (!window.SVGuitarChordDictionary.chordShape(name)) return;
-                const card = document.createElement("button");
-                card.type = "button";
-                card.className = "dictionary-card" + (name === current ? " active" : "");
-                card.textContent = name;
-                card.addEventListener("click", () => {
-                    selectedRoot = root;
-                    selectedType = type.value;
-                    renderAll();
+        const availableTypes = typeCategories.flatMap(category => category.types);
+        rootLetters.forEach(letter => {
+            accidentals.forEach(accidental => {
+                const root = letter + accidental.value;
+                availableTypes.forEach(type => {
+                    const name = root + type.value;
+                    if (!window.SVGuitarChordDictionary.chordShape(name)) return;
+                    const card = document.createElement("button");
+                    card.type = "button";
+                    card.className = "dictionary-card" + (name === current ? " active" : "");
+                    card.textContent = name;
+                    card.addEventListener("click", () => {
+                        selectedLetter = letter;
+                        selectedAccidental = accidental.value;
+                        selectedType = type.value;
+                        renderAll();
+                    });
+                    chordGrid.appendChild(card);
                 });
-                chordGrid.appendChild(card);
             });
         });
     }
@@ -328,20 +461,20 @@
                 strings: 6,
                 frets: 4,
                 position: shape.position || 1,
-                title: shape.title,
+                title: "",
                 tuning: ["E", "A", "D", "G", "B", "E"],
-                fontFamily: "Arial, Helvetica, sans-serif",
-                titleFontSize: 42,
+                fontFamily: "Assistant, Arial, Helvetica, sans-serif",
+                titleFontSize: 0,
                 tuningsFontSize: 24,
                 fretLabelFontSize: 24,
                 fingerSize: 0.62,
                 fingerTextSize: 20,
-                sidePadding: 0.22,
+                sidePadding: 0.3,
                 fretSize: 1.3,
                 titleBottomMargin: 0,
             })
             .chord({
-                title: shape.title,
+                title: "",
                 position: shape.position || 1,
                 fingers: shape.fingers || [],
                 barres: shape.barres || [],

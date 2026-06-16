@@ -146,8 +146,9 @@ class DataManager {
         setTimeout(() => {
             loopsData.forEach(loopData => {
                 // מצא את הלופ ברשימת הלופים השמורים
+                const loopDataName = (loopData.customName || loopData.name || "").toString().trim();
                 const savedLoop = window.loopManager.getAllSavedLoops()
-                    .find(loop => loop.customName === loopData.name);
+                    .find(loop => (loop.customName || loop.name || "").toString().trim() === loopDataName);
 
                 if (savedLoop) {
                     // צור עותק עם חזרות
@@ -156,7 +157,7 @@ class DataManager {
                         repeatCount: loopData.repeatCount || 1
                     };
 
-                    console.log(`Adding loop to structure: ${loopData.name} with ${loopData.repeatCount} repeats`);
+                    console.log(`Adding loop to structure: ${loopDataName} with ${loopData.repeatCount} repeats`);
                     window.songStructureManager.addLoopToSong(loopForStructure);
                 }
             });
@@ -274,6 +275,7 @@ class DataManager {
 
         if (measures.length > 0 && window.loopManager) {
             const defaultLoopData = [{
+                customName: "חלק ראשי",
                 name: "חלק ראשי",
                 measures: measures,
                 measureCount: measures.length,

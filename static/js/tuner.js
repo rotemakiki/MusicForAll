@@ -56,11 +56,19 @@ class GuitarTuner {
                             <div id="current-note" class="current-note">--</div>
                             <div id="target-note" class="target-note">בחר מיתר</div>
                         </div>
-                        <div class="tuner-gauge">
-                            <div class="gauge-needle" id="gauge-needle"></div>
-                            <div class="gauge-center"></div>
+                        <div class="tuner-gauge-wrapper">
+                            <div class="gauge-labels" aria-hidden="true">
+                                <span>למתוח</span>
+                                <span>מכוון</span>
+                                <span>להרפות</span>
+                            </div>
+                            <div class="tuner-gauge">
+                                <div class="gauge-needle" id="gauge-needle"></div>
+                                <div class="gauge-center"></div>
+                            </div>
                         </div>
                         <div class="cents-display" id="cents-display">0 סנט</div>
+                        <div class="tuning-direction" id="tuning-direction">נגן מיתר כדי להתחיל</div>
                     </div>
                     <div class="string-selector">
                         <div class="string-buttons">
@@ -190,6 +198,7 @@ class GuitarTuner {
         document.getElementById('frequency-value').textContent = '-- Hz';
         document.getElementById('current-note').textContent = '--';
         document.getElementById('cents-display').textContent = '0 סנט';
+        document.getElementById('tuning-direction').textContent = 'נגן מיתר כדי להתחיל';
         // Keep the needle centered (matches CSS base transform)
         document.getElementById('gauge-needle').style.transform = 'translate(-50%, -50%) translateX(0px)';
     }
@@ -317,6 +326,13 @@ class GuitarTuner {
             this.currentNote = closestNote;
             document.getElementById('current-note').textContent = closestNote.name;
             document.getElementById('target-note').textContent = `מיתר ${closestNote.string}`;
+
+            document.querySelectorAll('.string-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.string === String(closestNote.string));
+            });
+
+            this.currentCents = this.calculateCents(frequency, closestNote.frequency);
+            this.updateTunerDisplay();
         }
     }
     
@@ -357,6 +373,16 @@ class GuitarTuner {
         // Update cents display
         const centsText = cents >= 0 ? `+${cents.toFixed(1)}` : cents.toFixed(1);
         document.getElementById('cents-display').textContent = `${centsText} סנט`;
+
+        const absCents = Math.abs(cents);
+        const directionDisplay = document.getElementById('tuning-direction');
+        if (absCents < 5) {
+            directionDisplay.textContent = 'מכוון';
+        } else if (cents < 0) {
+            directionDisplay.textContent = 'נמוך מדי - למתוח את המיתר';
+        } else {
+            directionDisplay.textContent = 'גבוה מדי - להרפות את המיתר';
+        }
         
         // Update gauge needle position (-50 to +50 cents, centered at 0)
         const maxCents = 50;
@@ -378,7 +404,6 @@ class GuitarTuner {
         
         // Color feedback
         const gaugeNeedle = document.getElementById('gauge-needle');
-        const absCents = Math.abs(cents);
         if (absCents < 5) {
             gaugeNeedle.className = 'gauge-needle in-tune';
         } else if (absCents < 20) {

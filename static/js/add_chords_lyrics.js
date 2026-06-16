@@ -164,6 +164,15 @@
     const text = exportLinesToText();
     try {
       localStorage.setItem(STORAGE_KEY_TEXT, text);
+      localStorage.setItem(`${STORAGE_KEY_TEXT}_dirty`, "true");
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function markReturningToSongForm() {
+    try {
+      localStorage.setItem("returningFromPlayMethodEditor", "true");
     } catch (e) {
       // ignore
     }
@@ -248,6 +257,7 @@
 
     btnSaveReturn.addEventListener("click", () => {
       persist();
+      markReturningToSongForm();
       window.location.href = getReturnTo();
     });
   }

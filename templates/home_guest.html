@@ -11,20 +11,21 @@
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-content">
-        <h1 class="hero-title">🎵 מוזיקה לכולם 🎶</h1>
+        <div class="hero-logo" aria-label="מוזיקה לכולם">
+            <span class="hero-logo-mark">MFA</span>
+            <span class="hero-logo-text">מוזיקה לכולם</span>
+        </div>
+        <h1 class="hero-title">מוזיקה לכולם</h1>
         <p class="hero-subtitle">פלטפורמה ללימוד והוראת מוזיקה • שירים עם אקורדים • מורים וקורסים • קהילה מוזיקלית</p>
 
         <div class="hero-buttons">
             <a href="{{ url_for('auth.register') }}" class="hero-btn primary">
-                <span>🎸</span>
                 <span>הצטרף עכשיו</span>
             </a>
             <a href="{{ url_for('auth.login') }}" class="hero-btn">
-                <span>🔑</span>
                 <span>התחברות</span>
             </a>
             <a href="{{ url_for('songs.songs') }}" class="hero-btn">
-                <span>🎵</span>
                 <span>עיין בשירים</span>
             </a>
         </div>
@@ -48,37 +49,31 @@
 
         <div class="features-grid">
             <div class="feature-card">
-                <span class="feature-icon">🎓</span>
                 <h3 class="feature-title">מורים מקצועיים</h3>
                 <p class="feature-description">למד מהמורים הטובים ביותר עם ניסיון עשיר בהוראה ובביצוע. כל מורה עובר בדיקה יסודית ומספק הוראה איכותית.</p>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">🎸</span>
                 <h3 class="feature-title">שיעורים אינטראקטיביים</h3>
                 <p class="feature-description">שיעורים עם אקורדים אינטראקטיביים, מטרונום מובנה, ונגן שירים מתקדם. למד בקצב שלך עם כלים טכנולוגיים מתקדמים.</p>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">🌟</span>
                 <h3 class="feature-title">למידה מותאמת אישית</h3>
                 <p class="feature-description">מערכת חכמה שמתאימה את התוכן לרמה שלך. החל ממתחילים ועד מתקדמים, כל אחד מוצא את המקום שלו.</p>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">🎵</span>
                 <h3 class="feature-title">ספריית שירים</h3>
                 <p class="feature-description">שירים עם אקורדים וטאבים, הדרכות וידאו ואפשרות לנגן עם מטרונום. הספרייה גדלה כל הזמן עם תוכן חדש.</p>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">👥</span>
                 <h3 class="feature-title">קהילה מוזיקלית</h3>
                 <p class="feature-description">הצטרף לקהילה של לומדי מוזיקה ומורים, שתף שירים, קבל המלצות ולמד בקצב שלך.</p>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">📱</span>
                 <h3 class="feature-title">נגישות מכל מקום</h3>
                 <p class="feature-description">למד בבית, בדרך, או בכל מקום שתרצה. הפלטפורמה זמינה 24/7 ומותאמת לכל המכשירים.</p>
             </div>
@@ -120,19 +115,16 @@
 
         <div class="features-grid">
             <div class="feature-card">
-                <span class="feature-icon">1️⃣</span>
                 <h3 class="feature-title">הירשם בחינם</h3>
                 <p class="feature-description">צור חשבון בקלות ובחר אם אתה מורה או תלמיד. ההרשמה אורכת פחות מדקה ומיד תוכל להתחיל.</p>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">2️⃣</span>
                 <h3 class="feature-title">בחר שיר או מורה</h3>
                 <p class="feature-description">עיין בספריית השירים העשירה או חפש מורה שמתאים לך. כל שיר כולל אקורדים, וידאו הדרכה ואפשרות נגינה.</p>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">3️⃣</span>
                 <h3 class="feature-title">התחל ללמוד ולנגן</h3>
                 <p class="feature-description">השתמש בכלים האינטראקטיביים שלנו כדי ללמוד בקצב שלך. נגן עם המטרונום, תרגל אקורדים ושפר את הכישורים שלך.</p>
             </div>
@@ -150,36 +142,30 @@
 
         <div class="features-grid">
             <div class="feature-card">
-                <span class="feature-icon">🎸</span>
                 <h3 class="feature-title">תרגל שירים</h3>
                 <p class="feature-description">גש לספריית השירים ותתחיל לתרגל מיד עם אקורדים אינטראקטיביים ומטרונום מובנה.</p>
                 <div style="margin-top: 20px;">
                     <a href="{{ url_for('songs.songs') }}" class="hero-btn">
-                        <span>🎵</span>
                         <span>עבור לשירים</span>
                     </a>
                 </div>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">👨‍🏫</span>
                 <h3 class="feature-title">מצא אנשי מקצוע</h3>
                 <p class="feature-description">חפש מורה, אולפן, נגן (סשניסט) ועוד — ותתחיל להתקדם עם המיטב שיש.</p>
                 <div style="margin-top: 20px;">
                     <a href="{{ url_for('professionals.list_professionals') }}" class="hero-btn">
-                        <span>🔍</span>
                         <span>אנשי מקצוע</span>
                     </a>
                 </div>
             </div>
 
             <div class="feature-card">
-                <span class="feature-icon">📚</span>
                 <h3 class="feature-title">שיעורים</h3>
                 <p class="feature-description">שיעורים קצרים ממורים ומוסיקאים — חיפוש, סינון ולמידה בקצב שלך.</p>
                 <div style="margin-top: 20px;">
                     <a href="{{ url_for('lessons.lessons_list') }}" class="hero-btn">
-                        <span>▶️</span>
                         <span>צפה בשיעורים</span>
                     </a>
                 </div>
@@ -202,7 +188,6 @@
 
         <div style="margin-top: 24px; text-align: center;">
             <a href="{{ url_for('songs.songs') }}" class="hero-btn">
-                <span>🎵</span>
                 <span>לעמוד השירים</span>
             </a>
         </div>
@@ -218,11 +203,9 @@
 
             <div class="cta-buttons">
                 <a href="{{ url_for('auth.register') }}" class="hero-btn primary">
-                    <span>🚀</span>
                     <span>התחל עכשיו - בחינם</span>
                 </a>
                 <a href="{{ url_for('tutorials.tutorials') }}" class="hero-btn">
-                    <span>📖</span>
                     <span>מדריך למתחילים</span>
                 </a>
             </div>

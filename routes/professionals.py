@@ -4,11 +4,13 @@ from flask import Blueprint, render_template, request
 from firebase_admin import firestore
 
 from utils.professional_catalog import (
+    LANGUAGE_OPTIONS,
     PROFESSIONAL_TYPES,
     TYPE_LABELS,
     canonicalize_type,
     infer_professional_types,
     norm_list,
+    normalize_languages,
 )
 
 professionals_bp = Blueprint("professionals", __name__)
@@ -17,6 +19,53 @@ try:
     from routes.songs import _get_genres_config  # type: ignore
 except Exception:  # pragma: no cover
     _get_genres_config = None
+
+
+def _genre_aliases(genres_catalog: list[dict]) -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for genre in genres_catalog or []:
+        value = (genre.get("value") or "").strip()
+        label = (genre.get("label") or "").strip()
+        if not value:
+            continue
+
+        candidates = {value, value.replace("_", " "), label}
+        if " - " in label:
+            candidates.update(part.strip() for part in label.split(" - "))
+        if " - " not in label and " - " not in value:
+            candidates.add(label)
+
+        for candidate in candidates:
+            key = candidate.strip().lower().replace("_", " ").replace("-", " ")
+            if key:
+                aliases[key] = value
+    return aliases
+
+
+def _normalize_teacher_genres(user: dict, genres_catalog: list[dict]) -> list[str]:
+    aliases = _genre_aliases(genres_catalog)
+    valid_values = {
+        (genre.get("value") or "").strip()
+        for genre in genres_catalog or []
+        if (genre.get("value") or "").strip()
+    }
+    selected: set[str] = set()
+
+    # teacher_genres is the canonical field. styles is kept as a legacy fallback
+    # so existing profiles that wrote "רוק" / "Rock" still appear in filtering.
+    for raw in norm_list(user.get("teacher_genres")) + norm_list(user.get("styles")):
+        key = raw.strip().lower().replace("_", " ").replace("-", " ")
+        value = aliases.get(key)
+        if value:
+            selected.add(value)
+        elif raw in valid_values:
+            selected.add(raw)
+
+    return [
+        genre.get("value")
+        for genre in genres_catalog or []
+        if genre.get("value") in selected
+    ]
 
 
 @professionals_bp.route("/professionals")
@@ -29,6 +78,7 @@ def list_professionals():
     """
     db = firestore.client()
     docs = db.collection("users").stream()
+    genres_catalog = _get_genres_config() if _get_genres_config else []
 
     professionals: list[dict] = []
     for doc in docs:
@@ -39,7 +89,7 @@ def list_professionals():
         if not ptypes:
             continue
 
-        languages = norm_list(u.get("languages") or u.get("language"))
+        languages = normalize_languages(u.get("languages") or u.get("language"))
         areas = norm_list(u.get("areas") or u.get("area") or u.get("location"))
         location = (u.get("location") or "").strip()
         rating_avg = u.get("rating_avg")
@@ -60,7 +110,7 @@ def list_professionals():
                 "rating_avg": rating_avg,
                 "teacher_is_available": bool(u.get("is_available")) if "teacher" in ptypes else None,
                 "teacher_teaches_online": bool(u.get("teaches_online")) if "teacher" in ptypes else None,
-                "teacher_genres": norm_list(u.get("teacher_genres") or u.get("styles")) if "teacher" in ptypes else [],
+                "teacher_genres": _normalize_teacher_genres(u, genres_catalog) if "teacher" in ptypes else [],
                 "teacher_lesson_type": (u.get("teacher_lesson_type") or "").strip() if "teacher" in ptypes else "",
             }
         )
@@ -69,11 +119,17 @@ def list_professionals():
 
     initial_type = canonicalize_type(request.args.get("type") or "") or ""
 
-    language_options = sorted({lang for p in professionals for lang in (p.get("languages") or []) if lang})
+    known_language_labels = [lang["label"] for lang in LANGUAGE_OPTIONS]
+    custom_language_labels = sorted({
+        lang
+        for p in professionals
+        for lang in (p.get("languages") or [])
+        if lang and lang not in known_language_labels
+    })
+    language_options = known_language_labels + custom_language_labels
     area_options = sorted({a for p in professionals for a in (p.get("areas") or []) if a})
     type_options = PROFESSIONAL_TYPES
     type_labels = TYPE_LABELS
-    genres_catalog = _get_genres_config() if _get_genres_config else []
 
     return render_template(
         "professionals.html",

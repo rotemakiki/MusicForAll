@@ -28,14 +28,12 @@ body {
 }
 
 .welcome-title {
-    background: var(--g-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #2f4550;
     font-size: 2.8rem;
-    font-weight: 800;
+    font-family: "Assistant", var(--font-body);
+    font-weight: 700;
     margin: 0 0 15px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
 }
 
 .welcome-subtitle {
@@ -320,52 +318,51 @@ body {
     top: 50%;
     z-index: 20;
     border: none;
-    border-radius: 50%;
-    width: 52px;
-    height: 52px;
-    color: white;
-    font-size: 20px;
-    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+    width: 34px;
+    height: 58px;
+    color: #2f4550;
+    font-size: 0;
+    background: transparent;
+    box-shadow: none;
     cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease, filter 0.2s ease;
+    transition: transform 0.18s ease, opacity 0.18s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     transform: translateY(-50%);
     pointer-events: auto;
+    padding: 0;
+}
+
+.scroll-arrow::before {
+    content: "";
+    display: block;
+    width: 18px;
+    height: 18px;
+    border-color: #2f4550;
+    border-style: solid;
+    border-width: 3px 3px 0 0;
 }
 
 .scroll-arrow:hover {
-    transform: translateY(-50%) scale(1.08);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    transform: translateY(-50%) scale(1.12);
 }
 
-/* ימין — כחול כהה בולט */
 .scroll-arrow.scroll-right {
-    right: 8px;
-    background: linear-gradient(180deg, #1e3a8a 0%, #1d4ed8 100%);
-    border: 2px solid rgba(255, 255, 255, 0.95);
+    right: -4px;
 }
 
-.scroll-arrow.scroll-right:hover {
-    background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+.scroll-arrow.scroll-right::before {
+    transform: rotate(45deg);
 }
 
-/* שמאל — ניגוד גבוה מעל הגרדיאנט הסגול של הכרטיסים */
 .scroll-arrow.scroll-left {
-    left: 8px;
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-    border: 3px solid #fff;
-    box-shadow:
-        0 4px 18px rgba(15, 23, 42, 0.55),
-        0 0 0 2px rgba(255, 255, 255, 0.4);
+    left: -4px;
 }
 
-.scroll-arrow.scroll-left:hover {
-    background: linear-gradient(180deg, #1e293b 0%, #334155 100%);
-    box-shadow:
-        0 8px 24px rgba(15, 23, 42, 0.5),
-        0 0 0 2px rgba(255, 255, 255, 0.55);
+.scroll-arrow.scroll-left::before {
+    transform: rotate(-135deg);
 }
 
 .empty-state {
@@ -550,9 +547,14 @@ body {
     }
 
     .scroll-arrow {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
+        width: 30px;
+        height: 48px;
+    }
+
+    .scroll-arrow::before {
+        width: 15px;
+        height: 15px;
+        border-width: 2px 2px 0 0;
     }
 
     .quick-stats {

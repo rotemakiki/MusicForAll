@@ -50,6 +50,38 @@ body {
     animation: fadeInUp 1s ease-out;
 }
 
+.hero-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding: 10px 18px;
+    border: 1px solid rgba(245, 243, 238, 0.35);
+    border-radius: 999px;
+    color: #f5f3ee;
+    background: rgba(47, 69, 80, 0.25);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.16);
+}
+
+.hero-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #f5f3ee;
+    color: #2f4550;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.hero-logo-text {
+    font-family: "Assistant", var(--font-body);
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -62,14 +94,11 @@ body {
 }
 
 .hero-title {
-    font-family: var(--font-display);
+    font-family: "Assistant", var(--font-body);
     font-size: 4rem;
     font-weight: 800;
     margin-bottom: 20px;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--c-bg) 100%, white), color-mix(in srgb, var(--c-bg) 92%, white));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #f5f3ee;
     text-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     line-height: 1.2;
 }
@@ -95,13 +124,13 @@ body {
 .hero-btn {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 0;
     padding: 16px 32px;
-    background: color-mix(in srgb, var(--c-bg) 22%, transparent);
+    background: #2f4550;
     backdrop-filter: blur(10px);
-    border: 2px solid color-mix(in srgb, var(--c-bg) 28%, transparent);
+    border: 2px solid rgba(245, 243, 238, 0.28);
     border-radius: 50px;
-    color: var(--c-bg);
+    color: #f5f3ee;
     text-decoration: none;
     font-weight: 700;
     font-size: 1.1rem;
@@ -111,18 +140,20 @@ body {
 
 .hero-btn:hover {
     transform: translateY(-3px);
-    background: color-mix(in srgb, var(--c-bg) 30%, transparent);
-    border-color: color-mix(in srgb, var(--c-bg) 40%, transparent);
+    background: #3a5562;
+    border-color: rgba(245, 243, 238, 0.42);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    color: #f5f3ee;
 }
 
 .hero-btn.primary {
-    background: var(--g-accent);
-    border-color: transparent;
+    background: #2f4550 !important;
+    border-color: rgba(245, 243, 238, 0.28) !important;
+    color: #f5f3ee !important;
 }
 
 .hero-btn.primary:hover {
-    background: var(--g-accent);
+    background: #3a5562 !important;
     transform: translateY(-3px) scale(1.05);
 }
 

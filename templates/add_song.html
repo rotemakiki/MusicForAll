@@ -327,16 +327,7 @@
                         <div class="field-validation" id="video_url-validation"></div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="tutorial_video_url">
-                            <span class="label-icon">📚</span>
-                            קישור לסרטון הדרכה (יוטיוב)
-                        </label>
-                        <input type="text" id="tutorial_video_url" name="tutorial_video_url" class="form-input"
-                               placeholder="https://www.youtube.com/watch?v=...">
-                        <div class="input-hint">קישור יוטיוב לסרטון הדרכה (אופציונלי)</div>
-                        <div class="field-validation" id="tutorial_video_url-validation"></div>
-                    </div>
+                    <input type="hidden" id="tutorial_video_url" name="tutorial_video_url" value="">
 
                     <div class="form-group">
                         <label class="form-label">
@@ -428,6 +419,9 @@
                     <input type="hidden" id="chords" name="chords" required>
                     <input type="hidden" id="loops" name="loops">
                     <input type="hidden" id="play_method" name="play_method" value="boxes">
+                    <textarea id="tabs_text" name="tabs_text" style="display:none;"></textarea>
+                    <textarea id="chords_lyrics_text" name="chords_lyrics_text" style="display:none;"></textarea>
+                    <textarea id="lyrics_text" name="lyrics_text" style="display:none;"></textarea>
                 </div>
 
                 <!-- Notes Section -->

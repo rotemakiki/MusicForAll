@@ -254,17 +254,37 @@ function setupVideoInteractions() {
             }
         });
 
-        // Video preview on hover
         if (video) {
+            applyVideoAspectClass(video);
+
+            video.addEventListener('loadedmetadata', () => {
+                applyVideoAspectClass(video);
+            });
+
+            video.addEventListener('play', () => {
+                if (video.dataset.previewPlaying !== '1') {
+                    video.dataset.userPlaying = '1';
+                }
+            });
+
+            video.addEventListener('pause', () => {
+                if (video.dataset.previewPlaying !== '1') {
+                    delete video.dataset.userPlaying;
+                }
+            });
+
+            // Short muted preview on hover, without interrupting user-initiated playback.
             let hoverTimeout;
 
             card.addEventListener('mouseenter', () => {
                 hoverTimeout = setTimeout(() => {
-                    if (video.paused) {
+                    if (video.paused && video.dataset.userPlaying !== '1') {
                         video.currentTime = 0;
                         video.muted = true;
+                        video.dataset.previewPlaying = '1';
                         video.play().catch(() => {
                             // Handle autoplay restrictions
+                            delete video.dataset.previewPlaying;
                         });
                     }
                 }, 1500);
@@ -272,13 +292,23 @@ function setupVideoInteractions() {
 
             card.addEventListener('mouseleave', () => {
                 clearTimeout(hoverTimeout);
-                if (!video.paused) {
+                if (video.dataset.previewPlaying === '1') {
                     video.pause();
                     video.currentTime = 0;
+                    video.muted = false;
+                    delete video.dataset.previewPlaying;
                 }
             });
         }
     });
+}
+
+function applyVideoAspectClass(video) {
+    if (!video || !video.videoWidth || !video.videoHeight) return;
+
+    const ratio = video.videoWidth / video.videoHeight;
+    video.classList.toggle('is-portrait', ratio < 0.8);
+    video.classList.toggle('is-square', ratio >= 0.8 && ratio <= 1.25);
 }
 
 function setupIntersectionObserver() {

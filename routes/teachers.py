@@ -3,11 +3,14 @@ from firebase_admin import firestore
 from datetime import datetime
 
 from utils.professional_catalog import (
+    LANGUAGE_OPTIONS,
     TYPE_LABELS,
     additional_type_options,
     current_additional_types,
     infer_professional_types,
     merge_professional_types_for_save,
+    norm_list,
+    normalize_languages,
 )
 from utils.social_links import (
     SOCIAL_LINK_OPTIONS,
@@ -30,6 +33,36 @@ def _genre_label_map() -> dict[str, str]:
     }
 
 
+def _genre_alias_map() -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for value, label in _genre_label_map().items():
+        candidates = {value, value.replace("_", " "), label}
+        if " - " in label:
+            candidates.update(part.strip() for part in label.split(" - "))
+        for candidate in candidates:
+            key = candidate.strip().lower().replace("_", " ").replace("-", " ")
+            if key:
+                aliases[key] = value
+    return aliases
+
+
+def _normalize_teacher_genres(*values) -> list[str]:
+    aliases = _genre_alias_map()
+    label_map = _genre_label_map()
+    selected: set[str] = set()
+
+    for value in values:
+        for raw in norm_list(value):
+            key = raw.strip().lower().replace("_", " ").replace("-", " ")
+            genre_value = aliases.get(key)
+            if genre_value:
+                selected.add(genre_value)
+            elif raw in label_map:
+                selected.add(raw)
+
+    return [genre for genre in label_map if genre in selected]
+
+
 def _valid_teacher_genres(selected: list[str]) -> list[str]:
     valid_values = set(_genre_label_map())
     return sorted({g for g in selected if g in valid_values})
@@ -48,6 +81,94 @@ def _teacher_song_ids(db, teacher_id: str, limit: int = 200) -> set:
     except Exception:
         return set()
     return ids
+
+
+def _sort_value(value) -> str:
+    if not value:
+        return ""
+    try:
+        return value.isoformat()
+    except Exception:
+        return str(value)
+
+
+def _date_label(value) -> str:
+    if not value:
+        return "תאריך לא ידוע"
+    try:
+        return value.strftime("%d/%m/%Y")
+    except Exception:
+        return str(value)[:10]
+
+
+def _to_int(value, default: int = 0) -> int:
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
+def _teacher_song_lesson_videos(db, teacher_id: str, teacher_song_ids: set | None = None, limit: int = 100) -> list[dict]:
+    """Videos that are attached to songs created by this teacher; excludes courses/promos."""
+    teacher_song_ids = teacher_song_ids if teacher_song_ids is not None else _teacher_song_ids(db, teacher_id, limit=limit)
+    if not teacher_song_ids:
+        return []
+
+    videos: list[dict] = []
+
+    # Newer standalone video docs.
+    try:
+        for vdoc in db.collection("videos").where("uploaded_by", "==", teacher_id).stream():
+            v = vdoc.to_dict() or {}
+            kind = (v.get("kind") or "lesson").strip().lower()
+            song_id = v.get("song_id")
+            if kind != "lesson" or not song_id or song_id not in teacher_song_ids:
+                continue
+            v["id"] = vdoc.id
+            v["source"] = "video_doc"
+            videos.append(v)
+    except Exception:
+        pass
+
+    # Song-embedded tutorial videos.
+    try:
+        for sdoc in db.collection("songs").where("created_by", "==", teacher_id).limit(limit).stream():
+            song = sdoc.to_dict() or {}
+            song_id = sdoc.id
+            for idx, raw_video in enumerate(song.get("tutorial_videos") or []):
+                if not isinstance(raw_video, dict):
+                    continue
+                if raw_video.get("uploaded_by") and raw_video.get("uploaded_by") != teacher_id:
+                    continue
+                video_id = raw_video.get("id") or f"{song_id}_{idx}"
+                videos.append({
+                    "id": video_id,
+                    "title": raw_video.get("title") or song.get("title") or "סרטון לימוד",
+                    "description": raw_video.get("description") or f"סרטון לימוד לשיר {song.get('title') or ''}".strip(),
+                    "url": raw_video.get("url") or raw_video.get("video_url") or "",
+                    "song_id": song_id,
+                    "uploaded_by": raw_video.get("uploaded_by") or teacher_id,
+                    "uploaded_at": raw_video.get("uploaded_at") or song.get("updated_at") or song.get("created_at"),
+                    "views": _to_int(raw_video.get("views") or song.get("views") or 0),
+                    "watch_seconds": _to_int(raw_video.get("watch_seconds") or 0),
+                    "source": "song_tutorial_video",
+                })
+    except Exception:
+        pass
+
+    videos = [v for v in videos if v.get("url")]
+    videos.sort(
+        key=lambda x: (
+            _to_int(x.get("views") or 0),
+            _to_int(x.get("watch_seconds") or x.get("watch_seconds_total") or 0),
+            _sort_value(x.get("uploaded_at") or x.get("created_at")),
+        ),
+        reverse=True,
+    )
+    for v in videos:
+        v["uploaded_date_label"] = _date_label(v.get("uploaded_at") or v.get("created_at"))
+    return videos
+
 
 @teachers_bp.route('/teachers')
 def list_teachers():
@@ -71,31 +192,16 @@ def teacher_profile(teacher_id):
     for v in videos_ref:
         vid = v.to_dict()
         vid["id"] = v.id
+        vid["uploaded_date_label"] = _date_label(vid.get("uploaded_at") or vid.get("created_at"))
         videos.append(vid)
 
     # Partition by kind: promo videos vs lesson videos
     promo_videos = [v for v in videos if v.get("kind") == "promo"]
-    lesson_videos_all = [v for v in videos if v.get("kind") in (None, "", "lesson")]
 
     # Only "song lesson" videos are allowed in popular section:
-    # must be linked to a song created by this teacher.
+    # must be linked to a song created by this teacher and never to paid courses.
     teacher_song_ids = _teacher_song_ids(db, teacher_id=teacher_id, limit=300)
-    lesson_videos = []
-    for v in lesson_videos_all:
-        sid = v.get("song_id")
-        if not sid:
-            continue
-        if teacher_song_ids and sid not in teacher_song_ids:
-            continue
-        lesson_videos.append(v)
-
-    # Sort lesson videos by views desc (fallback 0), then by upload time desc
-    def _video_sort_key(v):
-        views = v.get("views") or 0
-        uploaded_at = v.get("uploaded_at") or v.get("created_at") or ""
-        return (views, uploaded_at)
-
-    lesson_videos.sort(key=_video_sort_key, reverse=True)
+    lesson_videos = _teacher_song_lesson_videos(db, teacher_id=teacher_id, teacher_song_ids=teacher_song_ids, limit=300)
     most_viewed = lesson_videos[:3]
 
     # Testimonials (only confirmed students can add)
@@ -108,11 +214,23 @@ def teacher_profile(teacher_id):
         else:
             is_confirmed_student = _has_teacher_confirmation(teacher_id, viewer_id)
 
+    confirmed_student_ids = set()
+    try:
+        for cdoc in db.collection("teacher_confirmations").where("teacher_id", "==", teacher_id).stream():
+            c = cdoc.to_dict() or {}
+            sid = c.get("student_id")
+            if sid:
+                confirmed_student_ids.add(sid)
+    except Exception:
+        confirmed_student_ids = set()
+
     testimonials = []
     try:
         tdocs = list(db.collection("teacher_testimonials").where("teacher_id", "==", teacher_id).stream())
         for tdoc in tdocs:
             t = tdoc.to_dict() or {}
+            if t.get("student_id") not in confirmed_student_ids:
+                continue
             t["id"] = tdoc.id
             testimonials.append(t)
         testimonials.sort(key=lambda x: x.get("created_at") or "", reverse=True)
@@ -146,28 +264,27 @@ def teacher_profile(teacher_id):
     try:
         for tdoc in db.collection("tutorials").where("teacher_id", "==", teacher_id).stream():
             t = tdoc.to_dict() or {}
-            total_views += int(t.get("views") or 0)
+            total_views += _to_int(t.get("views") or 0)
     except Exception:
         pass
 
     try:
         for sdoc in db.collection("course_lesson_stats").where("teacher_id", "==", teacher_id).stream():
             s = sdoc.to_dict() or {}
-            total_views += int(s.get("views") or 0)
+            total_views += _to_int(s.get("views") or 0)
     except Exception:
         pass
 
     teacher["professional_types"] = infer_professional_types(teacher)
     teacher["social_links_display"] = social_links_for_display(teacher)
     genre_labels = _genre_label_map()
-    teacher_genres = teacher.get("teacher_genres") or []
-    if isinstance(teacher_genres, str):
-        teacher_genres = [g.strip() for g in teacher_genres.split(",") if g.strip()]
+    teacher_genres = _normalize_teacher_genres(teacher.get("teacher_genres"), teacher.get("styles"))
     teacher["teacher_genre_labels"] = [
         genre_labels.get(g, g)
         for g in teacher_genres
         if g
     ]
+    teacher["languages_display"] = normalize_languages(teacher.get("languages") or teacher.get("language"))
 
     return render_template(
         "teacher_profile.html",
@@ -179,6 +296,7 @@ def teacher_profile(teacher_id):
         is_confirmed_student=bool(is_confirmed_student),
         days_on_site=days_on_site,
         total_views=total_views,
+        confirmed_students_count=len(confirmed_student_ids),
         type_labels=TYPE_LABELS,
     )
 
@@ -253,7 +371,8 @@ def edit_teacher_profile(teacher_id):
     if request.method == 'POST':
         instruments = request.form.get('instruments')
         styles = request.form.get('styles')
-        language = (request.form.get('language') or "").strip()
+        languages = normalize_languages(request.form.getlist("languages") or request.form.get("language"))
+        language = ", ".join(languages)
         location = (request.form.get('location') or "").strip()
         is_available_str = request.form.get('is_available')
         is_available = True if is_available_str == 'true' else False
@@ -279,7 +398,7 @@ def edit_teacher_profile(teacher_id):
             "styles": styles,
             "language": language,
             "location": location,
-            "languages": [language] if language else [],
+            "languages": languages,
             "areas": [location] if location else [],
             "professional_types": professional_types,
             "additional_services": [t for t in professional_types if t != "teacher"],
@@ -300,20 +419,17 @@ def edit_teacher_profile(teacher_id):
 
     teacher["id"] = teacher_id
     teacher["professional_types"] = infer_professional_types(teacher)
+    teacher["languages_display"] = normalize_languages(teacher.get("languages") or teacher.get("language"))
     genres_catalog = _get_genres_config()
-    selected_teacher_genres = teacher.get("teacher_genres") or []
-    if isinstance(selected_teacher_genres, str):
-        selected_teacher_genres = [
-            g.strip()
-            for g in selected_teacher_genres.split(",")
-            if g.strip()
-        ]
+    selected_teacher_genres = _normalize_teacher_genres(teacher.get("teacher_genres"), teacher.get("styles"))
     return render_template(
         "edit_teacher_profile.html",
         teacher=teacher,
         is_teacher=is_teacher,
         genres_catalog=genres_catalog,
         selected_teacher_genres=selected_teacher_genres,
+        language_options=LANGUAGE_OPTIONS,
+        selected_languages=teacher["languages_display"],
         lesson_type_options=[
             {"id": "private", "label": "שיעור פרטי"},
             {"id": "group", "label": "שיעור קבוצתי"},
@@ -549,7 +665,8 @@ def teacher_payments(teacher_id):
 
     # Views are counted only for: songs (song lesson videos), tutorials, and courses (premium-only).
     total_views = 0
-    total_watch_seconds = 0  # (not yet tracked for tutorials/courses; kept for scoring compatibility)
+    total_watch_seconds = 0
+    teacher_song_ids = set()
 
     # Song lesson views: unique per user+song (song_views collection)
     try:
@@ -558,7 +675,8 @@ def teacher_payments(teacher_id):
             for doc in db.collection("song_views").stream():
                 d = doc.to_dict() or {}
                 if d.get("song_id") in teacher_song_ids:
-                    total_views += 1
+                    total_views += _to_int(d.get("views") or 1, default=1)
+                    total_watch_seconds += _to_int(d.get("watch_seconds") or d.get("watch_seconds_total") or 0)
     except Exception:
         pass
 
@@ -566,7 +684,8 @@ def teacher_payments(teacher_id):
     try:
         for tdoc in db.collection("tutorials").where("teacher_id", "==", teacher_id).stream():
             t = tdoc.to_dict() or {}
-            total_views += int(t.get("views") or 0)
+            total_views += _to_int(t.get("views") or 0)
+            total_watch_seconds += _to_int(t.get("watch_seconds") or t.get("watch_seconds_total") or 0)
     except Exception:
         pass
 
@@ -574,11 +693,17 @@ def teacher_payments(teacher_id):
     try:
         for sdoc in db.collection("course_lesson_stats").where("teacher_id", "==", teacher_id).stream():
             s = sdoc.to_dict() or {}
-            total_views += int(s.get("views") or 0)
+            total_views += _to_int(s.get("views") or 0)
+            total_watch_seconds += _to_int(s.get("watch_seconds") or s.get("watch_seconds_total") or 0)
     except Exception:
         pass
 
-    videos = []
+    videos = _teacher_song_lesson_videos(
+        db,
+        teacher_id=teacher_id,
+        teacher_song_ids=teacher_song_ids,
+        limit=500,
+    )[:5]
 
     watch_minutes = total_watch_seconds / 60.0
     views_score = total_views

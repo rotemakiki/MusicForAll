@@ -320,16 +320,7 @@
                         <div class="field-validation" id="video_url-validation"></div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="tutorial_video_url">
-                            <span class="label-icon">📚</span>
-                            קישור לסרטון הדרכה (יוטיוב)
-                        </label>
-                        <input type="text" id="tutorial_video_url" name="tutorial_video_url" class="form-input"
-                               value="{{ song.get('tutorial_video_url', '') }}" placeholder="https://www.youtube.com/watch?v=...">
-                        <div class="input-hint">קישור יוטיוב לסרטון הדרכה (אופציונלי)</div>
-                        <div class="field-validation" id="tutorial_video_url-validation"></div>
-                    </div>
+                    <input type="hidden" id="tutorial_video_url" name="tutorial_video_url" value="{{ song.get('tutorial_video_url', '') }}">
 
                     <div class="form-group">
                         <label class="form-label">

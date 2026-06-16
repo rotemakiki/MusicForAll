@@ -41,6 +41,10 @@ class LoopManager {
                     const loop = this.getLoopById(this.editingLoopNameId);
                     if (loop) {
                         loop.customName = selectedValue;
+                        loop.name = selectedValue;
+                        if (window.songStructureManager && typeof window.songStructureManager.syncFromLoopUpdate === 'function') {
+                            window.songStructureManager.syncFromLoopUpdate(loop);
+                        }
                         this.renderSavedLoops();
                         this.editingLoopNameId = null; // Clear name editing state
                     }
@@ -103,6 +107,10 @@ class LoopManager {
                             const loop = this.getLoopById(this.editingLoopNameId);
                             if (loop) {
                                 loop.customName = customName;
+                                loop.name = customName;
+                                if (window.songStructureManager && typeof window.songStructureManager.syncFromLoopUpdate === 'function') {
+                                    window.songStructureManager.syncFromLoopUpdate(loop);
+                                }
                                 this.renderSavedLoops();
                                 this.editingLoopNameId = null;
                                 loopNameInput.style.display = 'none';
@@ -329,7 +337,7 @@ class LoopManager {
             if (existingLoop) {
                 // Update existing loop
                 existingLoop.customName = loopName;
-                existingLoop.name = existingLoop.name || loopName;
+                existingLoop.name = loopName;
                 existingLoop.measures = [...this.currentLoop];
                 existingLoop.measureCount = this.currentLoop.length;
                 
@@ -365,6 +373,7 @@ class LoopManager {
         const newLoop = {
             id: Date.now(),
             customName: loopName,
+            name: loopName,
             measures: [...this.currentLoop],
             measureCount: this.currentLoop.length,
             repeatCount: 1
@@ -464,6 +473,7 @@ class LoopManager {
         const newLoop = {
             id: Date.now(),
             customName: `${loop.customName} (עותק)`,
+            name: `${loop.customName} (עותק)`,
             measures: loop.measures.map(m => JSON.parse(JSON.stringify(m))), // Deep copy
             measureCount: loop.measureCount,
             repeatCount: loop.repeatCount || 1
@@ -911,7 +921,8 @@ class LoopManager {
      */
     getLoopsDataForSaving() {
         return this.savedLoops.map(loop => ({
-            name: loop.customName,
+            customName: loop.customName || loop.name,
+            name: loop.customName || loop.name,
             measures: loop.measures,
             measureCount: loop.measureCount,
             repeatCount: loop.repeatCount || 1
