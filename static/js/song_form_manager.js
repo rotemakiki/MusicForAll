@@ -1344,10 +1344,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const hasNewSongDraft =
             localStorage.getItem("songData") ||
             localStorage.getItem("chords") ||
-            localStorage.getItem("loops") ||
-            localStorage.getItem("play_method_tabs_text_new") ||
-            localStorage.getItem("play_method_chords_lyrics_text_new") ||
-            localStorage.getItem("play_method_lyrics_text_new");
+            localStorage.getItem("loops");
         if (!justReturned && !returningFromPlayMethodEditor && !hasNewSongDraft) {
             cleanStartNewSong();
         }

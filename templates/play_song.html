@@ -221,6 +221,34 @@
         </div>
     </header>
 
+    <div class="player-focus-toolbar" aria-label="אפשרויות תצוגה וניגון">
+        <div class="focus-toggle-group">
+            <button type="button" class="focus-toggle-btn" id="toggle-song-header-btn" onclick="toggleSongHeader()" aria-pressed="false" title="הסתר/הצג את פרטי השיר העליונים">
+                <span class="focus-toggle-icon">⌃</span>
+                <span class="focus-toggle-text">הסתר פרטים</span>
+            </button>
+            <button type="button" class="focus-toggle-btn" id="toggle-controls-panel-btn" onclick="toggleControlsPanel()" aria-pressed="false" title="הסתר/הצג את הסרגל הימני">
+                <span class="focus-toggle-icon">◀</span>
+                <span class="focus-toggle-text">הסתר סרגל</span>
+            </button>
+        </div>
+
+        <div class="compact-playback-controls" aria-label="כפתורי ניגון מהירים">
+            <button type="button" onclick="startPlayback()" class="compact-control-btn compact-play-btn" title="החל לנגן">
+                <span>▶️</span>
+                <span>נגן</span>
+            </button>
+            <button type="button" onclick="restartPlayback()" class="compact-control-btn compact-restart-btn" title="התחל מחדש">
+                <span>⏮️</span>
+                <span>מחדש</span>
+            </button>
+            <button type="button" onclick="stopPlayback()" class="compact-control-btn compact-stop-btn" title="עצור">
+                <span>⏹️</span>
+                <span>עצור</span>
+            </button>
+        </div>
+    </div>
+
     <div class="main-layout">
         <div class="controls-panel">
             <!-- 1. הכנה לתחילת השיר + כפתורי ניגון (הכי למעלה) -->
@@ -370,7 +398,7 @@
 
                     <div class="instruction-item">
                         <span class="instruction-icon">🔢</span>
-                        <span>תמיד 4 תיבות בשורה לתצוגה נוחה</span>
+                        <span>התיבות מסתדרות אוטומטית לפי הגודל והמסך</span>
                     </div>
 
                     <div class="instruction-item">

@@ -14,6 +14,9 @@
     <script src="{{ url_for('static', filename='js/auto_logout.js') }}" defer></script>
 </head>
 <body{% block body_attrs %}{% endblock %}>
+    <script>
+        window.MUSIC_FOR_ALL_REMEMBERED_SESSION = {{ session.get('remember_me', False) | tojson }};
+    </script>
 
     <!-- תפריט ניווט - רק אייקון -->
     <nav class="modern-navbar">

@@ -277,6 +277,37 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     color: rgba(47, 69, 80, 0.45);
 }
 
+.remember-me-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid rgba(47, 69, 80, 0.15);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.55);
+    color: #2f4550;
+    cursor: pointer;
+}
+
+.remember-me-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    accent-color: #2f4550;
+    cursor: pointer;
+}
+
+.remember-me-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    line-height: 1.4;
+}
+
+.remember-me-option small {
+    opacity: 0.75;
+}
+
 /* Submit button */
 .submit-btn {
     width: 100%;

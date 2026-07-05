@@ -64,6 +64,11 @@ try {
 // משתני גודל התיבות והפונט
 let measureScale = 1.0; // גודל בסיסי של התיבות
 let fontScale = 1.0;    // גודל בסיסי של הפונט
+const BASE_MEASURE_WIDTH = 200;
+const BASE_MEASURE_MIN_HEIGHT = 80;
+const MAX_MEASURES_PER_ROW = 4;
+const MEASURE_ROW_GAP = 12;
+const MEASURE_ROW_SIDE_PADDING = 40;
 
 // נתונים לניהול מיקום הנגינה
 let currentGlobalMeasureIndex = 0;
@@ -74,6 +79,91 @@ let isPlaying = false;
 
 // Play view state (boxes/tabs/chords_lyrics/lyrics)
 let currentPlayView = "boxes";
+
+function getPlayerLayoutStorageKey() {
+    const sid = window.songData?.songId || "unknown";
+    return `mfa_player_layout_v1_${sid}`;
+}
+
+function getPlayerContainer() {
+    return document.querySelector(".play-song-container");
+}
+
+function readPlayerLayoutState() {
+    try {
+        return JSON.parse(localStorage.getItem(getPlayerLayoutStorageKey()) || "{}") || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function savePlayerLayoutState(nextState) {
+    try {
+        const currentState = readPlayerLayoutState();
+        localStorage.setItem(getPlayerLayoutStorageKey(), JSON.stringify({
+            ...currentState,
+            ...nextState
+        }));
+    } catch (e) {
+        /* ignore */
+    }
+}
+
+function updatePlayerLayoutButtons() {
+    const container = getPlayerContainer();
+    if (!container) return;
+
+    const headerHidden = container.classList.contains("header-hidden");
+    const controlsHidden = container.classList.contains("controls-hidden");
+    const headerBtn = document.getElementById("toggle-song-header-btn");
+    const controlsBtn = document.getElementById("toggle-controls-panel-btn");
+
+    if (headerBtn) {
+        headerBtn.setAttribute("aria-pressed", headerHidden ? "true" : "false");
+        const icon = headerBtn.querySelector(".focus-toggle-icon");
+        const text = headerBtn.querySelector(".focus-toggle-text");
+        if (icon) icon.textContent = headerHidden ? "⌄" : "⌃";
+        if (text) text.textContent = headerHidden ? "הצג פרטים" : "הסתר פרטים";
+    }
+
+    if (controlsBtn) {
+        controlsBtn.setAttribute("aria-pressed", controlsHidden ? "true" : "false");
+        const icon = controlsBtn.querySelector(".focus-toggle-icon");
+        const text = controlsBtn.querySelector(".focus-toggle-text");
+        if (icon) icon.textContent = controlsHidden ? "▶" : "◀";
+        if (text) text.textContent = controlsHidden ? "הצג סרגל" : "הסתר סרגל";
+    }
+}
+
+function applyPlayerLayoutState(state) {
+    const container = getPlayerContainer();
+    if (!container) return;
+
+    container.classList.toggle("header-hidden", !!state.headerHidden);
+    container.classList.toggle("controls-hidden", !!state.controlsHidden);
+    updatePlayerLayoutButtons();
+}
+
+function toggleSongHeader() {
+    const container = getPlayerContainer();
+    if (!container) return;
+
+    const headerHidden = !container.classList.contains("header-hidden");
+    container.classList.toggle("header-hidden", headerHidden);
+    savePlayerLayoutState({ headerHidden });
+    updatePlayerLayoutButtons();
+}
+
+function toggleControlsPanel() {
+    const container = getPlayerContainer();
+    if (!container) return;
+
+    const controlsHidden = !container.classList.contains("controls-hidden");
+    container.classList.toggle("controls-hidden", controlsHidden);
+    savePlayerLayoutState({ controlsHidden });
+    updatePlayerLayoutButtons();
+    requestAnimationFrame(renderChords);
+}
 
 function getPlayViewStorageKey() {
     const sid = window.songData?.songId || "unknown";
@@ -337,13 +427,13 @@ function renderNotesTagSummary() {
 // פונקציות הגדלה/הקטנה של התיבות
 function increaseMeasureSize() {
     measureScale = Math.min(measureScale + 0.1, 2.0);
-    updateMeasuresSizes();
+    renderChords();
     showSizeIndicator();
 }
 
 function decreaseMeasureSize() {
     measureScale = Math.max(measureScale - 0.1, 0.5);
-    updateMeasuresSizes();
+    renderChords();
     showSizeIndicator();
 }
 
@@ -362,16 +452,36 @@ function decreaseFontSize() {
 function resetSizes() {
     measureScale = 1.0;
     fontScale = 1.0;
-    updateMeasuresSizes();
-    updateFontSizes();
+    renderChords();
     showSizeIndicator();
+}
+
+function getAvailableMeasureRowWidth() {
+    const chordSection = document.querySelector('.chord-section');
+    const wrapper = document.getElementById("chords-wrapper");
+    const availableSource = wrapper || chordSection;
+    const sourceWidth = availableSource?.clientWidth || chordSection?.clientWidth || 0;
+    return Math.max(sourceWidth - MEASURE_ROW_SIDE_PADDING, BASE_MEASURE_WIDTH);
+}
+
+function getMeasuresPerRow() {
+    const scaledMeasureWidth = BASE_MEASURE_WIDTH * measureScale;
+    const availableWidth = getAvailableMeasureRowWidth();
+    const byWidth = Math.floor((availableWidth + MEASURE_ROW_GAP) / (scaledMeasureWidth + MEASURE_ROW_GAP));
+    return Math.max(1, Math.min(MAX_MEASURES_PER_ROW, byWidth || 1));
 }
 
 function updateMeasuresSizes() {
     const measures = document.querySelectorAll('.measure-box');
+    const scaledWidth = BASE_MEASURE_WIDTH * measureScale;
+    const scaledMinHeight = BASE_MEASURE_MIN_HEIGHT * measureScale;
+
     measures.forEach(measure => {
-        measure.style.transform = `scale(${measureScale})`;
-        measure.style.margin = `${measureScale * 3}px`;
+        measure.style.width = `${scaledWidth}px`;
+        measure.style.minHeight = `${scaledMinHeight}px`;
+        measure.style.maxHeight = 'none';
+        measure.style.margin = '0';
+        measure.style.transform = '';
     });
 }
 
@@ -518,7 +628,7 @@ function buildAllMeasures() {
     return allMeasures;
 }
 
-// Enhanced chord rendering עם הצגה של 4 תיבות בשורה תמיד ומספור נכון
+// Enhanced chord rendering עם פריסה שמתאימה את מספר התיבות בשורה לגודל הנבחר
 function renderChords() {
     const wrapper = document.getElementById("chords-wrapper");
     wrapper.innerHTML = "";
@@ -538,13 +648,13 @@ function renderChords() {
         const prepContent = document.createElement("div");
         prepContent.className = "loop-content";
 
-        const measuresPerRow = 4;
+        const measuresPerRow = getMeasuresPerRow();
         for (let i = 0; i < prepMeasures.length; i += measuresPerRow) {
             const rowMeasures = prepMeasures.slice(i, i + measuresPerRow);
             const prepRow = document.createElement("div");
             prepRow.className = "chord-row fixed-four-per-row";
             rowMeasures.forEach(m => prepRow.appendChild(createMeasureElement(m)));
-            while (prepRow.children.length < 4) {
+            while (prepRow.children.length < measuresPerRow) {
                 const emptyDiv = document.createElement("div");
                 emptyDiv.className = "measure-box empty-measure";
                 prepRow.appendChild(emptyDiv);
@@ -604,7 +714,7 @@ function highlightCurrentSection(measureElement) {
     }
 }
 
-// Render measures organized by loop sections - 4 per row with auto-scroll
+// Render measures organized by loop sections with adaptive rows and auto-scroll
 function renderMeasuresByLoops(wrapper, measures) {
     const loopSections = new Map();
 
@@ -674,8 +784,8 @@ function renderMeasuresByLoops(wrapper, measures) {
         loopContent.className = "loop-content";
         loopContent.style.display = loopStates[section.loopIndex].visible ? 'block' : 'none';
 
-        // Group measures into rows - ALWAYS 4 per row
-        const measuresPerRow = 4;
+        // Group measures into rows. Larger boxes use fewer boxes per row to avoid overlap.
+        const measuresPerRow = getMeasuresPerRow();
         for (let i = 0; i < section.measures.length; i += measuresPerRow) {
             const rowMeasures = section.measures.slice(i, i + measuresPerRow);
             const rowDiv = document.createElement("div");
@@ -685,8 +795,8 @@ function renderMeasuresByLoops(wrapper, measures) {
                 rowDiv.appendChild(createMeasureElement(measureData));
             });
 
-            // מלא תיבות ריקות עד 4 תמיד
-            while (rowDiv.children.length < 4) {
+            // מלא תיבות ריקות עד סוף השורה לשמירה על יישור
+            while (rowDiv.children.length < measuresPerRow) {
                 const emptyDiv = document.createElement("div");
                 emptyDiv.className = "measure-box empty-measure";
                 rowDiv.appendChild(emptyDiv);
@@ -701,9 +811,9 @@ function renderMeasuresByLoops(wrapper, measures) {
     });
 }
 
-// Render measures in flat layout - 4 per row
+// Render measures in flat layout with adaptive rows
 function renderMeasuresFlat(wrapper, measures) {
-    const measuresPerRow = 4;
+    const measuresPerRow = getMeasuresPerRow();
     for (let i = 0; i < measures.length; i += measuresPerRow) {
         const rowMeasures = measures.slice(i, i + measuresPerRow);
         const rowDiv = document.createElement("div");
@@ -713,8 +823,8 @@ function renderMeasuresFlat(wrapper, measures) {
             rowDiv.appendChild(createMeasureElement(measureData));
         });
 
-        // מלא תיבות ריקות עד 4 תמיד
-        while (rowDiv.children.length < 4) {
+        // מלא תיבות ריקות עד סוף השורה לשמירה על יישור
+        while (rowDiv.children.length < measuresPerRow) {
             const emptyDiv = document.createElement("div");
             emptyDiv.className = "measure-box empty-measure";
             rowDiv.appendChild(emptyDiv);
@@ -1246,6 +1356,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const transposeSlider = document.getElementById("transpose-slider");
     const transposeInput = document.getElementById("transpose-input");
 
+    applyPlayerLayoutState(readPlayerLayoutState());
+
     // Transpose controls
     transposeSlider.addEventListener("input", (e) => {
         const value = parseFloat(e.target.value);
@@ -1390,6 +1502,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 break;
         }
+    });
+
+    let resizeRenderTimeout = null;
+    window.addEventListener("resize", () => {
+        clearTimeout(resizeRenderTimeout);
+        resizeRenderTimeout = setTimeout(renderChords, 120);
     });
 
     // Initialize everything

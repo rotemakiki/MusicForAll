@@ -15,7 +15,7 @@ from routes.lessons import lessons_bp
 from routes.general import general_bp
 from routes.chords_system import chords_system_bp  # קובץ חדש
 from routes.professionals import professionals_bp
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 
 app = Flask(__name__, static_folder='static')
@@ -55,6 +55,11 @@ if not secret_key:
     secret_key = 'dev-secret-key-change-in-production'
 
 app.secret_key = secret_key
+app.permanent_session_lifetime = timedelta(days=30)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
 
 mimetypes.add_type('application/javascript', '.js')
 

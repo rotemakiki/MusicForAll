@@ -19,6 +19,7 @@ class AutoLogoutManager {
         this.warningTimer = null;
         this.sessionCheckTimer = null;
         this.warningShown = false;
+        this.rememberedSession = window.MUSIC_FOR_ALL_REMEMBERED_SESSION === true;
 
         // התחל רק עבור משתמשים מחוברים
         if (this.isUserLoggedIn()) {
@@ -32,6 +33,12 @@ class AutoLogoutManager {
     }
 
     init() {
+        if (this.rememberedSession) {
+            this.startSessionCheck();
+            console.log('🔐 המשתמש זכור במחשב הזה - התנתקות אוטומטית כבויה');
+            return;
+        }
+
         this.setupEventListeners();
         this.resetInactivityTimer();
         this.startSessionCheck();
