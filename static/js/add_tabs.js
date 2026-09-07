@@ -15,20 +15,37 @@
   const editor = document.getElementById("tabs-editor");
   const btnSaveReturn = document.getElementById("tabs-save-return");
   const btnTemplate = document.getElementById("tabs-insert-template");
+  const templateSelect = document.getElementById("tabs-template-select");
 
   const returnTo = typeof window.tabsReturnTo === "string" ? window.tabsReturnTo : "/add_song";
   try { localStorage.setItem(STORAGE_KEY_RETURN, returnTo); } catch (e) { /* ignore */ }
 
-  function defaultTemplate() {
+  function buildTemplate(sectionName = "פתיח (Intro)", measures = 4) {
+    const measureLine = ["        "];
+    const countLine = ["        "];
+    const stringLine = "|----------------";
+
+    for (let i = 1; i <= measures; i += 1) {
+      measureLine.push(`|${String(i).padEnd(16, " ")}`);
+      countLine.push("|1 & 2 & 3 & 4 & ");
+    }
+
     return [
-      "e|----------------",
-      "B|----------------",
-      "G|----------------",
-      "D|----------------",
-      "A|----------------",
-      "E|----------------",
+      `[${sectionName}]`,
+      `${measureLine.join("")}|`,
+      `${countLine.join("")}|`,
+      `e${stringLine.repeat(measures)}|`,
+      `B${stringLine.repeat(measures)}|`,
+      `G${stringLine.repeat(measures)}|`,
+      `D${stringLine.repeat(measures)}|`,
+      `A${stringLine.repeat(measures)}|`,
+      `E${stringLine.repeat(measures)}|`,
       "",
     ].join("\n");
+  }
+
+  function defaultTemplate() {
+    return buildTemplate();
   }
 
   function load() {
@@ -61,7 +78,17 @@
   editor.addEventListener("input", persist);
 
   btnTemplate.addEventListener("click", () => {
-    editor.value = defaultTemplate();
+    const template = buildTemplate(templateSelect ? templateSelect.value : undefined);
+    const currentValue = editor.value || "";
+    const start = editor.selectionStart || 0;
+    const end = editor.selectionEnd || 0;
+    const needsSeparator = currentValue.trim().length > 0 && start > 0;
+    const insertText = `${needsSeparator ? "\n" : ""}${template}`;
+
+    editor.value = `${currentValue.slice(0, start)}${insertText}${currentValue.slice(end)}`;
+    editor.focus();
+    const cursor = start + insertText.length;
+    editor.setSelectionRange(cursor, cursor);
     persist();
   });
 

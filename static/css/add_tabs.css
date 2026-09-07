@@ -9,7 +9,7 @@ body {
 }
 
 .tabs-container {
-  max-width: 1100px;
+  max-width: 1480px;
   margin: 18px auto;
   padding: 0 16px;
 }
@@ -75,6 +75,28 @@ body {
   justify-content: center;
 }
 
+.tabs-template-label {
+  color: #34495e;
+  font-weight: 900;
+}
+
+.tabs-template-select {
+  min-width: 220px;
+  border: 2px solid #e1e8ed;
+  background: #fff;
+  color: #2c3e50;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  font-family: inherit;
+}
+
+.tabs-template-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+}
+
 .tabs-btn:hover {
   transform: translateY(-1px);
   border-color: #667eea;
@@ -100,14 +122,18 @@ body {
   border: 2px solid #e1e8ed;
   border-radius: 14px;
   padding: 12px 14px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 650;
   box-sizing: border-box;
   direction: ltr;
   text-align: left;
   white-space: pre;
+  overflow: auto;
+  min-height: 520px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  line-height: 1.5;
+  line-height: 1.65;
+  letter-spacing: 0.35px;
+  tab-size: 4;
 }
 
 .tabs-editor:focus {

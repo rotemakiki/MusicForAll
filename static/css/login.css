@@ -1,8 +1,13 @@
-/* Login Page - cream palette (#f5f3ee, #2f4550, #b0c4de) */
+/* Login Page - dark blue palette (#2f4550, #f5f3ee) */
+
+:root {
+    --login-blue: #2f4550;
+    --login-cream: #f5f3ee;
+}
 
 body.login-page {
     font-family: "Assistant", system-ui, sans-serif;
-    background: #f5f3ee !important;
+    background: var(--login-blue) !important;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -10,7 +15,7 @@ body.login-page {
     justify-content: center;
     position: relative;
     overflow-x: hidden;
-    color: #2f4550;
+    color: var(--login-cream) !important;
 }
 
 body.login-page .content {
@@ -35,7 +40,7 @@ body.login-page .login-floating-notes {
 
 body.login-page .login-floating-note {
     position: absolute;
-    color: rgba(47, 69, 80, 0.4);
+    color: rgba(245, 243, 238, 0.4);
     font-size: 2rem;
     animation: loginNoteFloat 15s linear infinite;
 }
@@ -73,10 +78,10 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     max-width: 1200px;
     height: 80vh;
     min-height: 600px;
-    background: #f5f3ee;
+    background: transparent;
     border-radius: 24px;
-    border: 1px solid rgba(47, 69, 80, 0.12);
-    box-shadow: 0 8px 32px rgba(47, 69, 80, 0.08);
+    border: 1px solid rgba(245, 243, 238, 0.18);
+    box-shadow: none;
     overflow: hidden;
     position: relative;
     z-index: 2;
@@ -97,7 +102,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
 /* Left panel - Branding */
 .login-brand-panel {
     flex: 1;
-    background: #f5f3ee;
+    background: transparent;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -106,7 +111,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     padding: 60px 40px;
     position: relative;
     overflow: hidden;
-    border-left: 1px solid rgba(47, 69, 80, 0.1);
+    border-left: 1px solid rgba(245, 243, 238, 0.18);
 }
 
 .brand-content {
@@ -118,7 +123,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     font-family: "Assistant", sans-serif;
     font-size: 2.5rem;
     font-weight: 700;
-    color: #2f4550;
+    color: var(--login-cream);
     margin-bottom: 15px;
 }
 
@@ -126,7 +131,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     font-family: "Assistant", sans-serif;
     font-size: 1.2rem;
     font-weight: 400;
-    color: #2f4550;
+    color: var(--login-cream);
     opacity: 0.85;
     line-height: 1.6;
     max-width: 350px;
@@ -143,7 +148,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #2f4550;
+    color: var(--login-cream);
     font-family: "Assistant", sans-serif;
     font-weight: 400;
     font-size: 1rem;
@@ -157,7 +162,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     flex-direction: column;
     justify-content: center;
     position: relative;
-    background: #f5f3ee;
+    background: transparent;
 }
 
 .form-header {
@@ -169,13 +174,13 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     font-family: "Assistant", sans-serif;
     font-size: 2.2rem;
     font-weight: 700;
-    color: #2f4550;
+    color: var(--login-cream);
     margin-bottom: 10px;
 }
 
 .form-subtitle {
     font-family: "Assistant", sans-serif;
-    color: #2f4550;
+    color: var(--login-cream);
     opacity: 0.85;
     font-size: 1rem;
     font-weight: 400;
@@ -245,7 +250,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     display: block;
     font-family: "Assistant", sans-serif;
     font-weight: 600;
-    color: #2f4550;
+    color: var(--login-cream);
     margin-bottom: 8px;
     font-size: 0.95rem;
 }
@@ -253,28 +258,28 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
 .form-input {
     width: 100%;
     padding: 16px 20px;
-    border: 2px solid rgba(47, 69, 80, 0.2);
+    border: 2px solid rgba(245, 243, 238, 0.45);
     border-radius: 12px;
     font-size: 1rem;
     font-family: "Assistant", sans-serif;
     font-weight: 400;
-    color: #2f4550;
-    background: #fff;
+    color: var(--login-blue);
+    background: var(--login-cream);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-input:focus {
     outline: none;
-    border-color: #2f4550;
-    box-shadow: 0 0 0 4px rgba(47, 69, 80, 0.1);
+    border-color: var(--login-cream);
+    box-shadow: 0 0 0 4px rgba(245, 243, 238, 0.18);
 }
 
 .form-input:hover {
-    border-color: rgba(47, 69, 80, 0.4);
+    border-color: rgba(245, 243, 238, 0.75);
 }
 
 .form-input::placeholder {
-    color: rgba(47, 69, 80, 0.45);
+    color: rgba(47, 69, 80, 0.55);
 }
 
 .remember-me-option {
@@ -282,10 +287,10 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     align-items: flex-start;
     gap: 12px;
     padding: 14px 16px;
-    border: 1px solid rgba(47, 69, 80, 0.15);
+    border: 1px solid rgba(245, 243, 238, 0.22);
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.55);
-    color: #2f4550;
+    background: rgba(245, 243, 238, 0.08);
+    color: var(--login-cream);
     cursor: pointer;
 }
 
@@ -293,7 +298,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     width: 18px;
     height: 18px;
     margin-top: 3px;
-    accent-color: #2f4550;
+    accent-color: var(--login-cream);
     cursor: pointer;
 }
 
@@ -312,8 +317,8 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
 .submit-btn {
     width: 100%;
     padding: 16px;
-    background: #b0c4de;
-    color: #2f4550;
+    background: var(--login-cream) !important;
+    color: var(--login-blue) !important;
     border: none;
     border-radius: 12px;
     font-size: 1.1rem;
@@ -321,13 +326,13 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(47, 69, 80, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .submit-btn:hover:not(:disabled) {
-    background: #9db4d4;
+    background: #ffffff !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(47, 69, 80, 0.15);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
 }
 
 .submit-btn:active:not(:disabled) {
@@ -351,7 +356,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     width: 20px;
     height: 20px;
     border: 2px solid rgba(47, 69, 80, 0.3);
-    border-top: 2px solid #2f4550;
+    border-top: 2px solid var(--login-blue);
     border-radius: 50%;
     right: 20px;
     top: 50%;
@@ -369,12 +374,12 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     text-align: center;
     margin-top: 30px;
     padding-top: 25px;
-    border-top: 1px solid rgba(47, 69, 80, 0.15);
+    border-top: 1px solid rgba(245, 243, 238, 0.18);
 }
 
 .register-link p {
     font-family: "Assistant", sans-serif;
-    color: #2f4550;
+    color: var(--login-cream);
     opacity: 0.85;
     margin-bottom: 15px;
 }
@@ -384,10 +389,10 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     align-items: center;
     justify-content: center;
     padding: 12px 24px;
-    background: #b0c4de;
+    background: var(--login-cream) !important;
     border: none;
     border-radius: 10px;
-    color: #2f4550;
+    color: var(--login-blue) !important;
     text-decoration: none;
     font-family: "Assistant", sans-serif;
     font-weight: 600;
@@ -395,33 +400,33 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
 }
 
 .register-btn:hover {
-    background: #9db4d4;
+    background: #ffffff !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(47, 69, 80, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
 }
 
 /* Force login */
 .modal-content {
-    background: #f5f3ee;
+    background: rgba(245, 243, 238, 0.08);
     border-radius: 20px;
     padding: 40px;
     max-width: 500px;
     margin: 20px;
     text-align: center;
-    border: 1px solid rgba(47, 69, 80, 0.12);
+    border: 1px solid rgba(245, 243, 238, 0.18);
 }
 
 .modal-title {
     font-family: "Assistant", sans-serif;
     font-size: 1.8rem;
     font-weight: 700;
-    color: #c62828;
+    color: var(--login-cream);
     margin-bottom: 10px;
 }
 
 .modal-text {
     font-family: "Assistant", sans-serif;
-    color: #2f4550;
+    color: var(--login-cream);
     opacity: 0.85;
     line-height: 1.6;
     margin-bottom: 15px;
@@ -450,22 +455,22 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
 }
 
 .force-login-btn {
-    background: #b0c4de;
-    color: #2f4550;
+    background: var(--login-cream) !important;
+    color: var(--login-blue) !important;
 }
 
 .force-login-btn:hover {
-    background: #9db4d4;
+    background: #ffffff !important;
     transform: translateY(-2px);
 }
 
 .cancel-btn {
-    background: rgba(47, 69, 80, 0.15);
-    color: #2f4550;
+    background: rgba(245, 243, 238, 0.16) !important;
+    color: var(--login-cream) !important;
 }
 
 .cancel-btn:hover {
-    background: rgba(47, 69, 80, 0.25);
+    background: rgba(245, 243, 238, 0.26) !important;
     transform: translateY(-2px);
 }
 
@@ -480,7 +485,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     font-size: 0.85rem;
     font-family: "Assistant", sans-serif;
     font-weight: 600;
-    color: #2f4550;
+    color: var(--login-blue);
     opacity: 0.7;
     transition: opacity 0.3s ease;
     z-index: 10;
@@ -496,7 +501,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     left: 20px;
     font-size: 0.8rem;
     font-family: "Assistant", sans-serif;
-    color: #2f4550;
+    color: var(--login-cream);
     opacity: 0.5;
 }
 
@@ -512,7 +517,7 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
     .login-brand-panel {
         padding: 40px 30px;
         border-left: none;
-        border-bottom: 1px solid rgba(47, 69, 80, 0.1);
+        border-bottom: 1px solid rgba(245, 243, 238, 0.18);
     }
 
     .brand-title {
@@ -579,4 +584,8 @@ body.login-page .login-floating-note:nth-child(8) { left: 88%; animation-delay: 
 .cancel-btn:focus {
     outline: 2px solid #2f4550;
     outline-offset: 2px;
+}
+
+body.login-page .modern-navbar .menu-trigger span {
+    background: var(--login-cream);
 }

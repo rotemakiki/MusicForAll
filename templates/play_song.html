@@ -471,6 +471,34 @@
                 תצוגת נגינה
             </h2>
 
+            {% if has_student_notes or (can_see_teacher_notes and has_teacher_notes) or has_note_tags %}
+            <div class="song-notes-inline" aria-label="הערות לשיר">
+                <div class="song-notes-inline-title">
+                    <span class="control-icon">📝</span>
+                    דגשים והערות לשיר
+                </div>
+                {% if has_student_notes %}
+                <div class="song-notes-inline-block">
+                    <strong>לתלמידים:</strong>
+                    <span>{{ song.student_notes }}</span>
+                </div>
+                {% endif %}
+                {% if can_see_teacher_notes and has_teacher_notes %}
+                <div class="song-notes-inline-block teacher-note">
+                    <strong>למורים:</strong>
+                    <span>{{ song.teacher_notes }}</span>
+                </div>
+                {% endif %}
+                {% if has_note_tags %}
+                <div class="song-notes-inline-tags">
+                    {% for t in song.note_tags %}
+                        <span class="note-tag">{{ t }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <div class="play-views-bar" role="tablist" aria-label="דרכי נגינה בנגן">
                 <button type="button" class="play-view-btn active" data-play-view="boxes" role="tab" aria-selected="true">תיבות</button>
                 <button type="button" class="play-view-btn{% if not (song.tabs_text and (song.tabs_text|string)|trim) %} disabled{% endif %}" data-play-view="tabs" role="tab" aria-selected="false" {% if not (song.tabs_text and (song.tabs_text|string)|trim) %}disabled{% endif %}>טאבים</button>

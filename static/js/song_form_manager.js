@@ -129,6 +129,131 @@ function initializeNewSong() {
 // ===== MULTI-GENRE MANAGEMENT =====
 
 let selectedGenres = [];
+let selectedArtists = [];
+
+function getArtistDisplayValue() {
+    const artists = window.getSelectedArtists ? window.getSelectedArtists() : selectedArtists;
+    const typedArtist = document.getElementById("artist") ? document.getElementById("artist").value.trim() : "";
+    const combined = [...artists];
+
+    if (typedArtist && !combined.some(a => a.toLowerCase() === typedArtist.toLowerCase())) {
+        combined.push(typedArtist);
+    }
+
+    return combined.join(" / ");
+}
+
+function getArtistsForSaving() {
+    const typedArtist = document.getElementById("artist") ? document.getElementById("artist").value.trim() : "";
+    const combined = [...selectedArtists];
+
+    if (typedArtist && !combined.some(a => a.toLowerCase() === typedArtist.toLowerCase())) {
+        combined.push(typedArtist);
+    }
+
+    return combined;
+}
+
+function initializeMultiArtists() {
+    const artistInput = document.getElementById("artist");
+    const addArtistBtn = document.getElementById("add-artist-btn");
+    const selectedArtistsContainer = document.getElementById("selected-artists");
+    const artistsListInput = document.getElementById("artists-list");
+
+    if (!artistInput || !addArtistBtn || !selectedArtistsContainer) return;
+
+    function syncHidden() {
+        if (artistsListInput) {
+            artistsListInput.value = JSON.stringify(getArtistsForSaving());
+        }
+    }
+
+    function updateArtistsDisplay() {
+        selectedArtistsContainer.innerHTML = "";
+
+        selectedArtists.forEach((artistName) => {
+            const artistTag = document.createElement("div");
+            artistTag.className = "artist-tag";
+
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = artistName;
+
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.className = "remove-artist";
+            removeBtn.dataset.artist = artistName;
+            removeBtn.textContent = "×";
+
+            artistTag.appendChild(nameSpan);
+            artistTag.appendChild(removeBtn);
+            selectedArtistsContainer.appendChild(artistTag);
+        });
+
+        selectedArtistsContainer.querySelectorAll(".remove-artist").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const artistToRemove = this.getAttribute("data-artist");
+                selectedArtists = selectedArtists.filter(a => a !== artistToRemove);
+                updateArtistsDisplay();
+                validateField("artist", getArtistDisplayValue());
+                saveFormData();
+            });
+        });
+
+        syncHidden();
+    }
+
+    function addArtistFromInput() {
+        const artistName = artistInput.value.trim();
+        if (!artistName) {
+            validateField("artist", getArtistDisplayValue());
+            return;
+        }
+
+        if (!selectedArtists.some(a => a.toLowerCase() === artistName.toLowerCase())) {
+            selectedArtists.push(artistName);
+        }
+
+        artistInput.value = "";
+        updateArtistsDisplay();
+        validateField("artist", getArtistDisplayValue());
+        saveFormData();
+        artistInput.focus();
+    }
+
+    addArtistBtn.addEventListener("click", addArtistFromInput);
+    artistInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            addArtistFromInput();
+        }
+    });
+    artistInput.addEventListener("input", () => {
+        syncHidden();
+        validateField("artist", getArtistDisplayValue());
+    });
+
+    window.loadArtists = (artists) => {
+        if (Array.isArray(artists)) {
+            selectedArtists = artists.map(a => String(a || "").trim()).filter(Boolean);
+        } else if (typeof artists === "string" && artists.trim()) {
+            selectedArtists = [artists.trim()];
+        } else {
+            selectedArtists = [];
+        }
+        artistInput.value = "";
+        updateArtistsDisplay();
+        validateField("artist", getArtistDisplayValue());
+    };
+    window.getSelectedArtists = getArtistsForSaving;
+    window.clearArtists = () => {
+        selectedArtists = [];
+        artistInput.value = "";
+        updateArtistsDisplay();
+        validateField("artist", "");
+    };
+
+    updateArtistsDisplay();
+}
 
 const FALLBACK_GENRES_CATALOG = [
     { value: "pop", label: "פופ - Pop" },
@@ -686,7 +811,8 @@ function saveFormData() {
 
     const formData = {
         title: document.getElementById("title").value,
-        artist: document.getElementById("artist").value,
+        artist: getArtistDisplayValue(),
+        artists: JSON.stringify(getArtistsForSaving()),
         language: document.getElementById("language") ? document.getElementById("language").value : "",
         genres: JSON.stringify(genresToSave),
         key: document.getElementById("key").value,
@@ -781,6 +907,13 @@ function loadFormData() {
                 }
             } else if (key === 'guitar_tuning') {
                 setGuitarTuningValue(savedData[key]);
+            } else if (key === 'artists') {
+                try {
+                    const artists = typeof savedData[key] === 'string' ? JSON.parse(savedData[key]) : savedData[key];
+                    if (window.loadArtists) window.loadArtists(artists);
+                } catch (e) {
+                    if (window.loadArtists) window.loadArtists([]);
+                }
             } else if (key === 'teacher_notes' || key === 'student_notes' || key === 'tabs_text' || key === 'chords_lyrics_text' || key === 'lyrics_text') {
                 // textarea fields
                 if (savedData[key] !== undefined && savedData[key] !== null) {
@@ -821,8 +954,8 @@ function validateField(fieldId, value) {
             message = isValid ? '✅ נראה טוב!' : '❌ שם השיר חייב להכיל לפחות 2 תווים';
             break;
         case 'artist':
-            isValid = value.trim().length >= 2;
-            message = isValid ? '✅ נראה טוב!' : '❌ שם האמן חייב להכיל לפחות 2 תווים';
+            isValid = (value || getArtistDisplayValue()).trim().length >= 2;
+            message = isValid ? '✅ אמנים נבחרו!' : '❌ יש להוסיף לפחות אמן אחד';
             break;
         case 'genre':
             // עבור ז'אנרים - השתמש בפונקציית validateGenres
@@ -920,6 +1053,9 @@ function resetForm() {
     document.getElementById("chords").value = "";
     document.getElementById("loops").value = "";
     setGuitarTuningValue("");
+    if (window.clearArtists) {
+        window.clearArtists();
+    }
 
     const accH = document.getElementById("accompaniment_level");
     const leadH = document.getElementById("lead_level");
@@ -1113,7 +1249,8 @@ function handleFormSubmission(event) {
 
     const formData = {
         title: document.getElementById("title").value,
-        artist: document.getElementById("artist").value,
+        artist: getArtistDisplayValue(),
+        artists: getArtistsForSaving(),
         genres: selectedGenres, // שלח כמערך
         language: document.getElementById("language") ? document.getElementById("language").value : "",
         key: document.getElementById("key").value,
@@ -1307,9 +1444,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // אתחול מערכת ריבוי ז'אנרים
     initializeMultiGenre();
+    initializeMultiArtists();
 
     // אתחול בחירת כיוון גיטרה
     initializeGuitarTuningPicker();
+
+    if (mode.isEditMode && window.existingArtistsForEdit && window.loadArtists) {
+        window.loadArtists(window.existingArtistsForEdit);
+    }
 
     // בעריכת שיר: טעינת ז'אנרים מהשרת (מהטמפלייט) אחרי ש-loadGenres זמין
     if (mode.isEditMode && window.existingGenresForEdit) {
@@ -1414,6 +1556,14 @@ document.addEventListener("DOMContentLoaded", function () {
             el.addEventListener("change", saveFormData);
         }
     });
+
+    const selectedArtistsContainer = document.getElementById("selected-artists");
+    if (selectedArtistsContainer) {
+        const observer = new MutationObserver(() => {
+            saveFormData();
+        });
+        observer.observe(selectedArtistsContainer, { childList: true, subtree: true });
+    }
 
     // שמירה אוטומטית גם כשמוסיפים/מוחקים ז'אנרים
     const addGenreBtn = document.getElementById("add-genre-btn");

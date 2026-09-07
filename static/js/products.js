@@ -3,6 +3,15 @@ let allProducts = [];
 let filteredProducts = [];
 let currentCategory = 'all';
 
+const CATEGORY_TRANSLATIONS = {
+    accessories: 'אביזרים',
+    audio: 'ציוד אודיו',
+    drums: 'תופים',
+    guitars: 'גיטרות',
+    keyboards: 'קלידים',
+    wind: 'כלי נשיפה'
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     loadProducts();
     setupEventListeners();
@@ -96,6 +105,12 @@ function hasFreeShipping(product) {
     return false;
 }
 
+function getProductCategory(product) {
+    const category = product?.main_category || product?.category || 'ללא קטגוריה';
+    const normalizedCategory = String(category).trim();
+    return CATEGORY_TRANSLATIONS[normalizedCategory.toLowerCase()] || normalizedCategory;
+}
+
 function initializePriceFilter(products) {
     const prices = (products || [])
         .map(p => getPriceILS(p))
@@ -148,7 +163,7 @@ function applyAllFilters() {
     filteredProducts = allProducts.filter(product => {
         // Category filter
         if (currentCategory !== 'all') {
-            const cat = product.main_category || product.category;
+            const cat = getProductCategory(product);
             if (cat !== currentCategory) return false;
         }
 
@@ -157,7 +172,7 @@ function applyAllFilters() {
             const hay = [
                 product.name,
                 product.description,
-                product.main_category,
+                getProductCategory(product),
                 product.sub_category,
                 product.category
             ].filter(Boolean).join(' ').toLowerCase();
@@ -214,7 +229,7 @@ function createProductCard(product) {
     let priceDisplay = '';
     const ilsPrice = getPriceILS(product);
     if (Number.isFinite(ilsPrice)) {
-        priceDisplay = `<span class="product-price">${ilsPrice.toFixed(2)} ₪</span>`;
+        priceDisplay = `<span class="product-price">${Math.round(ilsPrice).toLocaleString('he-IL')} ₪</span>`;
     }
 
     // Shipping info
@@ -228,19 +243,21 @@ function createProductCard(product) {
     }
 
     // Category display
-    const categoryDisplay = product.main_category || product.category || 'ללא קטגוריה';
+    const categoryDisplay = getProductCategory(product);
     const subCategoryDisplay = product.sub_category ? `<span class="sub-category">${product.sub_category}</span>` : '';
 
     // Rating display
-    const ratingDisplay = product.rating ? `
+    const rating = Number(product.rating);
+    const ratingDisplay = Number.isFinite(rating) ? `
         <div class="product-rating">
-            <span class="rating-stars">${generateStars(product.rating)}</span>
-            <span class="rating-number">${product.rating.toFixed(1)}</span>
+            <span class="rating-stars">${generateStars(rating)}</span>
+            <span class="rating-number">${rating.toFixed(1)}</span>
         </div>
     ` : '';
+    const description = product.description || '';
 
     return `
-        <div class="product-card" data-category="${product.main_category || product.category || ''}" onclick="window.location.href='/products/${product.id}'">
+        <div class="product-card" data-category="${categoryDisplay}" onclick="window.location.href='/products/${product.id}'">
             <div class="product-image-container">
                 <img src="${imageUrl}" alt="${product.name}" class="product-image"
                      onload="this.style.opacity='1'"
@@ -256,7 +273,7 @@ function createProductCard(product) {
             </div>
             <div class="product-info">
                 <h3 class="product-name">${product.name}</h3>
-                <p class="product-description">${product.description.substring(0, 100)}${product.description.length > 100 ? '...' : ''}</p>
+                ${description ? `<p class="product-description">${description}</p>` : ''}
 
                 <div class="product-meta">
                     ${ratingDisplay}
@@ -273,10 +290,6 @@ function createProductCard(product) {
                     <a href="/products/${product.id}" class="view-btn" onclick="event.stopPropagation()">
                         <i class="fas fa-eye"></i>
                         צפה בפרטים
-                    </a>
-                    <a href="${product.aliexpress_link || '#'}" target="_blank" class="aliexpress-btn" onclick="event.stopPropagation()">
-                        <i class="fas fa-external-link-alt"></i>
-                        קנה עכשיו
                     </a>
                 </div>
             </div>
@@ -309,10 +322,10 @@ function filterProducts() {
     applyAllFilters();
 }
 
-function filterByCategory(category) {
+function filterByCategory(category, event) {
     // Update active filter button
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event?.target) event.target.classList.add('active');
     currentCategory = category;
 
     applyAllFilters();

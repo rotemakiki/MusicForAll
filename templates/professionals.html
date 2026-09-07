@@ -30,13 +30,107 @@
                 </div>
 
                 <div class="filter-group">
-                    <label class="filter-label" for="filter-area">אזור בארץ</label>
-                    <select id="filter-area" class="filter-select">
-                        <option value="">הכל</option>
-                        {% for a in area_options %}
-                            <option value="{{ a }}">{{ a }}</option>
-                        {% endfor %}
-                    </select>
+                    <label class="filter-label" for="area-filter-toggle">אזור בארץ</label>
+                    <div class="area-filter" id="area-filter-dropdown">
+                        <input type="hidden" id="filter-area" value="">
+                        <button
+                            class="area-filter-toggle"
+                            id="area-filter-toggle"
+                            type="button"
+                            aria-expanded="false"
+                            aria-controls="area-filter-menu"
+                        >
+                            <span id="area-filter-label">הכל</span>
+                            <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+
+                        <div class="area-filter-menu" id="area-filter-menu" hidden>
+                            <input
+                                type="search"
+                                class="filter-input area-filter-search"
+                                id="area-filter-search"
+                                placeholder="חפש עיר או אזור"
+                                autocomplete="off"
+                            >
+
+                            <button
+                                class="area-option area-option-all"
+                                type="button"
+                                data-area-value=""
+                                data-area-label="הכל"
+                                data-area-match-values=""
+                            >
+                                כל הארץ
+                            </button>
+
+                            {% for group in area_groups %}
+                                {% set group_label = group["label"] %}
+                                {% set group_options = group["options"] %}
+                                {% set group_matches = ([group_label] + group_options) | join(',') %}
+                                <div class="area-group">
+                                    <button
+                                        class="area-group-toggle"
+                                        type="button"
+                                        aria-expanded="false"
+                                    >
+                                        <span>{{ group_label }}</span>
+                                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="area-group-options" hidden>
+                                        <button
+                                            class="area-option"
+                                            type="button"
+                                            data-area-value="{{ group_label }}"
+                                            data-area-label="כל {{ group_label }}"
+                                            data-area-match-values="{{ group_matches }}"
+                                            data-area-search="{{ group_label }}"
+                                        >
+                                            כל {{ group_label }}
+                                        </button>
+                                        {% for city in group_options %}
+                                            <button
+                                                class="area-option"
+                                                type="button"
+                                                data-area-value="{{ city }}"
+                                                data-area-label="{{ city }}"
+                                                data-area-match-values="{{ city }}"
+                                                data-area-search="{{ city }} {{ group_label }}"
+                                            >
+                                                {{ city }}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                            {% if custom_area_options %}
+                                <div class="area-group">
+                                    <button
+                                        class="area-group-toggle"
+                                        type="button"
+                                        aria-expanded="false"
+                                    >
+                                        <span>מיקומים נוספים</span>
+                                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="area-group-options" hidden>
+                                        {% for area in custom_area_options %}
+                                            <button
+                                                class="area-option"
+                                                type="button"
+                                                data-area-value="{{ area }}"
+                                                data-area-label="{{ area }}"
+                                                data-area-match-values="{{ area }}"
+                                                data-area-search="{{ area }}"
+                                            >
+                                                {{ area }}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="filter-group">

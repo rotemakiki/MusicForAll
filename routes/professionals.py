@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, request
 from firebase_admin import firestore
 
 from utils.professional_catalog import (
+    AREA_GROUPS,
     LANGUAGE_OPTIONS,
     PROFESSIONAL_TYPES,
     TYPE_LABELS,
@@ -127,7 +128,20 @@ def list_professionals():
         if lang and lang not in known_language_labels
     })
     language_options = known_language_labels + custom_language_labels
-    area_options = sorted({a for p in professionals for a in (p.get("areas") or []) if a})
+    known_area_values = {
+        group["label"]
+        for group in AREA_GROUPS
+        if isinstance(group.get("label"), str)
+    }
+    for group in AREA_GROUPS:
+        known_area_values.update(str(area) for area in group.get("options", []))
+
+    custom_area_options = sorted({
+        a
+        for p in professionals
+        for a in (p.get("areas") or [])
+        if a and a not in known_area_values
+    })
     type_options = PROFESSIONAL_TYPES
     type_labels = TYPE_LABELS
 
@@ -137,7 +151,8 @@ def list_professionals():
         type_options=type_options,
         type_labels=type_labels,
         language_options=language_options,
-        area_options=area_options,
+        area_groups=AREA_GROUPS,
+        custom_area_options=custom_area_options,
         genres_catalog=genres_catalog,
         initial_type=initial_type,
     )

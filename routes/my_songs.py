@@ -27,6 +27,29 @@ def _can_create_shared_lists() -> bool:
     return bool(uid) and _get_user_is_premium(uid)
 
 
+def _attach_artist_fields(song):
+    artists = song.get("artists")
+    if isinstance(artists, list):
+        clean_artists = []
+        seen = set()
+        for artist in artists:
+            name = str(artist or "").strip()
+            key = name.casefold()
+            if not name or key in seen:
+                continue
+            seen.add(key)
+            clean_artists.append(name)
+    else:
+        clean_artists = []
+
+    if not clean_artists and song.get("artist"):
+        clean_artists = [str(song.get("artist")).strip()]
+
+    song["artists"] = clean_artists
+    song["artist"] = " / ".join(clean_artists) if clean_artists else str(song.get("artist") or "")
+    return song
+
+
 @my_songs_bp.route('/api/my-songs/add/<string:song_id>', methods=['POST'])
 def add_to_my_songs(song_id):
     if 'user_id' not in session:
@@ -116,6 +139,7 @@ def my_songs_page():
             if song_doc.exists:
                 song = song_doc.to_dict()
                 song['id'] = song_id
+                _attach_artist_fields(song)
                 song['added_at'] = my_song_data.get('added_at', datetime.utcnow())
                 attach_song_level_fields(song)
                 songs_with_dates.append(song)
@@ -212,6 +236,7 @@ def song_list_detail_page(list_id):
                 continue
             song = sdoc.to_dict() or {}
             song["id"] = sid
+            _attach_artist_fields(song)
             song["added_at"] = it.get("added_at", datetime.utcnow())
             attach_song_level_fields(song)
             items.append(song)

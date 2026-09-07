@@ -103,6 +103,46 @@ def api_genres():
     return jsonify({"genres": _get_genres_config()}), 200
 
 
+def _normalize_artists_payload(data):
+    """Return a clean list of performing artists from new or legacy payloads."""
+    raw_artists = data.get("artists") if isinstance(data, dict) else None
+    artists = []
+
+    if isinstance(raw_artists, list) and raw_artists:
+        artists = raw_artists
+    else:
+        legacy_artist = data.get("artist") if isinstance(data, dict) else ""
+        artists = [legacy_artist] if legacy_artist else []
+
+    normalized = []
+    seen = set()
+    for artist in artists:
+        name = str(artist or "").strip()
+        key = name.casefold()
+        if not name or key in seen:
+            continue
+        seen.add(key)
+        normalized.append(name)
+
+    return normalized
+
+
+def _artist_display_name(artists, fallback=""):
+    artists = [str(a).strip() for a in (artists or []) if str(a or "").strip()]
+    if artists:
+        return " / ".join(artists)
+    return str(fallback or "").strip()
+
+
+def _attach_artist_fields(song):
+    """Hydrate artist fields while preserving legacy `artist` display text."""
+    artists = _normalize_artists_payload(song)
+    display = _artist_display_name(artists, song.get("artist", ""))
+    song["artists"] = artists or ([display] if display else [])
+    song["artist"] = display
+    return song
+
+
 def youtube_video_id(url):
     """מחלץ מזהה סרטון יוטיוב (11 תווים) מכל פורמט קישור."""
     if not url or not isinstance(url, str):
@@ -235,6 +275,7 @@ def songs():
     for doc in song_docs:
         song = doc.to_dict()
         song["id"] = doc.id
+        _attach_artist_fields(song)
         song["created_by"] = song.get("created_by", None)
 
         # Serialize created_at for client-side sorting
@@ -293,6 +334,7 @@ def edit_song(song_id):
         return "שיר לא נמצא", 404
 
     song = doc.to_dict()
+    _attach_artist_fields(song)
     user_roles = get_roles(session)
     if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
         flash("אין לך הרשאה לערוך שיר זה", "error")
@@ -400,6 +442,7 @@ def play_song(song_id):
 
     song = doc.to_dict()
     song["id"] = doc.id
+    _attach_artist_fields(song)
 
     # Handle genres for display - support both old and new format
     if "genres" in song and song["genres"]:
@@ -466,6 +509,7 @@ def play_song(song_id):
         "id": song_id,
         "title": song["title"],
         "artist": song["artist"],
+        "artists": song.get("artists", [song["artist"]]),
         "genre": song.get("genre", ", ".join(song["display_genres"])),  # For template compatibility
         "genres": song["display_genres"],  # New field for multiple genres
         "language": song.get("language", ""),
@@ -846,6 +890,7 @@ def edit_chords_for_song(song_id):
         return "שיר לא נמצא", 404
 
     song = doc.to_dict()
+    _attach_artist_fields(song)
     user_roles = get_roles(session)
     if song.get("created_by") != session["user_id"] and not can_edit_any_content(user_roles):
         flash("אין לך הרשאה לערוך שיר זה", "error")
@@ -899,6 +944,11 @@ def add_song():
         if field not in data or not data[field]:
             return jsonify({"error": f"Missing or empty field: {field}"}), 400
 
+    artists_data = _normalize_artists_payload(data)
+    if not artists_data:
+        return jsonify({"error": "יש להוסיף לפחות אמן מבצע אחד"}), 400
+    artist_display = _artist_display_name(artists_data, data.get("artist", ""))
+
     # Validate genres - must be array
     genres_data = data.get("genres", [])
     if not isinstance(genres_data, list) or len(genres_data) == 0:
@@ -923,7 +973,8 @@ def add_song():
 
     new_song = {
         "title": data["title"],
-        "artist": data["artist"],
+        "artist": artist_display,
+        "artists": artists_data,
         "genres": genres_data,  # Store as array
         "language": data.get("language", ""),  # Optional - song language (basic for now)
         "key": data["key"],
@@ -981,6 +1032,11 @@ def edit_song_api(song_id):
         if field not in data or not data[field]:
             return jsonify({"error": f"Missing or empty field: {field}"}), 400
 
+    artists_data = _normalize_artists_payload(data)
+    if not artists_data:
+        return jsonify({"error": "יש להוסיף לפחות אמן מבצע אחד"}), 400
+    artist_display = _artist_display_name(artists_data, data.get("artist", ""))
+
     # Validate genres - must be array
     genres_data = data.get("genres", [])
     if not isinstance(genres_data, list) or len(genres_data) == 0:
@@ -1005,7 +1061,8 @@ def edit_song_api(song_id):
 
     updated_fields = {
         "title": data["title"],
-        "artist": data["artist"],
+        "artist": artist_display,
+        "artists": artists_data,
         "genres": genres_data,  # Store as array
         "language": data.get("language", ""),  # Optional - song language (basic for now)
         "key": data["key"],
@@ -1069,6 +1126,7 @@ def _genre_display_line(song):
 
 def _song_card_payload(song, doc_id):
     """שדות מינימליים לכרטיס בדף הבית (בלי אקורדים כבדים)."""
+    _attach_artist_fields(song)
     out = {
         "id": doc_id,
         "title": song.get("title") or "",
@@ -1214,6 +1272,7 @@ def get_song_data(song_id):
         return jsonify({"error": "Song not found"}), 404
 
     song = doc.to_dict()
+    _attach_artist_fields(song)
     user_roles = get_roles(session)
 
     # בדוק הרשאות עריכה
@@ -1248,6 +1307,7 @@ def get_song_data(song_id):
         "id": song_id,
         "title": song["title"],
         "artist": song["artist"],
+        "artists": song.get("artists", [song["artist"]]),
         "chords": chords_data,
         "loops": loops_data,
         "success": True
@@ -1265,6 +1325,7 @@ def get_song_complete_data(song_id):
             return jsonify({"error": "Song not found"}), 404
 
         song = doc.to_dict()
+        _attach_artist_fields(song)
         user_roles = get_roles(session)
 
         # בדוק הרשאות עריכה
@@ -1311,6 +1372,7 @@ def get_song_complete_data(song_id):
             "id": song_id,
             "title": song["title"],
             "artist": song["artist"],
+            "artists": song.get("artists", [song["artist"]]),
             "chords": chords_data,
             "loops": loops_data,
             "structure": structure_data,

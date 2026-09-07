@@ -13,6 +13,16 @@ class LoopManager {
         this.utils = window.ChordCore.MeasureUtils;
         this.modeDetector = window.ChordCore.ModeDetector;
         this.appModes = window.ChordCore.APP_MODES;
+        this.predefinedLoopNames = [
+            "פתיח (Intro)",
+            "בית (Verse)",
+            "קדם פזמון (Pre Chorus)",
+            "פזמון (Chorus)",
+            "מעבר (Bridge)",
+            "ליווי סולו (Solo rhythm)",
+            "C part",
+            "סיום (Outro)"
+        ];
     }
 
     /**
@@ -55,17 +65,9 @@ class LoopManager {
                         // If loop has a custom name, pre-fill it
                         const loop = this.getLoopById(this.editingLoopNameId);
                         if (loop) {
-                            const predefinedOptions = [
-                                "פתיח (Intro)",
-                                "בית (Verse)",
-                                "פזמון (Chorus)",
-                                "מעבר (Bridge)",
-                                "C part",
-                                "סיום (Outro)"
-                            ];
                             // Only pre-fill if it's not a predefined option
                             const nameWithoutCopy = loop.customName.replace(/\s*\(עותק\)\s*$/, "").trim();
-                            if (!predefinedOptions.includes(nameWithoutCopy)) {
+                            if (!this.predefinedLoopNames.includes(nameWithoutCopy)) {
                                 loopNameInput.value = nameWithoutCopy;
                             } else {
                                 loopNameInput.value = '';
@@ -509,22 +511,13 @@ class LoopManager {
         const loopNameSelect = document.getElementById("loop-name-select");
         const loopNameInput = document.getElementById("loop-name");
         
-        const predefinedOptions = [
-            "פתיח (Intro)",
-            "בית (Verse)",
-            "פזמון (Chorus)",
-            "מעבר (Bridge)",
-            "C part",
-            "סיום (Outro)"
-        ];
-
         // Check if loop name matches a predefined option
-        let matchingOption = predefinedOptions.find(option => option === loop.customName);
+        let matchingOption = this.predefinedLoopNames.find(option => option === loop.customName);
         
         // If no exact match, try to find match by removing "(עותק)" suffix
         if (!matchingOption && loop.customName.includes("(עותק)")) {
             const nameWithoutCopy = loop.customName.replace(/\s*\(עותק\)\s*$/, "").trim();
-            matchingOption = predefinedOptions.find(option => option === nameWithoutCopy);
+            matchingOption = this.predefinedLoopNames.find(option => option === nameWithoutCopy);
         }
         
         if (matchingOption) {
@@ -625,22 +618,13 @@ class LoopManager {
         this.editingLoopNameId = loopId;
 
         // Find matching option in dropdown
-        const predefinedOptions = [
-            "פתיח (Intro)",
-            "בית (Verse)",
-            "פזמון (Chorus)",
-            "מעבר (Bridge)",
-            "C part",
-            "סיום (Outro)"
-        ];
-
         // Check if loop name matches a predefined option exactly
-        let matchingOption = predefinedOptions.find(option => option === loop.customName);
+        let matchingOption = this.predefinedLoopNames.find(option => option === loop.customName);
         
         // If no exact match, try to find match by removing "(עותק)" suffix (for duplicated loops)
         if (!matchingOption && loop.customName.includes("(עותק)")) {
             const nameWithoutCopy = loop.customName.replace(/\s*\(עותק\)\s*$/, "").trim();
-            matchingOption = predefinedOptions.find(option => option === nameWithoutCopy);
+            matchingOption = this.predefinedLoopNames.find(option => option === nameWithoutCopy);
         }
         
         if (matchingOption) {

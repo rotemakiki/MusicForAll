@@ -53,10 +53,18 @@
                     <div class="form-group">
                         <label class="form-label" for="artist">
                             <span class="label-icon">🎤</span>
-                            שם האמן
+                            אמנים מבצעים
                         </label>
-                        <input type="text" id="artist" name="artist" class="form-input" required
-                               placeholder="הכנס את שם האמן...">
+                        <div class="multi-artist-container">
+                            <input type="text" id="artist" name="artist" class="form-input"
+                                   placeholder="הכנס שם אמן ולחץ הוסף...">
+                            <button type="button" class="add-artist-btn" id="add-artist-btn">
+                                <span>➕</span>
+                            </button>
+                        </div>
+                        <div class="selected-artists" id="selected-artists"></div>
+                        <input type="hidden" id="artists-list" name="artists">
+                        <div class="input-hint">אפשר להוסיף כמה אמנים מבצעים לאותו שיר</div>
                         <div class="field-validation" id="artist-validation"></div>
                     </div>
 

@@ -9,14 +9,14 @@
 {% block content %}
 <div class="my-songs-container">
     <div class="page-header">
-        <h1 class="page-title">💝 השירים שלי</h1>
+        <h1 class="page-title">השירים שלי</h1>
         <p class="page-subtitle">השירים שהוספת לרשימה האישית שלך</p>
         <div class="songs-count">
             <span class="count-number">{{ songs|length }}</span>
             <span class="count-label">שירים ברשימה</span>
         </div>
-        <div style="margin-top: 14px; display:flex; gap: 10px; justify-content:center; flex-wrap: wrap;">
-            <a href="{{ url_for('my_songs.song_lists_page') }}" style="text-decoration:none; border:1px solid #cbd5e1; padding:10px 14px; border-radius: 12px; font-weight: 800; color:#0f172a;">רשימות שירים</a>
+        <div class="song-lists-link-wrap">
+            <a href="{{ url_for('my_songs.song_lists_page') }}" class="song-lists-link">רשימת שירים</a>
         </div>
     </div>
 
@@ -123,8 +123,8 @@
 
                     <div class="song-hover-meta" aria-hidden="true">
                         <div class="meta-line">
-                            <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">🎸 ליווי {{ song.accompaniment_level }}</span>
-                            <span class="detail-badge level-badge-lead" title="רמת סולו: {{ song.lead_level }} מתוך 10">🎶 סולו {{ song.lead_level }}</span>
+                            <span class="detail-badge level-badge-accompaniment" title="{{ song.accompaniment_level_title }} — {{ song.accompaniment_level_description | e }}">ליווי {{ song.accompaniment_level }}</span>
+                            <span class="detail-badge level-badge-lead" title="רמת סולו: {{ song.lead_level }} מתוך 10">סולו {{ song.lead_level }}</span>
                         </div>
                         <div class="genres-line">
                             {% set g_list = song.display_genres or song.genres or [] %}
@@ -140,7 +140,6 @@
 
                     <div class="song-actions">
                         <a href="{{ url_for('songs.play_song', song_id=song.id) }}" class="action-btn play-btn single-action">
-                            <span>🎵</span>
                             <span>פתח שיר</span>
                         </a>
                     </div>
@@ -151,7 +150,6 @@
                                 <option value="">בחר רשימה…</option>
                             </select>
                             <button type="button" class="action-btn chords-btn song-list-add-btn" onclick="addSongToListFromCard('{{ song.id }}', this)">
-                                <span>➕</span>
                                 <span>הוסף לרשימה</span>
                             </button>
                         </div>
@@ -165,7 +163,6 @@
             <h3>אין שירים ברשימה</h3>
             <p>עדיין לא הוספת שירים לרשימה האישית שלך</p>
             <a href="{{ url_for('songs.songs') }}" class="browse-btn">
-                <span>🔍</span>
                 <span>עיין בכל השירים</span>
             </a>
         </div>

@@ -942,6 +942,59 @@ body {
     line-height: 1.35;
 }
 
+.song-notes-inline {
+    max-width: 1100px;
+    margin: 0 auto 10px;
+    padding: 12px 14px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #eff6ff, #f8f9ff);
+    color: #1e293b;
+    box-shadow: 0 4px 14px rgba(44, 62, 80, 0.08);
+}
+
+.song-notes-inline-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    color: #334155;
+}
+
+.song-notes-inline-block {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    justify-content: center;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.song-notes-inline-block + .song-notes-inline-block {
+    margin-top: 6px;
+}
+
+.song-notes-inline-block strong {
+    color: #4f46e5;
+    white-space: nowrap;
+}
+
+.song-notes-inline-block.teacher-note strong {
+    color: #b45309;
+}
+
+.song-notes-inline-tags {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
 /* Preparation controls */
 .preparation-controls {
     display: flex;
@@ -1306,6 +1359,7 @@ input:checked + .preparation-slider:before {
     font-weight: 650;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     line-height: 1.5;
+    tab-size: 4;
 }
 
 .play-text-panel-lyrics {
@@ -1317,7 +1371,15 @@ input:checked + .preparation-slider:before {
 }
 
 .play-text-panel-tabs {
-    letter-spacing: 0.5px;
+    max-width: none;
+    width: 100%;
+    min-height: 420px;
+    background: #15181d;
+    color: #e5e7eb;
+    border-color: #2f3541;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 10px 24px rgba(15, 23, 42, 0.18);
+    letter-spacing: 0.45px;
+    line-height: 1.7;
 }
 
 /* Lyrics side panel */

@@ -7,6 +7,8 @@ class ChordUIManager {
         this.selectedAccidental = "";
         this.selectedLetter = null;
         this.selectedType = "";
+        this.selectedTriadType = "";
+        this.selectedExtensionType = "";
         this.recentlyUsedChords = [];
 
         // Advanced features state
@@ -249,6 +251,8 @@ class ChordUIManager {
 
             btn.onclick = () => {
                 this.selectedType = type;
+                this.selectedTriadType = "";
+                this.selectedExtensionType = "";
                 this.renderExtendedChords();
                 this.updateSelectedChord();
 
@@ -356,6 +360,8 @@ class ChordUIManager {
         this.selectedLetter = null;
         this.selectedAccidental = "";
         this.selectedType = "";
+        this.selectedTriadType = "";
+        this.selectedExtensionType = "";
         this.selectedBassNote = null;
 
         // Close any open panels
@@ -373,7 +379,7 @@ class ChordUIManager {
             if (!parsed.isEmpty) {
                 this.selectedLetter = parsed.root;
                 this.selectedAccidental = parsed.accidental;
-                this.selectedType = parsed.type;
+                this.applyParsedChordType(parsed.type);
                 this.selectedBassNote = slashParts.bassNote;
 
                 // Activate slash mode
@@ -393,10 +399,10 @@ class ChordUIManager {
             if (!parsed.isEmpty) {
                 this.selectedLetter = parsed.root;
                 this.selectedAccidental = parsed.accidental;
-                this.selectedType = parsed.type;
+                this.applyParsedChordType(parsed.type);
 
                 // If it's an extended chord type, show extended panel
-                if (window.ChordCore.isExtendedChordType(parsed.type)) {
+                if (window.ChordCore.isExtendedChordType(this.selectedType)) {
                     this.extendedMode = true;
                     const panel = document.getElementById('extended-chords-panel');
                     const toggle = document.getElementById('extended-mode-toggle');
@@ -489,7 +495,7 @@ class ChordUIManager {
             },
             seventh: {
                 container: 'seventh-chord-types',
-                chords: ['7', 'maj7', 'm7', '6', 'm6', '7b5'] // הוספנו 7b5 לאקורדים מרובעים
+                chords: ['m7', '7', '5b7', '6'] // אקורדים מרובעים שמשלימים את הבסיס המשולש
             },
             extended: {
                 container: 'extended-chord-types',
@@ -519,11 +525,9 @@ class ChordUIManager {
                     'sus2': 'Sus2',
                     'sus4': 'Sus4',
                     '7': '7',
-                    'maj7': 'Maj7',
                     'm7': 'm7',
                     '6': '6',
-                    'm6': 'm6',
-                    '7b5': '7♭5',    // חדש - אקורד דומיננט 7 עם קווינטה מוקטנת
+                    '5b7': '5b7',
                     'add9': 'Add9',
                     'add11': 'Add11', // חדש - אקורד עם הוספת 11
                     'add13': 'Add13'  // חדש - אקורד עם הוספת 13
@@ -531,12 +535,21 @@ class ChordUIManager {
 
                 btn.textContent = displayNames[type] || type;
 
-                if (this.selectedType === type) {
+                if (
+                    (categoryKey === 'triads' && this.selectedTriadType === type) ||
+                    (categoryKey !== 'triads' && this.selectedExtensionType === type) ||
+                    (!this.selectedTriadType && !this.selectedExtensionType && this.selectedType === type)
+                ) {
                     btn.classList.add("selected");
                 }
 
                 btn.onclick = () => {
-                    this.selectedType = type;
+                    if (categoryKey === 'triads') {
+                        this.selectedTriadType = type;
+                    } else {
+                        this.selectedExtensionType = type;
+                    }
+                    this.selectedType = this.combineChordTypes(this.selectedTriadType, this.selectedExtensionType);
                     this.renderTypeButtons();
                     this.updateSelectedChord();
 
@@ -607,6 +620,8 @@ class ChordUIManager {
         this.selectedLetter = null;
         this.selectedAccidental = "";
         this.selectedType = "";
+        this.selectedTriadType = "";
+        this.selectedExtensionType = "";
         this.selectedBassNote = null;
 
         // Close any open panels
@@ -626,6 +641,88 @@ class ChordUIManager {
         this.clearSelection();
         this.recentlyUsedChords = [];
         this.renderRecentlyUsedChords();
+    }
+
+    /**
+     * Combine the basic triad selection with the selected extension.
+     */
+    combineChordTypes(triadType, extensionType) {
+        const base = triadType || "";
+        const extension = extensionType || "";
+
+        if (!extension) return base;
+        if (!base) return extension;
+
+        if (base === "m") {
+            if (extension === "m7") return "m7";
+            return `m${extension}`;
+        }
+
+        if (extension === "m7") {
+            return `${base}7`;
+        }
+
+        return `${base}${extension}`;
+    }
+
+    /**
+     * Split an existing chord type back into UI selections.
+     */
+    applyParsedChordType(chordType) {
+        const parsedType = this.decomposeChordType(chordType || "");
+        this.selectedTriadType = parsedType.triadType;
+        this.selectedExtensionType = parsedType.extensionType;
+        this.selectedType = this.combineChordTypes(this.selectedTriadType, this.selectedExtensionType);
+
+        if (!this.selectedType && chordType) {
+            this.selectedType = chordType;
+        }
+    }
+
+    decomposeChordType(chordType) {
+        const knownExtensions = ["5b7", "7b5", "m7", "7", "6"];
+        const knownTriads = ["sus4", "sus2", "dim", "aug", "m"];
+
+        if (!chordType) {
+            return { triadType: "", extensionType: "" };
+        }
+
+        if (chordType === "m7") {
+            return { triadType: "m", extensionType: "m7" };
+        }
+
+        if (chordType === "m6") {
+            return { triadType: "m", extensionType: "6" };
+        }
+
+        if (chordType === "m5b7" || chordType === "m7b5") {
+            return { triadType: "m", extensionType: "5b7" };
+        }
+
+        if (knownExtensions.includes(chordType)) {
+            return {
+                triadType: "",
+                extensionType: chordType === "7b5" ? "5b7" : chordType
+            };
+        }
+
+        if (knownTriads.includes(chordType)) {
+            return { triadType: chordType, extensionType: "" };
+        }
+
+        for (const triadType of knownTriads) {
+            if (chordType.startsWith(triadType)) {
+                const extensionType = chordType.slice(triadType.length);
+                if (knownExtensions.includes(extensionType)) {
+                    return {
+                        triadType,
+                        extensionType: extensionType === "7b5" ? "5b7" : extensionType
+                    };
+                }
+            }
+        }
+
+        return { triadType: "", extensionType: chordType };
     }
 }
 

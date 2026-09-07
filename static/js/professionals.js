@@ -7,6 +7,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const filterLanguage = document.getElementById("filter-language");
   const filterRating = document.getElementById("filter-rating");
 
+  const areaDropdown = document.getElementById("area-filter-dropdown");
+  const areaToggle = document.getElementById("area-filter-toggle");
+  const areaMenu = document.getElementById("area-filter-menu");
+  const areaLabel = document.getElementById("area-filter-label");
+  const areaSearch = document.getElementById("area-filter-search");
+
   const teacherFiltersWrap = document.getElementById("teacher-filters");
   const filterTeacherAvailable = document.getElementById("filter-teacher-available");
   const filterTeacherOnline = document.getElementById("filter-teacher-online");
@@ -33,6 +39,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function lc(s) {
     return (s || "").toString().trim().toLowerCase();
+  }
+
+  function normalizeAreaValue(value) {
+    return lc(value)
+      .replace(/[״"׳']/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/\s*-\s*/g, "-");
+  }
+
+  function getSelectedAreaValues() {
+    const selectedArea = (filterArea?.value || "").trim();
+    if (!selectedArea) return [];
+
+    const matchValues = (filterArea?.dataset.matchValues || selectedArea)
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+
+    return Array.from(new Set([selectedArea, ...matchValues]));
+  }
+
+  function matchesArea(areas, selectedValues) {
+    if (!selectedValues.length) return true;
+
+    const normalizedAreas = areas.map(normalizeAreaValue).filter(Boolean);
+    const normalizedSelected = selectedValues.map(normalizeAreaValue).filter(Boolean);
+
+    return normalizedSelected.some((needle) =>
+      normalizedAreas.some((haystack) =>
+        haystack === needle || haystack.includes(needle) || needle.includes(haystack)
+      )
+    );
   }
 
   function isTeacherModeSelected() {
@@ -62,12 +100,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const rating = ratingRaw ? Number(ratingRaw) : null;
 
     const selectedType = (filterType?.value || "").trim();
-    const selectedArea = (filterArea?.value || "").trim();
+    const selectedAreaValues = getSelectedAreaValues();
     const selectedLanguage = (filterLanguage?.value || "").trim();
     const selectedRating = (filterRating?.value || "").trim();
 
     if (selectedType && !types.includes(selectedType)) return false;
-    if (selectedArea && !areas.includes(selectedArea)) return false;
+    if (!matchesArea(areas, selectedAreaValues)) return false;
     if (selectedLanguage && !languages.includes(selectedLanguage)) return false;
     if (selectedRating) {
       const min = Number(selectedRating);
@@ -117,9 +155,126 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function setAreaMenuOpen(open) {
+    if (!areaMenu || !areaToggle) return;
+
+    areaMenu.hidden = !open;
+    areaToggle.setAttribute("aria-expanded", open ? "true" : "false");
+
+    if (open && areaSearch) {
+      window.setTimeout(() => areaSearch.focus(), 0);
+    }
+  }
+
+  function updateAreaLabel() {
+    if (!areaLabel || !filterArea) return;
+
+    areaLabel.textContent = filterArea.dataset.label || "הכל";
+
+    const selected = filterArea.value || "";
+    areaDropdown?.querySelectorAll(".area-option").forEach((option) => {
+      option.classList.toggle("is-active", option.getAttribute("data-area-value") === selected);
+    });
+  }
+
+  function setAreaValue(option) {
+    if (!filterArea || !option) return;
+
+    filterArea.value = option.getAttribute("data-area-value") || "";
+    filterArea.dataset.label = option.getAttribute("data-area-label") || "הכל";
+    filterArea.dataset.matchValues = option.getAttribute("data-area-match-values") || filterArea.value;
+
+    updateAreaLabel();
+    applyFilters();
+    setAreaMenuOpen(false);
+  }
+
+  function filterAreaOptions() {
+    if (!areaDropdown || !areaSearch) return;
+
+    const query = normalizeAreaValue(areaSearch.value);
+
+    areaDropdown.querySelectorAll(".area-group").forEach((group) => {
+      let hasVisibleOption = false;
+      const options = Array.from(group.querySelectorAll(".area-option"));
+      const groupOptions = group.querySelector(".area-group-options");
+      const groupToggle = group.querySelector(".area-group-toggle");
+
+      options.forEach((option) => {
+        const searchText = normalizeAreaValue(
+          option.getAttribute("data-area-search") || option.textContent || ""
+        );
+        const visible = !query || searchText.includes(query);
+        option.hidden = !visible;
+        hasVisibleOption = hasVisibleOption || visible;
+      });
+
+      group.hidden = !hasVisibleOption;
+
+      if (query && hasVisibleOption) {
+        if (groupOptions) groupOptions.hidden = false;
+        if (groupToggle) groupToggle.setAttribute("aria-expanded", "true");
+      } else if (!query && groupOptions && groupToggle?.getAttribute("aria-expanded") !== "true") {
+        groupOptions.hidden = true;
+      }
+    });
+  }
+
+  function resetAreaFilter() {
+    if (!filterArea) return;
+
+    filterArea.value = "";
+    filterArea.dataset.label = "הכל";
+    filterArea.dataset.matchValues = "";
+    if (areaSearch) areaSearch.value = "";
+    filterAreaOptions();
+    updateAreaLabel();
+  }
+
+  function setupAreaFilter() {
+    if (!areaDropdown || !areaToggle || !areaMenu) return;
+
+    areaToggle.addEventListener("click", function () {
+      setAreaMenuOpen(areaMenu.hidden);
+    });
+
+    areaDropdown.querySelectorAll(".area-group-toggle").forEach((toggle) => {
+      toggle.addEventListener("click", function () {
+        const options = toggle.nextElementSibling;
+        const open = options?.hidden !== false;
+        if (options) options.hidden = !open;
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    });
+
+    areaDropdown.querySelectorAll(".area-option").forEach((option) => {
+      option.addEventListener("click", function () {
+        setAreaValue(option);
+      });
+    });
+
+    if (areaSearch) {
+      areaSearch.addEventListener("input", filterAreaOptions);
+    }
+
+    document.addEventListener("click", function (event) {
+      if (!areaDropdown.contains(event.target)) {
+        setAreaMenuOpen(false);
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        setAreaMenuOpen(false);
+      }
+    });
+
+    updateAreaLabel();
+  }
+
   function resetFilters() {
     if (filterType) filterType.value = "";
-    if (filterArea) filterArea.value = "";
+    resetAreaFilter();
     if (filterLanguage) filterLanguage.value = "";
     if (filterRating) filterRating.value = "";
 
@@ -134,7 +289,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Events
   const inputs = [
     filterType,
-    filterArea,
     filterLanguage,
     filterRating,
     filterTeacherAvailable,
@@ -149,6 +303,8 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   if (resetBtn) resetBtn.addEventListener("click", resetFilters);
+
+  setupAreaFilter();
 
   // Initial state: teacher filters visible iff teacher selected
   applyFilters();

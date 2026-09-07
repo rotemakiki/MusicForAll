@@ -18,14 +18,26 @@
       <button type="button" class="tabs-btn tabs-btn-success" id="tabs-save-return">✅ שמור וחזור</button>
       <a class="tabs-btn tabs-btn-ghost" href="{{ return_to | e }}">חזרה בלי לשמור</a>
       <div class="tabs-spacer"></div>
-      <button type="button" class="tabs-btn" id="tabs-insert-template">הכנס תבנית ריקה</button>
+      <label class="tabs-template-label" for="tabs-template-select">תבנית:</label>
+      <select class="tabs-template-select" id="tabs-template-select">
+        <option value="פתיח (Intro)">פתיח (Intro)</option>
+        <option value="בית (Verse)">בית (Verse)</option>
+        <option value="קדם פזמון (Pre Chorus)">קדם פזמון (Pre Chorus)</option>
+        <option value="פזמון (Chorus)">פזמון (Chorus)</option>
+        <option value="מעבר (Bridge)">מעבר (Bridge)</option>
+        <option value="סולו (Solo)">סולו (Solo)</option>
+        <option value="ליווי סולו (Solo rhythm)">ליווי סולו (Solo rhythm)</option>
+        <option value="סיום (Outro)">סיום (Outro)</option>
+      </select>
+      <button type="button" class="tabs-btn" id="tabs-insert-template">הכנס תבנית</button>
     </div>
 
-    <textarea id="tabs-editor" class="tabs-editor" rows="16"
-              placeholder="e|----------------\nB|----------------\nG|----------------\nD|----------------\nA|----------------\nE|----------------"></textarea>
+    <textarea id="tabs-editor" class="tabs-editor" rows="22"
+              spellcheck="false"
+              placeholder="[פתיח (Intro)]\n        |1               |2               |3               |4               |\n        |1 & 2 & 3 & 4 & |1 & 2 & 3 & 4 & |1 & 2 & 3 & 4 & |1 & 2 & 3 & 4 & |\ne|----------------|----------------|----------------|----------------|\nB|----------------|----------------|----------------|----------------|\nG|----------------|----------------|----------------|----------------|\nD|----------------|----------------|----------------|----------------|\nA|----------------|----------------|----------------|----------------|\nE|----------------|----------------|----------------|----------------|"></textarea>
 
     <div class="tabs-hint">
-      אפשר להשתמש במספרים לסריגים, ובאותיות H, P, B, S, V בין תווים. (בשלב הבא נהפוך את זה לגריד אמיתי.)
+      אפשר להשתמש במספרים לסריגים, ובאותיות H, P, B, S, V בין תווים. כל תבנית כוללת מספרי תיבות וספירות מעל המיתרים.
     </div>
   </div>
 </div>
