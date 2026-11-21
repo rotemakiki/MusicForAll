@@ -63,14 +63,28 @@ function detectFormMode() {
     };
 }
 
+function clearStoredSongParts() {
+    localStorage.removeItem("chords");
+    localStorage.removeItem("loops");
+    localStorage.removeItem("song_structure");
+    localStorage.removeItem("partsOwner");
+}
+
+// חלקים שייכים לשיר החדש רק אם סומנו כך, או שחזרנו עכשיו מעורך האקורדים של השיר הזה.
+function storedPartsBelongToNewSong() {
+    const owner = localStorage.getItem("partsOwner");
+    if (owner === "new") return true;
+    if (owner) return false;
+    return localStorage.getItem("addingNewSong") === "true"
+        && localStorage.getItem("justReturnedFromChords") === "true";
+}
+
 // ניקוי מוחלט כשמתחילים דף הוספת שיר חדש
 function cleanStartNewSong() {
     console.log("🚀 התחלה חדשה - ניקוי כל הנתונים הישנים");
 
     // נקה הכל מ-localStorage
-    localStorage.removeItem("chords");
-    localStorage.removeItem("loops");
-    localStorage.removeItem("song_structure");
+    clearStoredSongParts();
     localStorage.removeItem("justReturnedFromChords");
     localStorage.removeItem("editingSongId");
     localStorage.removeItem("editSongData");
@@ -105,25 +119,9 @@ function initializeEditSong(songId) {
 function initializeNewSong() {
     console.log("🏁 אתחול מצב שיר חדש");
 
-    // ניקוי מצב עריכה
     localStorage.removeItem("editingSongId");
     localStorage.removeItem("editSongData");
-
-    // הגדרת מצב שיר חדש
     localStorage.setItem("addingNewSong", "true");
-
-    // נקה אקורדים ישנים אם לא חזרנו מעמוד האקורדים
-    const justReturnedFromChords = localStorage.getItem("justReturnedFromChords");
-    if (!justReturnedFromChords) {
-        const existingChords = localStorage.getItem("chords");
-        const existingAddingNewSong = localStorage.getItem("addingNewSong");
-
-        if (existingChords && existingAddingNewSong !== "true") {
-            localStorage.removeItem("chords");
-            localStorage.removeItem("loops");
-            console.log("🧹 נוקו אקורדים ישנים שלא קשורים לשיר הנוכחי");
-        }
-    }
 }
 
 // ===== MULTI-GENRE MANAGEMENT =====
@@ -600,6 +598,12 @@ function checkForReturnedChords() {
 
         if (loops) {
             document.getElementById("loops").value = loops;
+        }
+
+        const structureInput = document.getElementById("song_structure");
+        const structure = localStorage.getItem("song_structure");
+        if (structureInput) {
+            structureInput.value = structure || loops || "[]";
         }
 
         // נקה את הסימון
@@ -1343,6 +1347,18 @@ function handleFormSubmission(event) {
     formData.chords = chords;
     formData.loops = loops;
 
+    const structureInput = document.getElementById("song_structure");
+    if (structureInput && structureInput.value) {
+        try {
+            const parsedStructure = JSON.parse(structureInput.value);
+            if (Array.isArray(parsedStructure) && parsedStructure.length > 0) {
+                formData.song_structure = parsedStructure;
+            }
+        } catch (e) {
+            console.log("שגיאה בקריאת מבנה השיר:", e);
+        }
+    }
+
     // שליחה לשרת
     const url = mode.isEditMode ? `/api/edit_song/${mode.songId}` : "/api/add_song";
     const method = mode.isEditMode ? "PUT" : "POST";
@@ -1415,6 +1431,7 @@ function clearAllSongData() {
     localStorage.removeItem("addingNewSong");
     localStorage.removeItem("editingSongId");
     localStorage.removeItem("song_structure");
+    localStorage.removeItem("partsOwner");
     localStorage.removeItem("pending_sync");
     localStorage.removeItem("returningFromPlayMethodEditor");
     ["tabs_text", "chords_lyrics_text", "lyrics_text"].forEach((type) => {
@@ -1480,15 +1497,19 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         syncAllLevelPickersFromHidden();
     } else {
-        // מצב הוספת שיר חדש
-        const justReturned = localStorage.getItem("justReturnedFromChords");
-        const returningFromPlayMethodEditor = localStorage.getItem("returningFromPlayMethodEditor");
-        const hasNewSongDraft =
-            localStorage.getItem("songData") ||
-            localStorage.getItem("chords") ||
-            localStorage.getItem("loops");
-        if (!justReturned && !returningFromPlayMethodEditor && !hasNewSongDraft) {
+        // מצב הוספת שיר חדש.
+        // חלקים ב-localStorage נשמרים גם בזמן עריכת שיר אחר, ולכן לא מספיק שהם קיימים.
+        const editingSongId = localStorage.getItem("editingSongId");
+        const continuingNewSong = localStorage.getItem("addingNewSong") === "true"
+            && !editingSongId;
+
+        if (!continuingNewSong) {
             cleanStartNewSong();
+        } else if (!storedPartsBelongToNewSong()) {
+            clearStoredSongParts();
+            console.log("🧹 נוקו חלקים שנשארו משיר אחר");
+        } else {
+            localStorage.setItem("partsOwner", "new");
         }
         localStorage.removeItem("returningFromPlayMethodEditor");
         initializeNewSong();

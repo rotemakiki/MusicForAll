@@ -34,6 +34,7 @@
     localStorage.setItem("editingSongId", "{{ song.id }}");
     localStorage.setItem("chords", JSON.stringify({{ song.chords | tojson }}));
     localStorage.setItem("loops", JSON.stringify({{ song.loops | tojson }}));
+    localStorage.setItem("partsOwner", "{{ song.id }}");
 
     // נקה כל נתוני שיר חדש שעלולים להפריע
     localStorage.removeItem("addingNewSong");
@@ -84,6 +85,7 @@
         try {
             localStorage.setItem("chords", JSON.stringify(chordLines));
             localStorage.setItem("loops", JSON.stringify(loopsData));
+            localStorage.setItem("partsOwner", "{{ song.id }}");
             localStorage.setItem("justReturnedFromChords", "true");
             console.log("Saved chords:", chordLines);
             console.log("Saved loops:", loopsData);

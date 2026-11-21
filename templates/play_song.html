@@ -132,63 +132,6 @@
                 </div>
             </div>
 
-            <!-- נגן יוטיוב - רק למשתמשים מחוברים -->
-            {% if can_watch_videos %}
-            <div class="youtube-player-section">
-                <button onclick="toggleYouTubePlayer()" class="youtube-toggle-btn">
-                    <span class="youtube-icon">📺</span>
-                    <span>השמע/הסתר וידאו</span>
-                </button>
-                {% if song.video_watch_url %}
-                <a href="{{ song.video_watch_url }}" target="_blank" rel="noopener noreferrer" class="youtube-open-link" title="פתח את הסרטון ביוטיוב">🔗 לצפייה ב-YouTube</a>
-                {% endif %}
-                <div id="youtube-player-container" class="youtube-player-container" style="display: none;">
-                    <button onclick="toggleYouTubePlayer()" class="close-youtube-btn">×</button>
-                    <iframe id="youtube-iframe" data-src="{{ song.video_embed_url }}" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-                    {% if song.video_watch_url %}
-                    <p class="youtube-fallback-hint">אם הסרטון לא מתנגן כאן (הגבלת הטמעה), <a href="{{ song.video_watch_url }}" target="_blank" rel="noopener noreferrer">לחץ לצפייה ב-YouTube</a>.</p>
-                    {% endif %}
-                    {% if is_localhost %}
-                    <p class="youtube-localhost-hint">אתה גולש מ-localhost. יוטיוב לא מאפשר הטמעה מכאן; בפרודקשן או דרך <a href="https://ngrok.com" target="_blank" rel="noopener">ngrok</a> הסרטונים אמורים להתנגן.</p>
-                    {% endif %}
-                </div>
-                {% if song.tutorial_video_url %}
-                <button onclick="toggleTutorialPlayer()" class="youtube-toggle-btn" style="margin-top: 10px;">
-                    <span class="youtube-icon">📚</span>
-                    <span>פתח/סגור סרטון הדרכה</span>
-                </button>
-                {% if song.tutorial_watch_url %}
-                <a href="{{ song.tutorial_watch_url }}" target="_blank" rel="noopener noreferrer" class="youtube-open-link" title="פתח סרטון ההדרכה ביוטיוב">🔗 הדרכה ב-YouTube</a>
-                {% endif %}
-                <div id="tutorial-player-container" class="youtube-player-container" style="display: none;">
-                    <button onclick="toggleTutorialPlayer()" class="close-youtube-btn">×</button>
-                    <iframe id="tutorial-iframe" data-src="{{ song.tutorial_embed_url }}" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-                    {% if song.tutorial_watch_url %}
-                    <p class="youtube-fallback-hint">אם הסרטון לא מתנגן כאן, <a href="{{ song.tutorial_watch_url }}" target="_blank" rel="noopener noreferrer">לחץ לצפייה ב-YouTube</a>.</p>
-                    {% endif %}
-                </div>
-                {% endif %}
-
-                {% if song.tutorial_videos %}
-                <div class="uploaded-tutorials-section">
-                    <h4 class="uploaded-tutorials-title">🎬 סרטוני הדרכה ({{ song.tutorial_videos|length }})</h4>
-                    <div class="uploaded-tutorials-grid">
-                        {% for tv in song.tutorial_videos %}
-                        <div class="uploaded-tutorial-card">
-                            <div class="uploaded-tutorial-name">{{ tv.title }}</div>
-                            <video class="uploaded-tutorial-video" src="{{ tv.url }}" controls preload="metadata"></video>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            {% else %}
-            <div class="youtube-player-section guest-video-block">
-                <p class="guest-video-message">התחבר עם משתמש רשום כדי לצפות בסרטונים</p>
-                <a href="{{ url_for('auth.login') }}" class="action-btn">התחבר</a>
-            </div>
-            {% endif %}
 
             <!-- כפתורי פעולה -->
             <div class="action-buttons">
@@ -223,6 +166,12 @@
 
     <div class="player-focus-toolbar" aria-label="אפשרויות תצוגה וניגון">
         <div class="focus-toggle-group">
+            {% if song.video_embed_url or song.tutorial_embed_url or song.tutorial_videos %}
+            <button type="button" class="focus-toggle-btn song-video-open-btn" id="open-song-video-btn" onclick="openSongVideoPanel()" aria-pressed="false" aria-haspopup="dialog" title="צפייה בסרטון השיר">
+                <span class="focus-toggle-icon">📺</span>
+                <span class="focus-toggle-text">סרטון</span>
+            </button>
+            {% endif %}
             <button type="button" class="focus-toggle-btn" id="toggle-song-header-btn" onclick="toggleSongHeader()" aria-pressed="false" title="הסתר/הצג את פרטי השיר העליונים">
                 <span class="focus-toggle-icon">⌃</span>
                 <span class="focus-toggle-text">הסתר פרטים</span>
@@ -368,7 +317,8 @@
                     </button>
 
                     <div class="help-text">
-                        💡 ניתן להשתמש בקיצורי דרך: Ctrl±/Shift± להגדלה/הקטנה, Ctrl+0 לאיפוס
+                        הגודל נשמר פרופורציונלי: התיבה, הטקסט, הנקודות והרווחים גדלים יחד, והשורה מתאימה את עצמה למסך כדי שהחלקים לא יעלו אחד על השני.
+                        קיצורים: Ctrl± לתיבות, Shift± לטקסט, Ctrl+0 לאיפוס.
                     </div>
                 </div>
             </div>
@@ -405,6 +355,11 @@
                         <span class="instruction-icon">✅</span>
                         <span>כבה/הדלק חלקי שיר בעמודה זו</span>
                     </div>
+
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🔁</span>
+                        <span>לופ תרגול: סמן חלקים (למשל בית וקדם-פזמון) ולחץ «נגן לופ»</span>
+                    </div>
                 </div>
             </div>
 
@@ -413,6 +368,7 @@
                 <button type="button" class="control-label collapsible-trigger" id="song-parts-trigger" onclick="toggleSongPartsPanel()" aria-expanded="false">
                     <span class="control-icon">🎼</span>
                     <span>חלקי השיר</span>
+                    <span id="song-parts-loop-badge" class="song-parts-loop-badge" hidden>לופ פעיל</span>
                     <span class="collapsible-chevron" aria-hidden="true">▼</span>
                 </button>
                 <div id="song-parts-panel" class="song-parts-panel collapsed">
@@ -511,6 +467,7 @@
             </div>
 
             <div class="play-view-panel" id="play-view-boxes" data-play-view-panel="boxes" role="tabpanel">
+                <div id="practice-loop-banner" class="practice-loop-banner" hidden></div>
                 <div class="selected-measure-info" id="selected-measure-info" style="display: none;">
                     <div class="info-content">
                         <span class="info-icon">📍</span>
@@ -534,6 +491,65 @@
         </div>
     </div>
 </div>
+
+{% if song.video_embed_url or song.tutorial_embed_url or song.tutorial_videos %}
+<div id="song-video-panel" class="song-video-panel" hidden>
+    <div class="song-video-backdrop" onclick="closeSongVideoPanel()"></div>
+    <div class="song-video-card" role="dialog" aria-modal="true" aria-labelledby="song-video-panel-title">
+        <div class="song-video-card-header">
+            <h3 id="song-video-panel-title">סרטונים — {{ song.title }}</h3>
+            <button type="button" class="song-video-close" onclick="closeSongVideoPanel()" aria-label="סגור">×</button>
+        </div>
+        <div class="song-video-card-body">
+            {% if can_watch_videos %}
+                {% if song.video_embed_url %}
+                <section class="song-video-block">
+                    <h4>סרטון השיר</h4>
+                    <div class="song-video-frame">
+                        <iframe id="song-video-iframe" data-src="{{ song.video_embed_url }}" src="" title="סרטון השיר" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    </div>
+                    {% if song.video_watch_url %}
+                    <a href="{{ song.video_watch_url }}" target="_blank" rel="noopener noreferrer" class="song-video-external">פתיחה ב-YouTube</a>
+                    {% endif %}
+                    {% if is_localhost %}
+                    <p class="youtube-localhost-hint">ב-localhost יוטיוב לרוב חוסם הטמעה. הסרטון עצמו שמור, ואפשר לפתוח אותו ב-YouTube.</p>
+                    {% endif %}
+                </section>
+                {% endif %}
+
+                {% if song.tutorial_embed_url %}
+                <section class="song-video-block">
+                    <h4>סרטון הדרכה</h4>
+                    <div class="song-video-frame">
+                        <iframe id="tutorial-video-iframe" data-src="{{ song.tutorial_embed_url }}" src="" title="סרטון הדרכה" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                    </div>
+                    {% if song.tutorial_watch_url %}
+                    <a href="{{ song.tutorial_watch_url }}" target="_blank" rel="noopener noreferrer" class="song-video-external">פתיחת ההדרכה ב-YouTube</a>
+                    {% endif %}
+                </section>
+                {% endif %}
+
+                {% if song.tutorial_videos %}
+                <section class="song-video-block">
+                    <h4>סרטוני הדרכה שהועלו לאתר ({{ song.tutorial_videos|length }})</h4>
+                    <div class="uploaded-tutorials-grid">
+                        {% for tv in song.tutorial_videos %}
+                        <div class="uploaded-tutorial-card">
+                            <div class="uploaded-tutorial-name">{{ tv.title }}</div>
+                            <video class="uploaded-tutorial-video" src="{{ tv.url }}" controls preload="metadata"></video>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+            {% else %}
+            <p class="guest-video-message">התחבר עם משתמש רשום כדי לצפות בסרטונים</p>
+            <a href="{{ url_for('auth.login') }}" class="song-video-external">התחבר</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {% include 'partials/accompaniment_levels_dialog.html' %}
 
@@ -564,6 +580,7 @@
         songKeyType: {{ song.key_type | tojson }},
         chords: {{ song.chords | tojson }},
         loops: {{ song.loops | tojson }},
+        structure: {{ song.song_structure | tojson }},
         originalBpm: {{ song.bpm }},
         timeSignature: "{{ song.time_signature }}",
         easyCapoFret: {{ (song.easy_capo_fret or 0) | int }},
@@ -593,39 +610,37 @@
         } catch (e) { /* ignore */ }
     })();
 
-    // נגן יוטיוב – טעינת iframe רק בלחיצה (lazy load) + שימוש ב־youtube-nocookie
-    function toggleYouTubePlayer() {
-        const container = document.getElementById('youtube-player-container');
-        const iframe = document.getElementById('youtube-iframe');
-        const isVisible = container.style.display !== 'none';
+    function openSongVideoPanel() {
+        const panel = document.getElementById('song-video-panel');
+        const button = document.getElementById('open-song-video-btn');
+        if (!panel) return;
+        panel.hidden = false;
+        document.body.classList.add('song-video-open');
+        if (button) button.setAttribute('aria-pressed', 'true');
+        panel.querySelectorAll('iframe[data-src]').forEach(function (iframe) {
+            if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
+        });
+        const closeBtn = panel.querySelector('.song-video-close');
+        if (closeBtn) closeBtn.focus();
+    }
 
-        if (isVisible) {
-            container.style.display = 'none';
-            iframe.src = '';
-        } else {
-            container.style.display = 'block';
-            if (iframe.dataset.src) {
-                iframe.src = iframe.dataset.src;
-            }
+    function closeSongVideoPanel() {
+        const panel = document.getElementById('song-video-panel');
+        const button = document.getElementById('open-song-video-btn');
+        if (!panel || panel.hidden) return;
+        panel.querySelectorAll('iframe').forEach(function (iframe) { iframe.src = ''; });
+        panel.querySelectorAll('video').forEach(function (video) { video.pause(); });
+        panel.hidden = true;
+        document.body.classList.remove('song-video-open');
+        if (button) {
+            button.setAttribute('aria-pressed', 'false');
+            button.focus();
         }
     }
 
-    // נגן סרטון הדרכה
-    function toggleTutorialPlayer() {
-        const container = document.getElementById('tutorial-player-container');
-        const iframe = document.getElementById('tutorial-iframe');
-        const isVisible = container.style.display !== 'none';
-
-        if (isVisible) {
-            container.style.display = 'none';
-            iframe.src = '';
-        } else {
-            container.style.display = 'block';
-            if (iframe.dataset.src) {
-                iframe.src = iframe.dataset.src;
-            }
-        }
-    }
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeSongVideoPanel();
+    });
 
     // נקה מזהים מהוספה/עריכה קודמים
     localStorage.removeItem("editingSongId");
@@ -714,6 +729,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/song_arrangement.js') }}"></script>
 <script src="{{ url_for('static', filename='js/play_song.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tuner.js') }}" defer></script>
 {% endblock %}

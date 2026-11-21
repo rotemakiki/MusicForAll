@@ -134,6 +134,8 @@ body {
   line-height: 1.65;
   letter-spacing: 0.35px;
   tab-size: 4;
+  background: #fff;
+  color: #2c3e50;
 }
 
 .tabs-editor:focus {

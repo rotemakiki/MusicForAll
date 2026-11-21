@@ -416,6 +416,7 @@
 
                     <input type="hidden" id="chords" name="chords" required>
                     <input type="hidden" id="loops" name="loops">
+                    <input type="hidden" id="song_structure" name="song_structure">
                     <input type="hidden" id="play_method" name="play_method" value="{{ song.get('play_method', 'boxes') }}">
                     <textarea id="tabs_text" name="tabs_text" style="display:none;">{{ song.get('tabs_text', '') }}</textarea>
                     <textarea id="chords_lyrics_text" name="chords_lyrics_text" style="display:none;">{{ song.get('chords_lyrics_text', '') }}</textarea>
@@ -499,6 +500,7 @@
     const songId = "{{ song.id }}";
     const existingChords = {{ song.chords | tojson }};
     const existingLoops = {{ song.loops | tojson }};
+    const existingStructure = {{ song.song_structure | tojson }};
 
     // Load existing genres (support both old single genre and new multiple genres)
     // Expose globally so song_form_manager.js can load them after it initializes
@@ -520,11 +522,17 @@
     // Set existing data in hidden fields
     document.getElementById("chords").value = JSON.stringify(existingChords);
     document.getElementById("loops").value = JSON.stringify(existingLoops);
+    document.getElementById("song_structure").value = JSON.stringify(existingStructure || []);
 
-    // Store for editing context
+    // Store for editing context. If we just came back from the chord editor,
+    // keep the arrangement that was saved in this tab.
+    const justReturnedFromChords = localStorage.getItem("justReturnedFromChords") === "true";
     localStorage.setItem("editingSongId", songId);
-    localStorage.setItem("chords", JSON.stringify(existingChords));
-    localStorage.setItem("loops", JSON.stringify(existingLoops));
+    if (!justReturnedFromChords) {
+        localStorage.setItem("chords", JSON.stringify(existingChords));
+        localStorage.setItem("loops", JSON.stringify(existingLoops));
+        localStorage.setItem("song_structure", JSON.stringify(existingStructure || []));
+    }
 
     // Play methods: hydrate per-song storage keys (so editors load existing content)
     // IMPORTANT: do NOT overwrite localStorage if user just edited in dedicated editor.

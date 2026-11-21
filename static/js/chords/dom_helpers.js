@@ -557,6 +557,12 @@ class DOMHelpers {
             // שמירה ב-localStorage בפורמט הישן
             localStorage.setItem("chords", JSON.stringify(chordLines));
             localStorage.setItem("loops", JSON.stringify(loopsData));
+            localStorage.setItem("song_structure", JSON.stringify(loopsData));
+            const editingSongId = localStorage.getItem("editingSongId");
+            const partsOwner = editingSongId && editingSongId !== "null" && editingSongId !== "undefined"
+                ? editingSongId
+                : "new";
+            localStorage.setItem("partsOwner", partsOwner);
             localStorage.setItem("justReturnedFromChords", "true");
 
             console.log("✅ נתונים נשמרו למערכת הישנה:", {

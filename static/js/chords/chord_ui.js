@@ -495,7 +495,7 @@ class ChordUIManager {
             },
             seventh: {
                 container: 'seventh-chord-types',
-                chords: ['m7', '7', '5b7', '6'] // אקורדים מרובעים שמשלימים את הבסיס המשולש
+                chords: ['m7', '7', '5b7', 'maj7'] // אקורדים מרובעים שמשלימים את הבסיס המשולש
             },
             extended: {
                 container: 'extended-chord-types',
@@ -526,7 +526,7 @@ class ChordUIManager {
                     'sus4': 'Sus4',
                     '7': '7',
                     'm7': 'm7',
-                    '6': '6',
+                    'maj7': 'Maj7',
                     '5b7': '5b7',
                     'add9': 'Add9',
                     'add11': 'Add11', // חדש - אקורד עם הוספת 11
@@ -655,11 +655,16 @@ class ChordUIManager {
 
         if (base === "m") {
             if (extension === "m7") return "m7";
+            if (extension === "maj7") return "mMaj7";
             return `m${extension}`;
         }
 
         if (extension === "m7") {
             return `${base}7`;
+        }
+
+        if (extension === "maj7") {
+            return `${base}Maj7`;
         }
 
         return `${base}${extension}`;
@@ -680,7 +685,7 @@ class ChordUIManager {
     }
 
     decomposeChordType(chordType) {
-        const knownExtensions = ["5b7", "7b5", "m7", "7", "6"];
+        const knownExtensions = ["5b7", "7b5", "maj7", "m7", "7", "6"];
         const knownTriads = ["sus4", "sus2", "dim", "aug", "m"];
 
         if (!chordType) {
@@ -699,6 +704,14 @@ class ChordUIManager {
             return { triadType: "m", extensionType: "5b7" };
         }
 
+        if (chordType === "maj7") {
+            return { triadType: "", extensionType: "maj7" };
+        }
+
+        if (chordType === "mMaj7" || chordType === "mmaj7") {
+            return { triadType: "m", extensionType: "maj7" };
+        }
+
         if (knownExtensions.includes(chordType)) {
             return {
                 triadType: "",
@@ -713,10 +726,13 @@ class ChordUIManager {
         for (const triadType of knownTriads) {
             if (chordType.startsWith(triadType)) {
                 const extensionType = chordType.slice(triadType.length);
-                if (knownExtensions.includes(extensionType)) {
+                const normalizedExtension = extensionType.toLowerCase() === "maj7"
+                    ? "maj7"
+                    : (extensionType === "7b5" ? "5b7" : extensionType);
+                if (knownExtensions.includes(normalizedExtension)) {
                     return {
                         triadType,
-                        extensionType: extensionType === "7b5" ? "5b7" : extensionType
+                        extensionType: normalizedExtension
                     };
                 }
             }

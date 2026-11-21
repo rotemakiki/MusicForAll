@@ -32,7 +32,6 @@ class LoopManager {
         this.setupLoopInputs();
         this.updateLoopDisplay();
         this.renderSavedLoops();
-        this.loadExistingLoopData();
     }
 
     /**

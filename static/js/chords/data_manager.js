@@ -6,6 +6,8 @@ class DataManager {
         this.modeDetector = window.ChordCore.ModeDetector;
         this.appModes = window.ChordCore.APP_MODES;
         this.isOnline = navigator.onLine;
+        this.initialLoadComplete = false;
+        this.loadedHadArrangement = false;
 
         // Track online/offline status
         window.addEventListener('online', () => {
@@ -37,6 +39,8 @@ class DataManager {
         } catch (error) {
             console.error('Error during data initialization:', error);
             this.loadFromLocalStorageBackup();
+        } finally {
+            this.initialLoadComplete = true;
         }
     }
 
@@ -102,36 +106,49 @@ class DataManager {
  */
     async restoreSongData(songData) {
         console.log("🔄 Restoring complete song data:", songData);
+        this.applyResolvedSong(songData);
+        this.saveToLocalStorageBackup(songData);
+    }
 
-        // Clear existing data
+    /**
+     * Put each part once in the sidebar, and the ordered repeats in the song structure.
+     * If the saved order is missing but the chord chart is longer, rebuild it from the chords.
+     */
+    applyResolvedSong(songData) {
+        const data = songData || {};
+        const resolved = window.SongArrangement
+            ? window.SongArrangement.resolve({
+                structure: data.structure || [],
+                loops: data.loops || [],
+                chords: data.chords || []
+            })
+            : {
+                library: data.loops || [],
+                arrangement: (data.structure && data.structure.length) ? data.structure : (data.loops || []),
+                recovered: false
+            };
+
         this.clearAllManagerData();
 
-        // Restore loops if available
-        if (songData.loops && songData.loops.length > 0) {
-            console.log("Restoring loops from backend:", songData.loops);
-            if (window.loopManager) {
-                window.loopManager.restoreLoopsFromData(songData.loops);
-            }
-        } else if (songData.chords && songData.chords.length > 0) {
-            console.log("No loops found, converting chords to loops");
-            this.convertChordsToLoops(songData.chords);
+        if (resolved.library.length && window.loopManager) {
+            window.loopManager.restoreLoopsFromData(resolved.library);
+        } else if (data.chords && data.chords.length) {
+            this.convertChordsToLoops(data.chords);
         }
 
-        // **תיקון חשוב**: אם יש מבנה שיר ישיר - השתמש בו
-        if (songData.structure && songData.structure.length > 0) {
-            console.log("Restoring song structure from backend:", songData.structure);
-            if (window.songStructureManager) {
-                window.songStructureManager.restoreSongStructure(songData.structure);
-            }
-        }
-        // **חדש**: אם אין מבנה ישיר, נסה לבנות מהלופים עם הסדר הנכון
-        else if (songData.loops && songData.loops.length > 0) {
-            console.log("Building song structure from loops order");
-            this.buildSongStructureFromLoopsData(songData.loops);
+        if (resolved.arrangement.length && window.songStructureManager) {
+            window.songStructureManager.restoreSongStructure(resolved.arrangement);
         }
 
-        // Store in localStorage as backup
-        this.saveToLocalStorageBackup(songData);
+        this.loadedHadArrangement = resolved.arrangement.length > 0;
+
+        if (resolved.recovered && window.domHelpers) {
+            window.domHelpers.showNotification(
+                "הסדר והחזרות לא נשמרו בשיר הזה, אז שחזרתי אותם לפי האקורדים. אם שם של חלק כולל כמה שמות, האקורדים שלהם זהים — כדאי לבדוק ולבחור את החלק הנכון. אחרי שמירה זה יישאר.",
+                "warning",
+                9000
+            );
+        }
     }
 
     /**
@@ -142,26 +159,12 @@ class DataManager {
             return;
         }
 
-        // המתן שהלופים ייטענו
-        setTimeout(() => {
-            loopsData.forEach(loopData => {
-                // מצא את הלופ ברשימת הלופים השמורים
-                const loopDataName = (loopData.customName || loopData.name || "").toString().trim();
-                const savedLoop = window.loopManager.getAllSavedLoops()
-                    .find(loop => (loop.customName || loop.name || "").toString().trim() === loopDataName);
-
-                if (savedLoop) {
-                    // צור עותק עם חזרות
-                    const loopForStructure = {
-                        ...savedLoop,
-                        repeatCount: loopData.repeatCount || 1
-                    };
-
-                    console.log(`Adding loop to structure: ${loopDataName} with ${loopData.repeatCount} repeats`);
-                    window.songStructureManager.addLoopToSong(loopForStructure);
-                }
+        loopsData.forEach((loopData) => {
+            window.songStructureManager.addLoopToSong({
+                ...loopData,
+                repeatCount: loopData.repeatCount || 1
             });
-        }, 100);
+        });
     }
 
     /**
@@ -171,17 +174,15 @@ class DataManager {
         try {
             const addingNewSong = localStorage.getItem("addingNewSong");
 
-            if (addingNewSong === "true") {
-                // **תיקון**: בדוק אם באמת יש נתונים לשיר הנוכחי
-                const hasExistingData = localStorage.getItem("chords") || localStorage.getItem("loops");
+            const owner = localStorage.getItem("partsOwner");
+            const hasExistingData = localStorage.getItem("chords")
+                || localStorage.getItem("loops")
+                || localStorage.getItem("song_structure");
+            const belongsToNewSong = owner === "new";
 
-                if (hasExistingData) {
-                    console.log("Loading new song data in progress from localStorage");
-                    this.loadFromLocalStorageBackup();
-                } else {
-                    console.log("No relevant data for current new song - starting clean");
-                    this.clearAllData();
-                }
+            if (addingNewSong === "true" && belongsToNewSong && hasExistingData) {
+                console.log("Loading new song data in progress from localStorage");
+                this.loadFromLocalStorageBackup();
             } else {
                 console.log("No new song in progress - starting clean");
                 this.clearAllData();
@@ -201,39 +202,29 @@ class DataManager {
         try {
             const savedChords = localStorage.getItem("chords");
             const savedLoops = localStorage.getItem("loops");
+            const savedStructure = localStorage.getItem("song_structure");
 
-            if (!savedChords && !savedLoops) {
+            if (!savedChords && !savedLoops && !savedStructure) {
                 console.log("No backup data found in localStorage");
                 return;
             }
 
-            // Clear existing data
-            this.clearAllManagerData();
-
-            // Load loops if available
-            if (savedLoops && savedLoops !== "[]") {
+            const parseList = (raw) => {
+                if (!raw || raw === "[]") return [];
                 try {
-                    const loopsData = JSON.parse(savedLoops);
-                    console.log("Restoring loops from localStorage:", loopsData);
-
-                    if (window.loopManager) {
-                        window.loopManager.restoreLoopsFromData(loopsData);
-                    }
-                } catch (e) {
-                    console.log("Error parsing localStorage loops:", e);
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (error) {
+                    console.log("Error parsing localStorage backup:", error);
+                    return [];
                 }
-            }
+            };
 
-            // Convert chords to loops if no loops available
-            if (savedChords && (!savedLoops || savedLoops === "[]")) {
-                try {
-                    const chordsData = JSON.parse(savedChords);
-                    console.log("Converting chords to loops from localStorage:", chordsData);
-                    this.convertChordsToLoops(chordsData);
-                } catch (e) {
-                    console.log("Error parsing localStorage chords:", e);
-                }
-            }
+            this.applyResolvedSong({
+                chords: parseList(savedChords),
+                loops: parseList(savedLoops),
+                structure: parseList(savedStructure)
+            });
 
             console.log("Successfully loaded from localStorage backup");
         } catch (error) {
@@ -347,6 +338,12 @@ class DataManager {
                 localStorage.setItem("song_structure", JSON.stringify(songData.structure));
             }
 
+            const editingSongId = localStorage.getItem("editingSongId");
+            const owner = editingSongId && editingSongId !== "null" && editingSongId !== "undefined"
+                ? editingSongId
+                : "new";
+            localStorage.setItem("partsOwner", owner);
+
             localStorage.setItem("last_backup", new Date().toISOString());
             console.log("Data saved to localStorage backup");
         } catch (error) {
@@ -405,13 +402,22 @@ class DataManager {
      */
     async autoSave() {
         try {
+            if (!this.initialLoadComplete) return false;
+
             const songData = this.collectCurrentSongData();
 
-            if (this.hasValidSongData(songData)) {
-                await this.saveSongToBackend(songData);
+            // Don't replace a loaded arrangement with an empty one before the user rebuilds it.
+            if (this.loadedHadArrangement && (!songData.structure || songData.structure.length === 0)) {
+                return false;
             }
+
+            if (this.hasValidSongData(songData)) {
+                return await this.saveSongToBackend(songData);
+            }
+            return false;
         } catch (error) {
             console.error("Error during auto-save:", error);
+            return false;
         }
     }
 
@@ -426,17 +432,16 @@ class DataManager {
             timestamp: new Date().toISOString()
         };
 
-        // Collect loops data
-        if (window.loopManager) {
-            songData.loops = window.loopManager.getLoopsDataForSaving();
-        }
-
-        // Collect song structure
+        // The arrangement (order + repeats) is what playback and the next edit must restore.
+        // The sidebar library is only a fallback when nothing has been placed in the song yet.
         if (window.songStructureManager) {
             songData.structure = window.songStructureManager.getSongStructureForSaving();
-            // Also generate chord lines for backward compatibility
             songData.chords = window.songStructureManager.convertToChordLines();
         }
+        if ((!songData.structure || songData.structure.length === 0) && window.loopManager) {
+            songData.structure = window.loopManager.getLoopsDataForSaving();
+        }
+        songData.loops = songData.structure;
 
         return songData;
     }
@@ -481,6 +486,7 @@ class DataManager {
             localStorage.removeItem("chords");
             localStorage.removeItem("loops");
             localStorage.removeItem("song_structure");
+            localStorage.removeItem("partsOwner");
             localStorage.removeItem("pending_sync");
         } catch (error) {
             console.error("Error clearing localStorage:", error);

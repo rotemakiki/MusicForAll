@@ -399,6 +399,16 @@ def edit_song(song_id):
         print(f"Error parsing loops for song {song_id}: {e}")
         song["loops"] = []
 
+    try:
+        structure_str = song.get("song_structure", "[]")
+        if isinstance(structure_str, str):
+            song["song_structure"] = json.loads(structure_str) if structure_str else []
+        else:
+            song["song_structure"] = structure_str if structure_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing song structure for song {song_id}: {e}")
+        song["song_structure"] = []
+
     levels_cfg = _get_song_levels_config()
     attach_song_level_fields_with_tables(song, accompaniment_levels=levels_cfg["accompaniment_levels"])
 
@@ -485,6 +495,17 @@ def play_song(song_id):
         print(f"Error parsing loops for song {song_id}: {e}")
         loops_data = []
 
+    structure_data = []
+    try:
+        structure_str = song.get("song_structure", "[]")
+        if isinstance(structure_str, str):
+            structure_data = json.loads(structure_str) if structure_str else []
+        else:
+            structure_data = structure_str if structure_str else []
+    except (json.JSONDecodeError, TypeError) as e:
+        print(f"Error parsing song structure for song {song_id}: {e}")
+        structure_data = []
+
     levels_cfg = _get_song_levels_config()
     attach_song_level_fields_with_tables(song, accompaniment_levels=levels_cfg["accompaniment_levels"])
 
@@ -536,6 +557,7 @@ def play_song(song_id):
         "original_artist": song.get("original_artist", ""),
         "chords": chords_list,
         "loops": loops_data,
+        "song_structure": structure_data,
         "beats": beats_per_measure,
         "created_by": song.get("created_by", None),
         "teacher_notes": song.get("teacher_notes", song.get("notes", "")),
@@ -991,6 +1013,7 @@ def add_song():
         "tutorial_video_url": data.get("tutorial_video_url", ""),  # Optional field
         "chords": json.dumps(data["chords"]),
         "loops": json.dumps(loops_data),
+        "song_structure": json.dumps(data.get("song_structure") or []),
         "song_version": data.get("song_version", ""),  # Optional field
         "original_artist": data.get("original_artist", ""),  # Optional field - for cover songs
         "notes": data.get("notes", ""),  # Optional field (legacy)
@@ -1092,6 +1115,8 @@ def edit_song_api(song_id):
         "lyrics_text": data.get("lyrics_text", ""),
         "updated_at": datetime.utcnow()
     }
+    if isinstance(data.get("song_structure"), list):
+        updated_fields["song_structure"] = json.dumps(data["song_structure"])
     firestore.client().collection("songs").document(song_id).update(updated_fields)
     return jsonify({"message": "השיר עודכן בהצלחה!"}), 200
 

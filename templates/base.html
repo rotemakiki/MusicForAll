@@ -30,12 +30,15 @@
                         <span></span>
                     </div>
                     {% set profile_image = navbar_profile_image %}
-                    {% if profile_image %}
-                        <a href="{{ url_for('students.user_profile') }}" class="profile-menu-trigger" title="הפרופיל שלי">
-                            <img src="{{ profile_image }}" alt="תמונת פרופיל" class="navbar-profile-img">
-                            <div class="status-indicator"></div>
-                        </a>
-                    {% endif %}
+                    <a href="{{ url_for('students.user_profile') }}" class="profile-menu-trigger" title="הפרופיל שלי">
+                        <span class="navbar-avatar-frame">
+                            {% if profile_image %}
+                                <img src="{{ profile_image }}" alt="" class="navbar-profile-img" width="50" height="50" onerror="this.remove()">
+                            {% endif %}
+                            <span class="navbar-avatar-fallback" aria-hidden="true"><i class="fas fa-user"></i></span>
+                        </span>
+                        <span class="status-indicator"></span>
+                    </a>
                 {% else %}
                     <div class="menu-trigger" onclick="toggleMenu()">
                         <span></span>

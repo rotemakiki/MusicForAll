@@ -95,7 +95,6 @@ class SongStructureManager {
     init() {
         this.setupDropZone();
         this.renderSongStructure();
-        this.loadExistingSongStructure();
     }
 
     /**
@@ -175,6 +174,11 @@ class SongStructureManager {
      * Restore song structure from data
      */
     restoreSongStructure(structureData) {
+        // An empty response must not wipe an arrangement that was already restored.
+        if ((!structureData || structureData.length === 0) && this.songStructure.length > 0) {
+            return;
+        }
+
         // Normalize legacy/new shapes:
         // - saved structure items use `name`, while in-memory loops use `customName`
         // - keep both so older UI code keeps working

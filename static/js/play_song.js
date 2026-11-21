@@ -2,7 +2,18 @@
 
 // Get song data from Flask
 const chords = window.songData.chords;
-const loops = window.songData.loops || [];
+let loops = window.songData.loops || [];
+if (window.SongArrangement) {
+    const resolvedArrangement = window.SongArrangement.resolve({
+        structure: window.songData.structure || [],
+        loops: loops,
+        chords: chords
+    });
+    if (resolvedArrangement.recovered && resolvedArrangement.arrangement.length) {
+        loops = resolvedArrangement.arrangement;
+        window.songArrangementRecovered = true;
+    }
+}
 const originalBpm = window.songData.originalBpm;
 const timeSignature = window.songData.timeSignature || "4/4";
 const playMethod = window.songData.playMethod || "boxes";
@@ -46,6 +57,8 @@ let addPreparationMeasure = true;
 let preparationMeasuresCount = 1; // מספר תיבות ריקות בתחילה (ברירת מחדל: 1)
 let enabledLoops = new Set();
 let loopStates = {};
+let infinitePracticeLoop = false;
+let practiceLoopCycle = 1;
 const metronome = document.getElementById("metronome-sound");
 
 // Transposition state
@@ -65,10 +78,8 @@ try {
 let measureScale = 1.0; // גודל בסיסי של התיבות
 let fontScale = 1.0;    // גודל בסיסי של הפונט
 const BASE_MEASURE_WIDTH = 200;
-const BASE_MEASURE_MIN_HEIGHT = 80;
 const MAX_MEASURES_PER_ROW = 4;
 const MEASURE_ROW_GAP = 12;
-const MEASURE_ROW_SIDE_PADDING = 40;
 
 // נתונים לניהול מיקום הנגינה
 let currentGlobalMeasureIndex = 0;
@@ -200,6 +211,9 @@ function openLyricsPanel() {
     if (!panel) return;
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");
+    const container = getPlayerContainer();
+    if (container) container.classList.add("lyrics-panel-open");
+    requestAnimationFrame(renderChords);
 }
 
 function closeLyricsPanel() {
@@ -207,6 +221,9 @@ function closeLyricsPanel() {
     if (!panel) return;
     panel.classList.remove("open");
     panel.setAttribute("aria-hidden", "true");
+    const container = getPlayerContainer();
+    if (container) container.classList.remove("lyrics-panel-open");
+    requestAnimationFrame(renderChords);
 }
 
 // Initialize enabled loops - all enabled by default
@@ -426,26 +443,27 @@ function renderNotesTagSummary() {
 
 // פונקציות הגדלה/הקטנה של התיבות
 function increaseMeasureSize() {
-    measureScale = Math.min(measureScale + 0.1, 2.0);
+    measureScale = Math.min(Math.round((measureScale + 0.1) * 10) / 10, 2.0);
     renderChords();
     showSizeIndicator();
 }
 
 function decreaseMeasureSize() {
-    measureScale = Math.max(measureScale - 0.1, 0.5);
+    measureScale = Math.max(Math.round((measureScale - 0.1) * 10) / 10, 0.5);
     renderChords();
     showSizeIndicator();
 }
 
 function increaseFontSize() {
-    fontScale = Math.min(fontScale + 0.1, 2.0);
-    updateFontSizes();
+    fontScale = Math.min(Math.round((fontScale + 0.1) * 10) / 10, 2.0);
+    // הטקסט מגדיל גם את התיבה, כדי שהיחס ביניהם יישמר
+    renderChords();
     showSizeIndicator();
 }
 
 function decreaseFontSize() {
-    fontScale = Math.max(fontScale - 0.1, 0.5);
-    updateFontSizes();
+    fontScale = Math.max(Math.round((fontScale - 0.1) * 10) / 10, 0.5);
+    renderChords();
     showSizeIndicator();
 }
 
@@ -461,20 +479,48 @@ function getAvailableMeasureRowWidth() {
     const wrapper = document.getElementById("chords-wrapper");
     const availableSource = wrapper || chordSection;
     const sourceWidth = availableSource?.clientWidth || chordSection?.clientWidth || 0;
-    return Math.max(sourceWidth - MEASURE_ROW_SIDE_PADDING, BASE_MEASURE_WIDTH);
+    // ריפוד העטיפה + מסגרת וריפוד של מקטע הלופ, כדי שהתיבה לא תגלוש על מה שלידה
+    const rowChrome = 76;
+    return Math.max(sourceWidth - rowChrome, 160);
+}
+
+// גודל התיבה והטקסט נשמרים באותו יחס.
+// הגדלת הטקסט מגדילה גם את התיבה, והכל נעצר ברוחב השורה כדי שלא תהיה חפיפה.
+function getAppliedScales() {
+    const requested = measureScale * fontScale;
+    const available = getAvailableMeasureRowWidth();
+    const maxScale = Math.max(0.5, available / BASE_MEASURE_WIDTH);
+    const layoutScale = Math.min(Math.max(requested, 0.5), maxScale);
+    const appliedFont = Math.min(fontScale, layoutScale);
+    return {
+        layoutScale,
+        appliedFont,
+        capped: requested > maxScale + 0.02
+    };
 }
 
 function getMeasuresPerRow() {
-    const scaledMeasureWidth = BASE_MEASURE_WIDTH * measureScale;
+    const { layoutScale } = getAppliedScales();
+    const scaledMeasureWidth = BASE_MEASURE_WIDTH * layoutScale;
+    const gap = MEASURE_ROW_GAP * layoutScale;
     const availableWidth = getAvailableMeasureRowWidth();
-    const byWidth = Math.floor((availableWidth + MEASURE_ROW_GAP) / (scaledMeasureWidth + MEASURE_ROW_GAP));
+    const byWidth = Math.floor((availableWidth + gap) / (scaledMeasureWidth + gap));
     return Math.max(1, Math.min(MAX_MEASURES_PER_ROW, byWidth || 1));
 }
 
+function applyScaleVariables() {
+    const applied = getAppliedScales();
+    const root = document.documentElement;
+    root.style.setProperty("--layout-scale", String(applied.layoutScale));
+    root.style.setProperty("--f-scale", String(applied.appliedFont));
+    return applied;
+}
+
 function updateMeasuresSizes() {
+    const applied = applyScaleVariables();
     const measures = document.querySelectorAll('.measure-box');
-    const scaledWidth = BASE_MEASURE_WIDTH * measureScale;
-    const scaledMinHeight = BASE_MEASURE_MIN_HEIGHT * measureScale;
+    const scaledWidth = BASE_MEASURE_WIDTH * applied.layoutScale;
+    const scaledMinHeight = 108 * applied.layoutScale;
 
     measures.forEach(measure => {
         measure.style.width = `${scaledWidth}px`;
@@ -486,27 +532,24 @@ function updateMeasuresSizes() {
 }
 
 function updateFontSizes() {
-    const chordBoxes = document.querySelectorAll('.chord-box');
-    const measureTitles = document.querySelectorAll('.measure-title');
-
-    chordBoxes.forEach(chord => {
-        const baseFontSize = 16; // גודל פונט בסיסי מעודכן
-        chord.style.fontSize = `${baseFontSize * fontScale}px`;
-    });
-
-    measureTitles.forEach(title => {
-        const baseFontSize = 12; // גודל פונט בסיסי מעודכן
-        title.style.fontSize = `${baseFontSize * fontScale}px`;
-    });
+    applyScaleVariables();
 }
 
 function showSizeIndicator() {
     const indicator = document.getElementById('size-indicator');
     if (indicator) {
+        const applied = getAppliedScales();
+        const fontShown = Math.round(applied.appliedFont * 100);
+        const fontRequested = Math.round(fontScale * 100);
+        const fontText = fontShown === fontRequested ? `${fontShown}%` : `${fontShown}% (בקשה ${fontRequested}%)`;
+        const capNote = applied.capped
+            ? `<span>הותאם לרוחב המסך כדי שהחלקים לא יעלו אחד על השני</span>`
+            : "";
         indicator.innerHTML = `
             <div class="size-info">
-                <span>📏 גודל תיבות: ${Math.round(measureScale * 100)}%</span>
-                <span>🔤 גודל פונט: ${Math.round(fontScale * 100)}%</span>
+                <span>📏 גודל תיבות: ${Math.round(applied.layoutScale * 100)}%</span>
+                <span>🔤 גודל פונט: ${fontText}</span>
+                ${capNote}
             </div>
         `;
         indicator.style.display = 'block';
@@ -630,8 +673,17 @@ function buildAllMeasures() {
 
 // Enhanced chord rendering עם פריסה שמתאימה את מספר התיבות בשורה לגודל הנבחר
 function renderChords() {
+    applyScaleVariables();
     const wrapper = document.getElementById("chords-wrapper");
     wrapper.innerHTML = "";
+
+    if (window.songArrangementRecovered) {
+        const note = document.createElement("div");
+        note.className = "arrangement-recovery-note";
+        note.style.cssText = "margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; font-weight: 600;";
+        note.textContent = "הסדר והחזרות שוחזרו מהאקורדים שנשמרו. אם שם של חלק כולל כמה שמות, האקורדים שלהם זהים. אפשר לסדר אותם בעריכה, והפעם זה יישמר.";
+        wrapper.appendChild(note);
+    }
 
     const measures = buildAllMeasures();
 
@@ -677,6 +729,7 @@ function renderChords() {
     updateBeatDots();
     updateMeasuresSizes();
     updateFontSizes();
+    updatePracticeLoopBanner();
 
     // גלילה אוטומטית לתיבה הנוכחית
     scrollToCurrentMeasure();
@@ -743,6 +796,11 @@ function renderMeasuresByLoops(wrapper, measures) {
     loopSections.forEach(section => {
         const loopSection = document.createElement("div");
         loopSection.className = "loop-section";
+        if (infinitePracticeLoop && enabledLoops.has(section.loopIndex)) {
+            loopSection.classList.add("practice-loop-part");
+        } else if (infinitePracticeLoop) {
+            loopSection.classList.add("practice-loop-skipped");
+        }
         loopSection.dataset.loopIndex = section.loopIndex;
         loopSection.dataset.repeatNumber = section.repeatNumber;
         loopSection.id = `loop-${section.loopIndex}-repeat-${section.repeatNumber}`;
@@ -757,25 +815,31 @@ function renderMeasuresByLoops(wrapper, measures) {
         const loopHeader = document.createElement("div");
         loopHeader.className = "loop-header";
 
-        let titleText = section.loop.name || section.loop.customName || "חלק ללא שם";
         const totalRepeats = section.loop.repeatCount || 1;
+        let titleText = getLoopDisplayName(section.loopIndex, false);
         if (totalRepeats > 1) {
             titleText += ` - חזרה ${section.repeatNumber}/${totalRepeats}`;
         }
 
+        const partInPracticeLoop = infinitePracticeLoop && enabledLoops.has(section.loopIndex);
         loopHeader.innerHTML = `
             <div class="loop-title-controls">
                 <button class="loop-toggle-btn" onclick="toggleLoopVisibility(${section.loopIndex})">
                     ${loopStates[section.loopIndex].visible ? '📖' : '📕'}
                 </button>
-                <span class="loop-title">${titleText}</span>
+                <span class="loop-title">${escapeHtml(titleText)}</span>
                 <span class="loop-measures-count">${section.loop.measureCount} תיבות</span>
             </div>
             <div class="loop-controls">
+                <button type="button" class="loop-practice-btn ${partInPracticeLoop ? "is-in-loop" : ""}"
+                        onclick="practicePart(${section.loopIndex})"
+                        title="לופ אינסופי על החלק הזה. לחיצה על חלק נוסף מוסיפה אותו ללופ.">
+                    ${partInPracticeLoop ? "✓ בלופ" : "🔁 תרגל"}
+                </button>
                 <label class="loop-enable-checkbox">
                     <input type="checkbox" ${loopStates[section.loopIndex].enabled ? 'checked' : ''}
                            onchange="toggleLoopEnabled(${section.loopIndex})">
-                    <span class="loop-checkbox-label">כלול בניגון</span>
+                    <span class="loop-checkbox-label">${infinitePracticeLoop ? "כלול בלופ" : "כלול בניגון"}</span>
                 </label>
             </div>
         `;
@@ -881,16 +945,17 @@ function createMeasureElement(measureData) {
             chordBox.classList.add("preparation-chord");
         }
 
-        // חישוב הרוחב היחסי של האקורד לפי כמות הנקישות שלו
+        // רוחב יחסי לפי מספר הנקישות, עם כיווץ כדי שהאקורדים יישארו בתוך התיבה
         const chordBeats = chord.width || chord.beats || 1;
-        const flexBasis = (chordBeats / measureData.totalBeats) * 100;
-        chordBox.style.flexBasis = `${flexBasis}%`;
-        chordBox.style.flexGrow = "0";
-        chordBox.style.flexShrink = "0";
+        chordBox.style.flexGrow = String(Math.max(chordBeats, 1));
+        chordBox.style.flexShrink = "1";
+        chordBox.style.flexBasis = "0%";
+        chordBox.style.minWidth = "0";
 
         // Apply transposition to chord name
         const transposedChordName = transposeChord(chord.chord, transposeSemitones);
         chordBox.innerText = transposedChordName;
+        chordBox.title = transposedChordName;
 
         // הוסף אפשרות לקליק על אקורד ספציפי
         chordBox.addEventListener("click", (e) => {
@@ -979,41 +1044,200 @@ function toggleLoopVisibility(loopIndex) {
     renderChords();
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function loopBaseName(loop) {
+    const name = loop && (loop.name || loop.customName);
+    const trimmed = name ? String(name).trim() : "";
+    return trimmed || "חלק ללא שם";
+}
+
+function getLoopDisplayName(loopIndex, includeRepeats = true) {
+    const base = loopBaseName(loops[loopIndex]);
+    let count = 0;
+    let occurrence = 0;
+    loops.forEach((loop, index) => {
+        if (loopBaseName(loop) !== base) return;
+        count += 1;
+        if (index === loopIndex) occurrence = count;
+    });
+
+    let label = count > 1 ? `${base} (${occurrence})` : base;
+    const repeats = (loops[loopIndex] && loops[loopIndex].repeatCount) || 1;
+    if (includeRepeats && repeats > 1) label += ` ×${repeats}`;
+    return label;
+}
+
+function practiceSelectionLabel() {
+    if (loops.length === 0 || enabledLoops.size === loops.length) return "כל השיר";
+    const names = [];
+    loops.forEach((_, index) => {
+        if (enabledLoops.has(index)) names.push(getLoopDisplayName(index));
+    });
+    return names.join(", ") || "אין חלקים מסומנים";
+}
+
+function setLoopEnabled(loopIndex, enabled) {
+    if (!loopStates[loopIndex]) return;
+    loopStates[loopIndex].enabled = enabled;
+    if (enabled) enabledLoops.add(loopIndex);
+    else enabledLoops.delete(loopIndex);
+}
+
+function updatePracticeLoopBadge() {
+    const badge = document.getElementById("song-parts-loop-badge");
+    if (!badge) return;
+    badge.hidden = !infinitePracticeLoop;
+}
+
+function updatePracticeLoopBanner() {
+    const banner = document.getElementById("practice-loop-banner");
+    if (!banner) return;
+    if (!infinitePracticeLoop) {
+        banner.hidden = true;
+        banner.textContent = "";
+        return;
+    }
+    banner.hidden = false;
+    if (isPlaying) {
+        banner.textContent = `🔁 לופ תרגול: ${practiceSelectionLabel()} · מחזור ${practiceLoopCycle}. הניגון חוזר עד שתעצור.`;
+    } else {
+        banner.textContent = `🔁 לופ תרגול מוכן: ${practiceSelectionLabel()}. «החל לנגן» יתחיל אותו מההתחלה.`;
+    }
+}
+
+function openSongPartsPanel() {
+    const panel = document.getElementById("song-parts-panel");
+    const trigger = document.getElementById("song-parts-trigger");
+    if (!panel || !trigger) return;
+    panel.classList.remove("collapsed");
+    trigger.setAttribute("aria-expanded", "true");
+}
+
 // Toggle loop enabled state
 function toggleLoopEnabled(loopIndex) {
-    loopStates[loopIndex].enabled = !loopStates[loopIndex].enabled;
+    setLoopEnabled(loopIndex, !loopStates[loopIndex].enabled);
 
-    if (loopStates[loopIndex].enabled) {
-        enabledLoops.add(loopIndex);
-    } else {
-        enabledLoops.delete(loopIndex);
+    if (infinitePracticeLoop && enabledLoops.size === 0 && isPlaying) {
+        stopPlayback();
+        showSelectionInfo("הלופ נעצר כי לא נשארו חלקים מסומנים");
     }
 
+    initializeSongPartsControls();
     renderChords();
+}
+
+function beginPracticePlayback() {
+    if (loops.length > 0 && enabledLoops.size === 0) {
+        showSelectionInfo("סמן לפחות חלק אחד ללופ התרגול");
+        return;
+    }
+
+    infinitePracticeLoop = true;
+    practiceLoopCycle = 1;
+
+    if (addPreparationMeasure) {
+        selectedStartMeasure = 0;
+    } else {
+        const bounds = getPracticeLoopBounds(buildAllMeasures());
+        selectedStartMeasure = bounds ? bounds.first : 0;
+    }
+
+    openSongPartsPanel();
+    initializeSongPartsControls();
+    startPlayback();
+}
+
+function exitPracticeLoop() {
+    infinitePracticeLoop = false;
+    practiceLoopCycle = 1;
+    loops.forEach((_, index) => setLoopEnabled(index, true));
+    selectedStartMeasure = null;
+    if (isPlaying) stopPlayback();
+    initializeSongPartsControls();
+    renderChords();
+}
+
+function practicePart(loopIndex) {
+    if (!loopStates[loopIndex]) return;
+
+    if (!infinitePracticeLoop) {
+        loops.forEach((_, index) => setLoopEnabled(index, index === loopIndex));
+        beginPracticePlayback();
+        return;
+    }
+
+    if (!enabledLoops.has(loopIndex)) {
+        setLoopEnabled(loopIndex, true);
+        initializeSongPartsControls();
+        renderChords();
+        if (!isPlaying) beginPracticePlayback();
+        return;
+    }
+
+    if (enabledLoops.size > 1) {
+        setLoopEnabled(loopIndex, false);
+        initializeSongPartsControls();
+        renderChords();
+        return;
+    }
+
+    beginPracticePlayback();
 }
 
 // Initialize song parts controls
 function initializeSongPartsControls() {
     const container = document.getElementById("song-parts-controls");
-    container.innerHTML = "";
+    if (!container) return;
 
     if (loops.length === 0) {
-        container.innerHTML = '<p style="color: #666; font-size: 12px;">השיר לא מחולק ללופים</p>';
+        container.innerHTML = `
+            <div class="practice-loop-box ${infinitePracticeLoop ? "is-active" : ""}">
+                <div class="practice-loop-title">🔁 לופ לתרגול</div>
+                <p class="practice-loop-hint">השיר לא מחולק לחלקים. אפשר לנגן את כולו בלופ אינסופי.</p>
+                <div class="practice-loop-actions">
+                    <button type="button" class="practice-loop-play" onclick="beginPracticePlayback()">נגן את כל השיר בלופ</button>
+                    ${infinitePracticeLoop ? '<button type="button" class="practice-loop-exit" onclick="exitPracticeLoop()">בטל לופ</button>' : ""}
+                </div>
+            </div>
+        `;
+        updatePracticeLoopBadge();
+        updatePracticeLoopBanner();
         return;
     }
 
-    loops.forEach((loop, index) => {
-        const controlDiv = document.createElement("div");
-        controlDiv.className = "song-part-control";
-        controlDiv.innerHTML = `
+    const showExit = infinitePracticeLoop || enabledLoops.size !== loops.length;
+    const partsHtml = loops.map((_, index) => `
+        <div class="song-part-control ${infinitePracticeLoop && enabledLoops.has(index) ? "in-practice-loop" : ""}">
             <label class="song-part-checkbox">
-                <input type="checkbox" ${enabledLoops.has(index) ? 'checked' : ''}
+                <input type="checkbox" ${enabledLoops.has(index) ? "checked" : ""}
                        onchange="toggleLoopFromControls(${index})">
-                <span class="song-part-name">${loop.name || loop.customName || "חלק ללא שם"}</span>
+                <span class="song-part-name">${escapeHtml(getLoopDisplayName(index))}</span>
             </label>
-        `;
-        container.appendChild(controlDiv);
-    });
+        </div>
+    `).join("");
+
+    container.innerHTML = `
+        <div class="practice-loop-box ${infinitePracticeLoop ? "is-active" : ""}">
+            <div class="practice-loop-title">🔁 לופ לתרגול</div>
+            <p class="practice-loop-hint">סמן את החלקים לתרגול, למשל בית וקדם-פזמון, ולחץ «נגן לופ». הניגון יחזור עליהם לפי סדר השיר עד שתעצור.</p>
+            <p class="practice-loop-hint">אפשר גם ללחוץ «תרגל» על חלק בתצוגה. לחיצה על חלק נוסף מוסיפה אותו ללופ.</p>
+            ${infinitePracticeLoop ? `<div class="practice-loop-status">בלופ: ${escapeHtml(practiceSelectionLabel())}</div>` : ""}
+            <div class="practice-loop-actions">
+                <button type="button" class="practice-loop-play" onclick="beginPracticePlayback()">נגן לופ על המסומנים</button>
+                ${showExit ? '<button type="button" class="practice-loop-exit" onclick="exitPracticeLoop()">חזור לשיר המלא</button>' : ""}
+            </div>
+        </div>
+        ${partsHtml}
+    `;
+    updatePracticeLoopBadge();
+    updatePracticeLoopBanner();
 }
 
 // Toggle loop from side controls
@@ -1138,7 +1362,13 @@ function syncPlaybackVisuals() {
 
 // Enhanced playback with proper measure and beat tracking + auto-scroll
 function startPlayback() {
+    if (infinitePracticeLoop && loops.length > 0 && enabledLoops.size === 0) {
+        showSelectionInfo("סמן לפחות חלק אחד ללופ התרגול");
+        return;
+    }
+
     stopPlayback();
+    practiceLoopCycle = 1;
 
     bpm = parseInt(document.getElementById("bpm-slider").value);
     intervalMs = 60000 / bpm;
@@ -1196,12 +1426,7 @@ function startPlayback() {
                 currentGlobalMeasureIndex++;
                 currentBeatInMeasure = 0;
 
-                if (currentGlobalMeasureIndex >= measures.length) {
-                    stopPlayback();
-                    return;
-                }
-
-                // דלג על לופים מושבתים באותו טיק — לא להשאיר את הלופ המושבת כ"נוכחי" למחזור מטרונום שלם
+                // דלג על לופים מושבתים באותו טיק. בלופ תרגול חוזרים להתחלה במקום לעצור.
                 findNextEnabledMeasure(measures);
                 if (!isPlaying) return;
             }
@@ -1217,28 +1442,65 @@ function startPlayback() {
     });
 }
 
-// Find next enabled measure
+function isMeasurePlayable(measure) {
+    if (!measure) return false;
+    if (measure.isPreparation || measure.loopIndex === null) return true;
+    return enabledLoops.has(measure.loopIndex);
+}
+
+function getPracticeLoopBounds(measures) {
+    let first = -1;
+    measures.forEach((measure, index) => {
+        if (!measure || measure.isPreparation) return;
+        if (measure.loopIndex !== null && !enabledLoops.has(measure.loopIndex)) return;
+        if (first === -1) first = index;
+    });
+    if (first === -1) return null;
+    return { first };
+}
+
+function restartPracticeCycle(measures) {
+    if (!infinitePracticeLoop) {
+        stopPlayback();
+        return false;
+    }
+
+    const bounds = getPracticeLoopBounds(measures);
+    if (!bounds) {
+        stopPlayback();
+        return false;
+    }
+
+    currentGlobalMeasureIndex = bounds.first;
+    currentBeatInMeasure = 0;
+    practiceLoopCycle += 1;
+    updatePracticeLoopBanner();
+    scrollToCurrentMeasure();
+    return true;
+}
+
+// Find next enabled measure. At the end of a practice loop, wrap to the first selected part.
 function findNextEnabledMeasure(measures) {
+    if (currentGlobalMeasureIndex >= measures.length) {
+        restartPracticeCycle(measures);
+        return;
+    }
+
     const startIdx = currentGlobalMeasureIndex;
     while (currentGlobalMeasureIndex < measures.length) {
         const measure = measures[currentGlobalMeasureIndex];
         if (!measure) break;
-
-        if (measure.isPreparation || measure.loopIndex === null || enabledLoops.has(measure.loopIndex)) {
-            break;
-        }
-
+        if (isMeasurePlayable(measure)) break;
         currentGlobalMeasureIndex++;
+    }
+
+    if (currentGlobalMeasureIndex >= measures.length) {
+        restartPracticeCycle(measures);
+        return;
     }
 
     if (currentGlobalMeasureIndex !== startIdx) {
         currentBeatInMeasure = 0;
-    }
-
-    if (currentGlobalMeasureIndex >= measures.length) {
-        stopPlayback();
-    } else {
-        // גלילה אוטומטית לתיבה החדשה
         scrollToCurrentMeasure();
     }
 }
