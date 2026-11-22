@@ -736,8 +736,12 @@ function renderChords() {
 }
 
 // פונקציה לגלילה אוטומטית
+let lastScrolledMeasureIndex = -1;
+
 function scrollToCurrentMeasure() {
     if (!isPlaying) return;
+    if (lastScrolledMeasureIndex === currentGlobalMeasureIndex) return;
+    lastScrolledMeasureIndex = currentGlobalMeasureIndex;
 
     const currentMeasureElement = document.querySelector(`[data-global-index="${currentGlobalMeasureIndex}"]`);
     if (currentMeasureElement) {
@@ -1358,6 +1362,7 @@ function syncPlaybackVisuals() {
     updateBeatDots();
     updateMeasurePlaybackClasses();
     updateLoopSectionHighlight();
+    scrollToCurrentMeasure();
 }
 
 // Enhanced playback with proper measure and beat tracking + auto-scroll
@@ -1509,6 +1514,7 @@ function stopPlayback() {
     clearInterval(interval);
     interval = null;
     isPlaying = false;
+    lastScrolledMeasureIndex = -1;
 
     // הסר הדגשות של נגינה
     document.querySelectorAll('.current-playing-section').forEach(section => {
